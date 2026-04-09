@@ -1,7 +1,7 @@
 """Visual effects: RoundCorners, DropShadow."""
 from __future__ import annotations
 
-from typing import Any, Tuple
+from typing import Any
 
 from camtasia.effects.base import Effect, register_effect
 
@@ -55,7 +55,7 @@ class RoundCorners(Effect):
         self.set_parameter("bottomRight", value)
 
 
-def _color_rgba(params: dict[str, Any], prefix: str) -> Tuple[float, float, float, float]:
+def _color_rgba(params: dict[str, Any], prefix: str) -> tuple[float, float, float, float]:
     """Read RGBA color from separate parameter keys."""
     return (
         params[f"{prefix}-red"]["defaultValue"],
@@ -66,7 +66,7 @@ def _color_rgba(params: dict[str, Any], prefix: str) -> Tuple[float, float, floa
 
 
 def _set_color_rgba(
-    params: dict[str, Any], prefix: str, rgba: Tuple[float, float, float, float]
+    params: dict[str, Any], prefix: str, rgba: tuple[float, float, float, float]
 ) -> None:
     """Write RGBA color to separate parameter keys."""
     params[f"{prefix}-red"]["defaultValue"] = rgba[0]
@@ -116,10 +116,10 @@ class DropShadow(Effect):
         self.set_parameter("opacity", value)
 
     @property
-    def color(self) -> Tuple[float, float, float, float]:
+    def color(self) -> tuple[float, float, float, float]:
         """RGBA color as ``(red, green, blue, alpha)`` floats."""
         return _color_rgba(self.parameters, "color")
 
     @color.setter
-    def color(self, rgba: Tuple[float, float, float, float]) -> None:
+    def color(self, rgba: tuple[float, float, float, float]) -> None:
         _set_color_rgba(self.parameters, "color", rgba)

@@ -120,7 +120,7 @@ class TestProjectSave:
             a["ident"]
             for a in reloaded["timeline"]["trackAttributes"]
         ]
-        assert "new-track" in track_names
+        assert set(track_names) == {"", "new-track"}
 
 
 class TestLoadProject:
@@ -146,7 +146,7 @@ class TestUseProject:
             a["ident"]
             for a in reloaded["timeline"]["trackAttributes"]
         ]
-        assert "ctx-track" in track_names
+        assert set(track_names) == {"", "ctx-track"}
 
     def test_use_project_no_save_on_exit(self, tmp_path: Path):
         proj_dir = _create_cmproj(tmp_path)

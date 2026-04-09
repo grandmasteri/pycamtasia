@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator
 
 EDIT_RATE = 705_600_000
 
@@ -38,7 +38,7 @@ class Transition:
         return self._data['leftMedia']
 
     @property
-    def right_media_id(self) -> Optional[int]:
+    def right_media_id(self) -> int | None:
         """Clip ID on the right side, or None for fade-out at end."""
         return self._data.get('rightMedia')
 
@@ -98,7 +98,7 @@ class TransitionList:
         self,
         name: str,
         left_clip_id: int,
-        right_clip_id: Optional[int],
+        right_clip_id: int | None,
         duration_ticks: int,
         **attributes: Any,
     ) -> Transition:
@@ -129,7 +129,7 @@ class TransitionList:
     def add_fade_through_black(
         self,
         left_clip_id: int,
-        right_clip_id: Optional[int],
+        right_clip_id: int | None,
         duration_ticks: int,
     ) -> Transition:
         """Add a FadeThroughBlack transition with default attributes.

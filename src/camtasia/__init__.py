@@ -1,5 +1,7 @@
 """pycamtasia — Python API for Camtasia project files."""
 
+from __future__ import annotations
+
 # Project management
 from camtasia.project import Project, load_project, use_project, new_project
 

@@ -116,7 +116,8 @@ class TestTrackClips:
     def test_clips_len(self):
         medias = [_make_clip_dict(clip_id=1), _make_clip_dict(clip_id=2)]
         track = _make_track(medias=medias)
-        assert len(track.clips) == 2
+        actual_ids = [c.id for c in track.clips]
+        assert actual_ids == [1, 2]
 
     def test_clips_getitem_by_id(self):
         medias = [_make_clip_dict(clip_id=10, clip_type="IMFile", src=5)]

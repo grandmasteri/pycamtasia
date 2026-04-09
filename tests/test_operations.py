@@ -8,7 +8,7 @@ import pytest
 from camtasia.operations.speed import rescale_project, set_audio_speed
 from camtasia.operations.sync import SyncSegment, match_marker_to_transcript, plan_sync
 from camtasia.operations.template import clone_project_structure, replace_media_source
-from camtasia.timing import EDIT_RATE
+from camtasia.timing import EDIT_RATE, parse_scalar
 
 
 def _make_project(tracks: list[dict] | None = None, markers: list[dict] | None = None) -> dict:
@@ -160,7 +160,6 @@ class TestRescaleProject:
         actual_clip = project["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]
         # old scalar = 51/101, new = old / factor = 51/202
         expected_scalar = Fraction(51, 101) / Fraction(2)
-        from camtasia.timing import parse_scalar
         assert parse_scalar(actual_clip["scalar"]) == expected_scalar
 
     def test_scales_stitched_media(self):
@@ -262,8 +261,6 @@ class TestPlanSync:
 
         actual_result = plan_sync(markers, words)
 
-        assert isinstance(actual_result, list)
-        assert isinstance(actual_result[0], SyncSegment)
         assert actual_result[0].video_start_ticks == 0
         assert actual_result[0].video_end_ticks == 705_600_000
         assert actual_result[0].audio_start_seconds == 0.0
