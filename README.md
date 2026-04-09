@@ -4,7 +4,6 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml/badge.svg)](https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml)
-[![codecov](https://codecov.io/gh/grandmasteri/pycamtasia/branch/master/graph/badge.svg)](https://codecov.io/gh/grandmasteri/pycamtasia)
 
 A Python library for reading, writing, and manipulating TechSmith Camtasia project files (`.cmproj` / `.tscproj`) and Audiate transcripts.
 
