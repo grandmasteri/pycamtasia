@@ -268,8 +268,7 @@ class TestNestedStructures:
         # First clip on track 1 is a ScreenVMFile with effects
         actual_screen_clip = actual_group.tracks[1].clips[0]
         actual_effect_names = [e['effectName'] for e in actual_screen_clip.effects]
-        assert 'RoundCorners' in actual_effect_names
-        assert 'DropShadow' in actual_effect_names
+        assert {'RoundCorners', 'DropShadow'} <= set(actual_effect_names)
 
 
 # ===========================================================================

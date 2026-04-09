@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "pycamtasia"
 version = "7.0.0"
 description = "Python API for reading, writing, and manipulating Camtasia project files"
-readme = "README.rst"
-license = "BSD-2-Clause"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
 authors = [
     { name = "Sixty North AS", email = "austin@sixty-north.com" },
