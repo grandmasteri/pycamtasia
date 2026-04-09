@@ -1,36 +1,35 @@
-import pathlib
+from __future__ import annotations
 
 import pytest
+from pathlib import Path
 
-from camtasia.project import load_project, new_project
+try:
+    import pymediainfo
+    HAS_PYMEDIAINFO = True
+except ImportError:
+    HAS_PYMEDIAINFO = False
 
+pymediainfo_required = pytest.mark.skipif(
+    not HAS_PYMEDIAINFO,
+    reason="pymediainfo not installed"
+)
+
+RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 
 @pytest.fixture
-def media_root(pytestconfig):
-    root = pathlib.Path(str(pytestconfig.rootdir))
-    return root / 'tests' / 'resources' / 'media'
+def project():
+    from camtasia.project import load_project
+    return load_project(RESOURCES / 'new.cmproj')
 
+@pytest.fixture
+def simple_video_path():
+    return RESOURCES / 'simple-video.cmproj'
 
-@pytest.fixture(scope='session')
-def simple_video_path(pytestconfig):
-    "Path to simple_video.cmproj."
-    root = pathlib.Path(str(pytestconfig.rootdir))
-    return root / 'tests' / 'resources' / 'simple-video.cmproj'
-
-
-@pytest.fixture(scope='session')
+@pytest.fixture
 def simple_video(simple_video_path):
-    "The 'simple-video' Project."
+    from camtasia.project import load_project
     return load_project(simple_video_path)
 
-
 @pytest.fixture
-def temp_path(tmpdir):
-    return pathlib.Path(str(tmpdir))
-
-
-@pytest.fixture
-def project(temp_path):
-    proj_path = temp_path / 'project.cmproj'
-    new_project(proj_path)
-    return load_project(proj_path)
+def media_root():
+    return RESOURCES / 'media'
