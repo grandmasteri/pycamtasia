@@ -10,6 +10,24 @@ Load projects, iterate tracks and clips, apply effects and speed changes, parse 
 :maxdepth: 2
 
 quickstart
+```
+
+## Guides
+
+```{toctree}
+:maxdepth: 2
+
+guides/speed-change
+guides/audio-video-sync
+guides/template-projects
+guides/transcripts
+```
+
+## API Reference
+
+```{toctree}
+:maxdepth: 2
+
 api/project
 api/timing
 api/media_bin
