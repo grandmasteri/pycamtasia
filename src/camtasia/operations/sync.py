@@ -1,0 +1,132 @@
+"""Audio-video sync from transcript and timeline markers.
+
+Implements the V3 labeled-markers workflow: given markers on a screen
+recording and a word-level transcript, calculate per-segment speed
+adjustments to align video with audio.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from fractions import Fraction
+
+from camtasia.timing import EDIT_RATE
+
+
+@dataclass
+class SyncSegment:
+    """A segment between two sync points with its speed adjustment.
+
+    Attributes:
+        video_start_ticks: Segment start on the video timeline (ticks).
+        video_end_ticks: Segment end on the video timeline (ticks).
+        audio_start_seconds: Corresponding audio start (seconds).
+        audio_end_seconds: Corresponding audio end (seconds).
+        scalar: Camtasia scalar (video_duration / audio_duration in ticks).
+    """
+
+    video_start_ticks: int
+    video_end_ticks: int
+    audio_start_seconds: float
+    audio_end_seconds: float
+    scalar: Fraction
+
+
+def match_marker_to_transcript(
+    label: str,
+    words: list[dict],
+) -> float | None:
+    """Fuzzy-match a marker label to words in a transcript.
+
+    Uses simple case-insensitive substring matching. Checks each word
+    in the label against the running text of the transcript.
+
+    Args:
+        label: Marker label text (e.g. "Selecting a recent batch run").
+        words: List of dicts with ``word``, ``start``, ``end`` keys.
+
+    Returns:
+        Start timestamp (seconds) of the best match, or None.
+    """
+    label_lower = label.lower().split()
+    if not label_lower or not words:
+        return None
+
+    # Build running text for substring search
+    texts = [w["word"].lower() for w in words]
+    full = " ".join(texts)
+    target = " ".join(label_lower)
+
+    idx = full.find(target)
+    if idx != -1:
+        # Count words before the match to find the word index
+        word_idx = full[:idx].count(" ")
+        return words[min(word_idx, len(words) - 1)]["start"]
+
+    # Fallback: match first word of label
+    first = label_lower[0]
+    for w in words:
+        if first in w["word"].lower():
+            return w["start"]
+
+    return None
+
+
+def plan_sync(
+    markers: list[tuple[str, int]],
+    transcript_words: list[dict],
+    edit_rate: int = EDIT_RATE,
+) -> list[SyncSegment]:
+    """Calculate per-segment speed adjustments to sync video with audio.
+
+    For each pair of consecutive markers, finds the corresponding audio
+    timestamps via transcript matching and computes the scalar needed to
+    align the video segment duration with the audio segment duration.
+
+    Args:
+        markers: List of ``(label, video_time_ticks)`` from
+            ``timeline.parameters.toc`` keyframes.
+        transcript_words: List of dicts with ``word``, ``start``, ``end``
+            keys (from WhisperX or Audiate).
+        edit_rate: Ticks per second (default 705,600,000).
+
+    Returns:
+        List of SyncSegments, one per gap between consecutive markers.
+    """
+    if len(markers) < 2:
+        return []
+
+    # Resolve audio timestamps for each marker
+    resolved: list[tuple[int, float]] = []
+    for label, video_ticks in markers:
+        audio_time = match_marker_to_transcript(label, transcript_words)
+        if audio_time is not None:
+            resolved.append((video_ticks, audio_time))
+
+    if len(resolved) < 2:
+        return []
+
+    resolved.sort(key=lambda x: x[0])
+
+    segments: list[SyncSegment] = []
+    for i in range(len(resolved) - 1):
+        v_start, a_start = resolved[i]
+        v_end, a_end = resolved[i + 1]
+
+        video_dur_ticks = v_end - v_start
+        audio_dur_ticks = round(float(a_end - a_start) * edit_rate)
+
+        if audio_dur_ticks <= 0 or video_dur_ticks <= 0:
+            continue
+
+        scalar = Fraction(video_dur_ticks, audio_dur_ticks)
+
+        segments.append(SyncSegment(
+            video_start_ticks=v_start,
+            video_end_ticks=v_end,
+            audio_start_seconds=a_start,
+            audio_end_seconds=a_end,
+            scalar=scalar,
+        ))
+
+    return segments

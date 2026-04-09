@@ -1,234 +1,376 @@
+"""Media bin management for Camtasia projects.
+
+Wraps the ``sourceBin`` JSON array in a project file, providing typed access
+to imported media entries (video, image, audio).
+"""
+from __future__ import annotations
+
 import datetime
+import shutil
 from enum import Enum
 from pathlib import Path
-import shutil
-from typing import Iterable, Tuple
-
-from pymediainfo import MediaInfo
-from xml.etree.ElementTree import ParseError
+from typing import Any, Iterator
 
 
 class MediaType(Enum):
-    # NB: These must match camtasia's codes for media types, i.e. as used in 'sourceBin/sourceTracks/type'.
+    """Camtasia media type codes used in ``sourceBin/sourceTracks/type``."""
+
     Video = 0
     Image = 1
     Audio = 2
 
 
 class IntEncodedTime:
-    """Times encoded as integers.
+    """Integer-encoded time used in ``sourceTracks[].range``.
 
-    Media times are sometimes reported using a special encoding where the three least significant digits represent
-    milliseconds and everything else represents seconds. This class represents that encoding, and provides support for
-    converting to other useful domains (e.g. frames).
+    The three least significant digits represent milliseconds; everything
+    above represents whole seconds.  This encoding is specific to Camtasia's
+    sourceTracks range fields and is **not** interchangeable with tick-based
+    timeline timing.
 
-    This is intentionally not interchangeable with other number types so that we don't accidentally compare it to e.g.
-    time represented in frames.
+    Args:
+        encoded_time: The raw integer from the ``range`` array.
     """
 
-    def __init__(self, encoded_time):
+    def __init__(self, encoded_time: int) -> None:
         self._seconds, self._milliseconds = divmod(encoded_time, 1000)
 
     @property
-    def seconds(self):
+    def seconds(self) -> int:
+        """Whole-second component."""
         return self._seconds
 
     @property
-    def milliseconds(self):
+    def milliseconds(self) -> int:
+        """Millisecond component (0–999)."""
         return self._milliseconds
 
-    def to_frame(self, frame_rate=30):
+    def to_frame(self, frame_rate: int = 30) -> int:
+        """Convert to a frame index at the given frame rate.
+
+        Args:
+            frame_rate: Frames per second (default 30).
+
+        Returns:
+            Zero-based frame index.
+        """
         return int((self.seconds + self.milliseconds / 1000) * frame_rate)
 
-    def __str__(self):
-        return f'{self.seconds}s{self.milliseconds}ms'
+    def __str__(self) -> str:
+        return f"{self.seconds}s{self.milliseconds}ms"
 
-    def __repr__(self):
-        return f'IntEncodedTime(encoded_time={self.seconds + self.milliseconds * 1000})'
+    def __repr__(self) -> str:
+        return f"IntEncodedTime(encoded_time={self.seconds * 1000 + self.milliseconds})"
 
 
 class Media:
-    def __init__(self, data):
+    """A single media entry from the project's source bin.
+
+    Wraps one element of the ``sourceBin`` JSON array.
+
+    Args:
+        data: The raw sourceBin dict for this media item.
+    """
+
+    def __init__(self, data: dict[str, Any]) -> None:
         self._data = data
 
     @property
     def source(self) -> Path:
-        return Path(self._data['src'])
+        """Relative path to the media file within the project bundle."""
+        return Path(self._data["src"])
 
     @property
-    def identity(self):
+    def identity(self) -> str:
+        """Filename stem of the source path."""
         return self.source.stem
 
     @property
-    def type(self):
-        return MediaType(self._data['sourceTracks'][0]['type'])
+    def type(self) -> MediaType:
+        """Media type derived from the first source track."""
+        return MediaType(self._data["sourceTracks"][0]["type"])
 
     @property
-    def rect(self):
-        return tuple(self._data['rect'])
+    def rect(self) -> tuple[int, int, int, int]:
+        """Native bounding rect as ``(x, y, width, height)``."""
+        return tuple(self._data["rect"])  # type: ignore[return-value]
 
     @property
-    def range(self) -> Tuple[IntEncodedTime, IntEncodedTime]:
-        """The start and stop times of the media as a `(start, stop)` tuple.
+    def dimensions(self) -> tuple[int, int]:
+        """Native dimensions as ``(width, height)`` extracted from *rect*."""
+        r = self._data["rect"]
+        return (r[2], r[3])
 
-        Each tuple element is an int-encoded time where the three least significant digits represent milliseconds and
-        everything else represents seconds.
+    @property
+    def range(self) -> tuple[IntEncodedTime, IntEncodedTime]:
+        """Start and stop times from the first source track.
 
-        Returns: A two-tuple of `IntEncodedTime`s.
+        Returns:
+            A ``(start, stop)`` tuple of :class:`IntEncodedTime` values.
         """
-
-        return tuple(map(IntEncodedTime, self._data['sourceTracks'][0]['range']))
-
-    @property
-    def last_modification(self):
-        return datetime.datetime.strptime(
-            self._data['lastMod'], '%Y%m%dT%H%M%S')
+        r = self._data["sourceTracks"][0]["range"]
+        return (IntEncodedTime(r[0]), IntEncodedTime(r[1]))
 
     @property
-    def id(self):
-        return self._data['id']
+    def last_modification(self) -> datetime.datetime:
+        """Timestamp of last modification (parsed from ``lastMod``)."""
+        return datetime.datetime.strptime(self._data["lastMod"], "%Y%m%dT%H%M%S")
 
-    def __repr__(self):
+    @property
+    def id(self) -> int:
+        """Unique integer ID referenced by clips via ``src``."""
+        return self._data["id"]
+
+    def __repr__(self) -> str:
         return f'Media(id={self.id}, source="{self.source}")'
 
 
 class MediaBin:
-    """Represents the media-bin element of the UI.
+    """The project's source-bin — a collection of imported media.
 
-    You can iterate over the MediaBin to access its invidivual Media objects.
+    Wraps the ``sourceBin`` JSON array.  Mutations go directly to the
+    underlying list so that ``project.save()`` persists changes.
 
     Args:
-        data: The 'sourceBin' subdict of the overall project dict.
-        root_path: Path to root directory of project.
+        media_bin_data: The ``sourceBin`` list from the project dict.
+        root_path: Path to the root directory of the ``.cmproj`` bundle.
     """
 
-    def __init__(self, media_bin_data, root_path):
+    def __init__(self, media_bin_data: list[dict[str, Any]], root_path: Path) -> None:
         self._data = media_bin_data
         self._root_path = root_path
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self) -> Iterable[Media]:
-        """Get iterator of Media instances in this bin.
-        """
+    def __iter__(self) -> Iterator[Media]:
+        """Iterate over all :class:`Media` entries in the bin."""
         for record in self._data:
             yield Media(record)
 
-    def __getitem__(self, media_id):
-        """Get the media with the specified ID.
+    def __getitem__(self, media_id: int) -> Media:
+        """Look up a media entry by its integer ID.
 
         Args:
-            media_id: ID of the media to get.
+            media_id: The ``id`` field of the desired media.
 
-        Returns: A Media instance.
+        Returns:
+            The matching :class:`Media` instance.
 
         Raises:
-            KeyError: The specified media is not contained in this MediaBin.
+            KeyError: No media with the given ID exists.
         """
         for media in self:
             if media.id == media_id:
                 return media
+        raise KeyError(f"No media with id {media_id}")
 
-        raise KeyError('No media with id {}'.format(media_id))
-
-    def __delitem__(self, media_id):
-        """Remove the specified Media from the MediaBin.
+    def __delitem__(self, media_id: int) -> None:
+        """Remove a media entry by its integer ID.
 
         Args:
-            media_id: The ID of the media to be removed.
+            media_id: The ``id`` of the media to remove.
 
         Raises:
-            KeyError: The specified media is not contained in this MediaBin.
+            KeyError: No media with the given ID exists.
         """
-
         for idx, record in enumerate(self._data):
-            if record['id'] == media_id:
+            if record["id"] == media_id:
                 self._data.pop(idx)
                 return
+        raise KeyError(f"No media with id {media_id}")
 
-        raise KeyError('No media with id{}'.format(media_id))
+    def next_id(self) -> int:
+        """Return the next available media ID (max existing + 1).
 
-    def import_media(self, file_path: Path):
-        """Import new media into the project.
+        Returns:
+            An integer suitable for a new sourceBin entry's ``id`` field.
+            Returns ``1`` if the bin is empty.
+        """
+        return max((rec["id"] for rec in self._data), default=0) + 1
 
-        All imported media will be copied into a new directory under the 'media' subdirectory of the project structure.
+    def add_media_entry(self, entry: dict[str, Any]) -> Media:
+        """Directly append a pre-built sourceBin dict.
+
+        Useful when copying entries from a template project or constructing
+        the JSON structure manually.
 
         Args:
-            file_path: Path to media to import.
+            entry: A complete sourceBin dict (must contain at least ``id``).
 
-        Returns: A Media instance for the newly imported media.
+        Returns:
+            A :class:`Media` wrapper around the added entry.
+        """
+        self._data.append(entry)
+        return Media(entry)
+
+    def import_media(
+        self,
+        file_path: Path,
+        *,
+        width: int | None = None,
+        height: int | None = None,
+        duration: int | None = None,
+        media_type: MediaType | None = None,
+        sample_rate: int | None = None,
+        bit_depth: int | None = None,
+        num_channels: int | None = None,
+    ) -> Media:
+        """Import a media file into the project.
+
+        The file is copied into the project's ``media/`` directory.  Metadata
+        can be supplied explicitly or, if *pymediainfo* is installed, parsed
+        automatically from the file.
+
+        Args:
+            file_path: Path to the media file to import.
+            width: Native width in pixels (required for video/image without pymediainfo).
+            height: Native height in pixels (required for video/image without pymediainfo).
+            duration: Duration value for the ``range`` field.  For images this
+                defaults to ``1``; for audio it is the sample count.
+            media_type: The :class:`MediaType`.  Required when pymediainfo is
+                not available.
+            sample_rate: Audio sample rate (e.g. 44100).
+            bit_depth: Audio bit depth (e.g. 16).
+            num_channels: Number of audio channels (e.g. 2).
+
+        Returns:
+            A :class:`Media` instance for the newly imported entry.
 
         Raises:
-            FileExistsError: Destination media directory already exists.
-            FileNotFoundError: `file_path` does not exist.
-            OSError: Other errors copying file.
-            ValueError: `file_path` can't be parsed as a media file.
+            FileNotFoundError: *file_path* does not exist.
+            ValueError: Insufficient metadata and pymediainfo is not installed.
         """
+        file_path = Path(file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(file_path)
 
-        try:
-            media_info = MediaInfo.parse(file_path)
-        except ParseError as e:
-            raise ValueError(f'Unable to parse media file {file_path}') from e
+        # Try pymediainfo if explicit metadata not provided
+        if media_type is None:
+            track = _parse_with_pymediainfo(file_path)
+            if track is None:
+                raise ValueError(
+                    f"Cannot determine media type for {file_path}. "
+                    "Either install pymediainfo or pass media_type explicitly."
+                )
+            media_type = _get_media_type(track)
+            width = width or track.get("width")
+            height = height or track.get("height")
+            duration = duration or int(track.get("duration", 1))
+            sample_rate = sample_rate or track.get("sampling_rate")
+            bit_depth = bit_depth or track.get("bit_depth", 0)
+            num_channels = num_channels or track.get("channel_s")
 
-        # Copy the file into the project's media directory
+        # Copy file into project media directory
         timestamp = datetime.datetime.now()
-        media_dir = self._root_path / 'media' / str(timestamp.timestamp())
+        media_dir = self._root_path / "media" / str(timestamp.timestamp())
         media_dir.mkdir(parents=True)
         dest = shutil.copy(file_path, media_dir)
 
-        # find next media ID
-        max_media_id = max((rec['id'] for rec in self._data), default=0)
-        next_media_id = max_media_id + 1
+        next_media_id = self.next_id()
+        rel_path = str(Path(dest).relative_to(self._root_path))
 
-        # TODO: The actual media info always seems to be the second element. Look into this.
-        track = media_info.tracks[1].to_data()
-        media_type = _get_media_type(track)
-
-        to_json = {
-            MediaType.Video: _visual_track_to_json,
-            MediaType.Image: _visual_track_to_json,
-            MediaType.Audio: _audio_track_to_json,
-        }[media_type]
-
-        json_data = to_json(track, next_media_id, str(
-            Path(dest).relative_to(self._root_path)), timestamp)
+        if media_type == MediaType.Audio:
+            json_data = _audio_track_to_json(
+                next_media_id, rel_path, timestamp,
+                sample_rate=sample_rate or 44100,
+                bit_depth=bit_depth or 16,
+                num_channels=num_channels or 2,
+                duration=duration or 0,
+            )
+        else:
+            json_data = _visual_track_to_json(
+                next_media_id, rel_path, timestamp,
+                media_type=media_type,
+                width=width or 0,
+                height=height or 0,
+                duration=duration if duration is not None else 1,
+            )
 
         self._data.append(json_data)
-
         return self[next_media_id]
 
 
-def _visual_track_to_json(track, media_id, source_file, timestamp):
-    media_rect = (0, 0, track['width'], track['height'])
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
+
+def _parse_with_pymediainfo(file_path: Path) -> dict[str, Any] | None:
+    """Attempt to parse media metadata via pymediainfo.
+
+    Returns:
+        A track data dict, or ``None`` if pymediainfo is not installed or
+        parsing fails.
+    """
+    try:
+        from pymediainfo import MediaInfo  # type: ignore[import-untyped]
+    except ImportError:
+        return None
+
+    try:
+        media_info = MediaInfo.parse(file_path)
+    except Exception:
+        return None
+
+    if len(media_info.tracks) < 2:
+        return None
+    return media_info.tracks[1].to_data()
+
+
+def _get_media_type(track: dict[str, Any]) -> MediaType:
+    """Map a pymediainfo ``kind_of_stream`` value to :class:`MediaType`."""
+    return {
+        "Image": MediaType.Image,
+        "Video": MediaType.Video,
+        "Audio": MediaType.Audio,
+    }[track["kind_of_stream"]]
+
+
+def _visual_track_to_json(
+    media_id: int,
+    source_file: str,
+    timestamp: datetime.datetime,
+    *,
+    media_type: MediaType,
+    width: int,
+    height: int,
+    duration: int,
+) -> dict[str, Any]:
+    """Build a sourceBin entry for a video or image track."""
+    media_rect = [0, 0, width, height]
     return {
         "id": media_id,
-        # str(Path(dest).relative_to(self._root_path)),
         "src": source_file,
         "rect": media_rect,
         "lastMod": _datetime_to_str(timestamp),
         "sourceTracks": [
             {
-                "range": [0, int(track.get('duration', 1))],
-                "type": _get_media_type(track).value,
-                # TODO: Not sure what this is! round(float(track.get('frame_rate', 600))),
+                "range": [0, duration],
+                "type": media_type.value,
                 "editRate": 1000,
                 "trackRect": media_rect,
                 "sampleRate": 0,
-                "bitDepth": track.get('bit_depth', 0),
+                "bitDepth": 0,
                 "numChannels": 0,
                 "integratedLUFS": 100.0,
                 "peakLevel": -1.0,
-
-                # TODO: ? This is empty for images in the examples. For movies it's a sequence of UUIDs like this.
-                # "metaData": "2b7b6a01-7a1f-11e2-83d0-0017f200be7f;2b7b6af0-7a1f-11e2-83d0-0017f200be7f;2b7b6af1-7a1f-11e2-83d0-0017f200be7f;2b7b6af2-7a1f-11e2-83d0-0017f200be7f;2b7b6af3-7a1f-11e2-83d0-0017f200be7f;2b7b6af5-7a1f-11e2-83d0-0017f200be7f;2b7b6af6-7a1f-11e2-83d0-0017f200be7f;2b7b6af7-7a1f-11e2-83d0-0017f200be7f;2b7b6af8-7a1f-11e2-83d0-0017f200be7f;2b7b6af9-7a1f-11e2-83d0-0017f200be7f;2b7b6afa-7a1f-11e2-83d0-0017f200be7f;2b7b6afb-7a1f-11e2-83d0-0017f200be7f;2b7b6afc-7a1f-11e2-83d0-0017f200be7f;"
-                "metaData": ""
+                "metaData": "",
             }
-        ]
+        ],
     }
 
 
-def _audio_track_to_json(track, media_id, source_file, timestamp):
+def _audio_track_to_json(
+    media_id: int,
+    source_file: str,
+    timestamp: datetime.datetime,
+    *,
+    sample_rate: int,
+    bit_depth: int,
+    num_channels: int,
+    duration: int,
+) -> dict[str, Any]:
+    """Build a sourceBin entry for an audio track."""
     return {
         "id": media_id,
         "src": source_file,
@@ -236,83 +378,24 @@ def _audio_track_to_json(track, media_id, source_file, timestamp):
         "lastMod": _datetime_to_str(timestamp),
         "sourceTracks": [
             {
-                "range": [0, int(track['samples_count'])],
-                "type": _get_media_type(track).value,
-                "editRate": track['sampling_rate'],  # TODO: Is this right?
+                "range": [0, duration],
+                "type": MediaType.Audio.value,
+                "editRate": sample_rate,
                 "trackRect": [0, 0, 0, 0],
-                "sampleRate": track['sampling_rate'],
-                "bitDepth": track['bit_depth'],
-                "numChannels": track['channel_s'],
-                "integratedLUFS": -21.8965729218104,  # TODO: No idea!
-                "peakLevel": 1.0,  # TODO: No idea!
-                "metaData": ""
+                "sampleRate": sample_rate,
+                "bitDepth": bit_depth,
+                "numChannels": num_channels,
+                "integratedLUFS": 100.0,
+                "peakLevel": -1.0,
+                "metaData": "",
             }
-        ]
+        ],
     }
 
 
-def _get_media_type(track):
-    "Maps a `pymediainfo.Track.kind_of_stream` to a `MediaType`."
-    return {
-        'Image': MediaType.Image,
-        'Video': MediaType.Video,
-        'Audio': MediaType.Audio,
-    }[track['kind_of_stream']]
+def _datetime_to_str(dt: datetime.datetime) -> str:
+    """Format a datetime as Camtasia's ``lastMod`` string.
 
-
-def _datetime_to_str(dt):
-    """Convert datetime object to camtasia lastMod format.
-
-    <year><month><day>T<hour><minute><second>, e.g. 20190606T103830
+    Format: ``YYYYMMDDTHHmmss``, e.g. ``20190606T103830``.
     """
-    return f'{dt.year}{dt.month:02}{dt.day:02}T{dt.hour:02}{dt.minute:02}{dt.second:02}'
-
-
-# Here's an example of the project file's media-bin format for video:
-
-#  "sourceBin" : [
-#      {
-#        "id" : 1,
-#        "src" : "./recordings/1559817572.462711/Rec 6-6-2019.trec",
-#        "rect" : [0, 0, 5120, 2880],
-#        "lastMod" : "20190606T103830",
-#        "sourceTracks" : [
-#          {
-#            "range" : [0, 1032],
-#            "type" : 0,
-#            "editRate" : 30,
-#            "trackRect" : [0, 0, 5120, 2880],
-#            "sampleRate" : 0,
-#            "bitDepth" : 0,
-#            "numChannels" : 0,
-#            "integratedLUFS" : 100.0,
-#            "peakLevel" : -1.0,
-#            "metaData" : "2b7b6a01-7a1f-11e2-83d0-0017f200be7f;2b7b6af0-7a1f-11e2-83d0-0017f200be7f;2b7b6af1-7a1f-11e2-83d0-0017f200be7f;2b7b6af2-7a1f-11e2-83d0-0017f200be7f;2b7b6af3-7a1f-11e2-83d0-0017f200be7f;2b7b6af5-7a1f-11e2-83d0-0017f200be7f;2b7b6af6-7a1f-11e2-83d0-0017f200be7f;2b7b6af7-7a1f-11e2-83d0-0017f200be7f;2b7b6af8-7a1f-11e2-83d0-0017f200be7f;2b7b6af9-7a1f-11e2-83d0-0017f200be7f;2b7b6afa-7a1f-11e2-83d0-0017f200be7f;2b7b6afb-7a1f-11e2-83d0-0017f200be7f;2b7b6afc-7a1f-11e2-83d0-0017f200be7f;"
-#          }
-#        ]
-#      }
-#    ],
-
-# And here's an example for audio:
-# "sourceBin": [
-# {
-#       "id" : 2,
-#       "src" : "./media/1600841055.810413/example.wav",
-#       "rect" : [0, 0, 0, 0],
-#       "lastMod" : "20200923T060323",
-#       "sourceTracks" : [
-#         {
-#           "range" : [0, 357210],
-#           "type" : 2,
-#           "editRate" : 44100,
-#           "trackRect" : [0, 0, 0, 0],
-#           "sampleRate" : 44100,
-#           "bitDepth" : 16,
-#           "numChannels" : 2,
-#           "integratedLUFS" : -21.8965729218104,
-#           "peakLevel" : 1.0,
-#           "metaData" : ""
-#         }
-#       ]
-#     }
-# ]
+    return f"{dt.year}{dt.month:02}{dt.day:02}T{dt.hour:02}{dt.minute:02}{dt.second:02}"

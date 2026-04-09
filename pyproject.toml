@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pycamtasia"
+version = "7.0.0"
+description = "Python API for reading, writing, and manipulating Camtasia project files"
+readme = "README.rst"
+license = "BSD-2-Clause"
+requires-python = ">=3.10"
+authors = [
+    { name = "Sixty North AS", email = "austin@sixty-north.com" },
+]
+keywords = ["camtasia", "video", "editing", "tscproj"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: BSD License",
+    "Topic :: Multimedia :: Video",
+]
+
+[project.optional-dependencies]
+cli = ["exit-codes>=1.3.0,<2", "docopt-subcommands"]
+media = ["pymediainfo"]
+dev = ["bumpversion", "ruff"]
+test = ["pytest", "hypothesis"]
+
+[project.urls]
+Homepage = "https://github.com/sixty-north/python-camtasia"
+Repository = "https://github.com/sixty-north/python-camtasia"
+Issues = "https://github.com/sixty-north/python-camtasia/issues"
+
+[project.scripts]
+pytsc = "camtasia.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+camtasia = ["resources/**"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
