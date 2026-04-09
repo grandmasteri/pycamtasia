@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import pytest
 from pathlib import Path
 
@@ -33,3 +34,10 @@ def simple_video(simple_video_path):
 @pytest.fixture
 def media_root():
     return RESOURCES / 'media'
+
+FIXTURES = Path(__file__).parent / 'fixtures'
+
+@pytest.fixture
+def test_project_a_data():
+    with open(FIXTURES / 'test_project_a.tscproj') as f:
+        return json.load(f)
