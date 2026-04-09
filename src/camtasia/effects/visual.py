@@ -123,3 +123,146 @@ class DropShadow(Effect):
     @color.setter
     def color(self, rgba: tuple[float, float, float, float]) -> None:
         _set_color_rgba(self.parameters, "color", rgba)
+
+
+@register_effect("MotionBlur")
+class MotionBlur(Effect):
+    """Motion blur effect.
+
+    Parameters:
+        intensity
+    """
+
+    @property
+    def intensity(self) -> float:
+        return self.get_parameter("intensity")
+
+    @intensity.setter
+    def intensity(self, value: float) -> None:
+        self.set_parameter("intensity", value)
+
+
+@register_effect("Mask")
+class Mask(Effect):
+    """Mask effect.
+
+    Parameters:
+        mask_shape, mask_opacity, mask_blend, mask_invert, mask_rotation,
+        mask_width, mask_height, mask_position_x, mask_position_y.
+
+    Width, height, and position parameters may be keyframed (dict with
+    ``keyframes`` array) or simple scalar values.
+    """
+
+    @property
+    def mask_shape(self) -> int:
+        return self.get_parameter("mask_shape")
+
+    @mask_shape.setter
+    def mask_shape(self, value: int) -> None:
+        self.set_parameter("mask_shape", value)
+
+    @property
+    def mask_opacity(self) -> float:
+        return self.get_parameter("mask_opacity")
+
+    @mask_opacity.setter
+    def mask_opacity(self, value: float) -> None:
+        self.set_parameter("mask_opacity", value)
+
+    @property
+    def mask_blend(self) -> float:
+        return self.get_parameter("mask_blend")
+
+    @mask_blend.setter
+    def mask_blend(self, value: float) -> None:
+        self.set_parameter("mask_blend", value)
+
+    @property
+    def mask_invert(self) -> int:
+        return self.get_parameter("mask_invert")
+
+    @mask_invert.setter
+    def mask_invert(self, value: int) -> None:
+        self.set_parameter("mask_invert", value)
+
+    @property
+    def mask_rotation(self) -> float:
+        return self.get_parameter("mask_rotation")
+
+    @mask_rotation.setter
+    def mask_rotation(self, value: float) -> None:
+        self.set_parameter("mask_rotation", value)
+
+    @property
+    def mask_width(self) -> float | dict:
+        return self.get_parameter("mask_width")
+
+    @mask_width.setter
+    def mask_width(self, value: float | dict) -> None:
+        self.set_parameter("mask_width", value)
+
+    @property
+    def mask_height(self) -> float | dict:
+        return self.get_parameter("mask_height")
+
+    @mask_height.setter
+    def mask_height(self, value: float | dict) -> None:
+        self.set_parameter("mask_height", value)
+
+    @property
+    def mask_position_x(self) -> float | dict:
+        return self.get_parameter("mask_positionX")
+
+    @mask_position_x.setter
+    def mask_position_x(self, value: float | dict) -> None:
+        self.set_parameter("mask_positionX", value)
+
+    @property
+    def mask_position_y(self) -> float | dict:
+        return self.get_parameter("mask_positionY")
+
+    @mask_position_y.setter
+    def mask_position_y(self, value: float | dict) -> None:
+        self.set_parameter("mask_positionY", value)
+
+
+@register_effect("BlurRegion")
+class BlurRegion(Effect):
+    """Blur region effect.
+
+    Parameters:
+        sigma, mask_corner_radius, mask_invert, color_alpha
+    """
+
+    @property
+    def sigma(self) -> float:
+        return self.get_parameter("sigma")
+
+    @sigma.setter
+    def sigma(self, value: float) -> None:
+        self.set_parameter("sigma", value)
+
+    @property
+    def mask_corner_radius(self) -> float:
+        return self.get_parameter("mask_corner_radius")
+
+    @mask_corner_radius.setter
+    def mask_corner_radius(self, value: float) -> None:
+        self.set_parameter("mask_corner_radius", value)
+
+    @property
+    def mask_invert(self) -> int:
+        return self.get_parameter("mask_invert")
+
+    @mask_invert.setter
+    def mask_invert(self, value: int) -> None:
+        self.set_parameter("mask_invert", value)
+
+    @property
+    def color_alpha(self) -> float:
+        return self.get_parameter("color_alpha")
+
+    @color_alpha.setter
+    def color_alpha(self, value: float) -> None:
+        self.set_parameter("color_alpha", value)

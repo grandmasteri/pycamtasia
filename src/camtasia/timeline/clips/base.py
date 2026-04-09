@@ -126,6 +126,11 @@ class BaseClip:
         return self._data.get('animationTracks', {})
 
     @property
+    def visual_animations(self) -> list[dict[str, Any]]:
+        """Visual animation array from animationTracks."""
+        return self.animation_tracks.get('visual', [])
+
+    @property
     def source_id(self) -> int | None:
         """Source bin ID (``src`` field), or ``None`` if absent."""
         return self._data.get('src')

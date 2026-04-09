@@ -49,6 +49,10 @@ class Callout(BaseClip):
         """Callout style (e.g. ``'basic'``)."""
         return self.definition.get('style', '')
 
+    @style.setter
+    def style(self, value: str) -> None:
+        self._data.setdefault('def', {})['style'] = value
+
     @property
     def width(self) -> float:
         """Callout width."""
@@ -75,3 +79,62 @@ class Callout(BaseClip):
     @horizontal_alignment.setter
     def horizontal_alignment(self, value: str) -> None:
         self._data.setdefault('def', {})['horizontal-alignment'] = value
+
+    @property
+    def fill_color(self) -> tuple[float, float, float, float]:
+        """Fill color as ``(r, g, b, opacity)``."""
+        d = self.definition
+        return (
+            d.get('fill-color-red', 0.0),
+            d.get('fill-color-green', 0.0),
+            d.get('fill-color-blue', 0.0),
+            d.get('fill-color-opacity', 1.0),
+        )
+
+    @fill_color.setter
+    def fill_color(self, rgba: tuple[float, float, float, float]) -> None:
+        d = self._data.setdefault('def', {})
+        d['fill-color-red'] = rgba[0]
+        d['fill-color-green'] = rgba[1]
+        d['fill-color-blue'] = rgba[2]
+        d['fill-color-opacity'] = rgba[3]
+
+    @property
+    def stroke_color(self) -> tuple[float, float, float, float]:
+        """Stroke color as ``(r, g, b, opacity)``."""
+        d = self.definition
+        return (
+            d.get('stroke-color-red', 0.0),
+            d.get('stroke-color-green', 0.0),
+            d.get('stroke-color-blue', 0.0),
+            d.get('stroke-color-opacity', 1.0),
+        )
+
+    @stroke_color.setter
+    def stroke_color(self, rgba: tuple[float, float, float, float]) -> None:
+        d = self._data.setdefault('def', {})
+        d['stroke-color-red'] = rgba[0]
+        d['stroke-color-green'] = rgba[1]
+        d['stroke-color-blue'] = rgba[2]
+        d['stroke-color-opacity'] = rgba[3]
+
+    @property
+    def corner_radius(self) -> float:
+        """Corner radius for rounded shapes."""
+        return self.definition.get('corner-radius', 0.0)
+
+    @corner_radius.setter
+    def corner_radius(self, value: float) -> None:
+        self._data.setdefault('def', {})['corner-radius'] = value
+
+    @property
+    def tail_position(self) -> tuple[float, float]:
+        """Tail position as ``(x, y)``."""
+        d = self.definition
+        return (d.get('tail-x', 0.0), d.get('tail-y', 0.0))
+
+    @tail_position.setter
+    def tail_position(self, xy: tuple[float, float]) -> None:
+        d = self._data.setdefault('def', {})
+        d['tail-x'] = xy[0]
+        d['tail-y'] = xy[1]
