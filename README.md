@@ -1,8 +1,15 @@
 # pycamtasia
 
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://grandmasteri.github.io/pycamtasia/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-313%20passing-brightgreen.svg)]()
+
 A Python library for reading, writing, and manipulating TechSmith Camtasia project files (`.cmproj` / `.tscproj`) and Audiate transcripts.
 
 Forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-camtasia), extended with full timeline manipulation, effects, speed changes, audio-video sync, and Audiate integration.
+
+📖 **[Full API Documentation](https://grandmasteri.github.io/pycamtasia/)**
 
 ## Features
 
@@ -278,7 +285,7 @@ The public API is available directly from `import camtasia`:
 - **Timing**: `EDIT_RATE`, `seconds_to_ticks()`, `ticks_to_seconds()`, `format_duration()`, `speed_to_scalar()`, `scalar_to_speed()`
 - **Operations**: `rescale_project()`, `set_audio_speed()`, `plan_sync()`, `clone_project_structure()`, `replace_media_source()`
 
-See docstrings on each class and function for detailed parameter documentation.
+See the [full API documentation](https://grandmasteri.github.io/pycamtasia/) for detailed parameter docs, examples, and type signatures.
 
 ## Contributing
 
