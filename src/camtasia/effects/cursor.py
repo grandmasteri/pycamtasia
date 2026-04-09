@@ -1,8 +1,6 @@
 """Cursor effects: CursorMotionBlur, CursorShadow, CursorPhysics, LeftClickScaling."""
 from __future__ import annotations
 
-from typing import Tuple
-
 from camtasia.effects.base import Effect, register_effect
 from camtasia.effects.visual import _color_rgba, _set_color_rgba
 
@@ -65,12 +63,12 @@ class CursorShadow(Effect):
         self.set_parameter("opacity", value)
 
     @property
-    def color(self) -> Tuple[float, float, float, float]:
+    def color(self) -> tuple[float, float, float, float]:
         """RGBA color as ``(red, green, blue, alpha)`` floats."""
         return _color_rgba(self.parameters, "color")
 
     @color.setter
-    def color(self, rgba: Tuple[float, float, float, float]) -> None:
+    def color(self, rgba: tuple[float, float, float, float]) -> None:
         _set_color_rgba(self.parameters, "color", rgba)
 
 

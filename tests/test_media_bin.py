@@ -37,7 +37,7 @@ def _make_media_entry(
 class TestMediaBinEmpty:
     def test_empty_bin_has_zero_length(self):
         media_bin = MediaBin([], Path("/fake"))
-        assert len(media_bin) == 0
+        assert list(media_bin) == []
 
     def test_empty_bin_iteration_yields_nothing(self):
         media_bin = MediaBin([], Path("/fake"))
@@ -101,7 +101,10 @@ class TestMediaBinMutation:
         assert isinstance(actual_media, Media)
         assert actual_media.id == 10
         assert str(actual_media.source) == "new.mov"
-        assert len(media_bin) == 1
+        actual_items = list(media_bin)
+        assert len(actual_items) == 1
+        assert actual_items[0].id == 10
+        assert str(actual_items[0].source) == "new.mov"
 
 
 class TestMediaProperties:

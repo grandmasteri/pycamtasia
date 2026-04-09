@@ -1,14 +1,25 @@
-"""Utilities and helper functions.
-"""
+"""Utilities and helper functions."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from camtasia.project import Project
+    from camtasia.timeline.marker import Marker
+    from camtasia.media_bin import Media
+    from camtasia.timeline.track import Track
 
 
-def media_markers(project):
+def media_markers(project: Project) -> Iterator[tuple[Marker, Media, Track]]:
     """Get all media markers in a project.
 
     Args:
         project: The Project to fetch data from.
 
-    Returns: An iterable of `(Marker, Media, Track)` tuples.
+    Yields:
+        Tuples of ``(Marker, Media, Track)`` for each media marker.
     """
     return (
         (marker, media, track)

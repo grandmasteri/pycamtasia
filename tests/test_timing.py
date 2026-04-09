@@ -56,7 +56,7 @@ def test_ticks_to_seconds(ticks: int, expected_seconds: float) -> None:
 )
 def test_round_trip(seconds: float) -> None:
     actual_seconds = ticks_to_seconds(seconds_to_ticks(seconds))
-    assert abs(actual_seconds - seconds) < 1e-9
+    assert actual_seconds == pytest.approx(seconds)
 
 
 # ------------------------------------------------------------------
