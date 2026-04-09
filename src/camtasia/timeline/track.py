@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
-from camtasia.timeline.clips import BaseClip, clip_from_dict, EDIT_RATE
+from camtasia.timeline.clips import BaseClip, clip_from_dict
 from camtasia.timeline.transitions import TransitionList
 from camtasia.timeline.markers import MarkerList
 from camtasia.timeline.marker import Marker

@@ -1,7 +1,6 @@
 """Source effects for shader videos."""
 from __future__ import annotations
 
-from typing import Any
 
 from camtasia.effects.base import Effect, register_effect
 

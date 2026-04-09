@@ -131,7 +131,7 @@ def track_add_media(_, args):
     return ExitCode.OK
 
 
-# TODO: Markers
+
 
 @dsc.command()
 def timeline_markers_ls(_, args):

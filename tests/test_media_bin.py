@@ -102,7 +102,7 @@ class TestMediaBinMutation:
         assert actual_media.id == 10
         assert str(actual_media.source) == "new.mov"
         actual_items = list(media_bin)
-        assert len(actual_items) == 1
+        assert [m.id for m in actual_items] == [10]
         assert actual_items[0].id == 10
         assert str(actual_items[0].source) == "new.mov"
 
