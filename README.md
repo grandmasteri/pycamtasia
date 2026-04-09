@@ -296,6 +296,20 @@ Contributions are welcome. Please:
 3. Add tests for new functionality
 4. Submit a pull request
 
+Run tests and view coverage:
+
+```bash
+# Run tests
+PYTHONPATH=src pytest tests/
+
+# Run tests with coverage report
+PYTHONPATH=src pytest tests/ --cov=camtasia --cov-report=term-missing
+
+# Generate HTML coverage report (browse locally)
+PYTHONPATH=src pytest tests/ --cov=camtasia --cov-report=html
+open htmlcov/index.html
+```
+
 The library uses thin wrappers over the underlying JSON dicts — mutations go directly to the dict, so `project.save()` always writes the current state. See `ARCHITECTURE.md` for design details.
 
 ## License
