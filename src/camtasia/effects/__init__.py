@@ -5,7 +5,7 @@ import importlib.util
 import pathlib
 
 from camtasia.effects.base import Effect, effect_from_dict
-from camtasia.effects.visual import DropShadow, RoundCorners
+from camtasia.effects.visual import BlurRegion, DropShadow, Mask, MotionBlur, RoundCorners
 from camtasia.effects.cursor import (
     CursorMotionBlur,
     CursorPhysics,
@@ -13,6 +13,7 @@ from camtasia.effects.cursor import (
     LeftClickScaling,
 )
 from camtasia.effects.source import SourceEffect
+from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
 
 # Re-export legacy EffectSchema so existing code keeps working.
 # The old effects.py depends on marshmallow; provide a stub if unavailable.
@@ -44,9 +45,14 @@ __all__ = [
     "effect_from_dict",
     "RoundCorners",
     "DropShadow",
+    "MotionBlur",
+    "Mask",
+    "BlurRegion",
     "CursorMotionBlur",
     "CursorPhysics",
     "CursorShadow",
     "LeftClickScaling",
     "SourceEffect",
+    "BehaviorPhase",
+    "GenericBehaviorEffect",
 ]
