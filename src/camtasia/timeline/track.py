@@ -560,9 +560,99 @@ class Track:
         )
         return ticks_to_seconds(max_ticks)
 
+    def split_clip(self, clip_id: int, split_at_seconds: float) -> tuple:
+        """Split a clip into two halves at a timeline position.
+
+        The left half keeps the original clip dict (mutated in place).
+        The right half is a deep copy inserted immediately after.
+
+        For Group clips, internal tracks are deep-copied unchanged —
+        the Group's ``mediaStart``/``mediaDuration`` act as a viewing
+        window into the internal timeline.
+
+        Args:
+            clip_id: ID of the clip to split.
+            split_at_seconds: Absolute timeline position in seconds.
+
+        Returns:
+            Tuple of ``(left_clip, right_clip)`` as typed clip objects.
+
+        Raises:
+            KeyError: No clip with the given ID on this track.
+            ValueError: Split point is outside the clip's time range.
+        """
+        import copy
+
+        medias = self._data.get('medias', [])
+        left_data = None
+        left_idx = None
+        for i, m in enumerate(medias):
+            if m['id'] == clip_id:
+                left_data = m
+                left_idx = i
+                break
+        if left_data is None:
+            raise KeyError(f'No clip with id={clip_id} on track {self.index}')
+
+        split_point = seconds_to_ticks(split_at_seconds)
+        orig_start = left_data['start']
+        orig_duration = left_data['duration']
+
+        if split_point <= orig_start or split_point >= orig_start + orig_duration:
+            raise ValueError(
+                f'Split point {split_at_seconds}s is outside clip range'
+            )
+
+        split_offset = split_point - orig_start
+
+        # Deep copy for right half
+        right_data = copy.deepcopy(left_data)
+
+        # Mutate left half
+        left_data['duration'] = split_offset
+
+        # Mutate right half
+        right_data['start'] = orig_start + split_offset
+        right_data['duration'] = orig_duration - split_offset
+        right_data['mediaStart'] = split_offset
+
+        # Assign new sequential IDs to right half
+        next_id = self._next_clip_id()
+        right_data['id'] = next_id
+        next_id += 1
+
+        # Re-ID internal tracks for Group clips
+        if right_data.get('_type') == 'Group':
+            for track in right_data.get('tracks', []):
+                for media in track.get('medias', []):
+                    media['id'] = next_id
+                    next_id += 1
+                    # Handle UnifiedMedia with nested video/audio
+                    if 'video' in media:
+                        media['video']['id'] = next_id
+                        next_id += 1
+                    if 'audio' in media:
+                        media['audio']['id'] = next_id
+                        next_id += 1
+
+        # Insert right half after left half
+        medias.insert(left_idx + 1, right_data)
+
+        return (clip_from_dict(left_data), clip_from_dict(right_data))
+
     def _next_clip_id(self) -> int:
         """Scan all medias on this track for the max ID and increment."""
-        max_id = max((m['id'] for m in self._data.get('medias', [])), default=0)
+        ids = []
+        for m in self._data.get('medias', []):
+            ids.append(m['id'])
+            for t in m.get('tracks', []):
+                for inner in t.get('medias', []):
+                    ids.append(inner['id'])
+                    if 'video' in inner:
+                        ids.append(inner['video']['id'])
+                    if 'audio' in inner:
+                        ids.append(inner['audio']['id'])
+        max_id = max(ids, default=0)
         return max_id + 1
 
     def __repr__(self) -> str:
