@@ -41,3 +41,12 @@ FIXTURES = Path(__file__).parent / 'fixtures'
 def test_project_a_data():
     with open(FIXTURES / 'test_project_a.tscproj') as f:
         return json.load(f)
+
+
+def pytest_configure(config):
+    config.addinivalue_line('markers', 'camtasia: requires Camtasia app installed')
+
+@pytest.fixture
+def camtasia_available():
+    if not Path('/Applications/Camtasia.app').exists():
+        pytest.skip('Camtasia not installed')
