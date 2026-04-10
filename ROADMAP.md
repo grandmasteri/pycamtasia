@@ -21,3 +21,7 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 
 - [ ] **Validate project before save** — Check for common issues (zero-range sources, missing media files, invalid clip references) before writing to disk.
 - [ ] **pymediainfo as optional dependency** — Add to `pyproject.toml` extras so users can `pip install pycamtasia[media]`.
+- [ ] **Parameter flattening on save** — Camtasia v10 converts dict parameters (`{type, defaultValue, interp}`) to bare scalars on save. Our code still writes dicts for some parameters.
+- [ ] **Clip metadata defaults** — Add `audiateLinkedSession`, `clipSpeedAttribute`, `colorAttribute`, `effectApplied` to new clips to match Camtasia's native output.
+- [ ] **Image clip `trimStartSum`** — Camtasia adds this field; include it in `add_image()`.
+- [ ] **Fade animation hold segment** — Camtasia uses 3 animationTracks segments (fade-in, hold, fade-out) vs our 2. Add the hold segment for full compatibility.
