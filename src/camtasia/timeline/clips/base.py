@@ -189,7 +189,7 @@ class BaseClip:
         record: dict[str, Any] = {
             'effectName': 'Glow',
             'bypassed': False,
-            'category': 'visual',
+            'category': 'categoryVisualEffects',
             'start': seconds_to_ticks(start_seconds),
             'duration': seconds_to_ticks(duration_seconds),
             'parameters': {
@@ -357,9 +357,10 @@ class BaseClip:
         return self.add_effect({
             'effectName': 'DropShadow',
             'bypassed': False,
-            'category': 'visual',
+            'category': 'categoryVisualEffects',
             'parameters': {
                 'angle': {'type': 'double', 'defaultValue': angle, 'interp': 'linr'},
+                'enabled': 1,
                 'offset': {'type': 'double', 'defaultValue': offset, 'interp': 'linr'},
                 'blur': {'type': 'double', 'defaultValue': blur, 'interp': 'linr'},
                 'opacity': {'type': 'double', 'defaultValue': opacity, 'interp': 'linr'},
@@ -383,7 +384,7 @@ class BaseClip:
         return self.add_effect({
             'effectName': 'Glow',
             'bypassed': False,
-            'category': 'visual',
+            'category': 'categoryVisualEffects',
             'parameters': {
                 'radius': {'type': 'double', 'defaultValue': radius, 'interp': 'linr'},
                 'intensity': {'type': 'double', 'defaultValue': intensity, 'interp': 'linr'},
@@ -402,13 +403,13 @@ class BaseClip:
         return self.add_effect({
             'effectName': 'RoundCorners',
             'bypassed': False,
-            'category': 'visual',
+            'category': 'categoryVisualEffects',
             'parameters': {
                 'radius': {'type': 'double', 'defaultValue': radius, 'interp': 'linr'},
-                'topLeft': {'type': 'double', 'defaultValue': True, 'interp': 'linr'},
-                'topRight': {'type': 'double', 'defaultValue': True, 'interp': 'linr'},
-                'bottomLeft': {'type': 'double', 'defaultValue': True, 'interp': 'linr'},
-                'bottomRight': {'type': 'double', 'defaultValue': True, 'interp': 'linr'},
+                'top-left': {'type': 'double', 'defaultValue': 1.0, 'interp': 'linr'},
+                'top-right': {'type': 'double', 'defaultValue': 1.0, 'interp': 'linr'},
+                'bottom-left': {'type': 'double', 'defaultValue': 1.0, 'interp': 'linr'},
+                'bottom-right': {'type': 'double', 'defaultValue': 1.0, 'interp': 'linr'},
             },
         })
 

@@ -343,6 +343,7 @@ def _visual_track_to_json(
         "src": source_file,
         "rect": media_rect,
         "lastMod": _datetime_to_str(timestamp),
+        "loudnessNormalization": True,
         "sourceTracks": [
             {
                 "range": [0, duration],
@@ -354,9 +355,12 @@ def _visual_track_to_json(
                 "numChannels": 0,
                 "integratedLUFS": 100.0,
                 "peakLevel": -1.0,
+                "tag": 0,
                 "metaData": "",
+                "parameters": {},
             }
         ],
+        "metadata": {},
     }
 
 
@@ -376,6 +380,7 @@ def _audio_track_to_json(
         "src": source_file,
         "rect": [0, 0, 0, 0],
         "lastMod": _datetime_to_str(timestamp),
+        "loudnessNormalization": True,
         "sourceTracks": [
             {
                 "range": [0, duration],
@@ -387,9 +392,12 @@ def _audio_track_to_json(
                 "numChannels": num_channels,
                 "integratedLUFS": 100.0,
                 "peakLevel": -1.0,
+                "tag": 0,
                 "metaData": "",
+                "parameters": {},
             }
         ],
+        "metadata": {},
     }
 
 

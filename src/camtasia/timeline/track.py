@@ -143,6 +143,7 @@ class Track:
         record: dict[str, Any] = {
             'id': self._next_clip_id(),
             '_type': clip_type,
+            'trackNumber': 0,
             'start': start,
             'duration': duration,
             'mediaStart': kwargs.pop('media_start', 0),

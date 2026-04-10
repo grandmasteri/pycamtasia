@@ -212,6 +212,7 @@ class _TrackAccessor:
         record: dict[str, Any] = {
             'trackIndex': index,
             'medias': [],
+            'parameters': {},
         }
 
         attrs_record: dict[str, Any] = {
@@ -219,6 +220,8 @@ class _TrackAccessor:
             'audioMuted': False,
             'videoHidden': False,
             'magnetic': False,
+            'matte': 0,
+            'solo': False,
             'metadata': {'IsLocked': 'False', 'trackHeight': '33'},
         }
 

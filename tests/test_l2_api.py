@@ -257,10 +257,10 @@ class TestAddRoundCorners:
         assert isinstance(actual_effect, RoundCorners)
         assert actual_effect.name == "RoundCorners"
         assert actual_effect.get_parameter("radius") == 16.0
-        assert actual_effect.get_parameter("topLeft") is True
-        assert actual_effect.get_parameter("topRight") is True
-        assert actual_effect.get_parameter("bottomLeft") is True
-        assert actual_effect.get_parameter("bottomRight") is True
+        assert actual_effect.get_parameter("top-left") == 1.0
+        assert actual_effect.get_parameter("top-right") == 1.0
+        assert actual_effect.get_parameter("bottom-left") == 1.0
+        assert actual_effect.get_parameter("bottom-right") == 1.0
 
 
 class TestRemoveEffects:
