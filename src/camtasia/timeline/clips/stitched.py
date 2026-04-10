@@ -42,8 +42,3 @@ class StitchedMedia(BaseClip):
     @volume.setter
     def volume(self, value: float) -> None:
         self._data.setdefault('attributes', {})['gain'] = value
-
-    @property
-    def source_effect(self) -> dict[str, Any] | None:
-        """Source effect applied to the stitched media, or ``None``."""
-        return self._data.get('sourceEffect')

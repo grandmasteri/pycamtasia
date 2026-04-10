@@ -157,6 +157,11 @@ class BaseClip:
         """Source bin ID (``src`` field), or ``None`` if absent."""
         return self._data.get('src')
 
+    @property
+    def source_effect(self) -> dict[str, Any] | None:
+        """Source effect applied to this clip, or ``None``."""
+        return self._data.get('sourceEffect')
+
     # ------------------------------------------------------------------
     # Convenience
     # ------------------------------------------------------------------

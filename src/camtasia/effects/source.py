@@ -16,21 +16,19 @@ class SourceEffect(Effect):
 
     def _get_color(self, index: int) -> tuple[float, float, float, float]:
         """Get RGBA for Color{index}."""
-        p = self.parameters
         return (
-            p[f"Color{index}-red"]["defaultValue"],
-            p[f"Color{index}-green"]["defaultValue"],
-            p[f"Color{index}-blue"]["defaultValue"],
-            p[f"Color{index}-alpha"]["defaultValue"],
+            self.get_parameter(f"Color{index}-red"),
+            self.get_parameter(f"Color{index}-green"),
+            self.get_parameter(f"Color{index}-blue"),
+            self.get_parameter(f"Color{index}-alpha"),
         )
 
     def _set_color(self, index: int, rgba: tuple[float, float, float, float]) -> None:
         """Set RGBA for Color{index}."""
-        p = self.parameters
-        p[f"Color{index}-red"]["defaultValue"] = rgba[0]
-        p[f"Color{index}-green"]["defaultValue"] = rgba[1]
-        p[f"Color{index}-blue"]["defaultValue"] = rgba[2]
-        p[f"Color{index}-alpha"]["defaultValue"] = rgba[3]
+        self.set_parameter(f"Color{index}-red", rgba[0])
+        self.set_parameter(f"Color{index}-green", rgba[1])
+        self.set_parameter(f"Color{index}-blue", rgba[2])
+        self.set_parameter(f"Color{index}-alpha", rgba[3])
 
     @property
     def color0(self) -> tuple[float, float, float, float]:
@@ -88,3 +86,23 @@ class SourceEffect(Effect):
     @property
     def source_file_type(self) -> str:
         return self.get_parameter("sourceFileType")
+
+    def set_shader_colors(
+        self,
+        color0: tuple[int, int, int],
+        color1: tuple[int, int, int],
+        color2: tuple[int, int, int],
+        color3: tuple[int, int, int],
+    ) -> None:
+        """Set all four shader colours from 0-255 RGB tuples.
+
+        Alpha is set to 1.0 for all colours.
+
+        Args:
+            color0: ``(r, g, b)`` with values 0–255.
+            color1: ``(r, g, b)`` with values 0–255.
+            color2: ``(r, g, b)`` with values 0–255.
+            color3: ``(r, g, b)`` with values 0–255.
+        """
+        for i, rgb in enumerate((color0, color1, color2, color3)):
+            self._set_color(i, (rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1.0))
