@@ -22,8 +22,8 @@ try:
     _spec = importlib.util.spec_from_file_location("camtasia._effects_legacy", _legacy_path)
     _legacy = importlib.util.module_from_spec(_spec)
     _spec.loader.exec_module(_legacy)
-    EffectSchema = _legacy.EffectSchema
-    ChromaKeyEffect = _legacy.ChromaKeyEffect
+    EffectSchema = _legacy.EffectSchema  # pragma: no cover
+    ChromaKeyEffect = _legacy.ChromaKeyEffect  # pragma: no cover
 except Exception:
 
     class EffectSchema:
