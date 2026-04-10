@@ -149,7 +149,13 @@ class Track:
             'mediaStart': kwargs.pop('media_start', 0),
             'mediaDuration': kwargs.pop('media_duration', duration),
             'scalar': kwargs.pop('scalar', 1),
-            'metadata': kwargs.pop('metadata', {}),
+            'metadata': {
+                'audiateLinkedSession': '',
+                'clipSpeedAttribute': {'type': 'bool', 'value': False},
+                'colorAttribute': {'type': 'color', 'value': [0, 0, 0, 0]},
+                'effectApplied': 'none',
+                **kwargs.pop('metadata', {}),
+            },
             'animationTracks': kwargs.pop('animation_tracks', {}),
             'parameters': kwargs.pop('parameters', {}),
             'effects': kwargs.pop('effects', []),
@@ -204,6 +210,7 @@ class Track:
             seconds_to_ticks(start_seconds),
             seconds_to_ticks(duration_seconds),
             media_duration=1,
+            trimStartSum=1,
             **kwargs,
         )
         return clip  # type: ignore[return-value]

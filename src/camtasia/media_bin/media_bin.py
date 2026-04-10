@@ -268,7 +268,8 @@ class MediaBin:
         dest = shutil.copy(file_path, media_dir)
 
         next_media_id = self.next_id()
-        rel_path = str(Path(dest).relative_to(self._root_path))
+        rel_path = './' + str(Path(dest).relative_to(self._root_path))
+        filename = Path(dest).name
 
         if media_type == MediaType.Audio:
             json_data = _audio_track_to_json(
@@ -277,6 +278,7 @@ class MediaBin:
                 bit_depth=bit_depth or 16,
                 num_channels=num_channels or 2,
                 duration=duration or 0,
+                filename=filename,
             )
         else:
             json_data = _visual_track_to_json(
@@ -285,6 +287,7 @@ class MediaBin:
                 width=width or 0,
                 height=height or 0,
                 duration=duration if duration is not None else 1,
+                filename=filename,
             )
 
         self._data.append(json_data)
@@ -335,6 +338,7 @@ def _visual_track_to_json(
     width: int,
     height: int,
     duration: int,
+    filename: str = "",
 ) -> dict[str, Any]:
     """Build a sourceBin entry for a video or image track."""
     media_rect = [0, 0, width, height]
@@ -356,7 +360,7 @@ def _visual_track_to_json(
                 "integratedLUFS": 100.0,
                 "peakLevel": -1.0,
                 "tag": 0,
-                "metaData": "",
+                "metaData": f"{filename};" if filename else "",
                 "parameters": {},
             }
         ],
@@ -373,6 +377,7 @@ def _audio_track_to_json(
     bit_depth: int,
     num_channels: int,
     duration: int,
+    filename: str = "",
 ) -> dict[str, Any]:
     """Build a sourceBin entry for an audio track."""
     return {
@@ -393,7 +398,7 @@ def _audio_track_to_json(
                 "integratedLUFS": 100.0,
                 "peakLevel": -1.0,
                 "tag": 0,
-                "metaData": "",
+                "metaData": f"{filename};" if filename else "",
                 "parameters": {},
             }
         ],

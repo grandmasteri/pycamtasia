@@ -139,6 +139,14 @@ class TestFade:
         assert actual_kfs[0]["value"] == 0.0
         assert actual_kfs[1]["value"] == 1.0
         assert actual_kfs[-1]["value"] == 0.0
+        # v10: 3 visual segments — fade-in, hold, fade-out
+        visual = clip._data["animationTracks"]["visual"]
+        assert len(visual) == 3
+        fade_in_ticks = seconds_to_ticks(1.0)
+        fade_out_ticks = seconds_to_ticks(1.0)
+        assert visual[0] == {"endTime": fade_in_ticks, "duration": fade_in_ticks}
+        assert visual[1] == {"endTime": dur - fade_out_ticks, "duration": dur - fade_out_ticks - fade_in_ticks}
+        assert visual[2] == {"endTime": dur, "duration": fade_out_ticks}
 
     def test_replaces_existing_opacity_animations(self):
         clip = IMFile(_clip_data(duration=EDIT_RATE * 10, media_duration=EDIT_RATE * 10))
