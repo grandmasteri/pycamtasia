@@ -242,7 +242,8 @@ class BaseClip:
 
         Follows the Camtasia v10 pattern: parameters.opacity holds keyframes
         with endTime/duration, and animationTracks.visual holds non-overlapping
-        timing segments (one per transition, not one per keyframe).
+        timing segments. When both fade-in and fade-out are present, three
+        segments are generated: fade-in, hold (constant opacity), fade-out.
         """
         # Build parameters.opacity keyframes
         param_kfs = []
@@ -265,17 +266,24 @@ class BaseClip:
             'defaultValue': 0.0,
             'keyframes': param_kfs,
         }
-        # Build animationTracks.visual — one segment per opacity *transition*
-        # (not per keyframe). A transition is where value changes between
-        # adjacent keyframes. Segments must not overlap.
-        visual = self._ensure_visual_tracks()
+        # Build animationTracks.visual segments.
+        # Identify fade-in and fade-out transitions.
+        transitions = []
         for i in range(len(keyframes) - 1):
             if keyframes[i]['value'] != keyframes[i + 1]['value']:
-                duration = keyframes[i + 1]['time'] - keyframes[i]['time']
-                visual.append({
-                    'endTime': keyframes[i + 1]['time'],
-                    'duration': duration,
-                })
+                transitions.append((keyframes[i]['time'], keyframes[i + 1]['time']))
+
+        visual = self._ensure_visual_tracks()
+        if len(transitions) == 2:
+            # Both fade-in and fade-out: 3 segments (fade-in, hold, fade-out)
+            fade_in_start, fade_in_end = transitions[0]
+            fade_out_start, fade_out_end = transitions[1]
+            visual.append({'endTime': fade_in_end, 'duration': fade_in_end - fade_in_start})
+            visual.append({'endTime': fade_out_start, 'duration': fade_out_start - fade_in_end})
+            visual.append({'endTime': fade_out_end, 'duration': fade_out_end - fade_out_start})
+        else:
+            for start, end in transitions:
+                visual.append({'endTime': end, 'duration': end - start})
 
     def fade_in(self, duration_seconds: float) -> Self:
         """Add an opacity fade-in (0 → 1) over *duration_seconds*.

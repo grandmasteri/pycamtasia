@@ -90,6 +90,29 @@ class Project:
         """The project's timeline."""
         return Timeline(self._data['timeline'])
 
+    @staticmethod
+    def _flatten_parameters(obj: Any) -> None:
+        """Convert parameter dicts without keyframes to bare defaultValues.
+
+        Camtasia v10 saves parameters as scalar values when there are no
+        keyframes.  This walks the entire data tree in-place and replaces
+        ``{"type": ..., "defaultValue": X, ...}`` with just ``X`` when
+        the dict has no ``"keyframes"`` key.  Dicts that also carry a
+        ``"name"`` key (effectDef entries) are left untouched.
+        """
+        if isinstance(obj, dict):
+            for key in list(obj):
+                val = obj[key]
+                if (isinstance(val, dict)
+                        and 'type' in val and 'defaultValue' in val
+                        and 'name' not in val and 'keyframes' not in val):
+                    obj[key] = val['defaultValue']
+                else:
+                    Project._flatten_parameters(val)
+        elif isinstance(obj, list):
+            for item in obj:
+                Project._flatten_parameters(item)
+
     def save(self) -> None:
         """Write the current project state to disk.
 
@@ -97,6 +120,8 @@ class Project:
         avoid parser crashes with ``.trec`` screen recordings.
         """
         import re
+
+        self._flatten_parameters(self._data)
 
         # Step 1: Standard pretty-print, preserving extreme floats
         # Python converts -1.79769e+308 to -inf during json.loads, then
