@@ -10,9 +10,9 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 ## Media Import
 
 - [ ] **Native `.trec` import** — Use a Python media library (pymediainfo or PyAV) to probe `.trec` multi-track containers and build correct source bin entries with all stream metadata (screen video, camera video, mic audio, system audio). Currently `.trec` files can only be used by starting from an existing Camtasia project.
-- [ ] **Replace ffprobe subprocess calls** — `import_media()` duration and dimension detection currently shells out to `ffprobe`. Replace with a Python library (pymediainfo or PyAV) for cleaner dependency management.
+- [x] **Replace ffprobe subprocess calls** — `import_media()` duration and dimension detection currently shells out to `ffprobe`. Replace with a Python library (pymediainfo or PyAV) for cleaner dependency management.
 - [x] **Auto-detect image dimensions** — ~~`import_media()` sets `rect: [0,0,0,0]` for images.~~ Fixed: uses ffprobe to detect width/height.
-- [ ] **Audio source metadata accuracy** — Our ffprobe-based import sets approximate values for `editRate`, `sampleRate`, `numChannels`, `bitDepth`, and `range`. Camtasia corrects these on open. Use a proper media library for exact values.
+- [x] **Audio source metadata accuracy** — Our ffprobe-based import sets approximate values for `editRate`, `sampleRate`, `numChannels`, `bitDepth`, and `range`. Camtasia corrects these on open. Use a proper media library for exact values.
 
 ## Timeline
 
@@ -27,8 +27,8 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 
 ## Quality of Life
 
-- [ ] **Validate project before save** — Check for common issues (zero-range sources, missing media files, invalid clip references) before writing to disk.
-- [ ] **pymediainfo as optional dependency** — Add to `pyproject.toml` extras so users can `pip install pycamtasia[media]`.
+- [x] **Validate project before save** — Check for common issues (zero-range sources, missing media files, invalid clip references) before writing to disk.
+- [x] **pymediainfo as optional dependency** — Add to `pyproject.toml` extras so users can `pip install pycamtasia[media]`.
 - [x] **Parameter flattening on save** — ~~Camtasia v10 converts dict parameters to bare scalars.~~ Fixed: `_flatten_parameters()` runs on save.
 - [x] **Clip metadata defaults** — ~~Missing v10 metadata fields.~~ Fixed: `add_clip()` includes all defaults.
 - [x] **Image clip `trimStartSum`** — ~~Missing field.~~ Fixed: included in `add_image()`.
