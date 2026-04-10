@@ -91,9 +91,53 @@ class Project:
         return Timeline(self._data['timeline'])
 
     def save(self) -> None:
-        """Write the current project state to disk."""
+        """Write the current project state to disk.
+
+        Matches Camtasia's ``NSJSONSerialization`` JSON formatting to
+        avoid parser crashes with ``.trec`` screen recordings.
+        """
+        import re
+
+        # Step 1: Standard pretty-print, preserving extreme floats
+        # Python converts -1.79769e+308 to -inf during json.loads, then
+        # json.dumps writes -Infinity which Camtasia cannot parse.
+        text = json.dumps(self._data, indent=2, ensure_ascii=False,
+                          allow_nan=True)
+        # Replace -Infinity/Infinity/NaN with the original extreme values
+        text = text.replace('-Infinity', '-1.79769313486232e+308')
+        text = text.replace('Infinity', '1.79769313486232e+308')
+        text = text.replace('NaN', '0.0')
+
+        # Step 2: Add space before colon (NSJSONSerialization style)
+        # "key": value  ->  "key" : value
+        text = re.sub(r'"(\s*):', r'" :', text)
+
+        # Step 3: Collapse scalar arrays to single lines
+        def _collapse(m: re.Match) -> str:
+            items = re.findall(
+                r'-?[\d.]+(?:e[+-]?\d+)?|"[^"]*"|true|false|null',
+                m.group(0))
+            return '[' + ', '.join(items) + ']'
+
+        text = re.sub(
+            r'\[\s*(?:-?[\d.]+(?:e[+-]?\d+)?|"[^"]*"|true|false|null)'
+            r'(?:,\s*(?:-?[\d.]+(?:e[+-]?\d+)?|"[^"]*"|true|false|null))*'
+            r'\s*\]',
+            _collapse, text, flags=re.DOTALL,
+        )
+
+        # Step 4: Expand empty objects to multi-line with proper indentation
+        def _expand_empty(m: re.Match) -> str:
+            indent = m.group(1)
+            return '{\n' + indent + '  ' + '}'
+        text = re.sub(r'\{\}(?=\n(\s*))', _expand_empty, text)
+
+        # Step 5: Add trailing space after commas at end of lines
+        text = re.sub(r',\n', ', \n', text)
+
         with self._project_file.open(mode='wt', encoding=self._encoding) as handle:
-            json.dump(self._data, handle)
+            handle.write(text)
+            handle.write('\n')
 
     # ------------------------------------------------------------------
     # L2 convenience methods
