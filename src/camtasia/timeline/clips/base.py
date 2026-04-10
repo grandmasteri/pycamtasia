@@ -58,6 +58,24 @@ class BaseClip:
         self._data['duration'] = value
 
     @property
+    def gain(self) -> float:
+        """Audio gain (0.0 = muted, 1.0 = full volume)."""
+        return self._data.get('attributes', {}).get('gain', 1.0)
+
+    @gain.setter
+    def gain(self, value: float) -> None:
+        self._data.setdefault('attributes', {})['gain'] = value
+
+    def mute(self) -> Self:
+        """Mute this clip's audio by setting gain to 0.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self.gain = 0.0
+        return self
+
+    @property
     def media_start(self) -> int | Fraction:
         """Offset into source media in ticks.
 
