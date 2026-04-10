@@ -712,11 +712,13 @@ class Track:
 
         # Mutate left half
         left_data['duration'] = split_offset
+        left_data['mediaDuration'] = split_offset
 
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
         right_data['mediaStart'] = split_offset
+        right_data['mediaDuration'] = orig_duration - split_offset
 
         # Assign new sequential IDs to right half
         next_id = self._next_clip_id()
