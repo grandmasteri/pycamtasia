@@ -324,6 +324,63 @@ class Project:
         """
         return self.timeline.total_duration_seconds()
 
+    def export_frame(
+        self,
+        video_path: Path | str,
+        timestamp_seconds: float,
+        output_path: Path | str | None = None,
+    ) -> Path:
+        """Extract a single frame from a video file as a PNG image.
+
+        Uses ffmpeg to extract the frame. If output_path is None,
+        saves to the project's media directory with an auto-generated name.
+
+        Args:
+            video_path: Path to the video file (.trec, .mp4, etc.)
+            timestamp_seconds: Time position to extract the frame from.
+            output_path: Where to save the PNG. Defaults to project media dir.
+
+        Returns:
+            Path to the extracted PNG file.
+
+        Raises:
+            RuntimeError: If ffmpeg exits with a non-zero return code.
+        """
+        video_path = Path(video_path)
+        if output_path is None:
+            media_dir = self._file_path / 'media'
+            media_dir.mkdir(parents=True, exist_ok=True)
+            stem = video_path.stem
+            output_path = media_dir / f'{stem}_frame_{timestamp_seconds:.3f}s.png'
+        else:
+            output_path = Path(output_path)
+
+        result = _sp.run(
+            ['ffmpeg', '-ss', str(timestamp_seconds), '-i', str(video_path),
+             '-frames:v', '1', '-q:v', '2', str(output_path)],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f'ffmpeg failed (rc={result.returncode}): {result.stderr}')
+        return output_path
+
+    def export_frame_and_import(
+        self,
+        video_path: Path | str,
+        timestamp_seconds: float,
+    ) -> Media:
+        """Extract a frame from video and import it into the project media bin.
+
+        Args:
+            video_path: Path to the video file.
+            timestamp_seconds: Time position to extract the frame from.
+
+        Returns:
+            The newly created Media entry.
+        """
+        png_path = self.export_frame(video_path, timestamp_seconds)
+        return self.import_media(png_path)
+
     def find_media_by_name(self, name: str) -> Media | None:
         """Search the source bin for media whose filename stem matches *name*.
 
