@@ -6,15 +6,17 @@
   "shouldApplyLoudnessNormalization": true,
   "videoFormatFrameRate": 30,
   "audioFormatSampleRate": 44100,
+  "allowSubFrameEditing": false,
   "width": 1920.0,
   "height": 1080.0,
   "version": "10.0",
-  "editRate": 30,
+  "editRate": 705600000,
   "authoringClientName": {
     "name": "Camtasia",
     "platform": "Mac",
     "version": "2026.0.7"
   },
+  "sourceBin": [],
   "timeline": {
     "id": 1,
     "sceneTrack": {
@@ -92,7 +94,9 @@
       0,
       255
     ],
-    "parameters": {}
+    "parameters": {},
+    "gain": 1.0,
+    "legacyAttenuateAudioMix": false
   },
   "metadata": {
     "activeThemeId": "e59eeb42-ccf0-4a36-bdf9-e630fdab686d",

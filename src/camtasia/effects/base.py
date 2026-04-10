@@ -53,12 +53,13 @@ class Effect:
             name: The parameter key inside the ``parameters`` dict.
 
         Returns:
-            The ``defaultValue`` of the parameter.
+            The ``defaultValue`` of the parameter, or the scalar value directly.
 
         Raises:
             KeyError: If the parameter does not exist.
         """
-        return self.parameters[name]["defaultValue"]
+        val = self.parameters[name]
+        return val['defaultValue'] if isinstance(val, dict) else val
 
     def set_parameter(self, name: str, value: Any) -> None:
         """Set a parameter's default value by name.
@@ -70,7 +71,11 @@ class Effect:
         Raises:
             KeyError: If the parameter does not exist.
         """
-        self.parameters[name]["defaultValue"] = value
+        val = self.parameters[name]
+        if isinstance(val, dict):
+            val["defaultValue"] = value
+        else:
+            self.parameters[name] = value
 
     # ------------------------------------------------------------------
     # Time-bounded effects
