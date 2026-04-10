@@ -662,6 +662,95 @@ class Track:
         )
         return ticks_to_seconds(max_ticks)
 
+    def set_segment_speeds(
+        self,
+        clip_id: int,
+        segments: list[tuple[float, float]],
+    ) -> list:
+        """Split a clip into segments with per-segment playback speeds.
+
+        Splits the clip at the boundaries defined by each segment's
+        timeline duration, then sets the appropriate scalar on each
+        piece so it plays at the requested speed.
+
+        Internally handles the Camtasia-specific scalar formula,
+        ``mediaStart`` accumulation, VMFile scalar compensation,
+        and ``clipSpeedAttribute`` metadata.
+
+        Args:
+            clip_id: ID of the clip to split and speed-adjust.
+            segments: List of ``(timeline_duration_seconds, speed)``
+                tuples.  *speed* is a multiplier where ``1.0`` means
+                the clip's original playback rate, ``2.0`` means twice
+                as fast, ``0.5`` means half speed, etc.  The sum of
+                all *timeline_duration_seconds* must equal the clip's
+                current duration.
+
+        Returns:
+            List of the resulting clip objects (one per segment).
+        """
+        from fractions import Fraction as _Frac
+
+        # Find the clip
+        clip = None
+        for c in self.clips:
+            if c.id == clip_id:
+                clip = c
+                break
+        if clip is None:
+            raise KeyError(f'No clip with id={clip_id} on this track')
+
+        total_dur = ticks_to_seconds(clip.duration)
+        md = clip._data.get('mediaDuration', clip.duration)
+        source_dur = ticks_to_seconds(int(md))
+        original_scalar = _Frac(source_dur / total_dur).limit_denominator(100000)
+        vmfile_scalar = (_Frac(1) / original_scalar).limit_denominator(100000)
+
+        # Split right-to-left at segment boundaries
+        split_points = []
+        clip_start = ticks_to_seconds(clip.start)
+        t = clip_start
+        for dur_s, _ in segments[:-1]:
+            t += dur_s
+            split_points.append(t)
+
+        current = clip
+        for sp in reversed(split_points):
+            left, right = self.split_clip(current.id, sp)
+            current = left
+
+        # Collect the split pieces in order
+        pieces = sorted(
+            [c for c in self.clips if c.start >= clip.start],
+            key=lambda c: c.start,
+        )[:len(segments)]
+
+        # Apply scalars using reverse-engineered Camtasia formula:
+        #   scalar = original_scalar / user_speed
+        #   mediaStart[i+1] = mediaStart[i] + dur[i] * (original_scalar / scalar[i])
+        #   VMFile scalar = 1 / original_scalar
+        cumulative_ms = 0.0
+        for piece, (dur_s, speed) in zip(pieces, segments):
+            seg_scalar = (
+                original_scalar / _Frac(speed).limit_denominator(100000)
+            ).limit_denominator(100000)
+            piece.scalar = seg_scalar
+            piece.duration = seconds_to_ticks(dur_s)
+            piece._data['mediaStart'] = int(cumulative_ms)
+            piece._data.setdefault('metadata', {})['clipSpeedAttribute'] = {
+                'type': 'bool', 'value': True,
+            }
+            # Adjust internal VMFile scalar to compensate for Group speed
+            for itrack in piece._data.get('tracks', []):
+                for imedia in itrack.get('medias', []):
+                    if imedia.get('_type') == 'VMFile':
+                        imedia['scalar'] = str(vmfile_scalar)
+
+            advance = seconds_to_ticks(dur_s) * float(original_scalar / seg_scalar)
+            cumulative_ms += advance
+
+        return pieces
+
     def split_clip(self, clip_id: int, split_at_seconds: float) -> tuple:
         """Split a clip into two halves at a timeline position.
 
