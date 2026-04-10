@@ -144,6 +144,28 @@ class TestMediaProperties:
         assert media.dimensions == (1280, 720)
 
 
+class TestImportMediaSourcePrefixAndMetaData:
+    """import_media() must prefix src with './' and set metaData to 'filename;'."""
+
+    def test_imported_source_starts_with_dot_slash(self, project, tmp_path):
+        media_file = tmp_path / "clip.mov"
+        media_file.write_bytes(b"\x00")
+        media = project.media_bin.import_media(
+            media_file, media_type=MediaType.Video, width=1920, height=1080,
+        )
+        raw_src = media._data["src"]
+        assert raw_src.startswith("./"), f"Expected src to start with './' but got: {raw_src}"
+
+    def test_imported_source_track_metadata_contains_filename(self, project, tmp_path):
+        media_file = tmp_path / "clip.mov"
+        media_file.write_bytes(b"\x00")
+        media = project.media_bin.import_media(
+            media_file, media_type=MediaType.Video, width=1920, height=1080,
+        )
+        meta = media._data["sourceTracks"][0]["metaData"]
+        assert meta == "clip.mov;", f"Expected metaData 'clip.mov;' but got: {meta!r}"
+
+
 class TestMediaTypeEnum:
     @pytest.mark.parametrize(
         ("member", "expected_value"),
