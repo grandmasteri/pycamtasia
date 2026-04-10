@@ -271,6 +271,7 @@ class Project:
         '.m4a': MediaType.Audio, '.aac': MediaType.Audio,
         '.mov': MediaType.Video, '.mp4': MediaType.Video,
         '.trec': MediaType.Video, '.avi': MediaType.Video,
+        '.tscshadervid': MediaType.Video,
     }
 
     def import_media(self, file_path: Path | str, **kwargs: Any) -> Media:
@@ -312,8 +313,17 @@ class Project:
                 dur_secs = meta.get('duration_seconds')
                 kwargs['duration'] = int(dur_secs * sr) if dur_secs else sr * 60
         elif media_type == MediaType.Video and 'duration' not in kwargs:
-            dur_secs = meta.get('duration_seconds')
-            kwargs['duration'] = int(dur_secs * 30) if dur_secs else 30 * 60
+            if suffix == '.tscshadervid':
+                # Shaders have infinite duration and no audio
+                kwargs['duration'] = 9223372036854775807  # MAX_INT64
+                kwargs.setdefault('width', 1920)
+                kwargs.setdefault('height', 1080)
+                kwargs.setdefault('sample_rate', 30)
+                kwargs.setdefault('num_channels', 0)
+                kwargs.setdefault('bit_depth', 32)
+            else:
+                dur_secs = meta.get('duration_seconds')
+                kwargs['duration'] = int(dur_secs * 30) if dur_secs else 30 * 60
         return self.media_bin.import_media(path, media_type=media_type, **kwargs)
 
     def total_duration_seconds(self) -> float:
