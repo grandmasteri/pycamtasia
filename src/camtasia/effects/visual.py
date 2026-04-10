@@ -57,22 +57,24 @@ class RoundCorners(Effect):
 
 def _color_rgba(params: dict[str, Any], prefix: str) -> tuple[float, float, float, float]:
     """Read RGBA color from separate parameter keys."""
-    return (
-        params[f"{prefix}-red"]["defaultValue"],
-        params[f"{prefix}-green"]["defaultValue"],
-        params[f"{prefix}-blue"]["defaultValue"],
-        params[f"{prefix}-alpha"]["defaultValue"],
-    )
+    def _val(key: str) -> float:
+        v = params[key]
+        return v['defaultValue'] if isinstance(v, dict) else v
+    return (_val(f"{prefix}-red"), _val(f"{prefix}-green"),
+            _val(f"{prefix}-blue"), _val(f"{prefix}-alpha"))
 
 
 def _set_color_rgba(
     params: dict[str, Any], prefix: str, rgba: tuple[float, float, float, float]
 ) -> None:
     """Write RGBA color to separate parameter keys."""
-    params[f"{prefix}-red"]["defaultValue"] = rgba[0]
-    params[f"{prefix}-green"]["defaultValue"] = rgba[1]
-    params[f"{prefix}-blue"]["defaultValue"] = rgba[2]
-    params[f"{prefix}-alpha"]["defaultValue"] = rgba[3]
+    for suffix, value in zip(("red", "green", "blue", "alpha"), rgba):
+        key = f"{prefix}-{suffix}"
+        v = params[key]
+        if isinstance(v, dict):
+            v["defaultValue"] = value
+        else:
+            params[key] = value
 
 
 @register_effect("DropShadow")
