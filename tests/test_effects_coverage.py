@@ -21,6 +21,7 @@ def _param(value, type_="double", interp="linr"):
 # ------------------------------------------------------------------
 
 def test_effect_schema_is_real_when_marshmallow_installed():
+    pytest.importorskip("marshmallow")
     from camtasia.effects import EffectSchema
     schema = EffectSchema()
     assert hasattr(schema, "type_schemas")
