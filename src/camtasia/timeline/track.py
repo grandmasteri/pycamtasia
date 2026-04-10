@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, Iterator
 
 from camtasia.annotations import callouts
-from camtasia.timeline.clips import AMFile, BaseClip, Callout, IMFile, VMFile, clip_from_dict
+from camtasia.timeline.clips import AMFile, BaseClip, Callout, Group, IMFile, VMFile, clip_from_dict
 from camtasia.timeline.transitions import Transition, TransitionList
 from camtasia.timeline.markers import MarkerList
 from camtasia.timeline.marker import Marker
@@ -302,6 +302,133 @@ class Track:
             **{'def': callout_def, **kwargs},
         )
         return clip  # type: ignore[return-value]
+
+    def add_group(
+        self,
+        start_seconds: float,
+        duration_seconds: float,
+        internal_tracks: list[dict[str, Any]] | None = None,
+        **kwargs: Any,
+    ) -> Group:
+        """Add a Group clip to the track.
+
+        Args:
+            start_seconds: Timeline position in seconds.
+            duration_seconds: Playback duration in seconds.
+            internal_tracks: List of internal track dicts. If ``None``, an
+                empty ``tracks`` list is created.
+            **kwargs: Additional fields merged into the clip dict.
+
+        Returns:
+            The newly created Group clip.
+        """
+        clip = self.add_clip(
+            'Group', None,
+            seconds_to_ticks(start_seconds),
+            seconds_to_ticks(duration_seconds),
+            tracks=internal_tracks or [],
+            attributes=kwargs.pop('attributes', {
+                'ident': '', 'gain': 1.0, 'mixToMono': False,
+            }),
+            **kwargs,
+        )
+        return clip  # type: ignore[return-value]
+
+    def add_screen_recording(
+        self,
+        source_id: int,
+        start_seconds: float,
+        duration_seconds: float,
+        background_source_id: int = 1,
+    ) -> Group:
+        """Add a Camtasia Rev screen recording Group to the track.
+
+        Creates a Group with the standard Rev structure:
+
+        - Track 0: VMFile shader background
+        - Track 1: UnifiedMedia with ScreenVMFile video + AMFile audio
+
+        Args:
+            source_id: Source bin ID for the .trec media entry.
+            start_seconds: Timeline position in seconds.
+            duration_seconds: Playback duration in seconds.
+            background_source_id: Source bin ID for the background shader
+                (defaults to 1).
+
+        Returns:
+            The newly created Group clip.
+        """
+        dur_ticks = seconds_to_ticks(duration_seconds)
+        next_id = self._next_clip_id()
+
+        bg_media = {
+            'id': next_id + 1,
+            '_type': 'VMFile',
+            'src': background_source_id,
+            'trackNumber': 0,
+            'attributes': {'ident': ''},
+            'parameters': {},
+            'effects': [],
+            'start': 0,
+            'duration': dur_ticks,
+            'mediaStart': 0,
+            'mediaDuration': dur_ticks,
+            'scalar': 1,
+            'metadata': {},
+            'animationTracks': {},
+        }
+
+        unified_media = {
+            'id': next_id + 2,
+            '_type': 'UnifiedMedia',
+            'video': {
+                'id': next_id + 3,
+                '_type': 'ScreenVMFile',
+                'src': source_id,
+                'trackNumber': 0,
+                'attributes': {'ident': ''},
+                'parameters': {},
+                'effects': [],
+                'start': 0,
+                'duration': dur_ticks,
+                'mediaStart': 0,
+                'mediaDuration': dur_ticks,
+                'scalar': 1,
+                'animationTracks': {},
+            },
+            'audio': {
+                'id': next_id + 4,
+                '_type': 'AMFile',
+                'src': source_id,
+                'trackNumber': 1,
+                'attributes': {
+                    'ident': '', 'gain': 1.0, 'mixToMono': False,
+                    'loudnessNormalization': True, 'sourceFileOffset': 0,
+                },
+                'channelNumber': '0',
+                'parameters': {},
+                'effects': [],
+            },
+            'effects': [],
+            'start': 0,
+            'duration': dur_ticks,
+            'mediaStart': 0,
+            'mediaDuration': dur_ticks,
+            'scalar': 1,
+        }
+
+        internal_tracks = [
+            {'trackIndex': 0, 'medias': [bg_media]},
+            {'trackIndex': 1, 'medias': [unified_media]},
+        ]
+
+        return self.add_group(
+            start_seconds, duration_seconds,
+            internal_tracks=internal_tracks,
+            attributes={
+                'ident': '', 'gain': 1.0, 'mixToMono': False,
+            },
+        )
 
     def add_transition(
         self,
