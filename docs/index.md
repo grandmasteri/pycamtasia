@@ -22,6 +22,7 @@ guides/speed-change
 guides/audio-video-sync
 guides/template-projects
 guides/transcripts
+guides/camtasia-rev
 ```
 
 ## API Reference
