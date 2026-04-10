@@ -15,6 +15,37 @@ from camtasia.timeline import Timeline
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 
 
+import subprocess as _sp
+
+
+def _probe_audio_duration(path: Path, sample_rate: int = 44100) -> int:
+    """Return total sample count via ffprobe, or a safe default."""
+    try:
+        out = _sp.run(
+            ['ffprobe', '-v', 'quiet', '-show_entries', 'format=duration',
+             '-of', 'csv=p=0', str(path)],
+            capture_output=True, text=True, timeout=10,
+        )
+        seconds = float(out.stdout.strip())
+        return int(seconds * sample_rate)
+    except Exception:
+        return 44100 * 60  # 1-minute fallback
+
+
+def _probe_video_duration(path: Path) -> int:
+    """Return duration in edit-rate ticks via ffprobe, or a safe default."""
+    try:
+        out = _sp.run(
+            ['ffprobe', '-v', 'quiet', '-show_entries', 'format=duration',
+             '-of', 'csv=p=0', str(path)],
+            capture_output=True, text=True, timeout=10,
+        )
+        seconds = float(out.stdout.strip())
+        return int(seconds * 30)  # video editRate is typically 30
+    except Exception:
+        return 30 * 60  # 1-minute fallback
+
+
 class Project:
     """Main entry-point for interacting with Camtasia projects.
 
@@ -103,6 +134,10 @@ class Project:
 
         if media_type == MediaType.Image:
             kwargs.setdefault('duration', 1)
+        elif media_type == MediaType.Audio and 'duration' not in kwargs:
+            kwargs['duration'] = _probe_audio_duration(path, kwargs.get('sample_rate', 44100))
+        elif media_type == MediaType.Video and 'duration' not in kwargs:
+            kwargs['duration'] = _probe_video_duration(path)
         return self.media_bin.import_media(path, media_type=media_type, **kwargs)
 
     def total_duration_seconds(self) -> float:
