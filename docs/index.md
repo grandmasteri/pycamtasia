@@ -17,6 +17,7 @@ quickstart
 ```{toctree}
 :maxdepth: 2
 
+guides/convenience-api
 guides/speed-change
 guides/audio-video-sync
 guides/template-projects
