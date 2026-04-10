@@ -7,12 +7,12 @@ import shutil
 from contextlib import contextmanager
 from importlib import resources as importlib_resources
 from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator
 
 from camtasia.authoring_client import AuthoringClient
-from camtasia.media_bin import MediaBin
+from camtasia.media_bin import Media, MediaBin, MediaType
 from camtasia.timeline import Timeline
-from camtasia.timing import EDIT_RATE
+from camtasia.timing import EDIT_RATE, seconds_to_ticks
 
 
 class Project:
@@ -63,6 +63,176 @@ class Project:
         """Write the current project state to disk."""
         with self._project_file.open(mode='wt', encoding=self._encoding) as handle:
             json.dump(self._data, handle)
+
+    # ------------------------------------------------------------------
+    # L2 convenience methods
+    # ------------------------------------------------------------------
+
+    _EXTENSION_TYPE_MAP: dict[str, MediaType] = {
+        '.png': MediaType.Image, '.jpg': MediaType.Image,
+        '.jpeg': MediaType.Image, '.gif': MediaType.Image,
+        '.bmp': MediaType.Image, '.tiff': MediaType.Image,
+        '.wav': MediaType.Audio, '.mp3': MediaType.Audio,
+        '.m4a': MediaType.Audio, '.aac': MediaType.Audio,
+        '.mov': MediaType.Video, '.mp4': MediaType.Video,
+        '.trec': MediaType.Video, '.avi': MediaType.Video,
+    }
+
+    def import_media(self, file_path: Path | str, **kwargs: Any) -> Media:
+        """Import a media file into the project's source bin.
+
+        Detects media type from the file extension and passes appropriate
+        defaults so that pymediainfo is not required.
+
+        Args:
+            file_path: Path to the media file.
+            **kwargs: Additional overrides forwarded to
+                :meth:`MediaBin.import_media`.
+
+        Returns:
+            The newly created Media entry.
+
+        Raises:
+            ValueError: Unknown file extension.
+        """
+        path = Path(file_path)
+        suffix = path.suffix.lower()
+        media_type = kwargs.pop('media_type', None) or self._EXTENSION_TYPE_MAP.get(suffix)
+        if media_type is None:
+            raise ValueError(f"Cannot determine media type for extension '{suffix}'")
+
+        if media_type == MediaType.Image:
+            kwargs.setdefault('duration', 1)
+        return self.media_bin.import_media(path, media_type=media_type, **kwargs)
+
+    def total_duration_seconds(self) -> float:
+        """Total timeline duration in seconds.
+
+        Returns:
+            Duration in seconds, delegated to the timeline.
+        """
+        return self.timeline.total_duration_seconds()
+
+    def find_media_by_name(self, name: str) -> Media | None:
+        """Search the source bin for media whose filename stem matches *name*.
+
+        Args:
+            name: Filename stem to match (case-sensitive).
+
+        Returns:
+            The first matching Media, or None.
+        """
+        for media in self.media_bin:
+            if media.identity == name:
+                return media
+        return None
+
+    def find_media_by_suffix(self, suffix: str) -> list[Media]:
+        """Return all media entries whose source path ends with *suffix*.
+
+        Args:
+            suffix: Extension or suffix to match (e.g. ``'.png'``).
+
+        Returns:
+            List of matching Media entries.
+        """
+        return [m for m in self.media_bin if str(m.source).endswith(suffix)]
+
+    def add_gradient_background(
+        self,
+        duration_seconds: float,
+        color0: tuple[float, float, float, float] = (0.16, 0.16, 0.16, 1.0),
+        color1: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0),
+        track_index: int = 1,
+    ) -> Any:
+        """Create a gradient shader background on the specified track.
+
+        Adds a sourceBin entry for the gradient shader and places a VMFile
+        clip on the given track.
+
+        Args:
+            duration_seconds: How long the background should last.
+            color0: First RGBA gradient colour.
+            color1: Second RGBA gradient colour.
+            track_index: Track index to place the clip on (default 1).
+
+        Returns:
+            The created clip.
+        """
+        import datetime
+        import time as _time
+
+        width = int(self._data.get('width', 1920))
+        height = int(self._data.get('height', 1080))
+        media_id = self.media_bin.next_id()
+        timestamp = datetime.datetime.now()
+        ts_str = f"{timestamp.year}{timestamp.month:02}{timestamp.day:02}T{timestamp.hour:02}{timestamp.minute:02}{timestamp.second:02}"
+        shader_name = f"gradient-bg-{media_id}.tscshadervid"
+        src_path = f"./media/{_time.time()}/{shader_name}"
+
+        source_entry: dict[str, Any] = {
+            "id": media_id,
+            "src": src_path,
+            "rect": [0, 0, width, height],
+            "lastMod": ts_str,
+            "loudnessNormalization": True,
+            "sourceTracks": [{
+                "range": [0, 9223372036854775807],
+                "type": 0,
+                "editRate": 30,
+                "trackRect": [0, 0, width, height],
+                "sampleRate": 30,
+                "bitDepth": 32,
+                "numChannels": 0,
+                "integratedLUFS": 100.0,
+                "peakLevel": -1.0,
+                "tag": 0,
+                "metaData": f"{shader_name};",
+                "parameters": {},
+            }],
+            "effectDef": [
+                {"name": "Color0", "type": "Color",
+                 "defaultValue": list(color0),
+                 "scalingType": 3, "unitType": 0, "userInterfaceType": 6},
+                {"name": "Color1", "type": "Color",
+                 "defaultValue": list(color1),
+                 "scalingType": 3, "unitType": 0, "userInterfaceType": 6},
+                {"name": "sourceFileType", "type": "string",
+                 "defaultValue": "tscshadervid",
+                 "maxValue": "", "minValue": "",
+                 "scalingType": 0, "unitType": 0, "userInterfaceType": 0},
+            ],
+            "metadata": {"timeAdded": timestamp.strftime("%Y%m%dT%H%M%S.%f")},
+        }
+        self.media_bin.add_media_entry(source_entry)
+
+        dur_ticks = seconds_to_ticks(duration_seconds)
+        track = self.timeline.tracks[track_index]
+
+        def _color_params(prefix: str, rgba: tuple[float, float, float, float]) -> dict:
+            return {
+                f"{prefix}-red": {"type": "double", "defaultValue": rgba[0], "interp": "linr"},
+                f"{prefix}-green": {"type": "double", "defaultValue": rgba[1], "interp": "linr"},
+                f"{prefix}-blue": {"type": "double", "defaultValue": rgba[2], "interp": "linr"},
+                f"{prefix}-alpha": {"type": "double", "defaultValue": rgba[3], "interp": "linr"},
+            }
+
+        source_effect = {
+            "effectName": "SourceEffect",
+            "bypassed": False,
+            "category": "",
+            "parameters": {
+                **_color_params("Color0", color0),
+                **_color_params("Color1", color1),
+                "sourceFileType": "tscshadervid",
+            },
+        }
+
+        return track.add_clip(
+            'VMFile', media_id, 0, dur_ticks,
+            attributes={"ident": shader_name.replace(".tscshadervid", "")},
+            sourceEffect=source_effect,
+        )
 
     @property
     def _project_file(self) -> Path:

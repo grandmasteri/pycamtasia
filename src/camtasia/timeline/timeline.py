@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
+from camtasia.timeline.clips import BaseClip
 from camtasia.timeline.markers import MarkerList
 from camtasia.timeline.marker import Marker
 from camtasia.timeline.track import Track
+from camtasia.timing import ticks_to_seconds
 
 
 class Timeline:
@@ -63,6 +65,67 @@ class Timeline:
     def markers(self) -> _TimelineMarkers:
         """Timeline-level markers (from ``parameters.toc``)."""
         return _TimelineMarkers(self._data)
+
+    # ------------------------------------------------------------------
+    # L2 convenience methods
+    # ------------------------------------------------------------------
+
+    def total_duration_ticks(self) -> int:
+        """Maximum end time across all tracks, in ticks.
+
+        Returns:
+            The tick position of the latest clip end, or 0 if empty.
+        """
+        max_end = 0
+        for track in self.tracks:
+            for clip in track.clips:
+                end = clip.start + clip.duration
+                if end > max_end:
+                    max_end = end
+        return max_end
+
+    def total_duration_seconds(self) -> float:
+        """Maximum end time across all tracks, in seconds.
+
+        Returns:
+            Duration in seconds, or 0.0 if the timeline is empty.
+        """
+        return ticks_to_seconds(self.total_duration_ticks())
+
+    def get_or_create_track(self, name: str) -> Track:
+        """Find a track by name, or create a new one if it doesn't exist.
+
+        Args:
+            name: Display name to search for (exact match).
+
+        Returns:
+            The existing or newly created Track.
+        """
+        for track in self.tracks:
+            if track.name == name:
+                return track
+        return self.add_track(name)
+
+    def all_clips(self) -> list[BaseClip]:
+        """Collect all clips across all tracks.
+
+        Returns:
+            A flat list of every clip on the timeline.
+        """
+        return [clip for track in self.tracks for clip in track.clips]
+
+    def add_marker(self, label: str, time_seconds: float) -> Marker:
+        """Add a timeline marker at the given time.
+
+        Args:
+            label: Display label for the marker.
+            time_seconds: Position in seconds.
+
+        Returns:
+            The newly created Marker.
+        """
+        from camtasia.timing import seconds_to_ticks
+        return self.markers.add(label, seconds_to_ticks(time_seconds))
 
     # ------------------------------------------------------------------
     # Internals
