@@ -234,7 +234,7 @@ class TestStitchedMediaSourceEffect:
 
 
 @pytest.fixture
-def project_c_data():
+def test_project_c_data():
     with open(FIXTURES / "test_project_c.tscproj") as f:
         return json.load(f)
 
@@ -261,10 +261,10 @@ def _walk_medias(medias: list[dict]):
             yield from _walk_medias(media.get("medias", []))
 
 
-class TestIntegrationProjectC:
-    def test_find_glow_effects(self, project_c_data):
+class TestProjectCIntegration:
+    def test_find_glow_effects(self, test_project_c_data):
         actual_glow_effects = []
-        for clip_data in _all_clips(project_c_data):
+        for clip_data in _all_clips(test_project_c_data):
             for eff_data in clip_data.get("effects", []):
                 if eff_data.get("effectName") == "Glow":
                     actual_glow_effects.append(effect_from_dict(eff_data))
@@ -277,10 +277,10 @@ class TestIntegrationProjectC:
         expected_intensities = {0.3545, 0.6, 0.4352}
         assert actual_intensities == expected_intensities
 
-    def test_find_time_bounded_effects_with_edge_mods(self, project_c_data):
+    def test_find_time_bounded_effects_with_edge_mods(self, test_project_c_data):
         actual_effects_with_left = []
         actual_effects_with_right = []
-        for clip_data in _all_clips(project_c_data):
+        for clip_data in _all_clips(test_project_c_data):
             for eff_data in clip_data.get("effects", []):
                 eff = effect_from_dict(eff_data)
                 if eff.is_time_bounded:
@@ -306,9 +306,9 @@ class TestIntegrationProjectC:
         assert actual_effects_with_left != []
         assert actual_effects_with_right != []
 
-    def test_find_stitched_media_with_source_effect(self, project_c_data):
+    def test_find_stitched_media_with_source_effect(self, test_project_c_data):
         actual_clips_with_source_effect = []
-        for clip_data in _all_clips(project_c_data):
+        for clip_data in _all_clips(test_project_c_data):
             if clip_data.get("_type") == "StitchedMedia" and "sourceEffect" in clip_data:
                 actual_clip = StitchedMedia(clip_data)
                 actual_clips_with_source_effect.append(actual_clip)
@@ -320,10 +320,10 @@ class TestIntegrationProjectC:
             assert "effectName" in actual_se
             assert "parameters" in actual_se
 
-    def test_nested_groups(self, project_c_data):
+    def test_nested_groups(self, test_project_c_data):
         """Verify Group containing Group works correctly."""
         actual_nested_groups = []
-        for clip_data in _all_clips(project_c_data):
+        for clip_data in _all_clips(test_project_c_data):
             if clip_data.get("_type") == "Group":
                 group = Group(clip_data)
                 for track in group.tracks:
