@@ -17,13 +17,13 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 ## Timeline
 
 - [x] **Seconds-based setters for clip position** — `clip.start_seconds` and `clip.duration_seconds` are read-only. Users have to call `clip.start = seconds_to_ticks(x)` which leaks the tick abstraction. Add writable `start_seconds` and `duration_seconds` properties.
-- [ ] **Group clip creation API** — Provide an L2 method to create Group clips (used by Camtasia Rev recordings) with proper UnifiedMedia children, rather than requiring manual `_data` manipulation.
+- [x] **Group clip creation API** — Provide an L2 method to create Group clips (used by Camtasia Rev recordings) with proper UnifiedMedia children, rather than requiring manual `_data` manipulation.
 - [ ] **Speed change API for screen recordings** — Apply speed scalars to `.trec`-backed clips, handling the Group/UnifiedMedia structure correctly.
 - [x] **Gain/mute API** — ~~No way to mute clip audio.~~ Fixed: `BaseClip.gain` property and `mute()` method.
 
 ## Export
 
-- [ ] **Exported frame (freeze frame) API** — Extract a frame from a video clip at a given timestamp and insert it as a still image on the timeline.
+- [x] **Exported frame (freeze frame) API** — Extract a frame from a video clip at a given timestamp and insert it as a still image on the timeline.
 
 ## Quality of Life
 
@@ -39,5 +39,5 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 
 ## Testing
 
-- [ ] **Camtasia open-in-app integration test** — Automate launching Camtasia via CLI and checking stderr for exceptions as a CI validation step.
+- [x] **Camtasia open-in-app integration test** — Automate launching Camtasia via CLI and checking stderr for exceptions as a CI validation step.
 - [ ] **Round-trip test for .trec projects** — Load a .trec-containing project, save, and verify Camtasia opens without crashes.
