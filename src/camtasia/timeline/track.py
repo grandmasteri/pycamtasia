@@ -1,6 +1,8 @@
 """Track on the timeline — wraps a single track dict and its attributes."""
 from __future__ import annotations
 
+import copy
+import json
 from typing import Any, Iterator
 
 from camtasia.annotations import callouts
@@ -339,6 +341,106 @@ class Track:
         clip.set_size(934.5, 253.9)
         clip.position(-416.6, -274.8)
         return clip
+
+    def add_lower_third(
+        self,
+        title: str,
+        subtitle: str,
+        start_seconds: float,
+        duration_seconds: float,
+        title_color: tuple[int, int, int, int] | None = None,
+        accent_color: tuple[float, float, float] | None = None,
+    ) -> Group:
+        """Add a Right Angle Lower Third title template to the track.
+
+        Args:
+            title: Main heading text (replaces 'Your Name Here').
+            subtitle: Body text (replaces 'Lorem ipsum...').
+            start_seconds: Timeline position in seconds.
+            duration_seconds: Playback duration in seconds.
+            title_color: Optional RGBA tuple ``(r, g, b, a)`` 0-255 for the
+                title text ``fgColor``.
+            accent_color: Optional ``(r, g, b)`` floats 0.0-1.0 for the
+                accent line fill color.
+
+        Returns:
+            The newly created Group clip.
+        """
+        from camtasia.templates.lower_third import LOWER_THIRD_TEMPLATE
+
+        tpl = copy.deepcopy(LOWER_THIRD_TEMPLATE)
+
+        # --- Assign fresh sequential IDs ---
+        base_id = self._next_clip_id()
+        # Map old IDs to new ones: outer=83, text_group=84, subtitle=85,
+        # title=86, shape=87, line=88
+        old_ids = [83, 84, 85, 86, 87, 88]
+        id_map = {old: base_id + i for i, old in enumerate(old_ids)}
+
+        tpl['id'] = id_map[83]
+
+        # Walk inner tracks and reassign IDs
+        for track in tpl['tracks']:
+            for media in track.get('medias', []):
+                media['id'] = id_map[media['id']]
+                # Recurse into nested group tracks (text group)
+                for inner_track in media.get('tracks', []):
+                    for inner_media in inner_track.get('medias', []):
+                        inner_media['id'] = id_map[inner_media['id']]
+
+        # Update assetProperties object references
+        for ap in tpl.get('attributes', {}).get('assetProperties', []):
+            ap['objects'] = [id_map[o] for o in ap['objects']]
+        # Inner text group assetProperties
+        text_group = tpl['tracks'][0]['medias'][0]
+        for ap in text_group.get('attributes', {}).get('assetProperties', []):
+            ap['objects'] = [id_map[o] for o in ap['objects']]
+
+        # --- Set timing ---
+        start_ticks = seconds_to_ticks(start_seconds)
+        dur_ticks = seconds_to_ticks(duration_seconds)
+        tpl['start'] = start_ticks
+        tpl['duration'] = dur_ticks
+        tpl['mediaDuration'] = float(dur_ticks)
+
+        # --- Replace text ---
+        # Title is clip id_map[86] on tracks[0].medias[0].tracks[1].medias[0]
+        title_clip = text_group['tracks'][1]['medias'][0]
+        title_clip['def']['text'] = title
+        # Update textAttributes rangeEnd to match new text length
+        for kf in title_clip['def'].get('textAttributes', {}).get('keyframes', []):
+            for attr in kf.get('value', []):
+                attr['rangeEnd'] = len(title)
+
+        # Subtitle is clip id_map[85] on tracks[0].medias[0].tracks[0].medias[0]
+        subtitle_clip = text_group['tracks'][0]['medias'][0]
+        subtitle_clip['def']['text'] = subtitle
+        for kf in subtitle_clip['def'].get('textAttributes', {}).get('keyframes', []):
+            for attr in kf.get('value', []):
+                attr['rangeEnd'] = len(subtitle)
+
+        # --- Optional color overrides ---
+        if title_color is not None:
+            r, g, b, a = title_color
+            color_str = f'({r},{g},{b},{a})'
+            for kf in title_clip['def']['textAttributes']['keyframes']:
+                for attr in kf['value']:
+                    if attr['name'] == 'fgColor':
+                        attr['value'] = color_str
+
+        if accent_color is not None:
+            line_clip = tpl['tracks'][2]['medias'][0]
+            for channel, val in zip(
+                ('fill-color-red', 'fill-color-green', 'fill-color-blue'),
+                accent_color,
+            ):
+                line_clip['def'][channel]['defaultValue'] = val
+                for kf in line_clip['def'][channel].get('keyframes', []):
+                    kf['value'] = val
+
+        # --- Insert into track ---
+        self._data.setdefault('medias', []).append(tpl)
+        return clip_from_dict(tpl)  # type: ignore[return-value]
 
     def add_group(
         self,
