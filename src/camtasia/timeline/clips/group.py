@@ -106,7 +106,7 @@ class Group(BaseClip):
         template_media = None
         for track in self._data.get('tracks', []):
             for m in track.get('medias', []):
-                if m['_type'] in ('UnifiedMedia', 'StitchedMedia'):
+                if m['_type'] in ('UnifiedMedia', 'StitchedMedia', 'ScreenVMFile'):
                     media_track = track
                     template_media = m
                     break
