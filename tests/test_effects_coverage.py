@@ -20,10 +20,10 @@ def _param(value, type_="double", interp="linr"):
 # effects/__init__.py — line 37: EffectSchema stub raises ImportError
 # ------------------------------------------------------------------
 
-def test_effect_schema_stub_raises_import_error():
+def test_effect_schema_is_real_when_marshmallow_installed():
     from camtasia.effects import EffectSchema
-    with pytest.raises(ImportError, match="marshmallow"):
-        EffectSchema()
+    schema = EffectSchema()
+    assert hasattr(schema, "type_schemas")
 
 
 # ------------------------------------------------------------------
