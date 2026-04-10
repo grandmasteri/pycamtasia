@@ -1,7 +1,11 @@
 """Group (compound) clip."""
 from __future__ import annotations
 
+import copy
+from fractions import Fraction
 from typing import Any
+
+from camtasia.timing import EDIT_RATE, seconds_to_ticks
 
 from .base import BaseClip
 
@@ -71,3 +75,120 @@ class Group(BaseClip):
     def height(self) -> float:
         """Group height."""
         return self.attributes.get('heightAttr', 0.0)
+
+    # ------------------------------------------------------------------
+    # Per-segment speed via StitchedMedia (v2 reverse-engineered format)
+    # ------------------------------------------------------------------
+
+    def set_internal_segment_speeds(
+        self,
+        segments: list[tuple[float, float, float]],
+        *,
+        next_id: int = 1000,
+    ) -> None:
+        """Replace the internal track's media with per-segment StitchedMedia clips.
+
+        Each segment maps a slice of the source recording to a timeline
+        duration, allowing different playback speeds per segment.
+
+        Uses the Camtasia StitchedMedia format reverse-engineered from
+        v2 projects: each StitchedMedia clip on the Group's internal
+        track has its own ``scalar``, ``mediaStart``, and nested
+        ScreenVMFile + ScreenIMFile children.
+
+        Args:
+            segments: List of ``(source_start_s, source_end_s,
+                timeline_duration_s)`` tuples.
+            next_id: Starting ID for generated clips.
+        """
+        # Find the internal track containing UnifiedMedia or existing media
+        media_track = None
+        template_media = None
+        for track in self._data.get('tracks', []):
+            for m in track.get('medias', []):
+                if m['_type'] in ('UnifiedMedia', 'StitchedMedia'):
+                    media_track = track
+                    template_media = m
+                    break
+            if media_track is not None:
+                break
+        if media_track is None:
+            raise ValueError('No internal track with UnifiedMedia found')
+
+        # Extract template info from UnifiedMedia or first StitchedMedia
+        if template_media['_type'] == 'UnifiedMedia':
+            video = template_media['video']
+            src = video['src']
+            ident = video['attributes'].get('ident', '')
+            video_params = copy.deepcopy(video.get('parameters', {}))
+            video_effects = copy.deepcopy(video.get('effects', []))
+        else:
+            src = template_media.get('src', 0)
+            ident = template_media.get('attributes', {}).get('ident', '')
+            video_params = {}
+            video_effects = []
+
+        # Build clips for each segment.
+        # Following v2 Track 1 pattern: use bare ScreenVMFile clips with
+        # scalar and clipSpeedAttribute for speed-changed segments.
+        new_medias = []
+        timeline_cursor = 0
+        cid = next_id
+
+        for src_start, src_end, tl_dur in segments:
+            src_dur = src_end - src_start
+            scalar = Fraction(src_dur / tl_dur).limit_denominator(100000)
+
+            start_ticks = seconds_to_ticks(timeline_cursor)
+            dur_ticks = seconds_to_ticks(tl_dur)
+            ms_ticks = seconds_to_ticks(src_start)
+            media_dur_ticks = seconds_to_ticks(src_dur)
+
+            clip = {
+                'id': cid,
+                '_type': 'ScreenVMFile',
+                'src': src,
+                'trackNumber': 0,
+                'attributes': {'ident': ident},
+                'parameters': copy.deepcopy(video_params),
+                'effects': copy.deepcopy(video_effects),
+                'start': start_ticks,
+                'duration': dur_ticks,
+                'mediaStart': ms_ticks,
+                'mediaDuration': media_dur_ticks,
+                'scalar': str(scalar) if scalar != 1 else 1,
+                'metadata': {
+                    'audiateLinkedSession': '',
+                    'clipSpeedAttribute': {
+                        'type': 'bool',
+                        'value': True,
+                    },
+                    'colorAttribute': {
+                        'type': 'color',
+                        'value': [0, 0, 0, 0],
+                    },
+                    'effectApplied': 'none',
+                },
+                'animationTracks': {},
+            }
+            new_medias.append(clip)
+            timeline_cursor += tl_dur
+            cid += 1
+
+        # Replace the internal track's medias
+        media_track['medias'] = new_medias
+
+        # Update Group duration and mediaDuration to match total timeline
+        total_tl = seconds_to_ticks(timeline_cursor)
+        self._data['duration'] = total_tl
+        self._data['mediaDuration'] = float(total_tl)
+        self._data['scalar'] = 1
+
+        # Keep VMFile on other tracks but extend to cover full source
+        for track in self._data.get('tracks', []):
+            if track is media_track:
+                continue
+            for m in track.get('medias', []):
+                if m.get('_type') in ('VMFile', 'ScreenVMFile'):
+                    m['duration'] = total_tl
+                    m['mediaDuration'] = total_tl
