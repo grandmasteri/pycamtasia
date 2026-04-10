@@ -5,6 +5,8 @@ import pathlib
 
 import pytest
 
+pytest.importorskip("marshmallow")
+
 # Load the legacy effects.py directly (same approach as effects/__init__.py)
 _legacy_path = pathlib.Path(__file__).parent.parent / "src" / "camtasia" / "effects.py"
 _spec = importlib.util.spec_from_file_location("camtasia._effects_legacy", str(_legacy_path))
