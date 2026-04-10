@@ -223,6 +223,58 @@ def test_baseclip_duration_seconds() -> None:
     assert clip.duration_seconds == 10.0
 
 
+@pytest.mark.parametrize(
+    "input_seconds, expected_ticks",
+    [
+        (0.0, 0),
+        (1.0, EDIT_RATE),
+        (5.5, round(5.5 * EDIT_RATE)),
+    ],
+    ids=["zero", "one-second", "fractional"],
+)
+def test_set_start_seconds(input_seconds: float, expected_ticks: int) -> None:
+    data = _base_clip_dict()
+    clip = BaseClip(data)
+    clip.start_seconds = input_seconds
+    actual_start = clip.start
+    assert actual_start == expected_ticks
+
+
+@pytest.mark.parametrize(
+    "input_seconds, expected_ticks",
+    [
+        (0.0, 0),
+        (1.0, EDIT_RATE),
+        (3.25, round(3.25 * EDIT_RATE)),
+    ],
+    ids=["zero", "one-second", "fractional"],
+)
+def test_set_duration_seconds(input_seconds: float, expected_ticks: int) -> None:
+    data = _base_clip_dict()
+    clip = BaseClip(data)
+    clip.duration_seconds = input_seconds
+    actual_duration = clip.duration
+    assert actual_duration == expected_ticks
+
+
+@pytest.mark.parametrize("input_seconds", [0.0, 1.0, 7.33], ids=["zero", "one", "fractional"])
+def test_start_seconds_roundtrip(input_seconds: float) -> None:
+    data = _base_clip_dict()
+    clip = BaseClip(data)
+    clip.start_seconds = input_seconds
+    actual_seconds = clip.start_seconds
+    assert actual_seconds == pytest.approx(input_seconds)
+
+
+@pytest.mark.parametrize("input_seconds", [0.0, 1.0, 4.87], ids=["zero", "one", "fractional"])
+def test_duration_seconds_roundtrip(input_seconds: float) -> None:
+    data = _base_clip_dict()
+    clip = BaseClip(data)
+    clip.duration_seconds = input_seconds
+    actual_seconds = clip.duration_seconds
+    assert actual_seconds == pytest.approx(input_seconds)
+
+
 def test_baseclip_media_start_parses_string_fraction() -> None:
     data = _base_clip_dict(mediaStart="100/3")
     clip = BaseClip(data)
