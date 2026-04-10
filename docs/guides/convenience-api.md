@@ -21,6 +21,24 @@ clip.clear_animations()     # remove all visual animations
 
 All time parameters are in seconds. The methods convert to ticks internally and build the correct `animationTracks.visual` keyframe entries.
 
+## Audio control
+
+Control clip audio gain. Works on any clip type including Group clips (screen recordings).
+
+```python
+clip.mute()              # set gain to 0 (silence)
+clip.gain = 0.5          # 50% volume
+print(clip.gain)         # read current gain
+```
+
+Common use case: muting the mic audio from a Camtasia Rev screen recording
+so the AI voiceover replaces it:
+
+```python
+group = list(list(proj.timeline.tracks)[0].clips)[0]
+group.mute()  # silence the cue words
+```
+
 ## Adding effects
 
 Effect methods construct the full JSON effect dict and append it to the clip's `effects` array.
@@ -92,6 +110,25 @@ print(f'Duration: {project.total_duration_seconds():.1f}s')
 narration = project.find_media_by_name('narration')
 pngs = project.find_media_by_suffix('.png')
 ```
+
+## Importing media
+
+```python
+slide = proj.import_media(Path('slide.png'))    # dimensions auto-detected via ffprobe
+audio = proj.import_media(Path('voiceover.mp3'))  # duration auto-detected
+```
+
+Image dimensions and audio duration are probed automatically using ffprobe.
+Install pymediainfo (`brew install mediainfo && pip install pymediainfo`) for
+more accurate metadata.
+
+## Transitions
+
+```python
+track.add_fade_through_black(clip1, clip2, duration_seconds=0.5)
+```
+
+Adds a fade-through-black transition between two adjacent clips on the same track.
 
 ## Method chaining
 
