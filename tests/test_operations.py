@@ -6,6 +6,7 @@ from fractions import Fraction
 import pytest
 
 from camtasia.operations.speed import rescale_project, set_audio_speed
+from camtasia.audiate.transcript import Word
 from camtasia.operations.sync import SyncSegment, match_marker_to_transcript, plan_sync
 from camtasia.operations.template import clone_project_structure, replace_media_source
 from camtasia.timing import EDIT_RATE, parse_scalar
@@ -215,11 +216,11 @@ class TestSetAudioSpeed:
 
 class TestMatchMarkerToTranscript:
     WORDS = [
-        {"word": "selecting", "start": 0.75, "end": 1.0},
-        {"word": "a", "start": 1.0, "end": 1.1},
-        {"word": "recent", "start": 1.25, "end": 1.5},
-        {"word": "batch", "start": 1.5, "end": 1.75},
-        {"word": "run", "start": 1.75, "end": 2.0},
+        Word(word_id='', text="selecting", start=0.75, end=1.0),
+        Word(word_id='', text="a", start=1.0, end=1.1),
+        Word(word_id='', text="recent", start=1.25, end=1.5),
+        Word(word_id='', text="batch", start=1.5, end=1.75),
+        Word(word_id='', text="run", start=1.75, end=2.0),
     ]
 
     def test_finds_matching_phrase(self):
@@ -248,15 +249,15 @@ class TestPlanSync:
             ("navigating to the dashboard", 705_600_000),
         ]
         words = [
-            {"word": "selecting", "start": 0.0, "end": 0.25},
-            {"word": "a", "start": 0.25, "end": 0.3},
-            {"word": "recent", "start": 0.3, "end": 0.5},
-            {"word": "batch", "start": 0.5, "end": 0.75},
-            {"word": "run", "start": 0.75, "end": 1.0},
-            {"word": "navigating", "start": 1.0, "end": 1.25},
-            {"word": "to", "start": 1.25, "end": 1.3},
-            {"word": "the", "start": 1.3, "end": 1.4},
-            {"word": "dashboard", "start": 1.4, "end": 1.75},
+            Word(word_id='', text="selecting", start=0.0, end=0.25),
+            Word(word_id='', text="a", start=0.25, end=0.3),
+            Word(word_id='', text="recent", start=0.3, end=0.5),
+            Word(word_id='', text="batch", start=0.5, end=0.75),
+            Word(word_id='', text="run", start=0.75, end=1.0),
+            Word(word_id='', text="navigating", start=1.0, end=1.25),
+            Word(word_id='', text="to", start=1.25, end=1.3),
+            Word(word_id='', text="the", start=1.3, end=1.4),
+            Word(word_id='', text="dashboard", start=1.4, end=1.75),
         ]
 
         actual_result = plan_sync(markers, words)
@@ -267,11 +268,11 @@ class TestPlanSync:
         assert actual_result[0].audio_end_seconds == 1.0
 
     def test_fewer_than_two_markers_returns_empty(self):
-        assert plan_sync([("only one", 0)], [{"word": "only", "start": 0.0, "end": 0.5}]) == []
+        assert plan_sync([("only one", 0)], [Word(word_id='', text="only", start=0.0, end=0.5)]) == []
 
     def test_no_transcript_match_returns_empty(self):
         markers = [("aaa", 0), ("bbb", 705_600_000)]
-        words = [{"word": "zzz", "start": 0.0, "end": 1.0}]
+        words = [Word(word_id='', text="zzz", start=0.0, end=1.0)]
         # "aaa" won't match "zzz" via substring either, so both fail
         # Actually "aaa" fallback checks first word "aaa" in "zzz" — no match
         actual_result = plan_sync(markers, words)

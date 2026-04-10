@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 
 from camtasia.timing import EDIT_RATE
+from camtasia.audiate.transcript import Word
 
 
 @dataclass
@@ -34,7 +35,7 @@ class SyncSegment:
 
 def match_marker_to_transcript(
     label: str,
-    words: list[dict],
+    words: list[Word],
 ) -> float | None:
     """Fuzzy-match a marker label to words in a transcript.
 
@@ -53,7 +54,7 @@ def match_marker_to_transcript(
         return None
 
     # Build running text for substring search
-    texts = [w["word"].lower() for w in words]
+    texts = [w.text.lower() for w in words]
     full = " ".join(texts)
     target = " ".join(label_lower)
 
@@ -61,20 +62,20 @@ def match_marker_to_transcript(
     if idx != -1:
         # Count words before the match to find the word index
         word_idx = full[:idx].count(" ")
-        return words[min(word_idx, len(words) - 1)]["start"]
+        return words[min(word_idx, len(words) - 1)].start
 
     # Fallback: match first word of label
     first = label_lower[0]
     for w in words:
-        if first in w["word"].lower():
-            return w["start"]
+        if first in w.text.lower():
+            return w.start
 
     return None
 
 
 def plan_sync(
     markers: list[tuple[str, int]],
-    transcript_words: list[dict],
+    transcript_words: list[Word],
     edit_rate: int = EDIT_RATE,
 ) -> list[SyncSegment]:
     """Calculate per-segment speed adjustments to sync video with audio.
