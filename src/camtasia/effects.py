@@ -3,7 +3,7 @@ from numbers import Real
 from marshmallow import Schema, fields, post_load
 from marshmallow_oneofschema import OneOfSchema
 
-from camtasia.color import RGBA
+from camtasia.color import RGBA, hex_rgb
 
 COLOR_KEY = "color"
 
@@ -262,7 +262,7 @@ class ChromaKeyEffectParametersSchema(Schema):
         deserialize=lambda b: bool(b)
     )
     softness = fields.Float(data_key=SOFTNESS_KEY)
-    tolerance = fields.Float(tolerance=TOLERANCE_KEY)
+    tolerance = fields.Float(data_key=TOLERANCE_KEY)
 
 
 class ChromaKeyEffectSchema(Schema):
