@@ -11,9 +11,8 @@ import pytest
 
 from camtasia.project import (
     Project,
-    _probe_image_dimensions,
-    _probe_audio_duration,
-    _probe_video_duration,
+    _probe_media,
+    _probe_media_ffprobe,
 )
 from camtasia.media_bin import MediaType
 
@@ -46,46 +45,50 @@ def _create_project(tmp_path: Path, data: dict | None = None) -> Project:
 class TestProbeImageDimensions:
     def test_success(self):
         mock_result = MagicMock(stdout="1280,720\n")
-        with patch("camtasia.project._sp.run", return_value=mock_result):
-            actual_w, actual_h = _probe_image_dimensions(Path("img.png"))
-        assert (actual_w, actual_h) == (1280, 720)
+        dur_result = MagicMock(stdout="")
+        with patch("camtasia.project._sp.run", side_effect=[mock_result, dur_result]):
+            actual = _probe_media_ffprobe(Path("img.png"))
+        assert (actual['width'], actual['height']) == (1280, 720)
 
     def test_fallback_on_exception(self):
         with patch("camtasia.project._sp.run", side_effect=FileNotFoundError):
-            actual_w, actual_h = _probe_image_dimensions(Path("img.png"))
-        assert (actual_w, actual_h) == (1920, 1080)
+            actual = _probe_media_ffprobe(Path("img.png"))
+        assert 'width' not in actual
 
     def test_fallback_on_bad_output(self):
         mock_result = MagicMock(stdout="garbage")
-        with patch("camtasia.project._sp.run", return_value=mock_result):
-            actual_w, actual_h = _probe_image_dimensions(Path("img.png"))
-        assert (actual_w, actual_h) == (1920, 1080)
+        dur_result = MagicMock(stdout="")
+        with patch("camtasia.project._sp.run", side_effect=[mock_result, dur_result]):
+            actual = _probe_media_ffprobe(Path("img.png"))
+        assert 'width' not in actual
 
 
 class TestProbeAudioDuration:
     def test_success(self):
-        mock_result = MagicMock(stdout="120.5\n")
-        with patch("camtasia.project._sp.run", return_value=mock_result):
-            actual_samples = _probe_audio_duration(Path("audio.wav"), sample_rate=44100)
-        assert actual_samples == int(120.5 * 44100)
+        stream_result = MagicMock(stdout="")
+        dur_result = MagicMock(stdout="120.5\n")
+        with patch("camtasia.project._sp.run", side_effect=[stream_result, dur_result]):
+            actual = _probe_media_ffprobe(Path("audio.wav"))
+        assert actual['duration_seconds'] == 120.5
 
     def test_fallback_on_exception(self):
         with patch("camtasia.project._sp.run", side_effect=OSError):
-            actual_samples = _probe_audio_duration(Path("audio.wav"))
-        assert actual_samples == 44100 * 60
+            actual = _probe_media_ffprobe(Path("audio.wav"))
+        assert 'duration_seconds' not in actual
 
 
 class TestProbeVideoDuration:
     def test_success(self):
-        mock_result = MagicMock(stdout="30.0\n")
-        with patch("camtasia.project._sp.run", return_value=mock_result):
-            actual_ticks = _probe_video_duration(Path("video.mp4"))
-        assert actual_ticks == int(30.0 * 30)
+        stream_result = MagicMock(stdout="")
+        dur_result = MagicMock(stdout="30.0\n")
+        with patch("camtasia.project._sp.run", side_effect=[stream_result, dur_result]):
+            actual = _probe_media_ffprobe(Path("video.mp4"))
+        assert actual['duration_seconds'] == 30.0
 
     def test_fallback_on_exception(self):
         with patch("camtasia.project._sp.run", side_effect=TimeoutError):
-            actual_ticks = _probe_video_duration(Path("video.mp4"))
-        assert actual_ticks == 30 * 60
+            actual = _probe_media_ffprobe(Path("video.mp4"))
+        assert 'duration_seconds' not in actual
 
 
 # ===================================================================
@@ -98,7 +101,7 @@ class TestImportMedia:
         project = _create_project(tmp_path)
         media_file = tmp_path / "photo.png"
         media_file.write_bytes(b"\x89PNG")
-        with patch("camtasia.project._probe_image_dimensions", return_value=(800, 600)):
+        with patch("camtasia.project._probe_media", return_value={'width': 800, 'height': 600, '_backend': 'ffprobe'}):
             actual_media = project.import_media(media_file)
         assert actual_media.type == MediaType.Image
         assert actual_media.dimensions == (800, 600)
@@ -114,7 +117,7 @@ class TestImportMedia:
         project = _create_project(tmp_path)
         media_file = tmp_path / "sound.wav"
         media_file.write_bytes(b"RIFF")
-        with patch("camtasia.project._probe_audio_duration", return_value=88200):
+        with patch("camtasia.project._probe_media", return_value={'duration_seconds': 2.0, '_backend': 'ffprobe'}):
             actual_media = project.import_media(media_file)
         assert actual_media.type == MediaType.Audio
 
@@ -122,7 +125,7 @@ class TestImportMedia:
         project = _create_project(tmp_path)
         media_file = tmp_path / "clip.mp4"
         media_file.write_bytes(b"\x00\x00")
-        with patch("camtasia.project._probe_video_duration", return_value=900):
+        with patch("camtasia.project._probe_media", return_value={'duration_seconds': 30.0, '_backend': 'ffprobe'}):
             actual_media = project.import_media(media_file)
         assert actual_media.type == MediaType.Video
 
