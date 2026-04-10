@@ -166,10 +166,18 @@ class BaseClip:
         """Timeline position in seconds."""
         return self.start / EDIT_RATE
 
+    @start_seconds.setter
+    def start_seconds(self, value: float) -> None:
+        self.start = seconds_to_ticks(value)
+
     @property
     def duration_seconds(self) -> float:
         """Playback duration in seconds."""
         return self.duration / EDIT_RATE
+
+    @duration_seconds.setter
+    def duration_seconds(self, value: float) -> None:
+        self.duration = seconds_to_ticks(value)
 
     def __repr__(self) -> str:
         return (
@@ -285,8 +293,28 @@ class BaseClip:
             for start, end in transitions:
                 visual.append({'endTime': end, 'duration': end - start})
 
+    def _get_existing_opacity_keyframes(self) -> list[dict[str, Any]] | None:
+        """Return raw opacity keyframes if an opacity track already exists."""
+        opacity = self._data.get('parameters', {}).get('opacity')
+        if opacity is None:
+            return None
+        kfs = opacity.get('keyframes')
+        if not kfs:
+            return None
+        return [{'time': kf['time'], 'value': kf['value'], 'interp': 'linr'} for kf in kfs]
+
+    def _clear_opacity(self) -> None:
+        """Remove all opacity state: visual segments and parameters.opacity."""
+        tracks = self._data.get('animationTracks', {})
+        if 'visual' in tracks:
+            tracks['visual'] = []
+        params = self._data.get('parameters', {})
+        params.pop('opacity', None)
+
     def fade_in(self, duration_seconds: float) -> Self:
         """Add an opacity fade-in (0 → 1) over *duration_seconds*.
+
+        If a fade-out already exists, merges into a single unified animation.
 
         Args:
             duration_seconds: Fade duration in seconds.
@@ -295,14 +323,30 @@ class BaseClip:
             ``self`` for chaining.
         """
         ticks = seconds_to_ticks(duration_seconds)
-        self._add_opacity_track([
-            {'time': 0, 'value': 0.0, 'interp': 'linr'},
-            {'time': ticks, 'value': 1.0, 'interp': 'linr'},
-        ])
+        existing = self._get_existing_opacity_keyframes()
+        if existing and existing[-1]['value'] == 0.0:
+            fade_out_start = existing[-2]['time']
+            fade_out_end = existing[-1]['time']
+            self._clear_opacity()
+            kf: list[dict[str, Any]] = [
+                {'time': 0, 'value': 0.0, 'interp': 'linr'},
+                {'time': ticks, 'value': 1.0, 'interp': 'linr'},
+            ]
+            if ticks < fade_out_start:
+                kf.append({'time': fade_out_start, 'value': 1.0, 'interp': 'linr'})
+            kf.append({'time': fade_out_end, 'value': 0.0, 'interp': 'linr'})
+            self._add_opacity_track(kf)
+        else:
+            self._add_opacity_track([
+                {'time': 0, 'value': 0.0, 'interp': 'linr'},
+                {'time': ticks, 'value': 1.0, 'interp': 'linr'},
+            ])
         return self
 
     def fade_out(self, duration_seconds: float) -> Self:
         """Add an opacity fade-out (1 → 0) ending at the clip's media end.
+
+        If a fade-in already exists, merges into a single unified animation.
 
         Args:
             duration_seconds: Fade duration in seconds.
@@ -312,10 +356,23 @@ class BaseClip:
         """
         ticks = seconds_to_ticks(duration_seconds)
         end = int(self.media_duration)
-        self._add_opacity_track([
-            {'time': end - ticks, 'value': 1.0, 'interp': 'linr'},
-            {'time': end, 'value': 0.0, 'interp': 'linr'},
-        ])
+        existing = self._get_existing_opacity_keyframes()
+        if existing and existing[0]['value'] == 0.0:
+            fade_in_end = existing[1]['time']
+            self._clear_opacity()
+            kf: list[dict[str, Any]] = [
+                {'time': 0, 'value': 0.0, 'interp': 'linr'},
+                {'time': fade_in_end, 'value': 1.0, 'interp': 'linr'},
+            ]
+            if fade_in_end < end - ticks:
+                kf.append({'time': end - ticks, 'value': 1.0, 'interp': 'linr'})
+            kf.append({'time': end, 'value': 0.0, 'interp': 'linr'})
+            self._add_opacity_track(kf)
+        else:
+            self._add_opacity_track([
+                {'time': end - ticks, 'value': 1.0, 'interp': 'linr'},
+                {'time': end, 'value': 0.0, 'interp': 'linr'},
+            ])
         return self
 
     def fade(
@@ -332,7 +389,7 @@ class BaseClip:
         Returns:
             ``self`` for chaining.
         """
-        self._remove_opacity_tracks()
+        self._clear_opacity()
         end = int(self._data.get('duration', self.media_duration))
         kf: list[dict[str, Any]] = []
         if fade_in_seconds > 0:
