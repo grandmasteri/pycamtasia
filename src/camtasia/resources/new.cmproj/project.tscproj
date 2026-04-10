@@ -1,84 +1,101 @@
 {
-  "title" : "",
-  "description" : "",
-  "author" : "",
-  "targetLoudness" : -18.0,
-  "shouldApplyLoudnessNormalization" : true,
-  "videoFormatFrameRate" : 30,
-  "audioFormatSampleRate" : 44100,
-  "width" : 1920.0,
-  "height" : 1080.0,
-  "version" : "4.0",
-  "editRate" : 30,
-  "authoringClientName" :  {
-    "name" : "Camtasia",
-    "platform" : "Mac",
-    "version" : "2020.0.8"
+  "title": "",
+  "description": "",
+  "author": "",
+  "targetLoudness": -18.0,
+  "shouldApplyLoudnessNormalization": true,
+  "videoFormatFrameRate": 30,
+  "audioFormatSampleRate": 44100,
+  "width": 1920.0,
+  "height": 1080.0,
+  "version": "10.0",
+  "editRate": 30,
+  "authoringClientName": {
+    "name": "Camtasia",
+    "platform": "Mac",
+    "version": "2026.0.7"
   },
-  "timeline" : {
-    "id" : 1,
-    "sceneTrack" : {
-      "scenes" : [
+  "timeline": {
+    "id": 1,
+    "sceneTrack": {
+      "scenes": [
         {
-          "csml" : {
-            "tracks" : [
+          "csml": {
+            "tracks": [
               {
-                "trackIndex" : 0,
-                "medias" : [
-                ]
+                "trackIndex": 0,
+                "medias": [],
+                "parameters": {}
               },
               {
-                "trackIndex" : 1,
-                "medias" : [
-                ]
-              }            ]
+                "trackIndex": 1,
+                "medias": [],
+                "parameters": {}
+              }
+            ]
           }
         }
       ]
     },
-    "trackAttributes" : [
+    "trackAttributes": [
       {
-        "ident" : "",
-        "audioMuted" : false,
-        "videoHidden" : false,
-        "magnetic" : false,
-        "matte" : 0,
-        "solo" : false,
-        "metadata" : {
-          "IsLocked" : "False",
-          "trackHeight" : "54"
+        "ident": "",
+        "audioMuted": false,
+        "videoHidden": false,
+        "magnetic": false,
+        "matte": 0,
+        "solo": false,
+        "metadata": {
+          "IsLocked": "False",
+          "trackHeight": "54"
         }
       },
       {
-        "ident" : "",
-        "audioMuted" : false,
-        "videoHidden" : false,
-        "magnetic" : false,
-        "matte" : 0,
-        "solo" : false,
-        "metadata" : {
-          "IsLocked" : "False",
-          "trackHeight" : "54"
+        "ident": "",
+        "audioMuted": false,
+        "videoHidden": false,
+        "magnetic": false,
+        "matte": 0,
+        "solo": false,
+        "metadata": {
+          "IsLocked": "False",
+          "trackHeight": "54"
         }
       }
     ],
-    "captionAttributes" : {
-      "enabled" : true,
-      "fontName" : "Arial",
-      "fontSize" : 32,
-      "backgroundColor" : [ 0, 0, 0, 204],
-      "foregroundColor" : [ 255, 255, 255, 255],
-      "lang" : "en",
-      "alignment" : 0,
-      "defaultFontSize" : true,
-      "opacity" : 0.5,
-      "backgroundEnabled" : true,
-      "backgroundOnlyAroundText" : true
+    "captionAttributes": {
+      "enabled": true,
+      "fontName": "Arial",
+      "fontSize": 32,
+      "backgroundColor": [
+        0,
+        0,
+        0,
+        204
+      ],
+      "foregroundColor": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "lang": "en",
+      "alignment": 0,
+      "defaultFontSize": true,
+      "opacity": 0.5,
+      "backgroundEnabled": true,
+      "backgroundOnlyAroundText": true
     },
-    "backgroundColor" : [ 0, 0, 0, 255]
+    "backgroundColor": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "parameters": {}
   },
-  "metadata" : {
-    "activeThemeId" : "e59eeb42-ccf0-4a36-bdf9-e630fdab686d",
-    "hasNotifiedAboutHFRMedia" : false
+  "metadata": {
+    "activeThemeId": "e59eeb42-ccf0-4a36-bdf9-e630fdab686d",
+    "hasNotifiedAboutHFRMedia": false
   }
 }
