@@ -18,6 +18,20 @@ from camtasia.timing import EDIT_RATE, seconds_to_ticks
 import subprocess as _sp
 
 
+def _probe_image_dimensions(path: Path) -> tuple[int, int]:
+    """Return (width, height) via ffprobe, or (1920, 1080) as fallback."""
+    try:
+        out = _sp.run(
+            ['ffprobe', '-v', 'quiet', '-show_entries', 'stream=width,height',
+             '-of', 'csv=p=0', str(path)],
+            capture_output=True, text=True, timeout=10,
+        )
+        w, h = out.stdout.strip().split(',')
+        return int(w), int(h)
+    except Exception:
+        return 1920, 1080
+
+
 def _probe_audio_duration(path: Path, sample_rate: int = 44100) -> int:
     """Return total sample count via ffprobe, or a safe default."""
     try:
@@ -203,6 +217,10 @@ class Project:
 
         if media_type == MediaType.Image:
             kwargs.setdefault('duration', 1)
+            if 'width' not in kwargs or 'height' not in kwargs:
+                w, h = _probe_image_dimensions(path)
+                kwargs.setdefault('width', w)
+                kwargs.setdefault('height', h)
         elif media_type == MediaType.Audio and 'duration' not in kwargs:
             kwargs['duration'] = _probe_audio_duration(path, kwargs.get('sample_rate', 44100))
         elif media_type == MediaType.Video and 'duration' not in kwargs:

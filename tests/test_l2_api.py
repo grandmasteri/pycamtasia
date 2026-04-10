@@ -194,3 +194,43 @@ class TestClearAnimations:
 
 # ===================================================================
 # Clip-level animation tests
+
+
+# ===================================================================
+# Clip metadata defaults
+# ===================================================================
+
+
+class TestClipMetadataDefaults:
+    """Tests for default metadata fields set by add_clip() and add_image()."""
+
+    @pytest.fixture()
+    def track(self) -> Track:
+        attrs, data = _track_data()
+        return Track(attrs, data)
+
+    def test_add_clip_has_default_metadata_fields(self, track: Track):
+        clip = track.add_clip('IMFile', 1, 0, EDIT_RATE * 5)
+        meta = clip.metadata
+        assert meta['audiateLinkedSession'] == ''
+        assert meta['clipSpeedAttribute'] == {'type': 'bool', 'value': False}
+        assert meta['colorAttribute'] == {'type': 'color', 'value': [0, 0, 0, 0]}
+        assert meta['effectApplied'] == 'none'
+
+    def test_custom_metadata_merges_and_overrides_defaults(self, track: Track):
+        clip = track.add_clip(
+            'IMFile', 1, 0, EDIT_RATE * 5,
+            metadata={'effectApplied': 'blur', 'custom_key': 42},
+        )
+        meta = clip.metadata
+        # overridden
+        assert meta['effectApplied'] == 'blur'
+        # custom addition
+        assert meta['custom_key'] == 42
+        # defaults still present
+        assert meta['audiateLinkedSession'] == ''
+        assert meta['clipSpeedAttribute'] == {'type': 'bool', 'value': False}
+
+    def test_add_image_includes_trimStartSum(self, track: Track):
+        clip = track.add_image(1, 0.0, 5.0)
+        assert clip._data['trimStartSum'] == 1
