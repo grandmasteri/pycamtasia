@@ -61,7 +61,6 @@ class TestFadeInThenFadeOut:
 
         expected_segments = [
             {"endTime": fade_in_ticks, "duration": fade_in_ticks},
-            {"endTime": dur - fade_out_ticks, "duration": dur - fade_out_ticks - fade_in_ticks},
             {"endTime": dur, "duration": fade_out_ticks},
         ]
         assert actual_segments == expected_segments
@@ -73,10 +72,9 @@ class TestFadeInThenFadeOut:
         clip.fade_out(0.5)
 
         actual_keyframes = clip._data["parameters"]["opacity"]["keyframes"]
-        assert actual_keyframes[0]["value"] == 0.0
-        assert actual_keyframes[1]["value"] == 1.0
-        assert actual_keyframes[-2]["value"] == 1.0
-        assert actual_keyframes[-1]["value"] == 0.0
+        assert len(actual_keyframes) == 2
+        assert actual_keyframes[0]["value"] == 1.0
+        assert actual_keyframes[1]["value"] == 0.0
 
 
 class TestFadeOutThenFadeIn:
@@ -105,7 +103,6 @@ class TestFadeOutThenFadeIn:
 
         expected_segments = [
             {"endTime": fade_in_ticks, "duration": fade_in_ticks},
-            {"endTime": dur - fade_out_ticks, "duration": dur - fade_out_ticks - fade_in_ticks},
             {"endTime": dur, "duration": fade_out_ticks},
         ]
         assert actual_segments == expected_segments
@@ -117,10 +114,9 @@ class TestFadeOutThenFadeIn:
         clip.fade_in(0.5)
 
         actual_keyframes = clip._data["parameters"]["opacity"]["keyframes"]
-        assert actual_keyframes[0]["value"] == 0.0
-        assert actual_keyframes[1]["value"] == 1.0
-        assert actual_keyframes[-2]["value"] == 1.0
-        assert actual_keyframes[-1]["value"] == 0.0
+        assert len(actual_keyframes) == 2
+        assert actual_keyframes[0]["value"] == 1.0
+        assert actual_keyframes[1]["value"] == 0.0
 
 
 class TestFadeInOnly:
@@ -141,8 +137,8 @@ class TestFadeInOnly:
         clip.fade_in(0.5)
 
         actual_keyframes = clip._data["parameters"]["opacity"]["keyframes"]
-        assert actual_keyframes[0]["value"] == 0.0
-        assert actual_keyframes[-1]["value"] == 1.0
+        assert len(actual_keyframes) == 1
+        assert actual_keyframes[0]["value"] == 1.0
 
 
 class TestFadeOutOnly:
@@ -165,8 +161,8 @@ class TestFadeOutOnly:
         clip.fade_out(0.5)
 
         actual_keyframes = clip._data["parameters"]["opacity"]["keyframes"]
-        assert actual_keyframes[0]["value"] == 1.0
-        assert actual_keyframes[-1]["value"] == 0.0
+        assert len(actual_keyframes) == 1
+        assert actual_keyframes[0]["value"] == 0.0
 
 
 class TestFadeMethodRegression:
@@ -196,7 +192,6 @@ class TestFadeMethodRegression:
             fade_out_ticks = seconds_to_ticks(fade_out_secs)
             expected_segments = [
                 {"endTime": fade_in_ticks, "duration": fade_in_ticks},
-                {"endTime": dur - fade_out_ticks, "duration": dur - fade_out_ticks - fade_in_ticks},
                 {"endTime": dur, "duration": fade_out_ticks},
             ]
             assert actual_segments == expected_segments
@@ -220,7 +215,6 @@ class TestFadeMethodRegression:
         fade_ticks = seconds_to_ticks(1.0)
         expected_segments = [
             {"endTime": fade_ticks, "duration": fade_ticks},
-            {"endTime": dur - fade_ticks, "duration": dur - fade_ticks - fade_ticks},
             {"endTime": dur, "duration": fade_ticks},
         ]
         assert actual_segments == expected_segments
