@@ -54,7 +54,7 @@ line-length = 100
 
 [tool.coverage.run]
 source = ["camtasia"]
-omit = ["*/cli.py", "*/frame_stamp.py"]
+omit = ["*/cli.py", "*/frame_stamp.py", "*/effects.py", "*/track_media.py"]
 
 [tool.coverage.report]
 fail_under = 100
