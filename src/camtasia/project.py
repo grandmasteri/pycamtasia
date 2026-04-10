@@ -13,51 +13,84 @@ from camtasia.authoring_client import AuthoringClient
 from camtasia.media_bin import Media, MediaBin, MediaType
 from camtasia.timeline import Timeline
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
+from camtasia.validation import ValidationIssue
 
 
 import subprocess as _sp
 
 
-def _probe_image_dimensions(path: Path) -> tuple[int, int]:
-    """Return (width, height) via ffprobe, or (1920, 1080) as fallback."""
+def _probe_media(path: Path) -> dict:
+    """Probe media file for metadata. Uses pymediainfo if available, falls back to ffprobe.
+
+    Returns a dict with available keys:
+    - Images: ``width``, ``height``
+    - Audio: ``duration_seconds``, ``sample_rate``, ``channels``, ``bit_depth``
+    - Video: ``duration_seconds``, ``width``, ``height``, ``frame_rate``
+    """
+    try:
+        from pymediainfo import MediaInfo  # type: ignore[import-untyped]
+        info = MediaInfo.parse(path)
+        result: dict = {}
+        for track in info.tracks:
+            if track.track_type == 'Video':
+                result['width'] = track.width
+                result['height'] = track.height
+                if track.duration:
+                    result['duration_seconds'] = track.duration / 1000.0
+                if track.frame_rate:
+                    result['frame_rate'] = float(track.frame_rate)
+            elif track.track_type == 'Audio':
+                if track.duration:
+                    result['duration_seconds'] = track.duration / 1000.0
+                if track.sampling_rate:
+                    result['sample_rate'] = int(track.sampling_rate)
+                if track.channel_s:
+                    result['channels'] = int(track.channel_s)
+                if track.bit_depth:
+                    result['bit_depth'] = int(track.bit_depth)
+            elif track.track_type == 'Image':
+                result['width'] = track.width
+                result['height'] = track.height
+            elif track.track_type == 'General':
+                if 'duration_seconds' not in result and track.duration:
+                    result['duration_seconds'] = track.duration / 1000.0
+        if result:
+            result['_backend'] = 'pymediainfo'
+            return result
+    except ImportError:
+        pass
+    except Exception:
+        pass
+    return _probe_media_ffprobe(path)
+
+
+def _probe_media_ffprobe(path: Path) -> dict:
+    """Probe media file using ffprobe subprocess."""
+    result: dict = {'_backend': 'ffprobe'}
     try:
         out = _sp.run(
             ['ffprobe', '-v', 'quiet', '-show_entries', 'stream=width,height',
              '-of', 'csv=p=0', str(path)],
             capture_output=True, text=True, timeout=10,
         )
-        w, h = out.stdout.strip().split(',')
-        return int(w), int(h)
+        parts = out.stdout.strip().split(',')
+        if len(parts) >= 2 and parts[0] and parts[1]:
+            result['width'] = int(parts[0])
+            result['height'] = int(parts[1])
     except Exception:
-        return 1920, 1080
-
-
-def _probe_audio_duration(path: Path, sample_rate: int = 44100) -> int:
-    """Return total sample count via ffprobe, or a safe default."""
+        pass
     try:
         out = _sp.run(
             ['ffprobe', '-v', 'quiet', '-show_entries', 'format=duration',
              '-of', 'csv=p=0', str(path)],
             capture_output=True, text=True, timeout=10,
         )
-        seconds = float(out.stdout.strip())
-        return int(seconds * sample_rate)
+        val = out.stdout.strip()
+        if val:
+            result['duration_seconds'] = float(val)
     except Exception:
-        return 44100 * 60  # 1-minute fallback
-
-
-def _probe_video_duration(path: Path) -> int:
-    """Return duration in edit-rate ticks via ffprobe, or a safe default."""
-    try:
-        out = _sp.run(
-            ['ffprobe', '-v', 'quiet', '-show_entries', 'format=duration',
-             '-of', 'csv=p=0', str(path)],
-            capture_output=True, text=True, timeout=10,
-        )
-        seconds = float(out.stdout.strip())
-        return int(seconds * 30)  # video editRate is typically 30
-    except Exception:
-        return 30 * 60  # 1-minute fallback
+        pass
+    return result
 
 
 class Project:
@@ -127,6 +160,50 @@ class Project:
             for item in obj:
                 Project._flatten_parameters(item)
 
+    def validate(self) -> list[ValidationIssue]:
+        """Check for common project issues.
+
+        Returns:
+            A list of :class:`ValidationIssue` instances (may be empty).
+        """
+        issues: list[ValidationIssue] = []
+        bin_ids: set[int] = set()
+
+        for media in self.media_bin:
+            bin_ids.add(media.id)
+            raw = media._data
+
+            # Zero-range audio
+            if media.type == MediaType.Audio:
+                r = raw['sourceTracks'][0]['range']
+                if r == [0, 0]:
+                    issues.append(ValidationIssue('error', f'Zero-range audio source: {media.source}', media.id))
+
+            # Zero-dimension image
+            if media.type == MediaType.Image:
+                if raw['rect'] == [0, 0, 0, 0]:
+                    issues.append(ValidationIssue('error', f'Zero-dimension image source: {media.source}', media.id))
+
+            # Missing source file
+            src_path = self._file_path / media.source if self._file_path.is_dir() else self._file_path.parent / media.source
+            if not src_path.exists():
+                issues.append(ValidationIssue('warning', f'Missing source file: {media.source}', media.id))
+
+        # Collect all clip source references
+        referenced_ids: set[int] = set()
+        for clip in self.timeline.all_clips():
+            if clip.source_id is not None:
+                referenced_ids.add(clip.source_id)
+                if clip.source_id not in bin_ids:
+                    issues.append(ValidationIssue('error', f'Clip references missing source ID {clip.source_id}', clip.source_id))
+
+        # Orphaned media
+        for media in self.media_bin:
+            if media.id not in referenced_ids:
+                issues.append(ValidationIssue('warning', f'Orphaned media not used by any clip: {media.source}', media.id))
+
+        return issues
+
     def save(self) -> None:
         """Write the current project state to disk.
 
@@ -134,6 +211,10 @@ class Project:
         avoid parser crashes with ``.trec`` screen recordings.
         """
         import re
+        import sys
+
+        for issue in self.validate():
+            print(f'[{issue.level}] {issue.message}', file=sys.stderr)
 
         self._flatten_parameters(self._data)
 
@@ -215,16 +296,24 @@ class Project:
         if media_type is None:
             raise ValueError(f"Cannot determine media type for extension '{suffix}'")
 
+        meta = _probe_media(path)
+
         if media_type == MediaType.Image:
             kwargs.setdefault('duration', 1)
-            if 'width' not in kwargs or 'height' not in kwargs:
-                w, h = _probe_image_dimensions(path)
-                kwargs.setdefault('width', w)
-                kwargs.setdefault('height', h)
-        elif media_type == MediaType.Audio and 'duration' not in kwargs:
-            kwargs['duration'] = _probe_audio_duration(path, kwargs.get('sample_rate', 44100))
+            kwargs.setdefault('width', meta.get('width', 1920))
+            kwargs.setdefault('height', meta.get('height', 1080))
+        elif media_type == MediaType.Audio:
+            sr = meta.get('sample_rate', kwargs.get('sample_rate', 44100))
+            kwargs.setdefault('sample_rate', sr)
+            if meta.get('_backend') == 'pymediainfo':
+                kwargs.setdefault('num_channels', meta.get('channels', 2))
+                kwargs.setdefault('bit_depth', meta.get('bit_depth', 16))
+            if 'duration' not in kwargs:
+                dur_secs = meta.get('duration_seconds')
+                kwargs['duration'] = int(dur_secs * sr) if dur_secs else sr * 60
         elif media_type == MediaType.Video and 'duration' not in kwargs:
-            kwargs['duration'] = _probe_video_duration(path)
+            dur_secs = meta.get('duration_seconds')
+            kwargs['duration'] = int(dur_secs * 30) if dur_secs else 30 * 60
         return self.media_bin.import_media(path, media_type=media_type, **kwargs)
 
     def total_duration_seconds(self) -> float:
