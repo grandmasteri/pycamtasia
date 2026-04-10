@@ -208,6 +208,52 @@ class Callout(BaseClip):
         self.height = height
         return self
 
+    def position(self, x: float, y: float) -> Self:
+        """Set the callout's position on the canvas.
+
+        Args:
+            x: Horizontal translation.
+            y: Vertical translation.
+
+        Returns:
+            Self for chaining.
+        """
+        params = self._data.setdefault('parameters', {})
+        params['translation0'] = x
+        params['translation1'] = y
+        return self
+
+    def set_alignment(self, horizontal: str, vertical: str) -> Self:
+        """Set text alignment.
+
+        Args:
+            horizontal: Horizontal alignment (e.g. ``'center'``, ``'left'``).
+            vertical: Vertical alignment (e.g. ``'center'``, ``'top'``).
+
+        Returns:
+            Self for chaining.
+        """
+        d = self._data.setdefault('def', {})
+        d['horizontal-alignment'] = horizontal
+        d['vertical-alignment'] = vertical
+        return self
+
+    def set_size(self, width: float, height: float) -> Self:
+        """Set callout dimensions and enable text resizing.
+
+        Args:
+            width: Callout width.
+            height: Callout height.
+
+        Returns:
+            Self for chaining.
+        """
+        d = self._data.setdefault('def', {})
+        d['width'] = width
+        d['height'] = height
+        d['resize-behavior'] = 'resizeText'
+        return self
+
     def add_behavior(
         self,
         preset: str = 'Reveal',

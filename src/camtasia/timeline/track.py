@@ -303,6 +303,43 @@ class Track:
         )
         return clip  # type: ignore[return-value]
 
+    def add_title(
+        self,
+        text: str,
+        start_seconds: float,
+        duration_seconds: float,
+        preset: str = 'centered',
+        **kwargs: Any,
+    ) -> Callout:
+        """Add a title callout with preset styling.
+
+        Args:
+            text: The title text content.
+            start_seconds: Timeline position in seconds.
+            duration_seconds: Playback duration in seconds.
+            preset: Preset name. Currently only ``'centered'`` is supported.
+            **kwargs: Additional fields merged into the clip dict.
+
+        Returns:
+            The newly created Callout clip for further customization.
+
+        Raises:
+            ValueError: If the preset name is not recognized.
+        """
+        if preset != 'centered':
+            raise ValueError(f'Unknown title preset: {preset!r}')
+
+        clip = self.add_callout(
+            text, start_seconds, duration_seconds,
+            font_name='Montserrat', font_weight='Regular', font_size=64.0,
+            **kwargs,
+        )
+        clip.set_colors(font_color=(1.0, 1.0, 1.0))
+        clip.set_alignment('center', 'center')
+        clip.set_size(934.5, 253.9)
+        clip.position(-416.6, -274.8)
+        return clip
+
     def add_group(
         self,
         start_seconds: float,
