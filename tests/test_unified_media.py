@@ -108,3 +108,25 @@ class TestUnifiedMediaIntegration:
         assert actual_clip.has_audio is True
         assert isinstance(actual_clip.video, ScreenVMFile)
         assert isinstance(actual_clip.audio, AMFile)
+
+
+class TestUnifiedMediaStreamTypes:
+    def test_is_screen_recording(self):
+        data = {
+            "_type": "UnifiedMedia", "id": 6,
+            "video": {"_type": "ScreenVMFile", "id": 7, "src": 2, "attributes": {}, "parameters": {}, "effects": []},
+            "audio": {"_type": "AMFile", "id": 8, "src": 2, "attributes": {}, "parameters": {}, "effects": []},
+        }
+        clip = UnifiedMedia(data)
+        assert clip.is_screen_recording is True
+        assert clip.is_camera is False
+
+    def test_is_camera(self):
+        data = {
+            "_type": "UnifiedMedia", "id": 9,
+            "video": {"_type": "VMFile", "id": 10, "src": 2, "attributes": {}, "parameters": {}, "effects": []},
+            "audio": {"_type": "AMFile", "id": 11, "src": 2, "attributes": {}, "parameters": {}, "effects": []},
+        }
+        clip = UnifiedMedia(data)
+        assert clip.is_camera is True
+        assert clip.is_screen_recording is False
