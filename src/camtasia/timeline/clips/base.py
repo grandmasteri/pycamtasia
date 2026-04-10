@@ -220,13 +220,44 @@ class BaseClip:
             ]
 
     def _add_opacity_track(self, keyframes: list[dict[str, Any]]) -> None:
-        """Append an opacity animation track entry with the given keyframes."""
-        self._ensure_visual_tracks().append({
-            'endOffset': 0,
-            'startOffset': 0,
-            'track': 'opacity',
-            'keyframes': keyframes,
-        })
+        """Add opacity animation via parameters.opacity and animationTracks.visual.
+
+        Follows the Camtasia v10 pattern: parameters.opacity holds keyframes
+        with endTime/duration, and animationTracks.visual holds non-overlapping
+        timing segments (one per transition, not one per keyframe).
+        """
+        # Build parameters.opacity keyframes
+        param_kfs = []
+        for i, kf in enumerate(keyframes):
+            if i + 1 < len(keyframes):
+                duration = keyframes[i + 1]['time'] - kf['time']
+                end_time = keyframes[i + 1]['time']
+            else:
+                duration = kf['time'] - keyframes[i - 1]['time'] if i > 0 else 1
+                end_time = kf['time']
+            param_kfs.append({
+                'endTime': end_time,
+                'time': kf['time'],
+                'value': kf['value'],
+                'duration': duration,
+            })
+        params = self._data.setdefault('parameters', {})
+        params['opacity'] = {
+            'type': 'double',
+            'defaultValue': 0.0,
+            'keyframes': param_kfs,
+        }
+        # Build animationTracks.visual — one segment per opacity *transition*
+        # (not per keyframe). A transition is where value changes between
+        # adjacent keyframes. Segments must not overlap.
+        visual = self._ensure_visual_tracks()
+        for i in range(len(keyframes) - 1):
+            if keyframes[i]['value'] != keyframes[i + 1]['value']:
+                duration = keyframes[i + 1]['time'] - keyframes[i]['time']
+                visual.append({
+                    'endTime': keyframes[i + 1]['time'],
+                    'duration': duration,
+                })
 
     def fade_in(self, duration_seconds: float) -> Self:
         """Add an opacity fade-in (0 → 1) over *duration_seconds*.
@@ -239,8 +270,8 @@ class BaseClip:
         """
         ticks = seconds_to_ticks(duration_seconds)
         self._add_opacity_track([
-            {'time': 0, 'value': '0', 'interp': 'linr'},
-            {'time': ticks, 'value': '1', 'interp': 'linr'},
+            {'time': 0, 'value': 0.0, 'interp': 'linr'},
+            {'time': ticks, 'value': 1.0, 'interp': 'linr'},
         ])
         return self
 
@@ -256,8 +287,8 @@ class BaseClip:
         ticks = seconds_to_ticks(duration_seconds)
         end = int(self.media_duration)
         self._add_opacity_track([
-            {'time': end - ticks, 'value': '1', 'interp': 'linr'},
-            {'time': end, 'value': '0', 'interp': 'linr'},
+            {'time': end - ticks, 'value': 1.0, 'interp': 'linr'},
+            {'time': end, 'value': 0.0, 'interp': 'linr'},
         ])
         return self
 
@@ -276,20 +307,20 @@ class BaseClip:
             ``self`` for chaining.
         """
         self._remove_opacity_tracks()
-        end = int(self.media_duration)
+        end = int(self._data.get('duration', self.media_duration))
         kf: list[dict[str, Any]] = []
         if fade_in_seconds > 0:
             in_ticks = seconds_to_ticks(fade_in_seconds)
-            kf.append({'time': 0, 'value': '0', 'interp': 'linr'})
-            kf.append({'time': in_ticks, 'value': '1', 'interp': 'linr'})
+            kf.append({'time': 0, 'value': 0.0, 'interp': 'linr'})
+            kf.append({'time': in_ticks, 'value': 1.0, 'interp': 'linr'})
         if fade_out_seconds > 0:
             out_ticks = seconds_to_ticks(fade_out_seconds)
             # If no fade-in, anchor full opacity at the start of the fade-out
             if not kf:
-                kf.append({'time': end - out_ticks, 'value': '1', 'interp': 'linr'})
+                kf.append({'time': end - out_ticks, 'value': 1.0, 'interp': 'linr'})
             elif kf[-1]['time'] < end - out_ticks:
-                kf.append({'time': end - out_ticks, 'value': '1', 'interp': 'linr'})
-            kf.append({'time': end, 'value': '0', 'interp': 'linr'})
+                kf.append({'time': end - out_ticks, 'value': 1.0, 'interp': 'linr'})
+            kf.append({'time': end, 'value': 0.0, 'interp': 'linr'})
         if kf:
             self._add_opacity_track(kf)
         return self
@@ -305,7 +336,7 @@ class BaseClip:
         """
         self._remove_opacity_tracks()
         self._add_opacity_track([
-            {'time': 0, 'value': str(opacity), 'interp': 'linr'},
+            {'time': 0, 'value': opacity, 'interp': 'linr'},
         ])
         return self
 
