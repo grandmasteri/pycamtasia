@@ -72,6 +72,35 @@ class Effect:
         """
         self.parameters[name]["defaultValue"] = value
 
+    # ------------------------------------------------------------------
+    # Time-bounded effects
+    # ------------------------------------------------------------------
+
+    @property
+    def start(self) -> int | None:
+        """Effect start time in ticks, or ``None`` if not time-bounded."""
+        return self._data.get('start')
+
+    @property
+    def duration(self) -> int | None:
+        """Effect duration in ticks, or ``None`` if not time-bounded."""
+        return self._data.get('duration')
+
+    @property
+    def is_time_bounded(self) -> bool:
+        """Whether this effect has explicit start/duration."""
+        return 'start' in self._data and 'duration' in self._data
+
+    @property
+    def left_edge_mods(self) -> list[dict[str, Any]]:
+        """Left edge modifications (fade-in, etc.)."""
+        return self._data.get('leftEdgeMods', [])
+
+    @property
+    def right_edge_mods(self) -> list[dict[str, Any]]:
+        """Right edge modifications (fade-out, etc.)."""
+        return self._data.get('rightEdgeMods', [])
+
     def __repr__(self) -> str:
         return f"{type(self).__name__}(name={self.name!r})"
 

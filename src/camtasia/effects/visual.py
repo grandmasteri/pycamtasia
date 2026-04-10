@@ -227,6 +227,31 @@ class Mask(Effect):
         self.set_parameter("mask_positionY", value)
 
 
+@register_effect("Glow")
+class Glow(Effect):
+    """Bloom/glow post-processing effect.
+
+    Parameters:
+        radius, intensity
+    """
+
+    @property
+    def radius(self) -> float:
+        return self.get_parameter("radius")
+
+    @radius.setter
+    def radius(self, value: float) -> None:
+        self.set_parameter("radius", value)
+
+    @property
+    def intensity(self) -> float:
+        return self.get_parameter("intensity")
+
+    @intensity.setter
+    def intensity(self, value: float) -> None:
+        self.set_parameter("intensity", value)
+
+
 @register_effect("BlurRegion")
 class BlurRegion(Effect):
     """Blur region effect.

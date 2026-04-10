@@ -5,7 +5,7 @@ import importlib.util
 import pathlib
 
 from camtasia.effects.base import Effect, effect_from_dict
-from camtasia.effects.visual import BlurRegion, DropShadow, Mask, MotionBlur, RoundCorners
+from camtasia.effects.visual import BlurRegion, DropShadow, Glow, Mask, MotionBlur, RoundCorners
 from camtasia.effects.cursor import (
     CursorMotionBlur,
     CursorPhysics,
@@ -48,6 +48,7 @@ __all__ = [
     "MotionBlur",
     "Mask",
     "BlurRegion",
+    "Glow",
     "CursorMotionBlur",
     "CursorPhysics",
     "CursorShadow",
