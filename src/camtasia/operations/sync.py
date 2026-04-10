@@ -7,6 +7,8 @@ adjustments to align video with audio.
 
 from __future__ import annotations
 
+import re
+
 from dataclasses import dataclass
 from fractions import Fraction
 
@@ -54,7 +56,7 @@ def match_marker_to_transcript(
         return None
 
     # Build running text for substring search
-    texts = [w.text.lower() for w in words]
+    texts = [re.sub(r"[^\w\s]", "", w.text.lower()).strip() for w in words]
     full = " ".join(texts)
     target = " ".join(label_lower)
 

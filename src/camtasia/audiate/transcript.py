@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import json
 from dataclasses import dataclass
 
@@ -66,8 +68,11 @@ class Transcript:
         text_words = phrase_lower.split()
         if not text_words:
             return None
+        def _normalize(s: str) -> str:
+            return re.sub(r"[^\w\s]", "", s).strip()
+
         for i, word in enumerate(self._words):
-            if word.text.lower() == text_words[0]:
+            if _normalize(word.text.lower()) == _normalize(text_words[0]):
                 if len(text_words) == 1:
                     return word
                 remaining = text_words[1:]
