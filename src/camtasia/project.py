@@ -517,6 +517,97 @@ class Project:
             sourceEffect=source_effect,
         )
 
+    def add_progressive_disclosure(
+        self,
+        images: list[tuple[int, float]],
+        start_seconds: float,
+        fade_in: float = 0.5,
+        track_prefix: str = 'Prog',
+    ) -> list:
+        """Place images on separate tracks so they accumulate visually.
+
+        Each image gets its own track (named ``{track_prefix}-{i}``) and
+        a fade-in animation.  All clips start at *start_seconds*; each
+        clip's duration comes from the corresponding tuple.
+
+        Args:
+            images: ``[(source_id, duration_seconds), ...]``
+            start_seconds: Timeline position for every clip.
+            fade_in: Fade-in duration in seconds (applied to each clip).
+            track_prefix: Name prefix for the created tracks.
+
+        Returns:
+            List of created clips.
+        """
+        clips = []
+        for i, (source_id, duration_seconds) in enumerate(images):
+            track = self.timeline.get_or_create_track(f'{track_prefix}-{i}')
+            clip = track.add_image(source_id, start_seconds, duration_seconds)
+            clip.fade_in(fade_in)
+            clips.append(clip)
+        return clips
+
+    def add_four_corner_gradient(
+        self,
+        shader_path: str | Path,
+        duration_seconds: float,
+        track_name: str = 'Background',
+    ) -> 'BaseClip':
+        """Import and place a 4-corner animated gradient shader background.
+
+        Reuses an existing ``.tscshadervid`` source if one is already in the
+        media bin; otherwise imports from *shader_path*.
+
+        Args:
+            shader_path: Path to the ``.tscshadervid`` shader file.
+            duration_seconds: How long the background clip should last.
+            track_name: Name of the track to place the clip on.
+
+        Returns:
+            The created video clip.
+        """
+        existing = self.find_media_by_suffix('.tscshadervid')
+        if existing:
+            shader_id = existing[0].id
+        else:
+            shader_id = self.import_media(shader_path).id
+        track = self.timeline.get_or_create_track(track_name)
+        return track.add_video(shader_id, start_seconds=0, duration_seconds=duration_seconds)
+
+    def add_voiceover_sequence(
+        self,
+        vo_files: list[str | Path],
+        pauses: dict[str, float] | None = None,
+        track_name: str = 'Audio',
+    ) -> dict[str, dict]:
+        """Import voiceover files and place them sequentially on an audio track.
+
+        Args:
+            vo_files: List of audio file paths to import and place.
+            pauses: Optional mapping of filename to seconds of silence
+                to insert after that clip.
+            track_name: Name of the track to place clips on.
+
+        Returns:
+            Dict mapping each filename to ``{'start': float,
+            'duration': float, 'clip': AMFile}``.
+        """
+        pauses = pauses or {}
+        track = self.timeline.get_or_create_track(track_name)
+        cursor = 0.0
+        result: dict[str, dict] = {}
+
+        for vo_file in vo_files:
+            path = Path(vo_file)
+            media = self.import_media(path)
+            meta = _probe_media(path)
+            dur = meta.get('duration_seconds', 1.0)
+            clip = track.add_audio(media.id, cursor, dur)
+            result[path.name] = {'start': cursor, 'duration': dur, 'clip': clip}
+            cursor += dur + pauses.get(path.name, 0.0)
+
+        return result
+
     @property
     def _project_file(self) -> Path:
         """Locate the .tscproj JSON file within the project bundle."""
