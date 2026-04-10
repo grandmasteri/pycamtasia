@@ -1,4 +1,4 @@
-"""Tests for new features discovered in the JT project format.
+"""Tests for new features for text behaviors, animation tracks, and callout shapes.
 
 Covers: MotionBlur, Mask, BlurRegion, GenericBehaviorEffect,
 animationTracks on BaseClip, and new callout shapes.
@@ -512,7 +512,7 @@ class TestCalloutNewShapes:
 
 
 # ------------------------------------------------------------------
-# Integration tests with real JT project fixture
+# Integration tests with sample project B fixture
 # ------------------------------------------------------------------
 
 @pytest.fixture
@@ -538,8 +538,8 @@ def _collect_all(obj, predicate):
     return results
 
 
-class TestJTIntegration:
-    """Integration tests against the real JT project fixture."""
+class TestTestProjectBIntegration:
+    """Integration tests against sample project B fixture."""
 
     def test_clips_with_animation_tracks(self, test_project_b_data):
         actual_clips = _collect_all(

@@ -29,6 +29,7 @@ from camtasia.timeline import (
 from camtasia.effects import (
     Effect,
     effect_from_dict,
+    Glow,
     RoundCorners,
     DropShadow,
     CursorMotionBlur,
@@ -90,6 +91,7 @@ __all__ = [
     # Effects
     "Effect",
     "effect_from_dict",
+    "Glow",
     "RoundCorners",
     "DropShadow",
     "CursorMotionBlur",
