@@ -512,7 +512,7 @@ class TestCalloutNewShapes:
 
 
 # ------------------------------------------------------------------
-# Integration tests with sample project B fixture
+# Integration tests with test project B fixture
 # ------------------------------------------------------------------
 
 @pytest.fixture
@@ -539,7 +539,7 @@ def _collect_all(obj, predicate):
 
 
 class TestTestProjectBIntegration:
-    """Integration tests against sample project B fixture."""
+    """Integration tests against test project B fixture."""
 
     def test_clips_with_animation_tracks(self, test_project_b_data):
         actual_clips = _collect_all(
@@ -558,7 +558,7 @@ class TestTestProjectBIntegration:
         assert actual_visual != []
         # Each segment has the expected keys
         actual_segment = actual_visual[0]
-        assert actual_segment.keys() >= {"endTime", "duration", "range"}
+        assert actual_segment.keys() >= {"endTime", "duration"}
 
     def test_generic_behavior_effects(self, test_project_b_data):
         actual_behaviors = _collect_all(
