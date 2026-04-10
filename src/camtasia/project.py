@@ -281,52 +281,57 @@ class Project:
         Returns:
             The created clip.
         """
-        import datetime
-        import time as _time
+        existing = self.find_media_by_suffix('.tscshadervid')
+        if existing:
+            media_id = existing[0].id
+            shader_name = existing[0].source.name
+        else:
+            import datetime
+            import time as _time
 
-        width = int(self._data.get('width', 1920))
-        height = int(self._data.get('height', 1080))
-        media_id = self.media_bin.next_id()
-        timestamp = datetime.datetime.now()
-        ts_str = f"{timestamp.year}{timestamp.month:02}{timestamp.day:02}T{timestamp.hour:02}{timestamp.minute:02}{timestamp.second:02}"
-        shader_name = f"gradient-bg-{media_id}.tscshadervid"
-        src_path = f"./media/{_time.time()}/{shader_name}"
+            width = int(self._data.get('width', 1920))
+            height = int(self._data.get('height', 1080))
+            media_id = self.media_bin.next_id()
+            timestamp = datetime.datetime.now()
+            ts_str = f"{timestamp.year}{timestamp.month:02}{timestamp.day:02}T{timestamp.hour:02}{timestamp.minute:02}{timestamp.second:02}"
+            shader_name = f"gradient-bg-{media_id}.tscshadervid"
+            src_path = f"./media/{_time.time()}/{shader_name}"
 
-        source_entry: dict[str, Any] = {
-            "id": media_id,
-            "src": src_path,
-            "rect": [0, 0, width, height],
-            "lastMod": ts_str,
-            "loudnessNormalization": True,
-            "sourceTracks": [{
-                "range": [0, 9223372036854775807],
-                "type": 0,
-                "editRate": 30,
-                "trackRect": [0, 0, width, height],
-                "sampleRate": 30,
-                "bitDepth": 32,
-                "numChannels": 0,
-                "integratedLUFS": 100.0,
-                "peakLevel": -1.0,
-                "tag": 0,
-                "metaData": f"{shader_name};",
-                "parameters": {},
-            }],
-            "effectDef": [
-                {"name": "Color0", "type": "Color",
-                 "defaultValue": list(color0),
-                 "scalingType": 3, "unitType": 0, "userInterfaceType": 6},
-                {"name": "Color1", "type": "Color",
-                 "defaultValue": list(color1),
-                 "scalingType": 3, "unitType": 0, "userInterfaceType": 6},
-                {"name": "sourceFileType", "type": "string",
-                 "defaultValue": "tscshadervid",
-                 "maxValue": "", "minValue": "",
-                 "scalingType": 0, "unitType": 0, "userInterfaceType": 0},
-            ],
-            "metadata": {"timeAdded": timestamp.strftime("%Y%m%dT%H%M%S.%f")},
-        }
-        self.media_bin.add_media_entry(source_entry)
+            source_entry: dict[str, Any] = {
+                "id": media_id,
+                "src": src_path,
+                "rect": [0, 0, width, height],
+                "lastMod": ts_str,
+                "loudnessNormalization": True,
+                "sourceTracks": [{
+                    "range": [0, 9223372036854775807],
+                    "type": 0,
+                    "editRate": 30,
+                    "trackRect": [0, 0, width, height],
+                    "sampleRate": 30,
+                    "bitDepth": 32,
+                    "numChannels": 0,
+                    "integratedLUFS": 100.0,
+                    "peakLevel": -1.0,
+                    "tag": 0,
+                    "metaData": f"{shader_name};",
+                    "parameters": {},
+                }],
+                "effectDef": [
+                    {"name": "Color0", "type": "Color",
+                     "defaultValue": list(color0),
+                     "scalingType": 3, "unitType": 0, "userInterfaceType": 6},
+                    {"name": "Color1", "type": "Color",
+                     "defaultValue": list(color1),
+                     "scalingType": 3, "unitType": 0, "userInterfaceType": 6},
+                    {"name": "sourceFileType", "type": "string",
+                     "defaultValue": "tscshadervid",
+                     "maxValue": "", "minValue": "",
+                     "scalingType": 0, "unitType": 0, "userInterfaceType": 0},
+                ],
+                "metadata": {"timeAdded": timestamp.strftime("%Y%m%dT%H%M%S.%f")},
+            }
+            self.media_bin.add_media_entry(source_entry)
 
         dur_ticks = seconds_to_ticks(duration_seconds)
         track = self.timeline.tracks[track_index]
