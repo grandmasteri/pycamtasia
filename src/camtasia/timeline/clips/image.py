@@ -1,6 +1,7 @@
 """Image media clip (IMFile)."""
 from __future__ import annotations
 
+from typing import Self
 
 from .base import BaseClip
 
@@ -63,3 +64,72 @@ class IMFile(BaseClip):
             for i in range(4)
             if f'geometryCrop{i}' in self.parameters
         }
+
+    # ------------------------------------------------------------------
+    # L2 — Transform helpers
+    # ------------------------------------------------------------------
+
+    def move_to(self, x: float, y: float) -> Self:
+        """Set the clip's canvas translation.
+
+        Args:
+            x: Horizontal position.
+            y: Vertical position.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self._set_param_value('translation0', x)
+        self._set_param_value('translation1', y)
+        return self
+
+    def scale_to(self, factor: float) -> Self:
+        """Set uniform scale on both axes.
+
+        Args:
+            factor: Scale factor (1.0 = native size).
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self._set_param_value('scale0', factor)
+        self._set_param_value('scale1', factor)
+        return self
+
+    def scale_to_xy(self, x: float, y: float) -> Self:
+        """Set non-uniform scale.
+
+        Args:
+            x: Horizontal scale factor.
+            y: Vertical scale factor.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self._set_param_value('scale0', x)
+        self._set_param_value('scale1', y)
+        return self
+
+    def crop(
+        self,
+        left: float = 0,
+        top: float = 0,
+        right: float = 0,
+        bottom: float = 0,
+    ) -> Self:
+        """Set geometry crop fractions.
+
+        Args:
+            left: Fraction to crop from the left edge (0.0–1.0).
+            top: Fraction to crop from the top edge.
+            right: Fraction to crop from the right edge.
+            bottom: Fraction to crop from the bottom edge.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self._set_param_value('geometryCrop0', left)
+        self._set_param_value('geometryCrop1', top)
+        self._set_param_value('geometryCrop2', right)
+        self._set_param_value('geometryCrop3', bottom)
+        return self

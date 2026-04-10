@@ -1,7 +1,9 @@
 """Callout (text overlay) clip."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Self
+
+from camtasia.effects.behaviors import GenericBehaviorEffect
 
 from .base import BaseClip
 
@@ -138,3 +140,124 @@ class Callout(BaseClip):
         d = self._data.setdefault('def', {})
         d['tail-x'] = xy[0]
         d['tail-y'] = xy[1]
+
+    # ------------------------------------------------------------------
+    # L2 convenience methods
+    # ------------------------------------------------------------------
+
+    def set_font(
+        self,
+        name: str,
+        weight: str = 'Regular',
+        size: float = 64.0,
+    ) -> Self:
+        """Update the callout's font properties.
+
+        Args:
+            name: Font family name (e.g. ``'Arial'``).
+            weight: Font weight (e.g. ``'Regular'``, ``'Bold'``).
+            size: Font size in points.
+
+        Returns:
+            Self for chaining.
+        """
+        font = self._data.setdefault('def', {}).setdefault('font', {})
+        font['name'] = name
+        font['weight'] = weight
+        font['size'] = size
+        return self
+
+    def set_colors(
+        self,
+        fill: tuple[float, float, float, float] | None = None,
+        stroke: tuple[float, float, float, float] | None = None,
+        font_color: tuple[float, float, float] | None = None,
+    ) -> Self:
+        """Set fill, stroke, and/or font RGBA colors.
+
+        Args:
+            fill: Fill color as ``(r, g, b, opacity)``, or ``None`` to skip.
+            stroke: Stroke color as ``(r, g, b, opacity)``, or ``None`` to skip.
+            font_color: Font color as ``(r, g, b)``, or ``None`` to skip.
+
+        Returns:
+            Self for chaining.
+        """
+        if fill is not None:
+            self.fill_color = fill
+        if stroke is not None:
+            self.stroke_color = stroke
+        if font_color is not None:
+            font = self._data.setdefault('def', {}).setdefault('font', {})
+            font['color-red'] = font_color[0]
+            font['color-green'] = font_color[1]
+            font['color-blue'] = font_color[2]
+        return self
+
+    def resize(self, width: float, height: float) -> Self:
+        """Set callout dimensions.
+
+        Args:
+            width: New width.
+            height: New height.
+
+        Returns:
+            Self for chaining.
+        """
+        self.width = width
+        self.height = height
+        return self
+
+    def add_behavior(
+        self,
+        preset: str = 'Reveal',
+        entrance_name: str = 'reveal',
+        exit_name: str = 'reveal',
+    ) -> GenericBehaviorEffect:
+        """Add a text animation behavior effect.
+
+        Args:
+            preset: Preset name stored in metadata (e.g. ``'Reveal'``).
+            entrance_name: Entrance animation name (e.g. ``'reveal'``).
+            exit_name: Exit animation name (e.g. ``'reveal'``, ``'none'``).
+
+        Returns:
+            The created :class:`GenericBehaviorEffect`.
+        """
+        record: dict[str, Any] = {
+            '_type': 'GenericBehaviorEffect',
+            'effectName': 'GenericBehaviorEffect',
+            'bypassed': False,
+            'start': 0,
+            'duration': self.duration,
+            'metadata': {'presetName': preset},
+            'in': {
+                'attributes': {
+                    'name': entrance_name,
+                    'type': 0,
+                    'characterOrder': 0,
+                    'offsetBetweenCharacters': 17640000,
+                    'suggestedDurationPerCharacter': 35280000,
+                    'overlapProportion': '1/2',
+                    'movement': 0,
+                    'springDamping': 0.0,
+                    'springStiffness': 0.0,
+                    'bounceBounciness': 0.0,
+                },
+                'parameters': {},
+            },
+            'center': {
+                'attributes': {'name': 'none', 'type': 1},
+                'parameters': {},
+            },
+            'out': {
+                'attributes': {
+                    'name': exit_name,
+                    'type': 0,
+                    'characterOrder': 0,
+                },
+                'parameters': {},
+            },
+        }
+        self._data.setdefault('effects', []).append(record)
+        return GenericBehaviorEffect(record)

@@ -85,3 +85,4 @@ fabric.properties
 docs/_build/
 *.egg-info
 .eggs
+src/camtasia/resources/new.cmproj/media/17*
