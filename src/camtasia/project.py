@@ -410,6 +410,58 @@ class Project:
 
         return media
 
+    def statistics(self) -> dict[str, Any]:
+        """Return detailed project statistics.
+
+        Returns a dict with:
+        - total_tracks: int
+        - empty_tracks: int
+        - total_clips: int
+        - clips_by_type: dict[str, int]
+        - total_media: int
+        - media_by_type: dict[str, int]
+        - total_transitions: int
+        - total_markers: int
+        - duration_seconds: float
+        - canvas: dict with width and height
+        """
+        clips_by_type: dict[str, int] = {}
+        total_clips = 0
+        total_transitions = 0
+        total_markers = 0
+        empty_tracks = 0
+
+        for track in self.timeline.tracks:
+            track_clips = list(track.clips)
+            if not track_clips:
+                empty_tracks += 1
+            for clip in track_clips:
+                total_clips += 1
+                ct = clip.clip_type
+                clips_by_type[ct] = clips_by_type.get(ct, 0) + 1
+            total_transitions += len(list(track.transitions))
+            total_markers += len(list(track.markers))
+
+        total_markers += len(list(self.timeline.markers))
+
+        media_by_type: dict[str, int] = {}
+        for m in self.media_bin:
+            mt = m.type.name if hasattr(m.type, 'name') else str(m.type)
+            media_by_type[mt] = media_by_type.get(mt, 0) + 1
+
+        return {
+            'total_tracks': self.timeline.track_count,
+            'empty_tracks': empty_tracks,
+            'total_clips': total_clips,
+            'clips_by_type': clips_by_type,
+            'total_media': len(self.media_bin),
+            'media_by_type': media_by_type,
+            'total_transitions': total_transitions,
+            'total_markers': total_markers,
+            'duration_seconds': self.total_duration_seconds(),
+            'canvas': {'width': self.width, 'height': self.height},
+        }
+
     def summary(self) -> str:
         """Return a human-readable summary of the project."""
         lines = [

@@ -853,6 +853,63 @@ class Track:
 
         return pieces
 
+    def duplicate_clip(self, clip_id: int, *, offset_seconds: float = 0.0) -> BaseClip:
+        """Duplicate a clip on this track.
+
+        Creates a deep copy of the clip with a new ID, placed immediately
+        after the original (or offset by offset_seconds).
+
+        Args:
+            clip_id: ID of the clip to duplicate.
+            offset_seconds: Time offset from the original's end (default 0).
+
+        Returns:
+            The new clip.
+        """
+        source = None
+        for m in self._data.get('medias', []):
+            if m.get('id') == clip_id:
+                source = m
+                break
+        if source is None:
+            raise KeyError(f'No clip with id={clip_id}')
+
+        new_data = copy.deepcopy(source)
+        new_id = self._next_clip_id()
+        new_data['id'] = new_id
+
+        def _remap_ids(obj, base_id):
+            cid = base_id
+            if isinstance(obj, dict):
+                if 'id' in obj and obj is not new_data:
+                    cid += 1
+                    obj['id'] = cid
+                for v in obj.values():
+                    cid = _remap_ids(v, cid)
+            elif isinstance(obj, list):
+                for item in obj:
+                    cid = _remap_ids(item, cid)
+            return cid
+        _remap_ids(new_data, new_id)
+
+        new_data['start'] = source['start'] + source.get('duration', 0) + seconds_to_ticks(offset_seconds)
+
+        self._data.setdefault('medias', []).append(new_data)
+        return clip_from_dict(new_data)
+
+    def move_clip(self, clip_id: int, new_start_seconds: float) -> None:
+        """Move a clip to a new timeline position.
+
+        Args:
+            clip_id: ID of the clip to move.
+            new_start_seconds: New start position in seconds.
+        """
+        for m in self._data.get('medias', []):
+            if m.get('id') == clip_id:
+                m['start'] = seconds_to_ticks(new_start_seconds)
+                return
+        raise KeyError(f'No clip with id={clip_id}')
+
     def split_clip(self, clip_id: int, split_at_seconds: float) -> tuple:
         """Split a clip into two halves at a timeline position.
 
