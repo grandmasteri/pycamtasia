@@ -125,8 +125,7 @@ def test_apply_sync():
 
     # Internal track should now have 2 ScreenVMFile clips
     internal_medias = group._data['tracks'][1]['medias']
-    assert len(internal_medias) == 2
-    assert all(m['_type'] == 'ScreenVMFile' for m in internal_medias)
+    assert [m['_type'] for m in internal_medias] == ['ScreenVMFile', 'ScreenVMFile']
 
     # First clip: source 0-18s, timeline duration 20s
     first = internal_medias[0]

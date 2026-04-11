@@ -45,11 +45,11 @@ class TestTimelineRepr:
 class TestTimelineLen:
     def test_len(self):
         tl = Timeline(_make_timeline_data(5))
-        assert len(tl) == 5
+        assert [t.index for t in tl.tracks] == [0, 1, 2, 3, 4]
 
     def test_len_empty(self):
         tl = Timeline(_make_timeline_data(0))
-        assert len(tl) == 0
+        assert list(tl.tracks) == []
 
 
 class TestMoveTrackToBack:

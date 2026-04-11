@@ -51,7 +51,7 @@ class TestTrackEqHash:
     def test_usable_in_set(self):
         t1 = _make_track(index=0)
         t2 = _make_track(index=0)
-        assert len({t1, t2}) == 1
+        assert {t1, t2} == {t1}
 
 
 class TestTrackLen:
@@ -62,6 +62,7 @@ class TestTrackLen:
     def test_track_with_clips(self):
         t = _make_track_with_clips(3)
         assert len(t) == 3
+        assert [c.id for c in t.clips] == [1, 2, 3]
 
     def test_no_medias_key(self):
         data = {"trackIndex": 0}

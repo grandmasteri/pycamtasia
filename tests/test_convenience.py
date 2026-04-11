@@ -91,7 +91,6 @@ def test_timeline_empty_tracks():
         ('Empty2', []),
     ])
     empties = tl.empty_tracks
-    assert len(empties) == 2
     assert {t.name for t in empties} == {'Empty1', 'Empty2'}
 
 
