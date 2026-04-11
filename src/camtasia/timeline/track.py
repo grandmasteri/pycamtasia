@@ -100,6 +100,10 @@ class Track:
     # Clips
     # ------------------------------------------------------------------
 
+    def clear(self) -> None:
+        """Remove all clips from this track."""
+        self._data['medias'] = []
+
     @property
     def clips(self) -> _ClipAccessor:
         """Iterable accessor over typed clip objects on this track."""
@@ -356,6 +360,10 @@ class Track:
         duration_seconds: float,
         title_color: tuple[int, int, int, int] | None = None,
         accent_color: tuple[float, float, float] | None = None,
+        *,
+        font_weight: int = 900,
+        scale: float | None = None,
+        template_ident: str = 'Right Angle Lower Third',
     ) -> Group:
         """Add a Right Angle Lower Third title template to the track.
 
@@ -368,6 +376,11 @@ class Track:
                 title text ``fgColor``.
             accent_color: Optional ``(r, g, b)`` floats 0.0-1.0 for the
                 accent line fill color.
+            font_weight: Font weight for the title text (default 900).
+            scale: Uniform scale for the outer Group (default ``None``
+                leaves the template scale unchanged).
+            template_ident: Identity string for the outer Group
+                (default ``'Right Angle Lower Third'``).
 
         Returns:
             The newly created Group clip.
@@ -443,6 +456,20 @@ class Track:
                 line_clip['def'][channel]['defaultValue'] = val
                 for kf in line_clip['def'][channel].get('keyframes', []):
                     kf['value'] = val
+
+        # --- font_weight override ---
+        for kf in title_clip['def']['textAttributes']['keyframes']:
+            for attr in kf['value']:
+                if attr['name'] == 'fontWeight':
+                    attr['value'] = font_weight
+
+        # --- scale override ---
+        if scale is not None:
+            tpl['parameters']['scale0'] = scale
+            tpl['parameters']['scale1'] = scale
+
+        # --- template_ident override ---
+        tpl['attributes']['ident'] = template_ident
 
         # --- Insert into track ---
         self._data.setdefault('medias', []).append(tpl)

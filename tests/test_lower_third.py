@@ -35,7 +35,7 @@ class TestAddLowerThirdCreatesGroup:
         clip = track.add_lower_third("Name", "Description", 5.0, 10.0)
 
         assert isinstance(clip, Group)
-        assert clip.ident == "Right Angle Lower Third(1)"
+        assert clip.ident == "Right Angle Lower Third"
         assert len(track._data["medias"]) == 1
         # Outer group has 3 tracks: Text group, Shape, Line
         assert len(clip._data["tracks"]) == 3
@@ -120,3 +120,60 @@ class TestLowerThirdPositionAndDuration:
         assert shape["id"] == outer_id + 4
         line = clip._data["tracks"][2]["medias"][0]
         assert line["id"] == outer_id + 5
+
+
+class TestLowerThirdFontWeight:
+    def test_font_weight_custom(self):
+        track = _make_track()
+        clip = track.add_lower_third("Name", "Sub", 0, 10, font_weight=700)
+
+        title_clip = _get_title_clip(clip._data)
+        for kf in title_clip["def"]["textAttributes"]["keyframes"]:
+            for attr in kf["value"]:
+                if attr["name"] == "fontWeight":
+                    actual_weight = attr["value"]
+                    expected_weight = 700
+                    assert actual_weight == expected_weight
+
+    def test_font_weight_default(self):
+        track = _make_track()
+        clip = track.add_lower_third("Name", "Sub", 0, 10)
+
+        title_clip = _get_title_clip(clip._data)
+        for kf in title_clip["def"]["textAttributes"]["keyframes"]:
+            for attr in kf["value"]:
+                if attr["name"] == "fontWeight":
+                    actual_weight = attr["value"]
+                    expected_weight = 900
+                    assert actual_weight == expected_weight
+
+
+class TestLowerThirdScale:
+    def test_scale_sets_parameters(self):
+        track = _make_track()
+        clip = track.add_lower_third("Name", "Sub", 0, 10, scale=0.923)
+
+        actual_scale0 = clip._data["parameters"]["scale0"]
+        actual_scale1 = clip._data["parameters"]["scale1"]
+        expected_scale = 0.923
+        assert actual_scale0 == expected_scale
+        assert actual_scale1 == expected_scale
+
+    def test_scale_none_no_params(self):
+        track = _make_track()
+        clip = track.add_lower_third("Name", "Sub", 0, 10)
+
+        assert "scale0" not in clip._data.get("parameters", {})
+        assert "scale1" not in clip._data.get("parameters", {})
+
+
+class TestLowerThirdTemplateIdent:
+    def test_template_ident_sets_attribute(self):
+        track = _make_track()
+        expected_ident = "Custom Lower Third"
+        clip = track.add_lower_third(
+            "Name", "Sub", 0, 10, template_ident=expected_ident,
+        )
+
+        actual_ident = clip._data["attributes"]["ident"]
+        assert actual_ident == expected_ident

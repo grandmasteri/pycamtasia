@@ -9,54 +9,22 @@ from .base import BaseClip
 class ScreenVMFile(BaseClip):
     """Screen recording video clip.
 
-    Extends BaseClip with cursor effects and transform parameters.
+    Inherits translation, scale, and other transform helpers from
+    :class:`BaseClip`.  Adds cursor effect properties.
 
     Args:
         data: The raw clip dict.
     """
 
-    def _get_param_value(self, key: str, default: float = 0.0) -> float:
-        param = self.parameters.get(key, default)
-        if isinstance(param, dict):
-            return param.get('defaultValue', default)
-        return param
+    # -- Cursor --
 
-    def _set_param_value(self, key: str, value: float, interp: str = 'eioe') -> None:
+    def _set_cursor_param(self, key: str, value: float, interp: str = 'linr') -> None:
+        """Write a cursor parameter as a dict with interp (Camtasia's cursor format)."""
         params = self._data.setdefault('parameters', {})
         if isinstance(params.get(key), dict):
             params[key]['defaultValue'] = value
         else:
             params[key] = {'type': 'double', 'defaultValue': value, 'interp': interp}
-
-    # -- Transform --
-
-    @property
-    def translation(self) -> tuple[float, float]:
-        """``(x, y)`` translation."""
-        return (
-            self._get_param_value('translation0'),
-            self._get_param_value('translation1'),
-        )
-
-    @translation.setter
-    def translation(self, value: tuple[float, float]) -> None:
-        self._set_param_value('translation0', value[0])
-        self._set_param_value('translation1', value[1])
-
-    @property
-    def scale(self) -> tuple[float, float]:
-        """``(x, y)`` scale factors."""
-        return (
-            self._get_param_value('scale0', 1.0),
-            self._get_param_value('scale1', 1.0),
-        )
-
-    @scale.setter
-    def scale(self, value: tuple[float, float]) -> None:
-        self._set_param_value('scale0', value[0])
-        self._set_param_value('scale1', value[1])
-
-    # -- Cursor --
 
     @property
     def cursor_scale(self) -> float:
@@ -65,7 +33,7 @@ class ScreenVMFile(BaseClip):
 
     @cursor_scale.setter
     def cursor_scale(self, value: float) -> None:
-        self._set_param_value('cursorScale', value, interp='linr')
+        self._set_cursor_param('cursorScale', value)
 
     @property
     def cursor_opacity(self) -> float:
@@ -74,7 +42,7 @@ class ScreenVMFile(BaseClip):
 
     @cursor_opacity.setter
     def cursor_opacity(self, value: float) -> None:
-        self._set_param_value('cursorOpacity', value, interp='linr')
+        self._set_cursor_param('cursorOpacity', value)
 
     @property
     def cursor_track_level(self) -> float:

@@ -193,8 +193,8 @@ class TestIMFile:
         data = _base(_type="IMFile")
         clip = IMFile(data)
         clip.translation = (100.0, 200.0)
-        assert data["parameters"]["translation0"]["defaultValue"] == 100.0
-        assert data["parameters"]["translation0"]["type"] == "double"
+        assert data["parameters"]["translation0"] == 100.0
+        assert data["parameters"]["translation1"] == 200.0
 
     def test_scale_setter(self):
         data = _base(_type="IMFile", parameters={
@@ -285,7 +285,8 @@ class TestScreenVMFile:
         data = _base(_type="ScreenVMFile", parameters={})
         clip = ScreenVMFile(data)
         clip.translation = (10.0, 20.0)
-        assert data["parameters"]["translation0"]["defaultValue"] == 10.0
+        assert data["parameters"]["translation0"] == 10.0
+        assert data["parameters"]["translation1"] == 20.0
 
     def test_scale(self):
         clip = self._make()
