@@ -146,3 +146,20 @@ def set_audio_speed(
                 return factor
 
     raise ValueError("No speed-changed audio clips found")
+
+
+def rescale(project: 'Project', factor: float | Fraction) -> None:
+    """Scale all timing in a project by factor.
+
+    This is a convenience wrapper around rescale_project() that
+    accepts a Project object.
+    """
+    rescale_project(project._data, Fraction(factor).limit_denominator(100000))
+
+
+def normalize_audio_speed(project: 'Project', target_speed: float = 1.0) -> Fraction:
+    """Rescale project so audio plays at target_speed.
+
+    Returns the original audio scalar.
+    """
+    return set_audio_speed(project._data, target_speed)

@@ -42,3 +42,12 @@ class StitchedMedia(BaseClip):
     @volume.setter
     def volume(self, value: float) -> None:
         self._data.setdefault('attributes', {})['gain'] = value
+
+    @property
+    def segment_count(self) -> int:
+        """Number of nested clip segments."""
+        return len(self._data.get('medias', []))
+
+    def clear_segments(self) -> None:
+        """Remove all nested segments."""
+        self._data['medias'] = []

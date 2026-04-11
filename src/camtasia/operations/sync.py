@@ -133,3 +133,20 @@ def plan_sync(
         ))
 
     return segments
+
+
+def apply_sync(
+    group: 'Group',
+    segments: list[SyncSegment],
+) -> None:
+    """Apply sync segments to a Group's internal track.
+
+    Converts SyncSegment objects to the (source_start, source_end,
+    timeline_duration) tuples expected by set_internal_segment_speeds.
+    """
+    from camtasia.timing import ticks_to_seconds
+    tuples = []
+    for seg in segments:
+        tl_dur = ticks_to_seconds(seg.video_end_ticks - seg.video_start_ticks)
+        tuples.append((seg.audio_start_seconds, seg.audio_end_seconds, tl_dur))
+    group.set_internal_segment_speeds(tuples)
