@@ -164,6 +164,41 @@ class BaseClip:
         """Source effect applied to this clip, or ``None``."""
         return self._data.get('sourceEffect')
 
+    def set_source_effect(
+        self,
+        *,
+        color0: tuple[int, int, int] | None = None,
+        color1: tuple[int, int, int] | None = None,
+        color2: tuple[int, int, int] | None = None,
+        color3: tuple[int, int, int] | None = None,
+        mid_point: tuple[float, float] = (0.5, 0.5),
+        speed: float = 5.0,
+        source_file_type: str = 'tscshadervid',
+    ) -> None:
+        """Create or replace the clip's sourceEffect for shader backgrounds.
+
+        Colors are 0-255 RGB tuples. They're converted to 0.0-1.0 internally.
+        """
+        params: dict[str, Any] = {}
+        for i, color in enumerate([color0, color1, color2, color3]):
+            if color is not None:
+                r, g, b = color
+                params[f'Color{i}-red'] = r / 255
+                params[f'Color{i}-green'] = g / 255
+                params[f'Color{i}-blue'] = b / 255
+                params[f'Color{i}-alpha'] = 1.0
+        params['MidPointX'] = mid_point[0]
+        params['MidPointY'] = mid_point[1]
+        params['Speed'] = speed
+        params['sourceFileType'] = source_file_type
+
+        self._data['sourceEffect'] = {
+            'effectName': 'SourceEffect',
+            'bypassed': False,
+            'category': '',
+            'parameters': params,
+        }
+
     # ------------------------------------------------------------------
     # Convenience
     # ------------------------------------------------------------------

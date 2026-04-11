@@ -4,8 +4,7 @@ from __future__ import annotations
 from typing import Any, Iterator
 
 from camtasia.timeline.clips import BaseClip
-from camtasia.timeline.markers import MarkerList
-from camtasia.timeline.marker import Marker
+from camtasia.timeline.markers import Marker, MarkerList
 from camtasia.timeline.track import Track
 from camtasia.timing import ticks_to_seconds
 
@@ -165,6 +164,25 @@ class Timeline:
             A flat list of every clip on the timeline.
         """
         return [clip for track in self.tracks for clip in track.clips]
+
+    def find_track(self, name: str) -> Track | None:
+        """Find a track by name, or return None."""
+        for track in self.tracks:
+            if track.name == name:
+                return track
+        return None
+
+    @property
+    def empty_tracks(self) -> list[Track]:
+        """Return all tracks with no clips."""
+        return [t for t in self.tracks if t.is_empty]
+
+    def remove_empty_tracks(self) -> int:
+        """Remove all empty tracks. Returns count removed."""
+        empty_indices = [t.index for t in self.tracks if t.is_empty]
+        for idx in reversed(empty_indices):
+            self.remove_track(idx)
+        return len(empty_indices)
 
     def add_marker(self, label: str, time_seconds: float) -> Marker:
         """Add a timeline marker at the given time.
