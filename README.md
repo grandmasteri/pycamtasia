@@ -30,7 +30,7 @@ Forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-
 - Camtasia v10 compatible JSON formatting (NSJSONSerialization style)
 - Python protocols (`__eq__`, `__hash__`, `__len__`, `__repr__`) on all major types
 - Input validation on crop, opacity, speed, and clip type
-- 1255 tests
+- 1260 tests
 
 ## Installation
 
