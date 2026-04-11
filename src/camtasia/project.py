@@ -14,7 +14,7 @@ from camtasia.authoring_client import AuthoringClient
 from camtasia.media_bin import Media, MediaBin, MediaType
 from camtasia.timeline import Timeline
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
-from camtasia.validation import ValidationIssue
+from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_indices
 
 
 import subprocess as _sp
@@ -228,6 +228,12 @@ class Project:
             if media.id not in referenced_ids:
                 issues.append(ValidationIssue('warning', f'Orphaned media not used by any clip: {media.source}', media.id))
 
+        # Duplicate clip IDs
+        issues.extend(_check_duplicate_clip_ids(self._data))
+
+        # Track index consistency
+        issues.extend(_check_track_indices(self._data))
+
         return issues
 
     def save(self) -> None:
@@ -403,6 +409,26 @@ class Project:
                 break
 
         return media
+
+    def summary(self) -> str:
+        """Return a human-readable summary of the project."""
+        lines = [
+            f'Project: {self.file_path.name}',
+            f'Canvas: {self.width}x{self.height}',
+            f'Duration: {self.total_duration_seconds():.1f}s',
+            f'Tracks: {self.timeline.track_count}',
+            f'Media: {len(self.media_bin)} items',
+        ]
+        for track in self.timeline.tracks:
+            clip_count = len(track)
+            if clip_count > 0:
+                types = set()
+                for clip in track.clips:
+                    types.add(clip.clip_type)
+                lines.append(f'  Track {track.index} "{track.name}": {clip_count} clips ({", ".join(sorted(types))})')
+            else:
+                lines.append(f'  Track {track.index} "{track.name}": empty')
+        return '\n'.join(lines)
 
     def total_duration_seconds(self) -> float:
         """Total timeline duration in seconds.

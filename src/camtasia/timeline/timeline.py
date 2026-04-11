@@ -143,6 +143,11 @@ class Timeline:
         """
         return ticks_to_seconds(self.total_duration_ticks())
 
+    @property
+    def duration_seconds(self) -> float:
+        """Total timeline duration in seconds."""
+        return self.total_duration_seconds()
+
     def get_or_create_track(self, name: str) -> Track:
         """Find a track by name, or create a new one if it doesn't exist.
 
