@@ -39,7 +39,7 @@ Forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-
 - Export: SRT subtitles, project reports (JSON/Markdown), timeline JSON
 - Builders: `TimelineBuilder` for cursor-based assembly, `CalloutBuilder` for styled text
 - Project introspection: `summary()`, `statistics()`, `validate()`
-- 1267 tests
+- 1273 tests
 
 ## Installation
 
