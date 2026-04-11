@@ -43,7 +43,7 @@ def _group_clip(clip_id=1, start_s=10.0, dur_s=100.0, source_s=120.0):
 def test_creates_correct_count():
     track = _make_track(_group_clip())
     pieces = track.set_segment_speeds(1, [(30, 1.0), (40, 2.0), (30, 0.5)])
-    assert len(pieces) == 3
+    assert [type(p).__name__ for p in pieces] == ['Group', 'Group', 'Group']
 
 
 def test_durations_match_requested():

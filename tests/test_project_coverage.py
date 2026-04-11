@@ -174,7 +174,7 @@ class TestFindMedia:
         actual_pngs = project.find_media_by_suffix(".png")
         actual_sources = [str(m.source) for m in actual_pngs]
         assert all(s.endswith(".png") for s in actual_sources)
-        assert len(actual_pngs) == 2
+        assert sorted(m.identity for m in actual_pngs) == ["a", "b"]
 
     def test_find_media_by_suffix_no_match(self, tmp_path: Path):
         project = _create_project(tmp_path)
@@ -278,8 +278,8 @@ class TestAddGradientBackground:
         assert actual_clip.duration > 0
         # Source bin should have the gradient entry
         actual_sources = list(project.media_bin)
-        assert len(actual_sources) == 1
-        assert "tscshadervid" in str(actual_sources[0].source)
+        actual_suffixes = [str(s.source).rsplit(".", 1)[-1] for s in actual_sources]
+        assert actual_suffixes == ["tscshadervid"]
 
     def test_custom_colors(self, tmp_path: Path):
         data = dict(MINIMAL_PROJECT_DATA)

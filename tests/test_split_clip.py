@@ -106,7 +106,7 @@ class TestSplitClip:
     def test_split_creates_two_clips(self):
         track, data = _make_track(_simple_clip())
         track.split_clip(1, 15.0)
-        assert len(data['medias']) == 2
+        assert [m['_type'] for m in data['medias']] == ['VMFile', 'VMFile']
 
     def test_split_durations_add_up(self):
         orig_dur = seconds_to_ticks(10.0)

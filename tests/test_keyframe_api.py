@@ -23,11 +23,8 @@ def test_add_keyframe_creates_parameter() -> None:
     param = clip.parameters["scale0"]
     assert param["type"] == "double"
     assert param["defaultValue"] == 0.0
-    assert len(param["keyframes"]) == 1
-    kf = param["keyframes"][0]
-    assert kf["time"] == 0
-    assert kf["value"] == 1.0
-    assert kf["interp"] == "eioe"
+    kf = param["keyframes"]
+    assert [(k["time"], k["value"], k["interp"]) for k in kf] == [(0, 1.0, "eioe")]
 
 
 # -- add_keyframe appends to existing keyframes --
@@ -36,8 +33,7 @@ def test_add_keyframe_appends_to_existing() -> None:
     clip = VMFile(_vmfile_dict())
     clip.add_keyframe("scale0", 0.0, 1.0)
     clip.add_keyframe("scale0", 1.0, 2.0)
-    assert len(clip.parameters["scale0"]["keyframes"]) == 2
-    assert clip.parameters["scale0"]["keyframes"][1]["value"] == 2.0
+    assert [kf["value"] for kf in clip.parameters["scale0"]["keyframes"]] == [1.0, 2.0]
 
 
 # -- add_keyframe preserves existing scalar as defaultValue --
@@ -48,7 +44,7 @@ def test_add_keyframe_preserves_scalar_as_default() -> None:
     clip.add_keyframe("scale0", 0.5, 2.0)
     param = clip.parameters["scale0"]
     assert param["defaultValue"] == 1.5
-    assert len(param["keyframes"]) == 1
+    assert [kf["value"] for kf in param["keyframes"]] == [2.0]
 
 
 # -- add_keyframe returns self (chaining) --

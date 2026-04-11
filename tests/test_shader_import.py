@@ -152,4 +152,4 @@ class TestImportShaderIdempotent:
         actual_second = proj.import_shader(shader)
 
         assert actual_first.id == actual_second.id
-        assert len(proj.find_media_by_suffix('.tscshadervid')) == 1
+        assert [s.id for s in proj.find_media_by_suffix('.tscshadervid')] == [actual_first.id]

@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Tests for SourceEffect flat-scalar color handling and set_shader_colors."""
 from camtasia.effects.source import SourceEffect
 from camtasia.effects.visual import _color_rgba, _set_color_rgba

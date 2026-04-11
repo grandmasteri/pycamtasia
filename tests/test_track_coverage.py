@@ -127,7 +127,6 @@ class TestTrackImageSequence:
     def test_creates_clips_without_transitions(self):
         track = _track()
         actual_clips = track.add_image_sequence([1, 2, 3], start_seconds=0.0, duration_per_image_seconds=2.0)
-        assert len(actual_clips) == 3
         assert all(isinstance(c, IMFile) for c in actual_clips)
         actual_starts = [c.start for c in actual_clips]
         assert actual_starts == [seconds_to_ticks(0.0), seconds_to_ticks(2.0), seconds_to_ticks(4.0)]
@@ -138,10 +137,9 @@ class TestTrackImageSequence:
             [1, 2, 3], start_seconds=0.0,
             duration_per_image_seconds=2.0, transition_seconds=0.5,
         )
-        assert len(actual_clips) == 3
+        assert [type(c).__name__ for c in actual_clips] == ['IMFile', 'IMFile', 'IMFile']
         actual_transitions = list(track.transitions)
-        assert len(actual_transitions) == 2
-        assert actual_transitions[0].name == "FadeThroughBlack"
+        assert [t.name for t in actual_transitions] == ["FadeThroughBlack", "FadeThroughBlack"]
 
 
 class TestTrackEndTime:
@@ -172,8 +170,7 @@ class TestTrackRemoveClip:
 class TestTrackMarkers:
     def test_track_markers_property(self):
         track = _track()
-        actual_markers = track.markers
-        assert len(actual_markers) == 0
+        assert list(track.markers) == []
 
 
 class TestTrackRepr:
@@ -199,11 +196,10 @@ class TestPerMediaMarkers:
         from camtasia.timeline.track import _PerMediaMarkers
         markers = _PerMediaMarkers(media_data)
         actual_markers = list(markers)
-        assert len(actual_markers) == 2
-        assert actual_markers[0].name == "Marker A"
-        assert actual_markers[0].time == 1000 + (600 - 500)
-        assert actual_markers[1].name == "Marker B"
-        assert actual_markers[1].time == 1000 + (800 - 500)
+        assert [(m.name, m.time) for m in actual_markers] == [
+            ("Marker A", 1000 + (600 - 500)),
+            ("Marker B", 1000 + (800 - 500)),
+        ]
 
     def test_len(self):
         media_data = {
@@ -214,11 +210,11 @@ class TestPerMediaMarkers:
             }
         }
         from camtasia.timeline.track import _PerMediaMarkers
-        assert len(_PerMediaMarkers(media_data)) == 1
+        markers = list(_PerMediaMarkers(media_data))
+        assert [m.name for m in markers] == ["M1"]
 
     def test_empty_markers(self):
         from camtasia.timeline.track import _PerMediaMarkers
-        assert len(_PerMediaMarkers({})) == 0
         assert list(_PerMediaMarkers({})) == []
 
 

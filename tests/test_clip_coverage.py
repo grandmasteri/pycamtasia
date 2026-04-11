@@ -564,8 +564,7 @@ class TestBaseClipFade:
         assert actual_result is clip
         assert "opacity" in data["parameters"]
         kf = data["parameters"]["opacity"]["keyframes"]
-        assert len(kf) == 1
-        assert kf[0]["value"] == 0.0
+        assert [k["value"] for k in kf] == [0.0]
 
     def test_fade_both(self):
         data = _base()
@@ -581,8 +580,7 @@ class TestBaseClipFade:
         clip = BaseClip(data)
         clip.fade(fade_out_seconds=1.0)
         kf = data["parameters"]["opacity"]["keyframes"]
-        assert len(kf) == 1
-        assert kf[0]["value"] == 0.0
+        assert [k["value"] for k in kf] == [0.0]
 
     def test_fade_no_op(self):
         data = _base()

@@ -72,9 +72,7 @@ class TestFadeInThenFadeOut:
         clip.fade_out(0.5)
 
         actual_keyframes = clip._data["parameters"]["opacity"]["keyframes"]
-        assert len(actual_keyframes) == 2
-        assert actual_keyframes[0]["value"] == 1.0
-        assert actual_keyframes[1]["value"] == 0.0
+        assert [kf["value"] for kf in actual_keyframes] == [1.0, 0.0]
 
 
 class TestFadeOutThenFadeIn:
@@ -114,9 +112,7 @@ class TestFadeOutThenFadeIn:
         clip.fade_in(0.5)
 
         actual_keyframes = clip._data["parameters"]["opacity"]["keyframes"]
-        assert len(actual_keyframes) == 2
-        assert actual_keyframes[0]["value"] == 1.0
-        assert actual_keyframes[1]["value"] == 0.0
+        assert [kf["value"] for kf in actual_keyframes] == [1.0, 0.0]
 
 
 class TestFadeInOnly:
@@ -137,8 +133,7 @@ class TestFadeInOnly:
         clip.fade_in(0.5)
 
         actual_keyframes = clip._data["parameters"]["opacity"]["keyframes"]
-        assert len(actual_keyframes) == 1
-        assert actual_keyframes[0]["value"] == 1.0
+        assert [kf["value"] for kf in actual_keyframes] == [1.0]
 
 
 class TestFadeOutOnly:
@@ -161,8 +156,7 @@ class TestFadeOutOnly:
         clip.fade_out(0.5)
 
         actual_keyframes = clip._data["parameters"]["opacity"]["keyframes"]
-        assert len(actual_keyframes) == 1
-        assert actual_keyframes[0]["value"] == 0.0
+        assert [kf["value"] for kf in actual_keyframes] == [0.0]
 
 
 class TestFadeMethodRegression:
