@@ -1,4 +1,6 @@
 """Tests for __eq__, __hash__, and __repr__ protocols."""
+from __future__ import annotations
+
 from pathlib import Path
 
 from camtasia.media_bin.media_bin import Media, MediaBin
@@ -25,10 +27,14 @@ def test_media_neq_different_id():
     assert _media(1) != _media(2)
 
 def test_media_hash_in_set():
-    assert len({_media(1), _media(1), _media(2)}) == 2
+    assert {_media(1), _media(1), _media(2)} == {_media(1), _media(2)}
 
 def test_media_repr():
     assert repr(_media(3)) == 'Media(id=3, source="media/file3.mp4")'
+
+
+def test_media_eq_non_media():
+    assert _media(1) != 'not a media'
 
 
 # --- MediaBin ---
@@ -48,11 +54,15 @@ def test_effect_eq_same_data():
 def test_effect_neq_different_data():
     assert Effect({"effectName": "Blur", "parameters": {}}) != Effect({"effectName": "Blur", "parameters": {}})
 
+
+def test_effect_eq_non_effect():
+    assert Effect({"effectName": "Blur", "parameters": {}}) != 'not an effect'
+
 def test_effect_hash():
     d = {"effectName": "Blur", "parameters": {}}
     e1, e2 = Effect(d), Effect(d)
     assert hash(e1) == hash(e2)
-    assert len({e1, e2}) == 1
+    assert {e1, e2} == {e1}
 
 
 # --- MarkerList ---
@@ -79,11 +89,16 @@ def test_transition_neq_different_data():
     d = {'name': 'Fade', 'duration': 100, 'leftMedia': 1, 'attributes': {}}
     assert Transition(d) != Transition(dict(d))
 
+
+def test_transition_eq_non_transition():
+    d = {'name': 'Fade', 'duration': 100, 'leftMedia': 1, 'attributes': {}}
+    assert Transition(d) != 'not a transition'
+
 def test_transition_hash():
     d = {'name': 'Fade', 'duration': 100, 'leftMedia': 1, 'attributes': {}}
     t1, t2 = Transition(d), Transition(d)
     assert hash(t1) == hash(t2)
-    assert len({t1, t2}) == 1
+    assert {t1, t2} == {t1}
 
 
 # --- Marker repr ---

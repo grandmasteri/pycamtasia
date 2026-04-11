@@ -16,9 +16,7 @@ class TestMediaSourceTracks:
                 {'type': 2, 'editRate': 44100, 'range': [0, 441000]},
             ],
         }).source_tracks
-        expected_length = 2
-        assert len(actual_tracks) == expected_length
-        assert actual_tracks[0]['type'] == 0
+        assert [t['type'] for t in actual_tracks] == [0, 2]
 
     def test_source_tracks_empty_when_missing(self):
         actual_tracks = Media({

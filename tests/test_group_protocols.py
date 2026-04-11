@@ -1,4 +1,5 @@
 """Tests for GroupTrack container protocols and Group.set_internal_segment_speeds auto-id."""
+from __future__ import annotations
 
 from camtasia.timeline.clips.group import Group, GroupTrack
 
@@ -40,15 +41,14 @@ def _make_group_data(media_ids=(1, 2, 3)):
 def test_group_track_len():
     data = _make_group_data()
     track = GroupTrack(data['tracks'][0])
-    assert len(track) == 3
+    assert [c.id for c in track] == [1, 2, 3]
 
 
 def test_group_track_iter():
     data = _make_group_data()
     track = GroupTrack(data['tracks'][0])
     clips = list(track)
-    assert len(clips) == 3
-    assert all(hasattr(c, 'id') for c in clips)
+    assert [c.id for c in clips] == [1, 2, 3]
 
 
 def test_set_internal_segment_speeds_auto_id():
