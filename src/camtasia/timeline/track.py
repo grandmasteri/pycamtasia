@@ -51,6 +51,7 @@ class Track:
 
     @name.setter
     def name(self, value: str) -> None:
+        """Set the track name."""
         self._attributes['ident'] = value
 
     @property
@@ -93,6 +94,7 @@ class Track:
 
     @audio_muted.setter
     def audio_muted(self, value: bool) -> None:
+        """Set whether the track's audio is muted."""
         self._attributes['audioMuted'] = value
 
     @property
@@ -102,6 +104,7 @@ class Track:
 
     @video_hidden.setter
     def video_hidden(self, value: bool) -> None:
+        """Set whether the track's video is hidden."""
         self._attributes['videoHidden'] = value
 
     @property
@@ -111,6 +114,7 @@ class Track:
 
     @magnetic.setter
     def magnetic(self, value: bool) -> None:
+        """Set whether magnetic clip snapping is enabled."""
         self._attributes['magnetic'] = value
 
     @property
@@ -120,6 +124,7 @@ class Track:
 
     @solo.setter
     def solo(self, value: bool) -> None:
+        """Set whether the track is soloed."""
         self._attributes['solo'] = value
 
     @property
@@ -129,6 +134,7 @@ class Track:
 
     @is_locked.setter
     def is_locked(self, value: bool) -> None:
+        """Set whether the track is locked against editing."""
         self._attributes.setdefault('metadata', {})['IsLocked'] = str(value)
 
     # ------------------------------------------------------------------

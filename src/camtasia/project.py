@@ -127,6 +127,7 @@ class Project:
 
     @width.setter
     def width(self, value: int) -> None:
+        """Set the canvas width in pixels."""
         self._data['width'] = value
 
     @property
@@ -136,6 +137,7 @@ class Project:
 
     @height.setter
     def height(self, value: int) -> None:
+        """Set the canvas height in pixels."""
         self._data['height'] = value
 
     @property
