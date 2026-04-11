@@ -375,6 +375,31 @@ class Track:
         )
         return clip  # type: ignore[return-value]
 
+    def add_callout_from_builder(
+        self,
+        builder: 'CalloutBuilder',
+        start_seconds: float,
+        duration_seconds: float,
+    ) -> Callout:
+        """Add a callout using a CalloutBuilder configuration."""
+        clip = self.add_callout(
+            builder.text, start_seconds, duration_seconds,
+            font_name=builder._font_name,
+            font_weight=builder._font_weight,
+            font_size=builder._font_size,
+        )
+        clip.move_to(builder._x, builder._y)
+        if builder._width and builder._height:
+            clip.resize(builder._width, builder._height)
+        if builder._fill_color:
+            clip.fill_color = builder._fill_color
+        if builder._font_color:
+            clip.set_colors(font_color=builder._font_color)
+        if builder._stroke_color:
+            clip.stroke_color = builder._stroke_color
+        clip.set_alignment(builder._alignment, 'center')
+        return clip
+
     def add_title(
         self,
         text: str,
