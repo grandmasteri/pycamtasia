@@ -43,6 +43,7 @@ class RGBA:
 
     @classmethod
     def from_hex(cls, color: str) -> RGBA:
+        """Create an RGBA instance from a hex color string."""
         channels = hex_rgb(color)
         if len(channels) == 3:
             return cls(*channels, alpha=cls.MAXIMUM_CHANNEL)
@@ -50,6 +51,7 @@ class RGBA:
 
     @classmethod
     def from_floats(cls, red: float, green: float, blue: float, alpha: float) -> RGBA:
+        """Create an RGBA instance from 0.0–1.0 float channel values."""
         return cls(
             red * cls.MAXIMUM_CHANNEL,
             green * cls.MAXIMUM_CHANNEL,
@@ -89,21 +91,26 @@ class RGBA:
 
     @property
     def red(self) -> int:
+        """Red channel value (0–255)."""
         return self._red
 
     @property
     def green(self) -> int:
+        """Green channel value (0–255)."""
         return self._green
 
     @property
     def blue(self) -> int:
+        """Blue channel value (0–255)."""
         return self._blue
 
     @property
     def alpha(self) -> int:
+        """Alpha channel value (0–255)."""
         return self._alpha
 
     def as_tuple(self) -> tuple[int, int, int, int]:
+        """Return the color as an ``(red, green, blue, alpha)`` tuple."""
         return (self.red, self.green, self.blue, self.alpha)
 
     def _key(self) -> tuple[int, int, int, int]:

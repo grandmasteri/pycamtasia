@@ -12,6 +12,7 @@ def rectangle(fill_color=Color(0.0, 0.0, 0.0, 0.0),
               height=180.0,
               width=240.0,
               ):
+    """Create a rectangle shape annotation dict."""
     return {
         "kind": "remix",
         "shape": "shape-rectangle",

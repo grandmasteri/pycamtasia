@@ -42,6 +42,7 @@ class BehaviorPhase:
 
     @property
     def character_order(self) -> int:
+        """Order in which characters animate (e.g. left-to-right, random)."""
         return self._attrs["characterOrder"]
 
     @character_order.setter
@@ -86,6 +87,7 @@ class BehaviorPhase:
 
     @property
     def spring_damping(self) -> float:
+        """Spring damping coefficient for bounce animations."""
         return self._attrs.get("springDamping", 0.0)
 
     @spring_damping.setter
@@ -94,6 +96,7 @@ class BehaviorPhase:
 
     @property
     def spring_stiffness(self) -> float:
+        """Spring stiffness coefficient for bounce animations."""
         return self._attrs.get("springStiffness", 0.0)
 
     @spring_stiffness.setter
@@ -102,6 +105,7 @@ class BehaviorPhase:
 
     @property
     def bounce_bounciness(self) -> float:
+        """Bounciness factor for bounce animations."""
         return self._attrs.get("bounceBounciness", 0.0)
 
     @bounce_bounciness.setter
@@ -138,10 +142,12 @@ class GenericBehaviorEffect:
 
     @property
     def effect_name(self) -> str:
+        """Effect name identifier."""
         return self._data["effectName"]
 
     @property
     def bypassed(self) -> bool:
+        """Whether the effect is bypassed (disabled)."""
         return self._data.get("bypassed", False)
 
     @bypassed.setter
