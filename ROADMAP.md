@@ -21,6 +21,9 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 - [x] **`track.split_clip(clip_id, split_at_seconds)`** — Split a clip into two halves at a given timeline position. Returns (left_clip, right_clip) with correct durations, mediaStart offsets, and new sequential IDs. Handles Group clips by deep-copying internal tracks.
 - [x] **Speed change API for screen recordings** — Apply speed scalars to `.trec`-backed clips, handling the Group/UnifiedMedia structure correctly.
 - [x] **Gain/mute API** — ~~No way to mute clip audio.~~ Fixed: `BaseClip.gain` property and `mute()` method.
+- [x] **Track reorder API** — `timeline.move_track()`, `reorder_tracks()`, `move_track_to_front()`, `move_track_to_back()`.
+- [x] **Project-wide clip ID allocator** — `timeline.next_clip_id()` for safe ID generation across all tracks.
+- [x] **Clip search** — `track.find_clip()` and `timeline.find_clip()` for locating clips by ID.
 
 ## Export
 
@@ -37,6 +40,13 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 - [x] **Source path `./` prefix** — ~~Missing prefix.~~ Fixed: `import_media()` prefixes with `./` and sets metaData filename.
 - [x] **Audio clip attributes** — ~~Missing v10 attributes.~~ Fixed: `add_audio()` includes gain, mixToMono, loudnessNormalization, sourceFileOffset, channelNumber.
 - [x] **NSJSONSerialization-compatible save** — ~~`save()` wrote compact JSON causing .trec parser crashes.~~ Fixed: matching Camtasia's formatting with scalar array collapsing, expanded empty objects, and `-Infinity` replacement.
+- [x] **Python protocols** — `__eq__`, `__hash__`, `__len__`, `__repr__` on all major types.
+- [x] **Input validation** — Validation on crop, opacity, speed, and clip type arguments.
+- [x] **Keyframe API** — `clip.add_keyframe()`, `clip.clear_keyframes()` for custom animation.
+- [x] **Shader import** — `project.import_shader()` for adding `.tscshadervid` files.
+- [x] **Lower third kwargs** — `track.add_lower_third()` supports `font_weight`, `scale`, `template_ident`.
+- [ ] **Marker consolidation** — Two separate Marker classes exist; unify into a single implementation.
+- [ ] **Type annotations on `color.py`** — Add full type hints to the color module.
 
 ## High-Level API (Screenplay-Driven Workflow)
 
@@ -50,4 +60,4 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 ## Testing
 
 - [x] **Camtasia open-in-app integration test** — Automate launching Camtasia via CLI and checking stderr for exceptions as a CI validation step.
-- [ ] **Round-trip test for .trec projects** — Load a .trec-containing project, save, and verify Camtasia opens without crashes.
+- [ ] **Round-trip test for `.trec` projects** — Load a .trec-containing project, save, and verify Camtasia opens without crashes.
