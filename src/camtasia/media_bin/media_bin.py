@@ -117,6 +117,23 @@ class Media:
         return datetime.datetime.strptime(self._data["lastMod"], "%Y%m%dT%H%M%S")
 
     @property
+    def duration_seconds(self) -> float | None:
+        """Return the source media duration in seconds, or None if unavailable."""
+        for st in self._data.get('sourceTracks', []):
+            if st.get('type') == 0:  # video track
+                range_val = st.get('range', [0, 0])
+                edit_rate = st.get('editRate', 1)
+                if edit_rate > 0 and len(range_val) >= 2:
+                    return range_val[1] / edit_rate
+        for st in self._data.get('sourceTracks', []):
+            if st.get('type') == 2:  # audio track
+                range_val = st.get('range', [0, 0])
+                edit_rate = st.get('editRate', 1)
+                if edit_rate > 0 and len(range_val) >= 2:
+                    return range_val[1] / edit_rate
+        return None
+
+    @property
     def id(self) -> int:
         """Unique integer ID referenced by clips via ``src``."""
         return self._data["id"]
