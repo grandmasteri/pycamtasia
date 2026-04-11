@@ -24,9 +24,15 @@ class Track:
         data: The track dict from ``csml.tracks``.
     """
 
-    def __init__(self, attributes: dict[str, Any], data: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        attributes: dict[str, Any],
+        data: dict[str, Any],
+        _all_tracks: list[dict[str, Any]] | None = None,
+    ) -> None:
         self._attributes = attributes
         self._data = data
+        self._all_tracks = _all_tracks
 
     # ------------------------------------------------------------------
     # Identity / display properties
@@ -834,19 +840,15 @@ class Track:
         return (clip_from_dict(left_data), clip_from_dict(right_data))
 
     def _next_clip_id(self) -> int:
-        """Scan all medias on this track for the max ID and increment."""
-        ids = []
-        for m in self._data.get('medias', []):
-            ids.append(m['id'])
-            for t in m.get('tracks', []):
-                for inner in t.get('medias', []):
-                    ids.append(inner['id'])
-                    if 'video' in inner:
-                        ids.append(inner['video']['id'])
-                    if 'audio' in inner:
-                        ids.append(inner['audio']['id'])
-        max_id = max(ids, default=0)
-        return max_id + 1
+        """Scan all medias for the max ID and increment.
+
+        When ``_all_tracks`` is set, scans every track in the project
+        (including nested group tracks and UnifiedMedia sub-clips) to
+        avoid ID collisions across tracks.  Falls back to scanning only
+        this track when ``_all_tracks`` is not available.
+        """
+        sources = self._all_tracks if self._all_tracks is not None else [self._data]
+        return _max_clip_id(sources) + 1
 
     def __repr__(self) -> str:
         return f'Track(name={self.name!r}, index={self.index})'
@@ -921,3 +923,20 @@ class _PerMediaMarkers:
             .get('toc', {})
             .get('keyframes', [])
         )
+
+
+def _max_clip_id(tracks: list[dict[str, Any]]) -> int:
+    """Return the maximum clip ID across a list of track dicts, recursively."""
+    best = 0
+    for track in tracks:
+        for m in track.get('medias', []):
+            best = max(best, m.get('id', 0))
+            if 'video' in m:
+                best = max(best, m['video'].get('id', 0))
+            if 'audio' in m:
+                best = max(best, m['audio'].get('id', 0))
+            # Recurse into Group internal tracks
+            inner_tracks = m.get('tracks', [])
+            if inner_tracks:
+                best = max(best, _max_clip_id(inner_tracks))
+    return best

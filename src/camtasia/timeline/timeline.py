@@ -57,6 +57,33 @@ class Timeline:
         """
         del self.tracks[index]
 
+    def next_clip_id(self) -> int:
+        """Return the next available clip ID across ALL tracks.
+
+        Scans every track — including nested group tracks and
+        UnifiedMedia sub-clips — for the maximum clip ID and returns
+        ``max + 1``.  Returns ``1`` for an empty project.
+        """
+        from camtasia.timeline.track import _max_clip_id
+        return _max_clip_id(self._track_list) + 1
+
+    def move_track(self, from_index: int, to_index: int) -> None:
+        """Move a track from one array position to another.
+
+        Args:
+            from_index: Current array position.
+            to_index: Desired array position.
+        """
+        self.tracks.move_track(from_index, to_index)
+
+    def reorder_tracks(self, order: list[int]) -> None:
+        """Reorder tracks by providing current trackIndex values in desired order.
+
+        Args:
+            order: List of current ``trackIndex`` values in the new order.
+        """
+        self.tracks.reorder_tracks(order)
+
     # ------------------------------------------------------------------
     # Markers
     # ------------------------------------------------------------------
@@ -157,7 +184,7 @@ class _TrackAccessor:
     def __iter__(self) -> Iterator[Track]:
         for i, track_data in enumerate(self._track_list):
             attrs = self._attrs[i] if i < len(self._attrs) else {}
-            yield Track(attrs, track_data)
+            yield Track(attrs, track_data, _all_tracks=self._track_list)
 
     def __getitem__(self, track_index: int) -> Track:
         """Get a track by its ``trackIndex``.
@@ -171,7 +198,7 @@ class _TrackAccessor:
         for i, t in enumerate(self._track_list):
             if t['trackIndex'] == track_index:
                 attrs = self._attrs[i] if i < len(self._attrs) else {}
-                return Track(attrs, t)
+                return Track(attrs, t, _all_tracks=self._track_list)
         raise KeyError(f'No track with index={track_index}')
 
     def __delitem__(self, track_index: int) -> None:
@@ -233,6 +260,56 @@ class _TrackAccessor:
             t['trackIndex'] = j
 
         return self[index]
+
+    def move_track(self, from_index: int, to_index: int) -> None:
+        """Move a track from one array position to another.
+
+        Args:
+            from_index: Current array position of the track.
+            to_index: Desired array position.
+
+        Raises:
+            IndexError: If either index is out of range.
+        """
+        tracks = self._track_list
+        attrs = self._data.get('trackAttributes', [])
+        n = len(tracks)
+        if not (0 <= from_index < n) or not (0 <= to_index < n):
+            raise IndexError(
+                f'Track index out of range: from_index={from_index}, '
+                f'to_index={to_index}, num_tracks={n}'
+            )
+        track = tracks.pop(from_index)
+        attr = attrs.pop(from_index) if from_index < len(attrs) else {}
+        tracks.insert(to_index, track)
+        attrs.insert(to_index, attr)
+        for j, t in enumerate(tracks):
+            t['trackIndex'] = j
+
+    def reorder_tracks(self, order: list[int]) -> None:
+        """Reorder tracks by providing current trackIndex values in desired order.
+
+        Args:
+            order: List of current ``trackIndex`` values in the new order.
+
+        Raises:
+            ValueError: If ``order`` doesn't contain exactly all current indices.
+        """
+        tracks = self._track_list
+        attrs = self._data.get('trackAttributes', [])
+        current_indices = {t['trackIndex'] for t in tracks}
+        if set(order) != current_indices or len(order) != len(tracks):
+            raise ValueError(
+                f'order must contain exactly all current trackIndex values: '
+                f'{sorted(current_indices)}'
+            )
+        index_to_pos = {t['trackIndex']: i for i, t in enumerate(tracks)}
+        new_tracks = [tracks[index_to_pos[idx]] for idx in order]
+        new_attrs = [attrs[index_to_pos[idx]] for idx in order]
+        tracks[:] = new_tracks
+        attrs[:] = new_attrs
+        for j, t in enumerate(tracks):
+            t['trackIndex'] = j
 
 
 class _TimelineMarkers:

@@ -76,6 +76,26 @@ class Group(BaseClip):
         """Group height."""
         return self.attributes.get('heightAttr', 0.0)
 
+    @property
+    def is_screen_recording(self) -> bool:
+        """Return True if this group contains screen recording media."""
+        for track in self._data.get('tracks', []):
+            for media in track.get('medias', []):
+                if media.get('_type') in ('UnifiedMedia', 'ScreenVMFile'):
+                    return True
+        return False
+
+    @property
+    def internal_media_src(self) -> int | None:
+        """Return the source ID of the internal screen recording media, or None."""
+        for track in self._data.get('tracks', []):
+            for media in track.get('medias', []):
+                if media.get('_type') == 'UnifiedMedia':
+                    return media.get('video', {}).get('src')
+                if media.get('_type') == 'ScreenVMFile':
+                    return media.get('src')
+        return None
+
     # ------------------------------------------------------------------
     # Per-segment speed via StitchedMedia (v2 reverse-engineered format)
     # ------------------------------------------------------------------
