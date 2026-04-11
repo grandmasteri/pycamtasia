@@ -203,6 +203,63 @@ class Timeline:
         return self.markers.add(label, seconds_to_ticks(time_seconds))
 
     # ------------------------------------------------------------------
+    # Search & filter
+    # ------------------------------------------------------------------
+
+    def clips_in_range(
+        self,
+        start_seconds: float,
+        end_seconds: float,
+    ) -> list[tuple[Track, BaseClip]]:
+        """Find all clips that overlap with a time range.
+
+        Returns (track, clip) tuples for clips whose time span
+        overlaps [start_seconds, end_seconds].
+        """
+        from camtasia.timing import seconds_to_ticks
+        start_ticks = seconds_to_ticks(start_seconds)
+        end_ticks = seconds_to_ticks(end_seconds)
+        results = []
+        for track in self.tracks:
+            for clip in track.clips:
+                clip_start = clip.start
+                clip_end = clip_start + clip.duration
+                if clip_start < end_ticks and clip_end > start_ticks:
+                    results.append((track, clip))
+        return results
+
+    def clips_of_type(self, clip_type: str) -> list[tuple[Track, BaseClip]]:
+        """Find all clips of a specific type across all tracks.
+
+        Args:
+            clip_type: Clip type string (e.g. 'AMFile', 'IMFile', 'Group').
+
+        Returns:
+            List of (track, clip) tuples.
+        """
+        results = []
+        for track in self.tracks:
+            for clip in track.clips:
+                if clip.clip_type == clip_type:
+                    results.append((track, clip))
+        return results
+
+    @property
+    def audio_clips(self) -> list[tuple[Track, BaseClip]]:
+        """All audio clips across all tracks."""
+        return self.clips_of_type('AMFile')
+
+    @property
+    def image_clips(self) -> list[tuple[Track, BaseClip]]:
+        """All image clips across all tracks."""
+        return self.clips_of_type('IMFile')
+
+    @property
+    def video_clips(self) -> list[tuple[Track, BaseClip]]:
+        """All video clips across all tracks."""
+        return self.clips_of_type('VMFile')
+
+    # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
 
