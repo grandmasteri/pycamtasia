@@ -88,6 +88,7 @@ class Track:
 
     @property
     def audio_muted(self) -> bool:
+        """Whether the track's audio is muted."""
         return self._attributes.get('audioMuted', False)
 
     @audio_muted.setter
@@ -96,6 +97,7 @@ class Track:
 
     @property
     def video_hidden(self) -> bool:
+        """Whether the track's video is hidden."""
         return self._attributes.get('videoHidden', False)
 
     @video_hidden.setter
@@ -104,6 +106,7 @@ class Track:
 
     @property
     def magnetic(self) -> bool:
+        """Whether the track has magnetic clip snapping enabled."""
         return self._attributes.get('magnetic', False)
 
     @magnetic.setter
@@ -112,6 +115,7 @@ class Track:
 
     @property
     def solo(self) -> bool:
+        """Whether the track is soloed for exclusive playback."""
         return self._attributes.get('solo', False)
 
     @solo.setter
@@ -120,6 +124,7 @@ class Track:
 
     @property
     def is_locked(self) -> bool:
+        """Whether the track is locked against editing."""
         return self._attributes.get('metadata', {}).get('IsLocked', 'False') == 'True'
 
     @is_locked.setter

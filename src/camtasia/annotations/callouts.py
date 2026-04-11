@@ -15,6 +15,7 @@ def text(text,
          vertical_alignment=VerticalAlignment.Center,
          line_spacing=0.0
          ):
+    """Create a text callout annotation dict."""
     return {
         "kind": "remix",
         "shape": "text",
@@ -65,6 +66,7 @@ def square(text,
            horizontal_alignment=HorizontalAlignment.Center,
            vertical_alignment=VerticalAlignment.Center,
            line_spacing=0.0):
+    """Create a square text callout annotation dict."""
     return {
         "kind": "remix",
         "shape": "text-rectangle",

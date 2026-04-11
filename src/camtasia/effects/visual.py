@@ -16,6 +16,7 @@ class RoundCorners(Effect):
 
     @property
     def radius(self) -> float:
+        """Corner radius in pixels."""
         return self.get_parameter("radius")
 
     @radius.setter
@@ -24,6 +25,7 @@ class RoundCorners(Effect):
 
     @property
     def top_left(self) -> bool:
+        """Whether the top-left corner is rounded."""
         return self.get_parameter("topLeft")
 
     @top_left.setter
@@ -32,6 +34,7 @@ class RoundCorners(Effect):
 
     @property
     def top_right(self) -> bool:
+        """Whether the top-right corner is rounded."""
         return self.get_parameter("topRight")
 
     @top_right.setter
@@ -40,6 +43,7 @@ class RoundCorners(Effect):
 
     @property
     def bottom_left(self) -> bool:
+        """Whether the bottom-left corner is rounded."""
         return self.get_parameter("bottomLeft")
 
     @bottom_left.setter
@@ -48,6 +52,7 @@ class RoundCorners(Effect):
 
     @property
     def bottom_right(self) -> bool:
+        """Whether the bottom-right corner is rounded."""
         return self.get_parameter("bottomRight")
 
     @bottom_right.setter
@@ -87,6 +92,7 @@ class DropShadow(Effect):
 
     @property
     def angle(self) -> float:
+        """Shadow angle in degrees."""
         return self.get_parameter("angle")
 
     @angle.setter
@@ -95,6 +101,7 @@ class DropShadow(Effect):
 
     @property
     def offset(self) -> float:
+        """Shadow offset distance in pixels."""
         return self.get_parameter("offset")
 
     @offset.setter
@@ -103,6 +110,7 @@ class DropShadow(Effect):
 
     @property
     def blur(self) -> float:
+        """Shadow blur radius."""
         return self.get_parameter("blur")
 
     @blur.setter
@@ -111,6 +119,7 @@ class DropShadow(Effect):
 
     @property
     def opacity(self) -> float:
+        """Shadow opacity from 0.0 (transparent) to 1.0 (opaque)."""
         return self.get_parameter("opacity")
 
     @opacity.setter
@@ -137,6 +146,7 @@ class MotionBlur(Effect):
 
     @property
     def intensity(self) -> float:
+        """Blur intensity level."""
         return self.get_parameter("intensity")
 
     @intensity.setter
@@ -158,6 +168,7 @@ class Mask(Effect):
 
     @property
     def mask_shape(self) -> int:
+        """Mask shape identifier."""
         return self.get_parameter("mask_shape")
 
     @mask_shape.setter
@@ -166,6 +177,7 @@ class Mask(Effect):
 
     @property
     def mask_opacity(self) -> float:
+        """Mask opacity from 0.0 (transparent) to 1.0 (opaque)."""
         return self.get_parameter("mask_opacity")
 
     @mask_opacity.setter
@@ -174,6 +186,7 @@ class Mask(Effect):
 
     @property
     def mask_blend(self) -> float:
+        """Mask edge blend (feather) amount."""
         return self.get_parameter("mask_blend")
 
     @mask_blend.setter
@@ -182,6 +195,7 @@ class Mask(Effect):
 
     @property
     def mask_invert(self) -> int:
+        """Whether the mask is inverted (1) or normal (0)."""
         return self.get_parameter("mask_invert")
 
     @mask_invert.setter
@@ -190,6 +204,7 @@ class Mask(Effect):
 
     @property
     def mask_rotation(self) -> float:
+        """Mask rotation angle in degrees."""
         return self.get_parameter("mask_rotation")
 
     @mask_rotation.setter
@@ -198,6 +213,7 @@ class Mask(Effect):
 
     @property
     def mask_width(self) -> float | dict:
+        """Mask width, scalar or keyframed dict."""
         return self.get_parameter("mask_width")
 
     @mask_width.setter
@@ -206,6 +222,7 @@ class Mask(Effect):
 
     @property
     def mask_height(self) -> float | dict:
+        """Mask height, scalar or keyframed dict."""
         return self.get_parameter("mask_height")
 
     @mask_height.setter
@@ -214,6 +231,7 @@ class Mask(Effect):
 
     @property
     def mask_position_x(self) -> float | dict:
+        """Mask horizontal position, scalar or keyframed dict."""
         return self.get_parameter("mask_positionX")
 
     @mask_position_x.setter
@@ -222,6 +240,7 @@ class Mask(Effect):
 
     @property
     def mask_position_y(self) -> float | dict:
+        """Mask vertical position, scalar or keyframed dict."""
         return self.get_parameter("mask_positionY")
 
     @mask_position_y.setter
@@ -239,6 +258,7 @@ class Glow(Effect):
 
     @property
     def radius(self) -> float:
+        """Glow spread radius."""
         return self.get_parameter("radius")
 
     @radius.setter
@@ -247,6 +267,7 @@ class Glow(Effect):
 
     @property
     def intensity(self) -> float:
+        """Glow intensity level."""
         return self.get_parameter("intensity")
 
     @intensity.setter
@@ -264,6 +285,7 @@ class BlurRegion(Effect):
 
     @property
     def sigma(self) -> float:
+        """Gaussian blur sigma value."""
         return self.get_parameter("sigma")
 
     @sigma.setter
@@ -272,6 +294,7 @@ class BlurRegion(Effect):
 
     @property
     def mask_corner_radius(self) -> float:
+        """Corner radius of the blur region mask."""
         return self.get_parameter("mask_corner_radius")
 
     @mask_corner_radius.setter
@@ -280,6 +303,7 @@ class BlurRegion(Effect):
 
     @property
     def mask_invert(self) -> int:
+        """Whether the blur region mask is inverted (1) or normal (0)."""
         return self.get_parameter("mask_invert")
 
     @mask_invert.setter
@@ -288,6 +312,7 @@ class BlurRegion(Effect):
 
     @property
     def color_alpha(self) -> float:
+        """Alpha channel of the blur region overlay color."""
         return self.get_parameter("color_alpha")
 
     @color_alpha.setter

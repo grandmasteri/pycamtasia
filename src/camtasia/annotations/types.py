@@ -4,6 +4,7 @@ from enum import Enum
 
 @dataclass(frozen=True)
 class Color:
+    """RGBA color with components in the range [0.0, 1.0]."""
     red: float
     green: float
     blue: float
@@ -17,23 +18,27 @@ class Color:
 
 
 class HorizontalAlignment(Enum):
+    """Horizontal text alignment options."""
     Left = 'left'
     Center = 'center'
     Right = 'right'
 
 
 class VerticalAlignment(Enum):
+    """Vertical text alignment options."""
     Top = 'top'
     Center = 'center'
     Bottom = 'bottom'
 
 
 class FillStyle(Enum):
+    """Shape fill style options."""
     Solid = 'solid'
     Gradient = 'gradient'
 
 
 class StrokeStyle(Enum):
+    """Shape stroke/border style options."""
     Solid = 'solid'
     Dash = 'dash'
     Dot = 'dot'

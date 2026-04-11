@@ -32,6 +32,7 @@ class SourceEffect(Effect):
 
     @property
     def color0(self) -> tuple[float, float, float, float]:
+        """First shader color as RGBA floats."""
         return self._get_color(0)
 
     @color0.setter
@@ -40,6 +41,7 @@ class SourceEffect(Effect):
 
     @property
     def color1(self) -> tuple[float, float, float, float]:
+        """Second shader color as RGBA floats."""
         return self._get_color(1)
 
     @color1.setter
@@ -48,6 +50,7 @@ class SourceEffect(Effect):
 
     @property
     def color2(self) -> tuple[float, float, float, float]:
+        """Third shader color as RGBA floats."""
         return self._get_color(2)
 
     @color2.setter
@@ -56,6 +59,7 @@ class SourceEffect(Effect):
 
     @property
     def color3(self) -> tuple[float, float, float, float]:
+        """Fourth shader color as RGBA floats."""
         return self._get_color(3)
 
     @color3.setter
@@ -77,6 +81,7 @@ class SourceEffect(Effect):
 
     @property
     def speed(self) -> float:
+        """Shader animation speed."""
         return self.get_parameter("Speed")
 
     @speed.setter
@@ -85,6 +90,7 @@ class SourceEffect(Effect):
 
     @property
     def source_file_type(self) -> str:
+        """Source file type identifier for the shader."""
         return self.get_parameter("sourceFileType")
 
     def set_shader_colors(
