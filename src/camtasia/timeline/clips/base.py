@@ -125,6 +125,8 @@ class BaseClip:
                 Internally stored as ``1/speed`` since scalar represents
                 the fraction of source consumed per output tick.
         """
+        if speed <= 0:
+            raise ValueError(f'Speed must be positive, got {speed}')
         self.scalar = Fraction(1, 1) / Fraction(speed).limit_denominator(10000)
 
     @property
@@ -183,6 +185,14 @@ class BaseClip:
     @duration_seconds.setter
     def duration_seconds(self, value: float) -> None:
         self.duration = seconds_to_ticks(value)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BaseClip):
+            return NotImplemented
+        return self._data is other._data or self.id == other.id
+
+    def __hash__(self) -> int:
+        return hash(self.id)
 
     def __repr__(self) -> str:
         return (
@@ -402,6 +412,8 @@ class BaseClip:
         Returns:
             ``self`` for chaining.
         """
+        if not 0.0 <= opacity <= 1.0:
+            raise ValueError(f'Opacity must be 0.0-1.0, got {opacity}')
         self._clear_opacity()
         end = int(self._data.get('duration', self.media_duration))
         self._add_opacity_track([
@@ -619,6 +631,9 @@ class BaseClip:
         Returns:
             ``self`` for chaining.
         """
+        for name, val in [('left', left), ('top', top), ('right', right), ('bottom', bottom)]:
+            if not 0.0 <= val <= 1.0:
+                raise ValueError(f'Crop {name} must be 0.0-1.0, got {val}')
         self._set_param_value('geometryCrop0', left)
         self._set_param_value('geometryCrop1', top)
         self._set_param_value('geometryCrop2', right)

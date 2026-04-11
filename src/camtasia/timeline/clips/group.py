@@ -40,8 +40,16 @@ class GroupTrack:
         """Track parameters dict."""
         return self._data.get('parameters', {})
 
+    def __len__(self) -> int:
+        """Number of clips in this group track."""
+        return len(self._data.get('medias', []))
+
+    def __iter__(self):
+        """Iterate over clips in this group track."""
+        return iter(self.clips)
+
     def __repr__(self) -> str:
-        return f"GroupTrack(index={self.track_index}, clips={len(self._data.get('medias', []))})"
+        return f"GroupTrack(index={self.track_index}, clips={len(self)})"
 
 
 class Group(BaseClip):
@@ -104,7 +112,7 @@ class Group(BaseClip):
         self,
         segments: list[tuple[float, float, float]],
         *,
-        next_id: int = 1000,
+        next_id: int | None = None,
     ) -> None:
         """Replace the internal track's media with per-segment StitchedMedia clips.
 
@@ -119,7 +127,8 @@ class Group(BaseClip):
         Args:
             segments: List of ``(source_start_s, source_end_s,
                 timeline_duration_s)`` tuples.
-            next_id: Starting ID for generated clips.
+            next_id: Starting ID for generated clips. If ``None``,
+                auto-detects from existing internal clip IDs.
         """
         # Find the internal track containing UnifiedMedia or existing media
         media_track = None
@@ -153,6 +162,13 @@ class Group(BaseClip):
         # scalar and clipSpeedAttribute for speed-changed segments.
         new_medias = []
         timeline_cursor = 0
+
+        if next_id is None:
+            max_id = 0
+            for track in self._data.get('tracks', []):
+                for m in track.get('medias', []):
+                    max_id = max(max_id, m.get('id', 0))
+            next_id = max_id + 1
         cid = next_id
 
         for src_start, src_end, tl_dur in segments:

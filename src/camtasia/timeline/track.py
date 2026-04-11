@@ -13,6 +13,12 @@ from camtasia.timeline.marker import Marker
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 
 
+_VALID_CLIP_TYPES = frozenset({
+    'AMFile', 'VMFile', 'IMFile', 'Callout', 'Group',
+    'ScreenVMFile', 'ScreenIMFile', 'StitchedMedia', 'UnifiedMedia',
+})
+
+
 class Track:
     """A track on the timeline.
 
@@ -51,6 +57,30 @@ class Track:
     def index(self) -> int:
         """Track index (position in the track list)."""
         return self._data['trackIndex']
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Track):
+            return NotImplemented
+        return self._data is other._data or self.index == other.index
+
+    def __hash__(self) -> int:
+        return hash(self.index)
+
+    def __len__(self) -> int:
+        """Number of clips on this track."""
+        return len(self._data.get('medias', []))
+
+    @property
+    def clip_count(self) -> int:
+        """Number of clips on this track."""
+        return len(self)
+
+    def find_clip(self, clip_id: int) -> BaseClip | None:
+        """Find a clip by ID, or return None."""
+        try:
+            return self.clips[clip_id]
+        except KeyError:
+            return None
 
     # ------------------------------------------------------------------
     # Track attribute flags
@@ -152,6 +182,9 @@ class Track:
         Returns:
             The newly created typed clip object.
         """
+        if clip_type not in _VALID_CLIP_TYPES:
+            raise ValueError(f'Unknown clip type {clip_type!r}. Valid: {sorted(_VALID_CLIP_TYPES)}')
+
         record: dict[str, Any] = {
             'id': self._next_clip_id(),
             '_type': clip_type,

@@ -20,6 +20,12 @@ class Timeline:
     def __init__(self, timeline_data: dict[str, Any]) -> None:
         self._data = timeline_data
 
+    def __repr__(self) -> str:
+        return f'Timeline(tracks={self.track_count})'
+
+    def __len__(self) -> int:
+        return self.track_count
+
     # ------------------------------------------------------------------
     # Tracks
     # ------------------------------------------------------------------
@@ -75,6 +81,25 @@ class Timeline:
             to_index: Desired array position.
         """
         self.tracks.move_track(from_index, to_index)
+
+    def move_track_to_back(self, track_index: int) -> None:
+        """Move a track to position 0 (behind all other tracks)."""
+        self.move_track(track_index, 0)
+
+    def move_track_to_front(self, track_index: int) -> None:
+        """Move a track to the last position (in front of all other tracks)."""
+        self.move_track(track_index, len(self) - 1)
+
+    def find_clip(self, clip_id: int) -> tuple | None:
+        """Find a clip by ID across all tracks.
+
+        Returns (track, clip) tuple, or None.
+        """
+        for track in self.tracks:
+            result = track.find_clip(clip_id)
+            if result is not None:
+                return (track, result)
+        return None
 
     def reorder_tracks(self, order: list[int]) -> None:
         """Reorder tracks by providing current trackIndex values in desired order.

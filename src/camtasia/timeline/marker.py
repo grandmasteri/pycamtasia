@@ -16,3 +16,7 @@ class Marker:
 
     name: str
     time: int
+
+    def __repr__(self) -> str:
+        from camtasia.timing import ticks_to_seconds
+        return f'Marker(name={self.name!r}, time_seconds={ticks_to_seconds(self.time):.2f})'

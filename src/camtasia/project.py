@@ -109,6 +109,11 @@ class Project:
         self._encoding = encoding
         self._data: dict = json.loads(self._project_file.read_text(encoding=encoding))
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Project):
+            return NotImplemented
+        return self._data == other._data
+
     @property
     def file_path(self) -> Path:
         """The full path to the Camtasia project."""

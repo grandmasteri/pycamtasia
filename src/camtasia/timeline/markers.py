@@ -58,6 +58,9 @@ class MarkerList:
     def __len__(self) -> int:
         return len(self._keyframes)
 
+    def __repr__(self) -> str:
+        return f'MarkerList(count={len(self)})'
+
     def __iter__(self) -> Iterator[Marker]:
         for kf in self._keyframes:
             yield Marker(name=kf['value'], time=kf['time'])
