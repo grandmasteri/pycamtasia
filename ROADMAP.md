@@ -45,8 +45,8 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 - [x] **Keyframe API** — `clip.add_keyframe()`, `clip.clear_keyframes()` for custom animation.
 - [x] **Shader import** — `project.import_shader()` for adding `.tscshadervid` files.
 - [x] **Lower third kwargs** — `track.add_lower_third()` supports `font_weight`, `scale`, `template_ident`.
-- [ ] **Marker consolidation** — Two separate Marker classes exist; unify into a single implementation.
-- [ ] **Type annotations on `color.py`** — Add full type hints to the color module.
+- [x] **Marker consolidation** — Two separate Marker classes exist; unify into a single implementation.
+- [x] **Type annotations on `color.py`** — Add full type hints to the color module.
 
 ## High-Level API (Screenplay-Driven Workflow)
 
@@ -60,4 +60,4 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 ## Testing
 
 - [x] **Camtasia open-in-app integration test** — Automate launching Camtasia via CLI and checking stderr for exceptions as a CI validation step.
-- [ ] **Round-trip test for `.trec` projects** — Load a .trec-containing project, save, and verify Camtasia opens without crashes.
+- [x] **Round-trip test for `.trec` projects** — Load a .trec-containing project, save, and verify Camtasia opens without crashes.
