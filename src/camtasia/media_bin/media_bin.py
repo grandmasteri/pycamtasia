@@ -138,6 +138,14 @@ class Media:
         """Unique integer ID referenced by clips via ``src``."""
         return self._data["id"]
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Media):
+            return NotImplemented
+        return self.id == other.id
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
     def __repr__(self) -> str:
         return f'Media(id={self.id}, source="{self.source}")'
 
@@ -159,6 +167,9 @@ class MediaBin:
 
     def __len__(self) -> int:
         return len(self._data)
+
+    def __repr__(self) -> str:
+        return f'MediaBin(count={len(self)})'
 
     def __iter__(self) -> Iterator[Media]:
         """Iterate over all :class:`Media` entries in the bin."""

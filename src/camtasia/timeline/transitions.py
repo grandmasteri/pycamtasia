@@ -62,6 +62,14 @@ class Transition:
             attrs.get('Color-blue', 0.0),
         )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Transition):
+            return NotImplemented
+        return self._data is other._data
+
+    def __hash__(self) -> int:
+        return id(self._data)
+
     def __repr__(self) -> str:
         right = self.right_media_id
         return (
@@ -86,6 +94,9 @@ class TransitionList:
 
     def __len__(self) -> int:
         return len(self._transitions)
+
+    def __repr__(self) -> str:
+        return f'TransitionList(count={len(self)})'
 
     def __iter__(self) -> Iterator[Transition]:
         for t in self._transitions:

@@ -106,6 +106,14 @@ class Effect:
         """Right edge modifications (fade-out, etc.)."""
         return self._data.get('rightEdgeMods', [])
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Effect):
+            return NotImplemented
+        return self._data is other._data
+
+    def __hash__(self) -> int:
+        return id(self._data)
+
     def __repr__(self) -> str:
         return f"{type(self).__name__}(name={self.name!r})"
 
