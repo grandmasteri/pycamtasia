@@ -17,7 +17,7 @@ from .image import IMFile
 from .screen_recording import ScreenVMFile, ScreenIMFile
 from .stitched import StitchedMedia
 from .group import Group, GroupTrack
-from .callout import Callout
+from .callout import Callout, CalloutBuilder
 from .unified import UnifiedMedia
 
 _TYPE_MAP: dict[str, type[BaseClip]] = {
@@ -59,6 +59,7 @@ __all__ = [
     'Group',
     'GroupTrack',
     'Callout',
+    'CalloutBuilder',
     'UnifiedMedia',
     'clip_from_dict',
 ]

@@ -8,6 +8,70 @@ from camtasia.effects.behaviors import GenericBehaviorEffect
 from .base import BaseClip
 
 
+class CalloutBuilder:
+    """Fluent builder for creating styled Callout clips.
+
+    Usage:
+        builder = CalloutBuilder('Hello World')
+        builder.font('Montserrat', weight=700, size=48)
+        builder.color(fill=(0, 0, 0, 255), font=(255, 255, 255, 255))
+        builder.position(100, 200)
+        builder.size(400, 100)
+        # Then pass builder to track.add_callout_from_builder()
+    """
+
+    def __init__(self, text: str) -> None:
+        self.text = text
+        self._font_name: str = 'Montserrat'
+        self._font_weight: int = 400
+        self._font_size: float = 36.0
+        self._fill_color: tuple[int, int, int, int] | None = None
+        self._font_color: tuple[int, int, int, int] | None = None
+        self._stroke_color: tuple[int, int, int, int] | None = None
+        self._x: float = 0.0
+        self._y: float = 0.0
+        self._width: float | None = None
+        self._height: float | None = None
+        self._alignment: str = 'center'
+
+    def font(self, name: str = 'Montserrat', *, weight: int = 400, size: float = 36.0) -> CalloutBuilder:
+        """Set font properties."""
+        self._font_name = name
+        self._font_weight = weight
+        self._font_size = size
+        return self
+
+    def color(
+        self,
+        *,
+        fill: tuple[int, int, int, int] | None = None,
+        font: tuple[int, int, int, int] | None = None,
+        stroke: tuple[int, int, int, int] | None = None,
+    ) -> CalloutBuilder:
+        """Set colors as RGBA 0-255 tuples."""
+        self._fill_color = fill
+        self._font_color = font
+        self._stroke_color = stroke
+        return self
+
+    def position(self, x: float, y: float) -> CalloutBuilder:
+        """Set canvas position."""
+        self._x = x
+        self._y = y
+        return self
+
+    def size(self, width: float, height: float) -> CalloutBuilder:
+        """Set dimensions."""
+        self._width = width
+        self._height = height
+        return self
+
+    def alignment(self, align: str) -> CalloutBuilder:
+        """Set horizontal alignment ('left', 'center', 'right')."""
+        self._alignment = align
+        return self
+
+
 class Callout(BaseClip):
     """Text overlay / annotation clip.
 
