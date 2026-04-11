@@ -134,6 +134,19 @@ class Media:
         return None
 
     @property
+    def source_tracks(self) -> list[dict[str, Any]]:
+        """Raw source track metadata dicts."""
+        return self._data.get('sourceTracks', [])
+
+    @property
+    def video_edit_rate(self) -> int | None:
+        """Edit rate of the first video source track, or None."""
+        for st in self.source_tracks:
+            if st.get('type') == 0:
+                return st.get('editRate')
+        return None
+
+    @property
     def id(self) -> int:
         """Unique integer ID referenced by clips via ``src``."""
         return self._data["id"]

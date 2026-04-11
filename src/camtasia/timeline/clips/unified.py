@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Self
+
 from camtasia.timeline.clips.base import BaseClip
 
 
@@ -37,3 +39,14 @@ class UnifiedMedia(BaseClip):
     def is_camera(self) -> bool:
         """Whether the video child is a camera recording."""
         return self._data.get('video', {}).get('_type') == 'VMFile'
+
+    @property
+    def source_id(self) -> int | None:
+        """Source bin ID from the video child."""
+        return self._data.get('video', {}).get('src')
+
+    def mute_audio(self) -> Self:
+        """Set audio gain to zero."""
+        if self.has_audio:
+            self._data['audio']['gain'] = 0.0
+        return self

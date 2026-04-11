@@ -104,6 +104,14 @@ class Group(BaseClip):
                     return media.get('src')
         return None
 
+    def find_internal_clip(self, clip_type: str) -> BaseClip | None:
+        """Find the first internal clip matching the given type string."""
+        for track in self.tracks:
+            for clip in track.clips:
+                if clip.clip_type == clip_type:
+                    return clip
+        return None
+
     # ------------------------------------------------------------------
     # Per-segment speed via StitchedMedia (v2 reverse-engineered format)
     # ------------------------------------------------------------------
