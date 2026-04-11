@@ -521,3 +521,168 @@ class BaseClip:
         """
         self._data['effects'] = []
         return self
+
+    # ------------------------------------------------------------------
+    # L2 — Transform parameter helpers
+    # ------------------------------------------------------------------
+
+    def _get_param_value(self, key: str, default: float = 0.0) -> float:
+        """Read a parameter value from either scalar or dict format."""
+        param = self.parameters.get(key, default)
+        if isinstance(param, dict):
+            return param.get('defaultValue', default)
+        return param
+
+    def _set_param_value(self, key: str, value: float) -> None:
+        """Write a parameter as compact scalar, or update defaultValue if dict exists."""
+        params = self._data.setdefault('parameters', {})
+        existing = params.get(key)
+        if isinstance(existing, dict):
+            existing['defaultValue'] = value
+        else:
+            params[key] = value
+
+    @property
+    def translation(self) -> tuple[float, float]:
+        """``(x, y)`` translation."""
+        return (
+            self._get_param_value('translation0'),
+            self._get_param_value('translation1'),
+        )
+
+    @translation.setter
+    def translation(self, value: tuple[float, float]) -> None:
+        self._set_param_value('translation0', value[0])
+        self._set_param_value('translation1', value[1])
+
+    @property
+    def scale(self) -> tuple[float, float]:
+        """``(x, y)`` scale factors."""
+        return (
+            self._get_param_value('scale0', 1.0),
+            self._get_param_value('scale1', 1.0),
+        )
+
+    @scale.setter
+    def scale(self, value: tuple[float, float]) -> None:
+        self._set_param_value('scale0', value[0])
+        self._set_param_value('scale1', value[1])
+
+    @property
+    def rotation(self) -> float:
+        """Z-rotation in radians (stored as ``rotation1``)."""
+        return self._get_param_value('rotation1')
+
+    @rotation.setter
+    def rotation(self, value: float) -> None:
+        self._set_param_value('rotation1', value)
+
+    def move_to(self, x: float, y: float) -> Self:
+        """Set the clip's canvas translation.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self._set_param_value('translation0', x)
+        self._set_param_value('translation1', y)
+        return self
+
+    def scale_to(self, factor: float) -> Self:
+        """Set uniform scale on both axes.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self._set_param_value('scale0', factor)
+        self._set_param_value('scale1', factor)
+        return self
+
+    def scale_to_xy(self, x: float, y: float) -> Self:
+        """Set non-uniform scale.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self._set_param_value('scale0', x)
+        self._set_param_value('scale1', y)
+        return self
+
+    def crop(
+        self,
+        left: float = 0,
+        top: float = 0,
+        right: float = 0,
+        bottom: float = 0,
+    ) -> Self:
+        """Set geometry crop fractions (0.0–1.0 per edge).
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self._set_param_value('geometryCrop0', left)
+        self._set_param_value('geometryCrop1', top)
+        self._set_param_value('geometryCrop2', right)
+        self._set_param_value('geometryCrop3', bottom)
+        return self
+
+    # ------------------------------------------------------------------
+    # L2 — Keyframe animation API
+    # ------------------------------------------------------------------
+
+    def add_keyframe(
+        self,
+        parameter: str,
+        time_seconds: float,
+        value: float,
+        duration_seconds: float = 0.0,
+        interp: str = 'eioe',
+    ) -> Self:
+        """Add a keyframe to a clip parameter.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        params = self._data.setdefault('parameters', {})
+        time_ticks = seconds_to_ticks(time_seconds)
+        dur_ticks = seconds_to_ticks(duration_seconds) if duration_seconds > 0 else 0
+        end_ticks = time_ticks + dur_ticks if dur_ticks else time_ticks
+
+        kf_entry: dict[str, Any] = {
+            'endTime': end_ticks,
+            'time': time_ticks,
+            'value': value,
+            'duration': dur_ticks,
+        }
+        if interp:
+            kf_entry['interp'] = interp
+
+        existing = params.get(parameter)
+        if isinstance(existing, dict) and 'keyframes' in existing:
+            existing['keyframes'].append(kf_entry)
+        else:
+            default_val = existing if isinstance(existing, (int, float)) else (
+                existing.get('defaultValue', 0.0) if isinstance(existing, dict) else 0.0
+            )
+            params[parameter] = {
+                'type': 'double',
+                'defaultValue': default_val,
+                'keyframes': [kf_entry],
+            }
+        return self
+
+    def clear_keyframes(self, parameter: str | None = None) -> Self:
+        """Remove keyframes from a parameter, or all parameters if *parameter* is ``None``.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        params = self._data.get('parameters', {})
+        if parameter is not None:
+            p = params.get(parameter)
+            if isinstance(p, dict):
+                p.pop('keyframes', None)
+        else:
+            for p in params.values():
+                if isinstance(p, dict):
+                    p.pop('keyframes', None)
+        return self

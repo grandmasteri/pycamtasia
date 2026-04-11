@@ -115,6 +115,24 @@ class Project:
         return self._file_path
 
     @property
+    def width(self) -> int:
+        """Canvas width in pixels."""
+        return self._data.get('width', 1920)
+
+    @width.setter
+    def width(self, value: int) -> None:
+        self._data['width'] = value
+
+    @property
+    def height(self) -> int:
+        """Canvas height in pixels."""
+        return self._data.get('height', 1080)
+
+    @height.setter
+    def height(self, value: int) -> None:
+        self._data['height'] = value
+
+    @property
     def edit_rate(self) -> int:
         """The editing tick rate (ticks per second).
 
@@ -326,6 +344,58 @@ class Project:
                 kwargs['duration'] = int(dur_secs * 30) if dur_secs else 30 * 60
         return self.media_bin.import_media(path, media_type=media_type, **kwargs)
 
+    def import_shader(self, shader_path: str | Path) -> Media:
+        """Import a .tscshadervid shader with effectDef parsing.
+
+        Reads the shader JSON, converts effectDef entries (hex colors to
+        RGBA floats), and sets sourceTracks metadata for Camtasia.
+        Reuses existing media if already imported.
+        """
+        path = Path(shader_path)
+        existing = self.find_media_by_name(path.stem)
+        if existing is not None:
+            return existing
+
+        media = self.import_media(path)
+        shader_data = json.loads(path.read_text())
+
+        effect_def = []
+        for entry in shader_data['effectDef']:
+            name = entry['name']
+            if entry.get('type') == 'Color':
+                hex_str = entry['value']
+                r, g, b = int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16)
+                effect_def.append({
+                    'name': name, 'type': 'Color',
+                    'defaultValue': [r / 255, g / 255, b / 255, 1.0],
+                    'scalingType': 3, 'unitType': 0, 'userInterfaceType': 6,
+                })
+            else:
+                effect_def.append({
+                    'name': name, 'type': entry['type'],
+                    'defaultValue': entry.get('defaultValue', entry.get('value')),
+                    'scalingType': 0,
+                    'unitType': 1 if 'MidPoint' in name else 0,
+                    'userInterfaceType': 0,
+                })
+        effect_def.append({
+            'name': 'sourceFileType', 'type': 'string',
+            'defaultValue': 'tscshadervid', 'maxValue': '', 'minValue': '',
+            'scalingType': 0, 'unitType': 0, 'userInterfaceType': 0,
+        })
+
+        # Find the source bin entry and patch it
+        for entry in self._data['sourceBin']:
+            if entry['id'] == media.id:
+                entry['effectDef'] = effect_def
+                st = entry['sourceTracks'][0]
+                st['editRate'] = 30
+                st['sampleRate'] = 30
+                st['bitDepth'] = 32
+                break
+
+        return media
+
     def total_duration_seconds(self) -> float:
         """Total timeline duration in seconds.
 
@@ -445,8 +515,8 @@ class Project:
             import datetime
             import time as _time
 
-            width = int(self._data.get('width', 1920))
-            height = int(self._data.get('height', 1080))
+            width = self.width
+            height = self.height
             media_id = self.media_bin.next_id()
             timestamp = datetime.datetime.now()
             ts_str = f"{timestamp.year}{timestamp.month:02}{timestamp.day:02}T{timestamp.hour:02}{timestamp.minute:02}{timestamp.second:02}"
