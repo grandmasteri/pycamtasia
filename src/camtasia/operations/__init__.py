@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from camtasia.operations.merge import merge_tracks
 from camtasia.operations.diff import ProjectDiff, diff_projects
 from camtasia.operations.batch import (
     apply_to_all_tracks,
@@ -28,6 +29,7 @@ __all__ = [
     "duplicate_project",
     "fade_all",
     "match_marker_to_transcript",
+    "merge_tracks",
     "move_all",
     "pack_track",
     "plan_sync",
