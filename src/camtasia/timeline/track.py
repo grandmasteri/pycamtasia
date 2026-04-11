@@ -715,6 +715,19 @@ class Track:
 
         return clips
 
+    @property
+    def is_empty(self) -> bool:
+        """True if this track has no clips."""
+        return len(self) == 0
+
+    def end_time_ticks(self) -> int:
+        """End time of the last clip on this track, in ticks."""
+        max_end = 0
+        for m in self._data.get('medias', []):
+            end = m.get('start', 0) + m.get('duration', 0)
+            max_end = max(max_end, end)
+        return max_end
+
     def end_time_seconds(self) -> float:
         """Return the end time of the last clip on this track in seconds.
 
@@ -722,11 +735,7 @@ class Track:
             Maximum ``start + duration`` across all clips, in seconds.
             Returns ``0.0`` if the track has no clips.
         """
-        max_ticks = max(
-            (clip.start + clip.duration for clip in self.clips),
-            default=0,
-        )
-        return ticks_to_seconds(max_ticks)
+        return ticks_to_seconds(self.end_time_ticks())
 
     def set_segment_speeds(
         self,

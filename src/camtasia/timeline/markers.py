@@ -25,6 +25,9 @@ class Marker:
         """Position in seconds."""
         return self.time / EDIT_RATE
 
+    def __repr__(self) -> str:
+        return f'Marker(name={self.name!r}, time_seconds={self.time_seconds:.2f})'
+
 
 class MarkerList:
     """Wraps a parameters dict that may contain toc keyframes.
