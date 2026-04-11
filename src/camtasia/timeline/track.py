@@ -127,6 +127,22 @@ class Track:
         """Set whether the track is soloed."""
         self._attributes['solo'] = value
 
+    def mute(self) -> None:
+        """Mute this track's audio."""
+        self.audio_muted = True
+
+    def unmute(self) -> None:
+        """Unmute this track's audio."""
+        self.audio_muted = False
+
+    def hide(self) -> None:
+        """Hide this track's video."""
+        self.video_hidden = True
+
+    def show(self) -> None:
+        """Show this track's video."""
+        self.video_hidden = False
+
     @property
     def is_locked(self) -> bool:
         """Whether the track is locked against editing."""
