@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Tests for camtasia.version module."""
 
 from camtasia.version import __version__, __version_info__
@@ -12,4 +13,4 @@ class TestVersion:
 
     def test_version_info_is_tuple_of_parts(self):
         assert __version_info__ == tuple(__version__.split("."))
-        assert len(__version_info__) == 3
+        major, minor, patch = __version_info__  # verifies exactly 3 parts

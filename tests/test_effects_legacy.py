@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Tests for the legacy camtasia/effects.py module — Effect, VisualEffect, ChromaKeyEffect."""
 
 import importlib.util

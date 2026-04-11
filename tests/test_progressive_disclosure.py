@@ -12,14 +12,13 @@ class TestProgressiveDisclosure:
             start_seconds=1.0,
         )
 
-        assert len(clips) == 2
+        assert [(c.start, c.duration) for c in clips] == [
+            (seconds_to_ticks(1.0), seconds_to_ticks(3.0)),
+            (seconds_to_ticks(1.0), seconds_to_ticks(5.0)),
+        ]
         track_names = [t.name for t in project.timeline.tracks]
         assert 'Prog-0' in track_names
         assert 'Prog-1' in track_names
-        assert clips[0].start == seconds_to_ticks(1.0)
-        assert clips[0].duration == seconds_to_ticks(3.0)
-        assert clips[1].start == seconds_to_ticks(1.0)
-        assert clips[1].duration == seconds_to_ticks(5.0)
 
     def test_fade_in_applied(self, project):
         clips = project.add_progressive_disclosure(

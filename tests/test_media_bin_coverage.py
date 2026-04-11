@@ -155,7 +155,7 @@ class TestMediaBinLen:
     def test_len_matches_entries(self):
         entries = [_make_entry(media_id=i) for i in range(3)]
         media_bin = MediaBin(entries, Path("/fake"))
-        assert len(media_bin) == 3
+        assert [m.id for m in media_bin] == [0, 1, 2]
 
 
 class TestParseWithPymediainfo:

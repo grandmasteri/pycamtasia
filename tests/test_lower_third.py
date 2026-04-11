@@ -36,9 +36,9 @@ class TestAddLowerThirdCreatesGroup:
 
         assert isinstance(clip, Group)
         assert clip.ident == "Right Angle Lower Third"
-        assert len(track._data["medias"]) == 1
+        assert [m["_type"] for m in track._data["medias"]] == ["Group"]
         # Outer group has 3 tracks: Text group, Shape, Line
-        assert len(clip._data["tracks"]) == 3
+        assert [t["medias"][0]["_type"] for t in clip._data["tracks"]] == ["Group", "Callout", "Callout"]
 
 
 class TestLowerThirdTitleText:

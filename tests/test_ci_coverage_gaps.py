@@ -147,8 +147,7 @@ class TestGroupSetInternalSegmentSpeeds:
         group.set_internal_segment_speeds([(0, 50, 50), (50, 100, 25)])
         # Internal track should now have 2 ScreenVMFile clips
         media_track = data['tracks'][1]
-        assert len(media_track['medias']) == 2
-        assert all(m['_type'] == 'ScreenVMFile' for m in media_track['medias'])
+        assert [m['_type'] for m in media_track['medias']] == ['ScreenVMFile', 'ScreenVMFile']
 
     def test_updates_group_duration(self):
         from camtasia.timeline.clips.group import Group

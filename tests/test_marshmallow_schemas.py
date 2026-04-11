@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Tests for marshmallow-based legacy effect schemas and TrackMediaEffects integration."""
 
 import importlib.util

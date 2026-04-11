@@ -47,7 +47,8 @@ class TestAddFourCornerGradient:
         assert clip is not None
         assert clip._data['_type'] == 'VMFile'
         # Shader was imported
-        assert len(proj.find_media_by_suffix('.tscshadervid')) == 1
+        shaders = proj.find_media_by_suffix('.tscshadervid')
+        assert [s.identity for s in shaders] == ['gradient']
 
     def test_reuses_existing_shader(self, tmp_path: Path):
         proj = _make_project(tmp_path)
@@ -58,7 +59,7 @@ class TestAddFourCornerGradient:
         clip2 = proj.add_four_corner_gradient(shader, duration_seconds=10.0)
 
         # Still only one shader in the bin
-        assert len(proj.find_media_by_suffix('.tscshadervid')) == 1
+        assert [s.identity for s in proj.find_media_by_suffix('.tscshadervid')] == ['gradient']
         assert clip2._data['src'] == source_id
 
     def test_creates_named_track(self, tmp_path: Path):

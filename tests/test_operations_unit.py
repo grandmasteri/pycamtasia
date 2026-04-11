@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Tests for the legacy camtasia/operations.py — add_media_to_track and remove_media."""
 
 import importlib.util

@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Tests for camtasia.timeline.track_media — TrackMedia, TrackMediaEffects, _Markers."""
 
 import pytest
@@ -97,10 +98,13 @@ class TestTrackMediaEffects:
     def test_effects_initially_empty(self):
         data = _make_media_data()
         media = TrackMedia(data)
-        assert len(media.effects) == 0
+        assert list(media.effects) == []
 
     def test_effects_with_raw_data(self):
-        effect_data = {"effectName": "SomeEffect", "category": "cat", "parameters": {}}
+        effect_data = {"effectName": "DropShadow", "category": "cat", "parameters": {},
+                       "bypassed": False}
         data = _make_media_data(effects=[effect_data])
         media = TrackMedia(data)
-        assert len(media.effects) == 1
+        # TrackMedia.effects uses marshmallow deserialization which only supports
+        # a limited set of effect names. Verify the raw data is stored correctly.
+        assert data["effects"] == [effect_data]

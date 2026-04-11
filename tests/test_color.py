@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Tests for camtasia.color module — hex_rgb function and RGBA class."""
 
 import pytest
