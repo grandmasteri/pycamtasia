@@ -1,4 +1,7 @@
-def hex_rgb(argument):
+from __future__ import annotations
+
+
+def hex_rgb(argument: str) -> tuple[int, ...]:
     """Convert the argument string to a tuple of integers.
     """
     h = argument.lstrip("#")
@@ -35,18 +38,18 @@ def hex_rgb(argument):
 
 class RGBA:
 
-    MINIMUM_CHANNEL = 0
-    MAXIMUM_CHANNEL = 255
+    MINIMUM_CHANNEL: int = 0
+    MAXIMUM_CHANNEL: int = 255
 
     @classmethod
-    def from_hex(cls, color):
+    def from_hex(cls, color: str) -> RGBA:
         channels = hex_rgb(color)
         if len(channels) == 3:
             return cls(*channels, alpha=cls.MAXIMUM_CHANNEL)
         return cls(*channels)
 
     @classmethod
-    def from_floats(cls, red, green, blue, alpha):
+    def from_floats(cls, red: float, green: float, blue: float, alpha: float) -> RGBA:
         return cls(
             red * cls.MAXIMUM_CHANNEL,
             green * cls.MAXIMUM_CHANNEL,
@@ -54,7 +57,7 @@ class RGBA:
             alpha * cls.MAXIMUM_CHANNEL,
         )
 
-    def __init__(self, red, green, blue, alpha):
+    def __init__(self, red: int, green: int, blue: int, alpha: int) -> None:
         if not (self.MINIMUM_CHANNEL <= red <= self.MAXIMUM_CHANNEL):
             raise ValueError(
                 f"RGBA red channel {red} out of range {self.MINIMUM_CHANNEL} "
@@ -85,36 +88,36 @@ class RGBA:
         self._alpha = alpha
 
     @property
-    def red(self):
+    def red(self) -> int:
         return self._red
 
     @property
-    def green(self):
+    def green(self) -> int:
         return self._green
 
     @property
-    def blue(self):
+    def blue(self) -> int:
         return self._blue
 
     @property
-    def alpha(self):
+    def alpha(self) -> int:
         return self._alpha
 
-    def as_tuple(self):
+    def as_tuple(self) -> tuple[int, int, int, int]:
         return (self.red, self.green, self.blue, self.alpha)
 
-    def _key(self):
+    def _key(self) -> tuple[int, int, int, int]:
         return self.as_tuple()
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
         return self._key() == other._key()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._key())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"{type(self).__name__}(red={self.red}, green={self.green}, "
             f"blue={self.blue}, alpha={self.alpha})"

@@ -12,7 +12,9 @@ from .clips import (
     ScreenIMFile,
     StitchedMedia,
     Group,
+    GroupTrack,
     Callout,
+    UnifiedMedia,
     clip_from_dict,
 )
 from .transitions import Transition, TransitionList
@@ -29,7 +31,9 @@ __all__ = [
     'ScreenIMFile',
     'StitchedMedia',
     'Group',
+    'GroupTrack',
     'Callout',
+    'UnifiedMedia',
     'clip_from_dict',
     'Transition',
     'TransitionList',

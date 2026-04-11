@@ -16,16 +16,21 @@ Forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-
 - Load, edit, and save Camtasia project bundles
 - Iterate tracks, clips, markers, and transitions
 - Type-safe clip access (audio, video, image, screen recording, callout, group)
-- Speed changes with rational-precision scalars (roadmap)
-- Add/remove transitions between clips
-- Cursor and visual effects (drop shadow, round corners, motion blur)
+- Speed changes with rational-precision scalars
+- Transform helpers (move, scale, crop, rotation)
+- Keyframe animation (fade in/out, opacity, custom keyframes)
+- Visual effects (drop shadow, round corners, glow)
+- Cursor effects (motion blur, shadow, physics, click scaling)
+- Track reordering and clip search across the timeline
 - Word-level transcript parsing from Audiate and WhisperX
 - High-level operations: project rescaling, audio-video sync, templates
 - Full timing system with tick↔seconds conversion
 - Audio gain control and mute API
 - Auto-detect image dimensions and audio duration via ffprobe
 - Camtasia v10 compatible JSON formatting (NSJSONSerialization style)
-- 100% test coverage with 788 tests
+- Python protocols (`__eq__`, `__hash__`, `__len__`, `__repr__`) on all major types
+- Input validation on crop, opacity, speed, and clip type
+- 1079 tests
 
 ## Installation
 
@@ -107,6 +112,36 @@ clip.set_speed(0.5)       # half speed — scalar becomes 2/1
 print(clip.scalar)        # Fraction(1, 2)
 ```
 
+### Transforms
+
+```python
+clip.move_to(x=100, y=200)       # reposition on canvas
+clip.scale_to(1.5)               # uniform scale
+clip.scale_to_xy(1.5, 1.0)       # non-uniform scale
+clip.crop(left=0.1, top=0.1, right=0.1, bottom=0.1)
+clip.rotation = 45.0             # degrees
+```
+
+### Animation & Opacity
+
+```python
+clip.fade_in(0.5)                # 0.5s fade in
+clip.fade_out(0.5)               # 0.5s fade out
+clip.fade(0.5, 0.5)              # combined fade in + out
+clip.set_opacity(0.8)            # static opacity
+
+clip.add_keyframe(time=1.0, value=0.5)   # custom keyframe
+clip.clear_keyframes()
+```
+
+### Effects
+
+```python
+clip.add_drop_shadow(offset=15.0, blur=25.0, opacity=0.2)
+clip.add_round_corners(radius=16.0)
+clip.add_glow()
+```
+
 ## Transitions
 
 Transitions live on each track and reference the clips on either side:
@@ -132,29 +167,48 @@ for t in track.transitions:
 track.transitions.remove(0)
 ```
 
-## Effects
-
-Add visual and cursor effects to clips:
+## Track & Timeline Operations
 
 ```python
-from camtasia.effects import RoundCorners, DropShadow, CursorPhysics
+# Track
+track.clear()                    # remove all clips
+track.add_lower_third("Title", "Subtitle", start_seconds=0, duration_seconds=5,
+                      font_weight="bold", scale=1.2, template_ident="custom")
+track.add_screen_recording(media, start_seconds=0, duration_seconds=30)
+track.add_group(clips, start_seconds=0)
+track.find_clip(clip_id)
 
-# Visual effects
-clip.effects.append(RoundCorners(radius=16.0).data)
-clip.effects.append(DropShadow(offset=15.0, blur=25.0, opacity=0.2).data)
-
-# Cursor effects (for screen recordings)
-clip.effects.append(CursorPhysics(smoothing=0.8).data)
+# Timeline
+timeline.move_track(from_index, to_index)
+timeline.reorder_tracks([2, 0, 1])
+timeline.move_track_to_front(track_index)
+timeline.move_track_to_back(track_index)
+timeline.find_clip(clip_id)
+timeline.next_clip_id()
 ```
 
-Available effect classes:
+## Project Properties
 
-- `RoundCorners` — rounded corner radius
-- `DropShadow` — shadow with offset, blur, opacity
-- `CursorMotionBlur` — motion blur on cursor movement
-- `CursorShadow` — drop shadow under cursor
-- `CursorPhysics` — smooth/elastic cursor movement
-- `LeftClickScaling` — visual pulse on left click
+```python
+proj.width                       # project canvas width
+proj.height                      # project canvas height
+proj.import_shader('path/to/shader.tscshadervid')
+```
+
+## Group Clips
+
+```python
+group.is_screen_recording        # True if group wraps a .trec
+group.internal_media_src          # source path of internal media
+group.set_internal_segment_speeds([(0, 1.0), (5.0, 2.0)])  # per-segment speeds
+```
+
+## Media Bin
+
+```python
+for media in proj.media_bin:
+    print(media.source, media.duration_seconds)
+```
 
 ## Audiate Integration
 
@@ -191,35 +245,26 @@ High-level operations that coordinate changes across the entire project.
 
 ### Rescale Project
 
-Stretch or compress all timing values by a factor:
-
 ```python
 from fractions import Fraction
 from camtasia.operations import rescale_project
 
 proj = camtasia.load_project('project.cmproj')
-
-# Stretch everything by 10% (slow down)
-rescale_project(proj._data, Fraction(11, 10))
+rescale_project(proj._data, Fraction(11, 10))  # stretch by 10%
 proj.save()
 ```
 
 ### Fix Audio Speed
-
-Correct audio that was recorded at the wrong speed:
 
 ```python
 from camtasia.operations import set_audio_speed
 
 proj = camtasia.load_project('project.cmproj')
 factor = set_audio_speed(proj._data, target_speed=1.0)
-print(f"Applied stretch factor: {float(factor):.4f}")
 proj.save()
 ```
 
 ### Audio-Video Sync
-
-Align video segments with audio using transcript markers:
 
 ```python
 from camtasia.operations import plan_sync
@@ -236,31 +281,21 @@ for seg in segments:
 
 ### Templates
 
-Clone a project's structure for reuse, or swap media sources:
-
 ```python
 from camtasia.operations import clone_project_structure, replace_media_source
 
-# Create an empty template from an existing project
 template = clone_project_structure(proj._data)
-
-# Replace all references to one media source with another
 count = replace_media_source(proj._data, old_source_id=1, new_source_id=2)
-print(f"Updated {count} clips")
 ```
 
 ## Timing System
 
-Camtasia uses an `editRate` of **705,600,000 ticks per second** — chosen to be evenly divisible by common frame rates (30, 60 fps) and audio sample rates (44100, 48000 Hz). This avoids floating-point rounding in timeline positioning.
+Camtasia uses an `editRate` of **705,600,000 ticks per second** — chosen to be evenly divisible by common frame rates (30, 60 fps) and audio sample rates (44100, 48000 Hz).
 
 ```python
 from camtasia.timing import (
-    EDIT_RATE,
-    seconds_to_ticks,
-    ticks_to_seconds,
-    format_duration,
-    speed_to_scalar,
-    scalar_to_speed,
+    EDIT_RATE, seconds_to_ticks, ticks_to_seconds,
+    format_duration, speed_to_scalar, scalar_to_speed,
 )
 
 EDIT_RATE                        # 705_600_000
@@ -272,19 +307,26 @@ speed_to_scalar(2.0)             # Fraction(1, 2)
 scalar_to_speed(Fraction(1, 2))  # 2.0
 ```
 
-Speed scalars are stored as `fractions.Fraction` for exact rational arithmetic — no floating-point drift when composing speed changes.
-
 ## API Reference
 
 The public API is available directly from `import camtasia`:
 
-- **Project management**: `load_project()`, `new_project()`, `Project`
+- **Project**: `load_project()`, `new_project()`, `use_project()`, `Project`, `ValidationIssue`
+  - `project.width`, `project.height`, `project.import_shader()`
 - **Timeline**: `Timeline`, `Track`, `Marker`, `MarkerList`, `Transition`, `TransitionList`
+  - `timeline.move_track()`, `reorder_tracks()`, `move_track_to_front()`, `move_track_to_back()`, `find_clip()`, `next_clip_id()`
+  - `track.clear()`, `track.add_lower_third()`, `track.add_screen_recording()`, `track.add_group()`, `track.find_clip()`
 - **Clips**: `BaseClip`, `AMFile`, `VMFile`, `IMFile`, `ScreenVMFile`, `ScreenIMFile`, `StitchedMedia`, `Group`, `Callout`
-- **Effects**: `Effect`, `RoundCorners`, `DropShadow`, `CursorPhysics`, `CursorMotionBlur`, `CursorShadow`, `LeftClickScaling`
+  - Transforms: `move_to()`, `scale_to()`, `scale_to_xy()`, `crop()`, `rotation`
+  - Animation: `fade_in()`, `fade_out()`, `fade()`, `set_opacity()`, `add_keyframe()`, `clear_keyframes()`
+  - Effects: `add_drop_shadow()`, `add_round_corners()`, `add_glow()`
+  - Group: `is_screen_recording`, `internal_media_src`, `set_internal_segment_speeds()`
+  - Media: `media.duration_seconds`
+- **Effects**: `Effect`, `Glow`, `RoundCorners`, `DropShadow`, `CursorPhysics`, `CursorMotionBlur`, `CursorShadow`, `LeftClickScaling`, `SourceEffect`
 - **Audiate**: `AudiateProject`, `Transcript`, `Word`
 - **Timing**: `EDIT_RATE`, `seconds_to_ticks()`, `ticks_to_seconds()`, `format_duration()`, `speed_to_scalar()`, `scalar_to_speed()`
 - **Operations**: `rescale_project()`, `set_audio_speed()`, `plan_sync()`, `clone_project_structure()`, `replace_media_source()`
+- **Protocols**: `__eq__`, `__hash__`, `__len__`, `__repr__` on all major types
 
 See the [full API documentation](https://grandmasteri.github.io/pycamtasia/) for detailed parameter docs, examples, and type signatures.
 
@@ -300,15 +342,8 @@ Contributions are welcome. Please:
 Run tests and view coverage:
 
 ```bash
-# Run tests
 PYTHONPATH=src pytest tests/
-
-# Run tests with coverage report
 PYTHONPATH=src pytest tests/ --cov=camtasia --cov-report=term-missing
-
-# Generate HTML coverage report (browse locally)
-PYTHONPATH=src pytest tests/ --cov=camtasia --cov-report=html
-open htmlcov/index.html
 ```
 
 The library uses thin wrappers over the underlying JSON dicts — mutations go directly to the dict, so `project.save()` always writes the current state. See `ARCHITECTURE.md` for design details.
@@ -316,7 +351,6 @@ The library uses thin wrappers over the underlying JSON dicts — mutations go d
 ## Known Limitations
 
 - `.trec` screen recordings cannot be imported into new projects — start from the existing Camtasia Rev project
-- `set_speed()` not yet implemented
 - Audio source metadata from ffprobe is approximate — Camtasia corrects values on open
 
 ## License
