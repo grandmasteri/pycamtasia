@@ -1,3 +1,5 @@
+"""Legacy marshmallow-based track media wrapper."""
+
 from camtasia.effects import EffectSchema
 from .marker import Marker
 

@@ -4,6 +4,11 @@ All notable changes to pycamtasia are documented in this file.
 
 ## Unreleased
 
+### Public API
+- `RGBA` and `hex_rgb` exported from top-level `camtasia` package
+- Module-level docstrings added to `color`, `annotations.types`, `cli`, `frame_stamp`, `timeline.track_media`, `timeline.clips.unified`
+- `Project.save()` now emits `warnings.warn()` instead of `print()` for validation issues
+
 ### Clip Transforms & Animation
 - `clip.move_to(x, y)` — reposition clip on canvas
 - `clip.scale_to(factor)` — uniform scale
@@ -61,4 +66,4 @@ All notable changes to pycamtasia are documented in this file.
 
 ### Internal
 - `BaseClip` transforms consolidated into shared base class
-- Test count: 1079
+- Test count: 1118

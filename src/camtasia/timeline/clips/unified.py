@@ -1,3 +1,5 @@
+"""UnifiedMedia clip type for bundled video and audio."""
+
 from __future__ import annotations
 
 from typing import Self

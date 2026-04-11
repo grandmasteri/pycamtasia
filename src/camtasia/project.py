@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import warnings
 from contextlib import contextmanager
 from importlib import resources as importlib_resources
 from pathlib import Path
@@ -234,10 +235,10 @@ class Project:
         avoid parser crashes with ``.trec`` screen recordings.
         """
         import re
-        import sys
 
         for issue in self.validate():
-            print(f'[{issue.level}] {issue.message}', file=sys.stderr)
+            message = f'[{issue.level}] {issue.message}'
+            warnings.warn(message, stacklevel=2)
 
         self._flatten_parameters(self._data)
 
