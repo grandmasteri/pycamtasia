@@ -57,6 +57,9 @@ from camtasia.timing import (
     scalar_to_speed,
 )
 
+# Color
+from camtasia.color import RGBA, hex_rgb
+
 # Operations
 from camtasia.operations import (
     rescale_project,
@@ -126,4 +129,7 @@ __all__ = [
     "plan_sync",
     "clone_project_structure",
     "replace_media_source",
+    # Color
+    "RGBA",
+    "hex_rgb",
 ]

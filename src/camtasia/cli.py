@@ -1,3 +1,5 @@
+"""Command-line interface for pycamtasia."""
+
 from pathlib import Path
 import sys
 

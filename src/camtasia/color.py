@@ -1,3 +1,5 @@
+"""Color utilities for Camtasia projects."""
+
 from __future__ import annotations
 
 
