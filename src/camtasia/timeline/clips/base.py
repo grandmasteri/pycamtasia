@@ -506,15 +506,15 @@ class BaseClip:
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
-                'angle': {'type': 'double', 'defaultValue': angle, 'interp': 'linr'},
+                'angle': angle,
                 'enabled': 1,
-                'offset': {'type': 'double', 'defaultValue': offset, 'interp': 'linr'},
-                'blur': {'type': 'double', 'defaultValue': blur, 'interp': 'linr'},
-                'opacity': {'type': 'double', 'defaultValue': opacity, 'interp': 'linr'},
-                'color-red': {'type': 'double', 'defaultValue': color[0], 'interp': 'linr'},
-                'color-green': {'type': 'double', 'defaultValue': color[1], 'interp': 'linr'},
-                'color-blue': {'type': 'double', 'defaultValue': color[2], 'interp': 'linr'},
-                'color-alpha': {'type': 'double', 'defaultValue': 1.0, 'interp': 'linr'},
+                'offset': offset,
+                'blur': blur,
+                'opacity': opacity,
+                'color-red': color[0],
+                'color-green': color[1],
+                'color-blue': color[2],
+                'color-alpha': 1.0,
             },
         })
 
@@ -533,8 +533,8 @@ class BaseClip:
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
-                'radius': {'type': 'double', 'defaultValue': radius, 'interp': 'linr'},
-                'intensity': {'type': 'double', 'defaultValue': intensity, 'interp': 'linr'},
+                'radius': radius,
+                'intensity': intensity,
             },
         })
 
@@ -552,11 +552,11 @@ class BaseClip:
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
-                'radius': {'type': 'double', 'defaultValue': radius, 'interp': 'linr'},
-                'top-left': {'type': 'double', 'defaultValue': 1.0, 'interp': 'linr'},
-                'top-right': {'type': 'double', 'defaultValue': 1.0, 'interp': 'linr'},
-                'bottom-left': {'type': 'double', 'defaultValue': 1.0, 'interp': 'linr'},
-                'bottom-right': {'type': 'double', 'defaultValue': 1.0, 'interp': 'linr'},
+                'radius': radius,
+                'top-left': 1.0,
+                'top-right': 1.0,
+                'bottom-left': 1.0,
+                'bottom-right': 1.0,
             },
         })
 
@@ -579,9 +579,9 @@ class BaseClip:
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
-                'brightness': {'type': 'double', 'defaultValue': brightness, 'interp': 'linr'},
-                'contrast': {'type': 'double', 'defaultValue': contrast, 'interp': 'linr'},
-                'saturation': {'type': 'double', 'defaultValue': saturation, 'interp': 'linr'},
+                'brightness': brightness,
+                'contrast': contrast,
+                'saturation': saturation,
             },
         })
         return self
@@ -606,12 +606,12 @@ class BaseClip:
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
-                'width': {'type': 'double', 'defaultValue': width, 'interp': 'linr'},
-                'color-red': {'type': 'double', 'defaultValue': r, 'interp': 'linr'},
-                'color-green': {'type': 'double', 'defaultValue': g, 'interp': 'linr'},
-                'color-blue': {'type': 'double', 'defaultValue': b, 'interp': 'linr'},
-                'color-alpha': {'type': 'double', 'defaultValue': a, 'interp': 'linr'},
-                'corner-radius': {'type': 'double', 'defaultValue': corner_radius, 'interp': 'linr'},
+                'width': width,
+                'color-red': r,
+                'color-green': g,
+                'color-blue': b,
+                'color-alpha': a,
+                'corner-radius': corner_radius,
             },
         })
         return self
@@ -634,10 +634,10 @@ class BaseClip:
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
-                'color-red': {'type': 'double', 'defaultValue': r, 'interp': 'linr'},
-                'color-green': {'type': 'double', 'defaultValue': g, 'interp': 'linr'},
-                'color-blue': {'type': 'double', 'defaultValue': b, 'interp': 'linr'},
-                'intensity': {'type': 'double', 'defaultValue': intensity, 'interp': 'linr'},
+                'color-red': r,
+                'color-green': g,
+                'color-blue': b,
+                'intensity': intensity,
             },
         })
         return self
@@ -660,7 +660,7 @@ class BaseClip:
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
-                'dim-opacity': {'type': 'double', 'defaultValue': dim_opacity, 'interp': 'linr'},
+                'dim-opacity': dim_opacity,
             },
         })
         return self
