@@ -71,6 +71,18 @@ class Track:
         """Number of clips on this track."""
         return len(self._data.get('medias', []))
 
+    def __iter__(self):
+        """Iterate over clips on this track."""
+        return iter(self.clips)
+
+    def __contains__(self, item) -> bool:
+        """Check if a clip (by ID or object) is on this track."""
+        if isinstance(item, int):
+            return any(m.get('id') == item for m in self._data.get('medias', []))
+        if hasattr(item, 'id'):
+            return any(m.get('id') == item.id for m in self._data.get('medias', []))
+        return False
+
     @property
     def clip_count(self) -> int:
         """Number of clips on this track."""

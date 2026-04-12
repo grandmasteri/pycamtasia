@@ -104,3 +104,28 @@ class TestAddClipValidation:
         source_id = None if clip_type in ("Callout", "Group") else 1
         clip = t.add_clip(clip_type, source_id, 0, 1000)
         assert clip is not None
+
+
+class TestTrackIter:
+    def test_track_iter(self):
+        t = _make_track_with_clips(3)
+        clips = list(t)
+        assert [c.id for c in clips] == [1, 2, 3]
+
+
+class TestTrackContains:
+    def test_track_contains_by_id(self):
+        t = _make_track_with_clips(2)
+        assert 1 in t
+
+    def test_track_contains_by_clip(self):
+        t = _make_track_with_clips(2)
+        clip = list(t.clips)[0]
+        assert clip in t
+
+    def test_track_not_contains(self):
+        t = _make_track_with_clips(2)
+        assert 999 not in t
+    def test_track_contains_non_clip_returns_false(self):
+        t = _make_track_with_clips(2)
+        assert ("not a clip" in t) is False
