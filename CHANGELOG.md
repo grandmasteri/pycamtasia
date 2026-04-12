@@ -103,3 +103,6 @@ All notable changes to pycamtasia are documented in this file.
 - Type annotations added to test files
 - Round-trip tests for real `.trec`-containing projects
 - 100% coverage maintained across all 26 commits
+## Known Limitations
+
+- `add_behavior()` on Callout clips produces incomplete GenericBehaviorEffect data that causes Camtasia to crash with `boost::bad_rational`. The behavior effect structure requires many preset-specific attributes (spring physics, character order, overlap proportions) that the library doesn't yet generate. Workaround: use behavior effects from Camtasia's GUI, or copy behavior data from a reference project.
