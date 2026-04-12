@@ -168,3 +168,100 @@ def test_duplicate_creates_unique_ids(num_duplicates):
         all_ids.append(dup.id)
 
     assert len(all_ids) == len(set(all_ids)), f'Duplicate IDs: {all_ids}'
+
+
+# ------------------------------------------------------------------
+# 7. pack_track preserves clip count
+# ------------------------------------------------------------------
+
+@given(st.integers(min_value=1, max_value=8))
+@settings(max_examples=20, deadline=None)
+def test_pack_preserves_clip_count(num_clips):
+    """Packing a track should not add or remove clips."""
+    from camtasia.operations.layout import pack_track
+    track, data = _make_track()
+    for i in range(num_clips):
+        track.add_clip('AMFile', 1, i * TICK * 3, TICK)  # gaps between clips
+    original_count = len(data['medias'])
+    pack_track(track)
+    assert len(data['medias']) == original_count
+
+
+# ------------------------------------------------------------------
+# 8. ripple_delete reduces clip count by 1
+# ------------------------------------------------------------------
+
+@given(st.integers(min_value=2, max_value=8))
+@settings(max_examples=20, deadline=None)
+def test_ripple_delete_reduces_count(num_clips):
+    """Ripple delete should remove exactly one clip."""
+    from camtasia.operations.layout import ripple_delete
+    track, data = _make_track()
+    ids = []
+    for i in range(num_clips):
+        clip = track.add_clip('AMFile', 1, i * TICK, TICK)
+        ids.append(clip.id)
+    ripple_delete(track, ids[0])
+    assert len(data['medias']) == num_clips - 1
+
+
+# ------------------------------------------------------------------
+# 9. All operations leave valid project state
+# ------------------------------------------------------------------
+
+@given(st.lists(st.sampled_from([
+    'add', 'remove', 'split', 'duplicate', 'clear', 'pack', 'move'
+]), min_size=1, max_size=12))
+@settings(max_examples=50, deadline=None)
+def test_all_operations_leave_valid_state(operations):
+    """Any sequence of operations should leave no stale transitions."""
+    from camtasia.operations.layout import pack_track
+    track, data = _make_track()
+    clip_ids = []
+
+    for op in operations:
+        try:
+            if op == 'add':
+                clip = track.add_clip('AMFile', 1, len(clip_ids) * TICK, TICK)
+                clip_ids.append(clip.id)
+            elif op == 'remove' and clip_ids:
+                cid = clip_ids.pop(0)
+                track.remove_clip(cid)
+            elif op == 'split' and clip_ids:
+                # Split the last clip at its midpoint
+                cid = clip_ids[-1]
+                for m in data['medias']:
+                    if m['id'] == cid:
+                        mid = m['start'] + m['duration'] // 2
+                        if mid > m['start'] and mid < m['start'] + m['duration']:
+                            from camtasia.timing import ticks_to_seconds
+                            left, right = track.split_clip(cid, ticks_to_seconds(mid))
+                            clip_ids[-1] = left.id
+                            clip_ids.append(right.id)
+                        break
+            elif op == 'duplicate' and clip_ids:
+                dup = track.duplicate_clip(clip_ids[-1])
+                clip_ids.append(dup.id)
+            elif op == 'clear':
+                track.clear()
+                clip_ids.clear()
+            elif op == 'pack' and clip_ids:
+                pack_track(track)
+            elif op == 'move' and clip_ids:
+                track.move_clip(clip_ids[-1], len(clip_ids) * 10.0)
+        except (KeyError, ValueError):
+            pass  # Some operations may fail on edge cases
+
+    # INVARIANT: no stale transitions
+    existing_ids = {m['id'] for m in data.get('medias', [])}
+    for trans in data.get('transitions', []):
+        left = trans.get('leftMedia')
+        right = trans.get('rightMedia')
+        if left is not None:
+            assert left in existing_ids, f'Stale leftMedia={left}'
+        if right is not None:
+            assert right in existing_ids, f'Stale rightMedia={right}'
+
+    # INVARIANT: no duplicate IDs
+    all_ids = [m['id'] for m in data.get('medias', [])]
+    assert len(all_ids) == len(set(all_ids)), f'Duplicate IDs: {all_ids}'
