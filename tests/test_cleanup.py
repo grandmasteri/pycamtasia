@@ -131,3 +131,29 @@ class TestCollectSourceIdsFromUnifiedMedia:
         remaining_ids = {s['id'] for s in project._data['sourceBin']}
         assert 50 in remaining_ids
         assert 51 in remaining_ids
+
+
+class TestCompactMethod:
+    def test_compact_method_returns_summary(self, project):
+        _add_source(project, 10)
+        _add_source(project, 20)
+        _add_clip(project, src_id=10)
+
+        result = project.compact()
+
+        assert result['orphaned_media_removed'] == 1
+        assert result['empty_tracks_removed'] >= 0
+
+    def test_compact_validates_after_cleanup(self, project):
+        import pytest
+        # Add a zero-range audio source referenced by a clip so it survives cleanup
+        project._data.setdefault('sourceBin', []).append({
+            'id': 99,
+            'src': './media/bad.wav',
+            'rect': [0, 0, 0, 0],
+            'sourceTracks': [{'range': [0, 0], 'type': 1}],
+        })
+        _add_clip(project, src_id=99)
+
+        with pytest.raises(ValueError, match='Validation errors after compact'):
+            project.compact()

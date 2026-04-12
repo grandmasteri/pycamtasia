@@ -574,6 +574,30 @@ class Project:
             'canvas': {'width': self.width, 'height': self.height},
         }
 
+    def compact(self) -> dict[str, int]:
+        """Run all cleanup operations and validate.
+
+        Removes orphaned media, empty tracks, and validates the result.
+
+        Returns:
+            Summary dict with counts of items cleaned.
+
+        Raises:
+            ValueError: If validation finds errors after cleanup.
+        """
+        from camtasia.operations.cleanup import compact_project
+        result = compact_project(self)
+
+        issues = self.validate()
+        errors = [i for i in issues if i.level == 'error']
+        if errors:
+            raise ValueError(
+                f'Validation errors after compact: '
+                f'{[e.message for e in errors]}'
+            )
+
+        return result
+
     def summary(self) -> str:
         """Return a human-readable summary of the project."""
         lines = [
