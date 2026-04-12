@@ -372,6 +372,9 @@ Run tests and view coverage:
 ```bash
 PYTHONPATH=src pytest tests/
 PYTHONPATH=src pytest tests/ --cov=camtasia --cov-report=term-missing
+
+# Run tests in parallel
+python -m pytest -n auto
 ```
 
 The library uses thin wrappers over the underlying JSON dicts — mutations go directly to the dict, so `project.save()` always writes the current state. See `ARCHITECTURE.md` for design details.
