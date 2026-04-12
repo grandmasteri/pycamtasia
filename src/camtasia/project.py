@@ -141,6 +141,60 @@ class Project:
         self._data['height'] = value
 
     @property
+    def title(self) -> str:
+        """Project title."""
+        return self._data.get('title', '')
+
+    @title.setter
+    def title(self, value: str) -> None:
+        self._data['title'] = value
+
+    @property
+    def description(self) -> str:
+        """Project description."""
+        return self._data.get('description', '')
+
+    @description.setter
+    def description(self, value: str) -> None:
+        self._data['description'] = value
+
+    @property
+    def author(self) -> str:
+        """Project author."""
+        return self._data.get('author', '')
+
+    @author.setter
+    def author(self, value: str) -> None:
+        self._data['author'] = value
+
+    @property
+    def target_loudness(self) -> float:
+        """Target loudness in LUFS for audio normalization."""
+        return self._data.get('targetLoudness', -18.0)
+
+    @target_loudness.setter
+    def target_loudness(self, value: float) -> None:
+        self._data['targetLoudness'] = value
+
+    @property
+    def frame_rate(self) -> int:
+        """Video frame rate."""
+        return self._data.get('videoFormatFrameRate', 30)
+
+    @frame_rate.setter
+    def frame_rate(self, value: int) -> None:
+        self._data['videoFormatFrameRate'] = value
+
+    @property
+    def sample_rate(self) -> int:
+        """Audio sample rate."""
+        return self._data.get('audioFormatSampleRate', 44100)
+
+    @sample_rate.setter
+    def sample_rate(self, value: int) -> None:
+        self._data['audioFormatSampleRate'] = value
+
+    @property
     def edit_rate(self) -> int:
         """The editing tick rate (ticks per second).
 
