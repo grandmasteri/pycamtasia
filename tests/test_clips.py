@@ -523,3 +523,14 @@ def test_callout_text_default_when_no_def() -> None:
     data = _base_clip_dict(_type="Callout")
     clip = Callout(data)
     assert clip.text == ""
+
+
+class TestClipReprShowsSeconds:
+    def test_clip_repr_shows_seconds(self):
+        data = _base_clip_dict(start=705_600_000, duration=705_600_000 * 2)
+        clip = BaseClip(data)
+        r = repr(clip)
+        assert "1.00s" in r
+        assert "2.00s" in r
+        assert "start=" in r
+        assert "duration=" in r

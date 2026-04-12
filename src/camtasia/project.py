@@ -890,7 +890,10 @@ class Project:
         return self.file_path
 
     def __repr__(self) -> str:
-        return f'Project(file_path="{self.file_path}")'
+        return (f'Project(path={self.file_path.name!r}, '
+                f'{self.width}x{self.height}, '
+                f'tracks={self.timeline.track_count}, '
+                f'duration={self.total_duration_seconds():.1f}s)')
 
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
