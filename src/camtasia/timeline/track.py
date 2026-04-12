@@ -950,6 +950,40 @@ class Track:
 
         return pieces
 
+    def trim_clip(
+        self,
+        clip_id: int,
+        *,
+        trim_start_seconds: float = 0.0,
+        trim_end_seconds: float = 0.0,
+    ) -> None:
+        """Trim a clip's start and/or end.
+
+        Positive trim_start removes from the beginning (clip starts later,
+        mediaStart advances). Positive trim_end removes from the end
+        (clip ends earlier, duration decreases).
+
+        Args:
+            clip_id: ID of the clip to trim.
+            trim_start_seconds: Seconds to trim from the start.
+            trim_end_seconds: Seconds to trim from the end.
+        """
+        trim_start = seconds_to_ticks(trim_start_seconds)
+        trim_end = seconds_to_ticks(trim_end_seconds)
+
+        for m in self._data.get('medias', []):
+            if m.get('id') == clip_id:
+                if trim_start > 0:
+                    m['start'] = m.get('start', 0) + trim_start
+                    m['duration'] = m.get('duration', 0) - trim_start
+                    m['mediaStart'] = m.get('mediaStart', 0) + trim_start
+                if trim_end > 0:
+                    m['duration'] = m.get('duration', 0) - trim_end
+                if m.get('duration', 0) <= 0:
+                    raise ValueError(f'Trim would result in zero or negative duration for clip {clip_id}')
+                return
+        raise KeyError(f'No clip with id={clip_id}')
+
     def duplicate_clip(self, clip_id: int, *, offset_seconds: float = 0.0) -> BaseClip:
         """Duplicate a clip on this track.
 
