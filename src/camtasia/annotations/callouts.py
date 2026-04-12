@@ -114,3 +114,73 @@ def square(text,
             ]
         }
     }
+
+
+def arrow(
+    *,
+    tail: tuple[float, float] = (0, 0),
+    head: tuple[float, float] = (100, 0),
+    color: tuple[float, float, float] = (1.0, 0.0, 0.0),
+    width: float = 3.0,
+) -> dict:
+    """Create an arrow annotation dict."""
+    return {
+        'kind': 'remix',
+        'shape': 'arrow',
+        'style': 'basic',
+        'tail-x': tail[0],
+        'tail-y': tail[1],
+        'head-x': head[0],
+        'head-y': head[1],
+        'stroke-color-red': {'type': 'double', 'defaultValue': color[0], 'interp': 'linr'},
+        'stroke-color-green': {'type': 'double', 'defaultValue': color[1], 'interp': 'linr'},
+        'stroke-color-blue': {'type': 'double', 'defaultValue': color[2], 'interp': 'linr'},
+        'stroke-width': {'type': 'double', 'defaultValue': width, 'interp': 'linr'},
+    }
+
+
+def highlight(
+    *,
+    width: float = 200,
+    height: float = 100,
+    color: tuple[float, float, float, float] = (1.0, 1.0, 0.0, 0.3),
+) -> dict:
+    """Create a highlight annotation dict."""
+    r, g, b, a = color
+    return {
+        'kind': 'remix',
+        'shape': 'shape-rectangle',
+        'style': 'basic',
+        'width': {'type': 'double', 'defaultValue': width, 'interp': 'linr'},
+        'height': {'type': 'double', 'defaultValue': height, 'interp': 'linr'},
+        'fill-color-red': {'type': 'double', 'defaultValue': r, 'interp': 'linr'},
+        'fill-color-green': {'type': 'double', 'defaultValue': g, 'interp': 'linr'},
+        'fill-color-blue': {'type': 'double', 'defaultValue': b, 'interp': 'linr'},
+        'fill-color-opacity': {'type': 'double', 'defaultValue': a, 'interp': 'linr'},
+        'fill-style': 'solid',
+        'stroke-width': {'type': 'double', 'defaultValue': 0.0, 'interp': 'linr'},
+    }
+
+
+def keystroke_callout(
+    keys: str,
+    *,
+    font_size: float = 24.0,
+) -> dict:
+    """Create a keystroke callout annotation dict.
+
+    Args:
+        keys: Key combination string (e.g. 'Ctrl+C', 'Cmd+Shift+S').
+        font_size: Font size for the keystroke text.
+    """
+    return {
+        'kind': 'remix',
+        'shape': 'text',
+        'style': 'keystroke',
+        'text': keys,
+        'font': {
+            'name': 'Montserrat',
+            'weight': 'Bold',
+            'size': {'type': 'double', 'defaultValue': font_size, 'interp': 'linr'},
+        },
+    }

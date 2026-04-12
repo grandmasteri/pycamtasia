@@ -1,12 +1,26 @@
 """Timeline — top-level container for tracks, markers, and scene data."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Iterator
 
 from camtasia.timeline.clips import BaseClip
 from camtasia.timeline.markers import Marker, MarkerList
 from camtasia.timeline.track import Track
-from camtasia.timing import ticks_to_seconds
+from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+
+
+@dataclass
+class ZoomPanKeyframe:
+    """A zoom/pan keyframe on the timeline."""
+    time_seconds: float
+    scale: float = 1.0
+    center_x: float = 0.5  # 0.0-1.0 normalized
+    center_y: float = 0.5  # 0.0-1.0 normalized
+
+    def __repr__(self) -> str:
+        return (f'ZoomPanKeyframe(t={self.time_seconds:.2f}s, '
+                f'scale={self.scale:.2f}, center=({self.center_x:.2f}, {self.center_y:.2f}))')
 
 
 class Timeline:
@@ -199,7 +213,6 @@ class Timeline:
         Returns:
             The newly created Marker.
         """
-        from camtasia.timing import seconds_to_ticks
         return self.markers.add(label, seconds_to_ticks(time_seconds))
 
     # ------------------------------------------------------------------
@@ -216,7 +229,6 @@ class Timeline:
         Returns (track, clip) tuples for clips whose time span
         overlaps [start_seconds, end_seconds].
         """
-        from camtasia.timing import seconds_to_ticks
         start_ticks = seconds_to_ticks(start_seconds)
         end_ticks = seconds_to_ticks(end_seconds)
         results = []
@@ -258,6 +270,53 @@ class Timeline:
     def video_clips(self) -> list[tuple[Track, BaseClip]]:
         """All video clips across all tracks."""
         return self.clips_of_type('VMFile')
+
+    # ------------------------------------------------------------------
+    # Zoom & Pan
+    # ------------------------------------------------------------------
+
+    @property
+    def zoom_pan_keyframes(self) -> list[ZoomPanKeyframe]:
+        """Get zoom/pan keyframes from the timeline."""
+        return [
+            ZoomPanKeyframe(
+                time_seconds=ticks_to_seconds(kf.get('time', 0)),
+                scale=kf.get('scale', 1.0),
+                center_x=kf.get('centerX', 0.5),
+                center_y=kf.get('centerY', 0.5),
+            )
+            for kf in self._data.get('zoomNPan', [])
+        ]
+
+    def add_zoom_pan(
+        self,
+        time_seconds: float,
+        *,
+        scale: float = 1.0,
+        center_x: float = 0.5,
+        center_y: float = 0.5,
+    ) -> ZoomPanKeyframe:
+        """Add a zoom/pan keyframe to the timeline.
+
+        Args:
+            time_seconds: Timeline position.
+            scale: Zoom level (1.0 = 100%, 2.0 = 200%).
+            center_x: Horizontal center 0.0-1.0 (0.5 = center).
+            center_y: Vertical center 0.0-1.0 (0.5 = center).
+        """
+        if scale <= 0:
+            raise ValueError(f'Scale must be positive, got {scale}')
+        self._data.setdefault('zoomNPan', []).append({
+            'time': seconds_to_ticks(time_seconds),
+            'scale': scale,
+            'centerX': center_x,
+            'centerY': center_y,
+        })
+        return ZoomPanKeyframe(time_seconds, scale, center_x, center_y)
+
+    def clear_zoom_pan(self) -> None:
+        """Remove all zoom/pan keyframes."""
+        self._data['zoomNPan'] = []
 
     # ------------------------------------------------------------------
     # Internals
