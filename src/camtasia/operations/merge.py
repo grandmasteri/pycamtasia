@@ -8,6 +8,23 @@ if TYPE_CHECKING:
     from camtasia.project import Project
 
 
+def _remap_clip_ids(clip_data: dict, id_counter: list[int], id_map: dict[int, int]) -> None:
+    """Recursively remap all id and src fields in a clip and its children."""
+    old_id = clip_data.get('id')
+    if old_id is not None:
+        new_id = id_counter[0]
+        id_counter[0] += 1
+        clip_data['id'] = new_id
+    if 'src' in clip_data and clip_data['src'] in id_map:
+        clip_data['src'] = id_map[clip_data['src']]
+    for key in ('video', 'audio'):
+        if key in clip_data:
+            _remap_clip_ids(clip_data[key], id_counter, id_map)
+    for track in clip_data.get('tracks', []):
+        for media in track.get('medias', []):
+            _remap_clip_ids(media, id_counter, id_map)
+
+
 def merge_tracks(
     source: Project,
     target: Project,
@@ -51,15 +68,12 @@ def merge_tracks(
             continue
 
         new_track = target.timeline.add_track(track.name)
-        base_id = target.timeline.next_clip_id()
+        id_counter = [target.timeline.next_clip_id()]
 
         for clip_data in track._data.get('medias', []):
             new_clip = copy.deepcopy(clip_data)
-            new_clip['id'] = base_id
-            base_id += 1
+            _remap_clip_ids(new_clip, id_counter, id_map)
             new_clip['start'] = new_clip.get('start', 0) + offset_ticks
-            if 'src' in new_clip and new_clip['src'] in id_map:
-                new_clip['src'] = id_map[new_clip['src']]
             new_track._data.setdefault('medias', []).append(new_clip)
 
         count += 1

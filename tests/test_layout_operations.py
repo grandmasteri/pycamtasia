@@ -185,3 +185,13 @@ class TestSnapToGrid:
         track = _make_track([_clip(1, 0.0, 1.0)])
         with pytest.raises(ValueError, match='Grid must be positive'):
             snap_to_grid(track, grid_seconds=0)
+
+    def test_snap_to_grid_clamps_negative(self):
+        """A clip near time 0 should not snap to a negative start."""
+        track = _make_track([{
+            'id': 1,
+            'start': -seconds_to_ticks(0.3),
+            'duration': seconds_to_ticks(1.0),
+        }])
+        snap_to_grid(track, grid_seconds=1.0)
+        assert track._data['medias'][0]['start'] == 0
