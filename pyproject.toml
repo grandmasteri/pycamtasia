@@ -47,6 +47,10 @@ camtasia = ["resources/**"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not integration'"
+markers = [
+    "integration: Camtasia integration tests (slow, requires Camtasia app)",
+]
 
 [tool.ruff]
 target-version = "py310"
