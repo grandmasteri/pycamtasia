@@ -271,18 +271,11 @@ class Callout(BaseClip):
         return self
 
     def position(self, x: float, y: float) -> Self:
-        """Set the callout's position on the canvas.
+        """Set the callout position.
 
-        Args:
-            x: Horizontal translation.
-            y: Vertical translation.
-
-        Returns:
-            Self for chaining.
+        .. deprecated:: Use :meth:`move_to` instead (inherited from BaseClip).
         """
-        params = self._data.setdefault('parameters', {})
-        params['translation0'] = x
-        params['translation1'] = y
+        self.move_to(x, y)
         return self
 
     def set_alignment(self, horizontal: str, vertical: str) -> Self:
