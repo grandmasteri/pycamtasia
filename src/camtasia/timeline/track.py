@@ -158,8 +158,9 @@ class Track:
     # ------------------------------------------------------------------
 
     def clear(self) -> None:
-        """Remove all clips from this track."""
+        """Remove all clips and transitions from this track."""
         self._data['medias'] = []
+        self._data['transitions'] = []
 
     @property
     def clips(self) -> _ClipAccessor:
@@ -252,6 +253,11 @@ class Track:
         for i, m in enumerate(medias):
             if m['id'] == clip_id:
                 medias.pop(i)
+                transitions = self._data.get('transitions', [])
+                self._data['transitions'] = [
+                    t for t in transitions
+                    if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
+                ]
                 return
         raise KeyError(f'No clip with id={clip_id} on track {self.index}')
 

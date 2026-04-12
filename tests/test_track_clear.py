@@ -24,6 +24,19 @@ class TestTrackClearRemovesClips:
         assert actual_clips == []
 
 
+class TestTrackClearAlsoRemovesTransitions:
+    def test_clear_also_clears_transitions(self):
+        track = _make_track()
+        c1 = track.add_callout("A", 0, 5)
+        c2 = track.add_callout("B", 5, 5)
+        track.add_fade_through_black(c1, c2, 0.5)
+
+        track.clear()
+
+        assert list(track.clips) == []
+        assert track._data.get('transitions', []) == []
+
+
 class TestTrackClearOnEmptyTrack:
     def test_clear_on_empty_track_is_noop(self):
         track = _make_track()
