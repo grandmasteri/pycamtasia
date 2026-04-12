@@ -9,7 +9,7 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 
 ## Media Import
 
-- [ ] **Native `.trec` import** — Use a Python media library (pymediainfo or PyAV) to probe `.trec` multi-track containers and build correct source bin entries with all stream metadata (screen video, camera video, mic audio, system audio). Currently `.trec` files can only be used by starting from an existing Camtasia project.
+- [x] **Native `.trec` import** — Use a Python media library (pymediainfo or PyAV) to probe `.trec` multi-track containers and build correct source bin entries with all stream metadata (screen video, camera video, mic audio, system audio). Currently `.trec` files can only be used by starting from an existing Camtasia project.
 - [x] **Replace ffprobe subprocess calls** — `import_media()` duration and dimension detection currently shells out to `ffprobe`. Replace with a Python library (pymediainfo or PyAV) for cleaner dependency management.
 - [x] **Auto-detect image dimensions** — ~~`import_media()` sets `rect: [0,0,0,0]` for images.~~ Fixed: uses ffprobe to detect width/height.
 - [x] **Audio source metadata accuracy** — Our ffprobe-based import sets approximate values for `editRate`, `sampleRate`, `numChannels`, `bitDepth`, and `range`. Camtasia corrects these on open. Use a proper media library for exact values.
