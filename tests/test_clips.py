@@ -534,3 +534,18 @@ class TestClipReprShowsSeconds:
         assert "2.00s" in r
         assert "start=" in r
         assert "duration=" in r
+
+
+class TestSetTimeRange:
+    def test_set_time_range(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        clip.set_time_range(2.0, 5.0)
+        assert clip.start == EDIT_RATE * 2
+        assert clip.duration == EDIT_RATE * 5
+
+    def test_set_time_range_chaining(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        result = clip.set_time_range(1.0, 3.0)
+        assert result is clip

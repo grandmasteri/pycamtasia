@@ -136,3 +136,35 @@ class TestExtendClip:
 
         with pytest.raises(KeyError, match="No clip with id=999"):
             track.extend_clip(999, extend_seconds=1.0)
+
+
+class TestSwapClips:
+    def test_swap_clips(self):
+        track = _make_track()
+        c1 = track.add_callout("A", 1, 5)
+        c2 = track.add_callout("B", 10, 5)
+        orig_start_a = c1.start
+        orig_start_b = c2.start
+
+        track.swap_clips(c1.id, c2.id)
+
+        swapped_a = track.clips[c1.id]
+        swapped_b = track.clips[c2.id]
+        assert swapped_a.start == orig_start_b
+        assert swapped_b.start == orig_start_a
+
+    def test_swap_clips_nonexistent_raises(self):
+        track = _make_track()
+        c1 = track.add_callout("A", 0, 5)
+
+        with pytest.raises(KeyError, match="No clip with id=999"):
+            track.swap_clips(c1.id, 999)
+
+    def test_swap_clips_second_nonexistent_raises(self):
+        data = {'trackIndex': 0, 'medias': [
+            {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100},
+        ]}
+        from camtasia.timeline.track import Track
+        t = Track({'ident': 'test'}, data)
+        with pytest.raises(KeyError, match='999'):
+            t.swap_clips(1, 999)
