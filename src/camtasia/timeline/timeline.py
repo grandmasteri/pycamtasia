@@ -384,6 +384,18 @@ class Timeline:
 
         return issues
 
+    def shift_all(self, seconds: float) -> None:
+        """Shift all clips on all tracks by the given number of seconds.
+
+        Positive values move clips forward, negative moves backward.
+        Clips are clamped to not go before time 0.
+        """
+        offset = seconds_to_ticks(seconds)
+        for track in self.tracks:
+            for m in track._data.get('medias', []):
+                new_start = m.get('start', 0) + offset
+                m['start'] = max(0, new_start)
+
     # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------

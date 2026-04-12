@@ -900,6 +900,21 @@ class Project:
 
         return result
 
+    def copy_to(self, dest_path: str | Path) -> 'Project':
+        """Copy this project to a new location.
+
+        Args:
+            dest_path: Destination path for the .cmproj copy.
+
+        Returns:
+            The loaded Project at the new location.
+        """
+        dst = Path(dest_path)
+        if dst.exists():
+            raise FileExistsError(f'Destination already exists: {dst}')
+        shutil.copytree(self.file_path, dst)
+        return load_project(str(dst))
+
     @property
     def _project_file(self) -> Path:
         """Locate the .tscproj JSON file within the project bundle."""

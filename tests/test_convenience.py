@@ -276,3 +276,33 @@ def test_overlaps_none():
     ]
     track = _make_track(medias=medias)
     assert track.overlaps() == []
+
+
+# ---------------------------------------------------------------------------
+# Timeline.shift_all
+# ---------------------------------------------------------------------------
+
+def test_shift_all_forward():
+    tl = _make_timeline([
+        ('A', [{'id': 1, 'start': 0, 'duration': 100}, {'id': 2, 'start': 1000, 'duration': 200}]),
+        ('B', [{'id': 3, 'start': 500, 'duration': 100}]),
+    ])
+    tl.shift_all(2.0)
+    offset = seconds_to_ticks(2.0)
+    raw_tracks = tl._track_list
+    assert raw_tracks[0]['medias'][0]['start'] == offset
+    assert raw_tracks[0]['medias'][1]['start'] == 1000 + offset
+    assert raw_tracks[1]['medias'][0]['start'] == 500 + offset
+
+
+def test_shift_all_backward_clamps():
+    start_ticks = seconds_to_ticks(1.0)
+    tl = _make_timeline([
+        ('A', [{'id': 1, 'start': start_ticks, 'duration': 100}]),
+        ('B', [{'id': 2, 'start': 0, 'duration': 100}]),
+    ])
+    tl.shift_all(-5.0)
+    raw_tracks = tl._track_list
+    # Both should be clamped to 0
+    assert raw_tracks[0]['medias'][0]['start'] == 0
+    assert raw_tracks[1]['medias'][0]['start'] == 0
