@@ -160,7 +160,7 @@ class Media:
         return hash(self.id)
 
     def __repr__(self) -> str:
-        return f'Media(id={self.id}, source="{self.source}")'
+        return f'Media(id={self.id}, identity={self.identity!r}, type={self.type.name})'
 
 
 class MediaBin:
@@ -206,6 +206,25 @@ class MediaBin:
                 return media
         available = sorted(m.id for m in self)
         raise KeyError(f"No media with id {media_id}. Available IDs: {available}")
+
+    def find_by_type(self, media_type: MediaType) -> list[Media]:
+        """Find all media entries of a specific type."""
+        return [m for m in self if m.type == media_type]
+
+    @property
+    def audio_files(self) -> list[Media]:
+        """All audio media entries."""
+        return self.find_by_type(MediaType.Audio)
+
+    @property
+    def video_files(self) -> list[Media]:
+        """All video media entries."""
+        return self.find_by_type(MediaType.Video)
+
+    @property
+    def image_files(self) -> list[Media]:
+        """All image media entries."""
+        return self.find_by_type(MediaType.Image)
 
     def __delitem__(self, media_id: int) -> None:
         """Remove a media entry by its integer ID.

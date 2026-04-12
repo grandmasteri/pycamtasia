@@ -30,7 +30,7 @@ def test_media_hash_in_set():
     assert {_media(1), _media(1), _media(2)} == {_media(1), _media(2)}
 
 def test_media_repr():
-    assert repr(_media(3)) == 'Media(id=3, source="media/file3.mp4")'
+    assert repr(_media(3)) == "Media(id=3, identity='file3', type=Video)"
 
 
 def test_media_eq_non_media():

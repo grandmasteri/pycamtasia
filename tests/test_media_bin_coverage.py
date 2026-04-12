@@ -91,7 +91,7 @@ class TestMediaRepr:
     def test_repr_format(self):
         entry = _make_entry(media_id=42, src="./media/clip.mov")
         media = Media(entry)
-        assert repr(media) == 'Media(id=42, source="media/clip.mov")'
+        assert repr(media) == "Media(id=42, identity='clip', type=Video)"
 
 
 class TestMediaBinImportMedia:
