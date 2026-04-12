@@ -384,7 +384,11 @@ class Project:
         suffix = path.suffix.lower()
         media_type = kwargs.pop('media_type', None) or self._EXTENSION_TYPE_MAP.get(suffix)
         if media_type is None:
-            raise ValueError(f"Cannot determine media type for extension '{suffix}'")
+            supported = ', '.join(sorted(self._EXTENSION_TYPE_MAP))
+            raise ValueError(
+                f"Cannot determine media type for extension '{suffix}'. "
+                f"Supported extensions: {supported}"
+            )
 
         meta = _probe_media(path)
 
@@ -828,7 +832,10 @@ class Project:
             for file in self.file_path.iterdir():
                 if file.is_file() and file.suffix == '.tscproj':
                     return file
-            raise FileNotFoundError("No .tscproj file was found in directory")
+            raise FileNotFoundError(
+                f"No .tscproj file found in '{self.file_path}'. "
+                f"Ensure the path points to a valid .cmproj bundle."
+            )
         return self.file_path
 
     def __repr__(self) -> str:

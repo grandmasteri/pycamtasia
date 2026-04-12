@@ -46,7 +46,11 @@ def ripple_delete(track: Track, clip_id: int) -> None:
             target_idx = i
             break
     if target is None:
-        raise KeyError(f'No clip with id={clip_id}')
+        available = [m.get('id') for m in medias]
+        raise KeyError(
+            f"No clip with id={clip_id} on track index={track.index}. "
+            f"Available clip IDs: {available}"
+        )
     gap = target.get('duration', 0)
     target_start = target.get('start', 0)
     medias.pop(target_idx)

@@ -204,7 +204,8 @@ class MediaBin:
         for media in self:
             if media.id == media_id:
                 return media
-        raise KeyError(f"No media with id {media_id}")
+        available = sorted(m.id for m in self)
+        raise KeyError(f"No media with id {media_id}. Available IDs: {available}")
 
     def __delitem__(self, media_id: int) -> None:
         """Remove a media entry by its integer ID.

@@ -986,8 +986,11 @@ class Track:
         orig_duration = left_data['duration']
 
         if split_point <= orig_start or split_point >= orig_start + orig_duration:
+            start_sec = ticks_to_seconds(orig_start)
+            end_sec = ticks_to_seconds(orig_start + orig_duration)
             raise ValueError(
-                f'Split point {split_at_seconds}s is outside clip range'
+                f"Split point {split_at_seconds}s is outside clip range "
+                f"({start_sec:.3f}s\u2013{end_sec:.3f}s) for clip id={clip_id}"
             )
 
         split_offset = split_point - orig_start
