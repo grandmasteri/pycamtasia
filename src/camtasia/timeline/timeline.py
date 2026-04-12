@@ -363,7 +363,10 @@ class _TrackAccessor:
             if t['trackIndex'] == track_index:
                 attrs = self._attrs[i] if i < len(self._attrs) else {}
                 return Track(attrs, t, _all_tracks=self._track_list)
-        raise KeyError(f'No track with index={track_index}')
+        raise KeyError(
+            f"No track with index={track_index}. "
+            f"Timeline has {len(self)} tracks (indices 0\u2013{len(self)-1})"
+        )
 
     def __delitem__(self, track_index: int) -> None:
         """Remove a track by its ``trackIndex``.
