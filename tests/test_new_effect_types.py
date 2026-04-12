@@ -1,0 +1,57 @@
+from __future__ import annotations
+
+from camtasia.timeline.clips import BaseClip
+
+
+def _base_clip_dict(**overrides) -> dict:
+    base = {
+        "id": 14,
+        "_type": "AMFile",
+        "src": 3,
+        "start": 0,
+        "duration": 106051680000,
+        "mediaStart": 0,
+        "mediaDuration": 113484000000,
+        "scalar": 1,
+    }
+    base.update(overrides)
+    return base
+
+
+class TestAddLutEffect:
+    def test_add_lut_effect_creates_effect(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        result = clip.add_lut_effect()
+        effect = data["effects"][0]
+        assert effect["effectName"] == "LutEffect"
+        assert effect["bypassed"] is False
+        assert effect["category"] == "categoryVisualEffects"
+        assert effect["parameters"]["lut_intensity"] == 1.0
+        assert effect["parameters"]["channel"] == 0
+        assert result is clip
+
+    def test_add_lut_effect_custom_intensity(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        clip.add_lut_effect(intensity=0.6)
+        assert data["effects"][0]["parameters"]["lut_intensity"] == 0.6
+
+
+class TestAddEmphasize:
+    def test_add_emphasize_creates_effect(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        result = clip.add_emphasize()
+        effect = data["effects"][0]
+        assert effect["effectName"] == "Emphasize"
+        assert effect["bypassed"] is False
+        assert effect["category"] == "categoryAudioEffects"
+        assert effect["parameters"]["emphasizeAmount"] == 0.5
+        assert result is clip
+
+    def test_add_emphasize_custom_amount(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        clip.add_emphasize(amount=0.8)
+        assert data["effects"][0]["parameters"]["emphasizeAmount"] == 0.8

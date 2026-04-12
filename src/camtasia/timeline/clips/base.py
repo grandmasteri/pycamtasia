@@ -665,6 +665,47 @@ class BaseClip:
         })
         return self
 
+    def add_lut_effect(self, *, intensity: float = 1.0) -> Self:
+        """Add a color LUT (Look-Up Table) effect.
+
+        Args:
+            intensity: Effect intensity 0.0-1.0.
+        """
+        self.add_effect({
+            'effectName': 'LutEffect',
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {
+                'lutSource': '',
+                'lut_intensity': intensity,
+                'channel': 0,
+                'shadowRampStart': 0.0,
+                'shadowRampEnd': 0.0,
+                'highlightRampStart': 1.0,
+                'highlightRampEnd': 1.0,
+            },
+        })
+        return self
+
+    def add_emphasize(self, *, amount: float = 0.5) -> Self:
+        """Add an audio emphasis effect.
+
+        Args:
+            amount: Emphasis amount 0.0-1.0.
+        """
+        self.add_effect({
+            'effectName': 'Emphasize',
+            'bypassed': False,
+            'category': 'categoryAudioEffects',
+            'parameters': {
+                'emphasizeAmount': amount,
+                'emphasizeRampPosition': 0,
+                'emphasizeRampInTime': EDIT_RATE,
+                'emphasizeRampOutTime': EDIT_RATE,
+            },
+        })
+        return self
+
     def remove_effects(self) -> Self:
         """Remove all effects from this clip.
 
