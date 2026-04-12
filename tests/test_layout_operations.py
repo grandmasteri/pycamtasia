@@ -123,6 +123,35 @@ class TestRippleDelete:
             ripple_delete(track, clip_id=999)
 
 
+    def test_ripple_delete_cascades_transitions(self):
+        track = _make_track([
+            _clip(1, 0.0, 2.0),
+            _clip(2, 2.0, 3.0),
+            _clip(3, 5.0, 1.0),
+        ])
+        track._data['transitions'] = [
+            {'leftMedia': 1, 'rightMedia': 2, 'duration': 100},
+            {'leftMedia': 2, 'rightMedia': 3, 'duration': 100},
+        ]
+        ripple_delete(track, clip_id=2)
+        assert len(track._data['transitions']) == 0
+
+    def test_ripple_delete_keeps_unrelated_transitions(self):
+        track = _make_track([
+            _clip(1, 0.0, 2.0),
+            _clip(2, 2.0, 3.0),
+            _clip(3, 5.0, 1.0),
+            _clip(4, 6.0, 1.0),
+        ])
+        track._data['transitions'] = [
+            {'leftMedia': 1, 'rightMedia': 2, 'duration': 100},
+            {'leftMedia': 3, 'rightMedia': 4, 'duration': 100},
+        ]
+        ripple_delete(track, clip_id=2)
+        assert len(track._data['transitions']) == 1
+        assert track._data['transitions'][0]['leftMedia'] == 3
+
+
 class TestSnapToGrid:
     @pytest.mark.parametrize(
         'actual_start, expected_start',

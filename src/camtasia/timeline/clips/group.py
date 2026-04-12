@@ -221,6 +221,7 @@ class Group(BaseClip):
 
         # Replace the internal track's medias
         media_track['medias'] = new_medias
+        media_track['transitions'] = []
 
         # Update Group duration and mediaDuration to match total timeline
         total_tl = seconds_to_ticks(timeline_cursor)

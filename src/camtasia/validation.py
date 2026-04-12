@@ -60,3 +60,28 @@ def _check_track_indices(data: dict) -> list[ValidationIssue]:
         if idx != i:
             issues.append(ValidationIssue('warning', f'Track array[{i}] has trackIndex={idx} (expected {i})'))
     return issues
+
+
+def _check_transition_references(data: dict) -> list[ValidationIssue]:
+    """Check that all transitions reference existing clips on their track."""
+    issues: list[ValidationIssue] = []
+    tracks = (data.get('timeline', {}).get('sceneTrack', {})
+              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    for ti, track in enumerate(tracks):
+        clip_ids = {m['id'] for m in track.get('medias', [])}
+        for j, trans in enumerate(track.get('transitions', [])):
+            left = trans.get('leftMedia')
+            right = trans.get('rightMedia')
+            if left is not None and left not in clip_ids:
+                issues.append(ValidationIssue(
+                    'error',
+                    f'Track[{ti}] transition[{j}] leftMedia={left} '
+                    f'not found in track clips {clip_ids}'
+                ))
+            if right is not None and right not in clip_ids:
+                issues.append(ValidationIssue(
+                    'error',
+                    f'Track[{ti}] transition[{j}] rightMedia={right} '
+                    f'not found in track clips {clip_ids}'
+                ))
+    return issues
