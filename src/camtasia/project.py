@@ -217,6 +217,16 @@ class Project:
         """The project's timeline."""
         return Timeline(self._data['timeline'])
 
+    @property
+    def has_screen_recording(self) -> bool:
+        """Whether the project contains any screen recording clips."""
+        from camtasia.timeline.clips.group import Group
+        for track in self.timeline.tracks:
+            for clip in track.clips:
+                if isinstance(clip, Group) and clip.is_screen_recording:
+                    return True
+        return False
+
     @staticmethod
     def _flatten_parameters(obj: Any) -> None:
         """Convert parameter dicts without keyframes to bare defaultValues.

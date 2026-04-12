@@ -53,6 +53,11 @@ class Timeline:
         """Number of tracks on the timeline."""
         return len(self._track_list)
 
+    @property
+    def total_clip_count(self) -> int:
+        """Total number of clips across all tracks."""
+        return sum(len(track) for track in self.tracks)
+
     def add_track(self, name: str = '') -> Track:
         """Append a new empty track.
 

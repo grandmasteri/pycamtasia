@@ -109,3 +109,109 @@ def test_timeline_remove_empty_tracks():
     assert tl.track_count == 1
     remaining = list(tl.tracks)
     assert remaining[0].name == 'Keep'
+
+
+# ---------------------------------------------------------------------------
+# Track.sort_clips
+# ---------------------------------------------------------------------------
+
+def test_sort_clips():
+    medias = [
+        {'id': 1, '_type': 'VMFile', 'start': 300, 'duration': 100},
+        {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 100},
+        {'id': 3, '_type': 'VMFile', 'start': 200, 'duration': 100},
+    ]
+    track = _make_track(medias=medias)
+    track.sort_clips()
+    assert [m['start'] for m in track._data['medias']] == [100, 200, 300]
+
+
+# ---------------------------------------------------------------------------
+# Timeline.total_clip_count
+# ---------------------------------------------------------------------------
+
+def test_total_clip_count():
+    tl = _make_timeline([
+        ('A', [{'id': 1, 'start': 0, 'duration': 1}, {'id': 2, 'start': 1, 'duration': 1}]),
+        ('B', [{'id': 3, 'start': 0, 'duration': 1}]),
+        ('C', []),
+    ])
+    assert tl.total_clip_count == 3
+
+
+# ---------------------------------------------------------------------------
+# Project.has_screen_recording
+# ---------------------------------------------------------------------------
+
+def _make_project_data(track_medias_list):
+    """Build minimal Project._data with given track medias."""
+    tracks = []
+    attrs = []
+    for i, medias in enumerate(track_medias_list):
+        tracks.append({'trackIndex': i, 'medias': medias})
+        attrs.append({'ident': f'Track{i}'})
+    return {
+        'timeline': {
+            'sceneTrack': {'scenes': [{'csml': {'tracks': tracks}}]},
+            'trackAttributes': attrs,
+        },
+        'sourceBin': [],
+    }
+
+
+def test_has_screen_recording_true():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+    group_media = {
+        'id': 1, '_type': 'Group', 'start': 0, 'duration': 100,
+        'tracks': [{'trackIndex': 0, 'medias': [{'id': 2, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100}]}],
+        'attributes': {'ident': ''},
+    }
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([[group_media]])
+    proj.timeline = Timeline(proj._data['timeline'])
+    assert Project.has_screen_recording.fget(proj) is True
+
+
+def test_has_screen_recording_false():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+    plain_media = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([[plain_media]])
+    proj.timeline = Timeline(proj._data['timeline'])
+    assert Project.has_screen_recording.fget(proj) is False
+
+
+# ---------------------------------------------------------------------------
+# Track.first_clip / Track.last_clip
+# ---------------------------------------------------------------------------
+
+def test_first_clip():
+    medias = [
+        {'id': 1, '_type': 'VMFile', 'start': 300, 'duration': 100},
+        {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 100},
+    ]
+    track = _make_track(medias=medias)
+    assert track.first_clip is not None
+    assert track.first_clip.id == 2
+
+
+def test_last_clip():
+    medias = [
+        {'id': 1, '_type': 'VMFile', 'start': 100, 'duration': 50},
+        {'id': 2, '_type': 'VMFile', 'start': 200, 'duration': 300},
+    ]
+    track = _make_track(medias=medias)
+    assert track.last_clip is not None
+    assert track.last_clip.id == 2  # 200+300=500 > 100+50=150
+
+
+def test_first_clip_empty():
+    track = _make_track(medias=[])
+    assert track.first_clip is None
+
+
+def test_last_clip_empty():
+    track = _make_track(medias=[])
+    assert track.last_clip is None
