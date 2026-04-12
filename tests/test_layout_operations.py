@@ -65,6 +65,17 @@ class TestPackTrack:
         expected_starts = [seconds_to_ticks(0.0), seconds_to_ticks(2.0)]
         assert actual_starts == expected_starts
 
+    def test_pack_track_clears_transitions(self):
+        track = _make_track([
+            _clip(1, 0.0, 2.0),
+            _clip(2, 5.0, 3.0),
+        ])
+        track._data['transitions'] = [
+            {'leftMedia': 1, 'rightMedia': 2, 'duration': 100},
+        ]
+        pack_track(track)
+        assert track._data['transitions'] == []
+
     def test_pack_track_empty(self):
         track = _make_track([])
         pack_track(track)  # should not raise

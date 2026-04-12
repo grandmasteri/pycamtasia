@@ -75,6 +75,17 @@ class TestMoveClip:
             track.move_clip(999, 5.0)
 
 
+    def test_move_clip_removes_transitions(self):
+        track = _make_track()
+        c1 = track.add_callout("A", 0, 5)
+        c2 = track.add_callout("B", 5, 5)
+        track._data['transitions'] = [
+            {'leftMedia': c1.id, 'rightMedia': c2.id, 'duration': 100},
+        ]
+        track.move_clip(c1.id, 20.0)
+        assert track._data['transitions'] == []
+
+
 class TestDuplicateGroupClip:
     def test_duplicate_group_remaps_nested_ids(self):
         data = {
