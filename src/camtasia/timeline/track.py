@@ -773,6 +773,26 @@ class Track:
 
         return clips
 
+    def sort_clips(self) -> None:
+        """Sort clips by start time."""
+        self._data.get('medias', []).sort(key=lambda m: m.get('start', 0))
+
+    @property
+    def first_clip(self) -> BaseClip | None:
+        """First clip by start time, or None if track is empty."""
+        medias = self._data.get('medias', [])
+        if not medias:
+            return None
+        return clip_from_dict(min(medias, key=lambda m: m.get('start', 0)))
+
+    @property
+    def last_clip(self) -> BaseClip | None:
+        """Last clip by end time, or None if track is empty."""
+        medias = self._data.get('medias', [])
+        if not medias:
+            return None
+        return clip_from_dict(max(medias, key=lambda m: m.get('start', 0) + m.get('duration', 0)))
+
     @property
     def is_empty(self) -> bool:
         """True if this track has no clips."""
