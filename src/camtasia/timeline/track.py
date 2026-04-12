@@ -810,6 +810,40 @@ class Track:
         """True if this track has no clips."""
         return len(self) == 0
 
+    @property
+    def total_duration_seconds(self) -> float:
+        """Total duration of all clips on this track in seconds."""
+        total = sum(m.get('duration', 0) for m in self._data.get('medias', []))
+        return ticks_to_seconds(total)
+
+    def gaps(self) -> list[tuple[float, float]]:
+        """Find gaps between clips on this track.
+
+        Returns list of (start_seconds, end_seconds) tuples for each gap.
+        """
+        medias = sorted(self._data.get('medias', []), key=lambda m: m.get('start', 0))
+        result = []
+        for i in range(len(medias) - 1):
+            end = medias[i].get('start', 0) + medias[i].get('duration', 0)
+            next_start = medias[i + 1].get('start', 0)
+            if next_start > end:
+                result.append((ticks_to_seconds(end), ticks_to_seconds(next_start)))
+        return result
+
+    def overlaps(self) -> list[tuple[int, int]]:
+        """Find overlapping clips on this track.
+
+        Returns list of (clip_id_a, clip_id_b) tuples for overlapping pairs.
+        """
+        medias = sorted(self._data.get('medias', []), key=lambda m: m.get('start', 0))
+        result = []
+        for i in range(len(medias) - 1):
+            end = medias[i].get('start', 0) + medias[i].get('duration', 0)
+            next_start = medias[i + 1].get('start', 0)
+            if next_start < end:
+                result.append((medias[i]['id'], medias[i + 1]['id']))
+        return result
+
     def end_time_ticks(self) -> int:
         """End time of the last clip on this track, in ticks."""
         max_end = 0
