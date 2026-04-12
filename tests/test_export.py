@@ -119,3 +119,64 @@ class TestReportWithMedia:
         assert actual_data['media_count'] >= 1
         actual_identities = [m['identity'] for m in actual_data['media']]
         assert 'empty' in actual_identities
+
+
+# ── EDL tests ──────────────────────────────────────────────────────
+
+from camtasia.export.edl import _format_timecode, export_edl
+
+
+def test_edl_header(project, tmp_path):
+    out = export_edl(project, tmp_path / 'out.edl', title='My Project')
+    lines = out.read_text().splitlines()
+    assert lines[0] == 'TITLE: My Project'
+    assert lines[1] == 'FCM: NON-DROP FRAME'
+
+
+def test_edl_events(project, tmp_path):
+    _add_clip(project, start_seconds=0.0, duration_seconds=5.0)
+    _add_clip(project, start_seconds=5.0, duration_seconds=3.0)
+    out = export_edl(project, tmp_path / 'out.edl')
+    event_lines = [l for l in out.read_text().splitlines() if l and l[0].isdigit()]
+    assert len(event_lines) == 2
+
+
+def test_edl_timecodes(project, tmp_path):
+    _add_clip(project, start_seconds=1.0, duration_seconds=2.0)
+    out = export_edl(project, tmp_path / 'out.edl')
+    event_lines = [l for l in out.read_text().splitlines() if l and l[0].isdigit()]
+    assert '00:00:01:00' in event_lines[0]  # rec_in
+    assert '00:00:03:00' in event_lines[0]  # rec_out
+
+
+@pytest.mark.parametrize('seconds, expected', [
+    (0.0, '00:00:00:00'),
+    (1.5, '00:00:01:15'),
+    (61.0, '00:01:01:00'),
+    (3661.0, '01:01:01:00'),
+])
+def test_format_timecode(seconds, expected):
+    assert _format_timecode(seconds) == expected
+
+
+class TestEdlWithMedia:
+    def test_edl_resolves_source_names(self, project, tmp_path):
+        from camtasia.export import export_edl
+        wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
+        media = project.import_media(wav)
+        track = project.timeline.add_track('Audio')
+        track.add_audio(media.id, start_seconds=0.0, duration_seconds=2.0)
+        output = tmp_path / 'test.edl'
+        export_edl(project, output)
+        actual_content = output.read_text()
+        assert 'empty' in actual_content  # source name resolved from media bin
+
+    def test_edl_handles_missing_source(self, project, tmp_path):
+        from camtasia.export import export_edl
+        track = project.timeline.add_track('Test')
+        # Add clip with source_id that doesn't exist in media bin
+        track.add_clip('AMFile', 9999, 0, 705600000)
+        output = tmp_path / 'test.edl'
+        export_edl(project, output)
+        actual_content = output.read_text()
+        assert 'AX' in actual_content  # fallback source name
