@@ -133,3 +133,56 @@ class TestBasicOperations:
         clip.add_round_corners(radius=16.0)
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+
+class TestEffectsAndAnnotations:
+    @pytest.mark.integration
+    def test_color_adjustment_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        img = _create_test_image(tmp_path)
+        media = proj.import_media(img)
+        track = proj.timeline.add_track('Content')
+        clip = track.add_clip('IMFile', media.id, 0, seconds_to_ticks(5))
+        clip.add_color_adjustment(brightness=0.1, contrast=0.2)
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_border_effect_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        img = _create_test_image(tmp_path)
+        media = proj.import_media(img)
+        track = proj.timeline.add_track('Content')
+        clip = track.add_clip('IMFile', media.id, 0, seconds_to_ticks(5))
+        clip.add_border(width=4.0, color=(1.0, 0.0, 0.0, 1.0))
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    @pytest.mark.xfail(reason='add_behavior produces boost::bad_rational in Camtasia - needs investigation')
+    def test_callout_with_behavior_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        track = proj.timeline.add_track('Callouts')
+        callout = track.add_callout('Hello World', start_seconds=0.0, duration_seconds=5.0)
+        callout.add_behavior('Reveal', 'reveal', 'reveal')
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_lower_third_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        track = proj.timeline.add_track('Titles')
+        track.add_lower_third('Speaker Name', 'Title goes here', start_seconds=0.0, duration_seconds=5.0)
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_multiple_tracks_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        img = _create_test_image(tmp_path)
+        media = proj.import_media(img)
+        for i in range(5):
+            track = proj.timeline.add_track(f'Track {i}')
+            track.add_clip('IMFile', media.id, 0, seconds_to_ticks(5))
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
