@@ -334,6 +334,57 @@ class Timeline:
         return CaptionAttributes(self._data.setdefault('captionAttributes', {}))
 
     # ------------------------------------------------------------------
+    # Structural validation
+    # ------------------------------------------------------------------
+
+    def validate_structure(self) -> list[str]:
+        """Check timeline structural invariants.
+
+        Returns a list of issue descriptions (empty = valid).
+        """
+        issues = []
+
+        # Check 1: trackIndex matches array position
+        for i, track in enumerate(self.tracks):
+            if track.index != i:
+                issues.append(f'Track array[{i}] has trackIndex={track.index}')
+
+        # Check 2: No duplicate clip IDs across all tracks
+        all_ids: dict[int, str] = {}
+        for track in self.tracks:
+            for clip in track.clips:
+                if clip.id in all_ids:
+                    issues.append(
+                        f'Duplicate clip ID {clip.id} on track {track.index} '
+                        f'(also on {all_ids[clip.id]})'
+                    )
+                all_ids[clip.id] = f'track {track.index}'
+
+        # Check 3: No stale transition references
+        for track in self.tracks:
+            clip_ids = {c.id for c in track.clips}
+            for trans in track.transitions:
+                if trans.left_media_id and trans.left_media_id not in clip_ids:
+                    issues.append(
+                        f'Track {track.index}: transition leftMedia={trans.left_media_id} '
+                        f'not found in clips'
+                    )
+                if trans.right_media_id and trans.right_media_id not in clip_ids:
+                    issues.append(
+                        f'Track {track.index}: transition rightMedia={trans.right_media_id} '
+                        f'not found in clips'
+                    )
+
+        # Check 4: No overlapping clips on the same track
+        for track in self.tracks:
+            for a_id, b_id in track.overlaps():
+                issues.append(
+                    f'Track {track.index}: clips {a_id} and {b_id} overlap'
+                )
+
+        return issues
+
+    # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
 
