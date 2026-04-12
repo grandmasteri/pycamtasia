@@ -522,9 +522,9 @@ def _blur_region_data():
         "effectName": "BlurRegion",
         "parameters": {
             "sigma": _param(10.0),
-            "mask_corner_radius": _param(0.0),
-            "mask_invert": _param(0),
-            "color_alpha": _param(1.0),
+            "mask-cornerRadius": _param(0.0),
+            "mask-invert": _param(0),
+            "color-alpha": _param(1.0),
         },
     }
 

@@ -289,7 +289,7 @@ class BlurRegion(Effect):
     """Blur region effect.
 
     Parameters:
-        sigma, mask_corner_radius, mask_invert, color_alpha
+        sigma, mask-cornerRadius, mask-invert, color-alpha
     """
 
     @property
@@ -304,26 +304,26 @@ class BlurRegion(Effect):
     @property
     def mask_corner_radius(self) -> float:
         """Corner radius of the blur region mask."""
-        return self.get_parameter("mask_corner_radius")
+        return self.get_parameter("mask-cornerRadius")
 
     @mask_corner_radius.setter
     def mask_corner_radius(self, value: float) -> None:
-        self.set_parameter("mask_corner_radius", value)
+        self.set_parameter("mask-cornerRadius", value)
 
     @property
     def mask_invert(self) -> int:
         """Whether the blur region mask is inverted (1) or normal (0)."""
-        return self.get_parameter("mask_invert")
+        return self.get_parameter("mask-invert")
 
     @mask_invert.setter
     def mask_invert(self, value: int) -> None:
-        self.set_parameter("mask_invert", value)
+        self.set_parameter("mask-invert", value)
 
     @property
     def color_alpha(self) -> float:
         """Alpha channel of the blur region overlay color."""
-        return self.get_parameter("color_alpha")
+        return self.get_parameter("color-alpha")
 
     @color_alpha.setter
     def color_alpha(self, value: float) -> None:
-        self.set_parameter("color_alpha", value)
+        self.set_parameter("color-alpha", value)

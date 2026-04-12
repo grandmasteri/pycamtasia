@@ -145,9 +145,9 @@ BLUR_REGION_DICT = {
     "category": "",
     "parameters": {
         "sigma": _param(10.0),
-        "mask_corner_radius": _param(5.0),
-        "mask_invert": _param(0, type_="int"),
-        "color_alpha": _param(0.8),
+        "mask-cornerRadius": _param(5.0),
+        "mask-invert": _param(0, type_="int"),
+        "color-alpha": _param(0.8),
     },
     "metadata": {"presetName": "Blur Region"},
 }
