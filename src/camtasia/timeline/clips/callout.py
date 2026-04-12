@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any, Self
 
-from camtasia.effects.behaviors import GenericBehaviorEffect
-
 from .base import BaseClip
 
 
@@ -318,56 +316,16 @@ class Callout(BaseClip):
         d['resize-behavior'] = 'resizeText'
         return self
 
-    def add_behavior(
-        self,
-        preset: str = 'Reveal',
-        entrance_name: str = 'reveal',
-        exit_name: str = 'reveal',
-    ) -> GenericBehaviorEffect:
-        """Add a text animation behavior effect.
+    def add_behavior(self, preset: str = 'Reveal') -> Self:
+        """Add a text behavior animation effect.
 
         Args:
-            preset: Preset name stored in metadata (e.g. ``'Reveal'``).
-            entrance_name: Entrance animation name (e.g. ``'reveal'``).
-            exit_name: Exit animation name (e.g. ``'reveal'``, ``'none'``).
+            preset: Behavior preset name (``'Reveal'``, ``'Sliding'``).
 
         Returns:
-            The created :class:`GenericBehaviorEffect`.
+            Self for chaining.
         """
-        record: dict[str, Any] = {
-            '_type': 'GenericBehaviorEffect',
-            'effectName': 'GenericBehaviorEffect',
-            'bypassed': False,
-            'start': 0,
-            'duration': self.duration,
-            'metadata': {'presetName': preset},
-            'in': {
-                'attributes': {
-                    'name': entrance_name,
-                    'type': 0,
-                    'characterOrder': 0,
-                    'offsetBetweenCharacters': 17640000,
-                    'suggestedDurationPerCharacter': 35280000,
-                    'overlapProportion': '1/2',
-                    'movement': 0,
-                    'springDamping': 0.0,
-                    'springStiffness': 0.0,
-                    'bounceBounciness': 0.0,
-                },
-                'parameters': {},
-            },
-            'center': {
-                'attributes': {'name': 'none', 'type': 1},
-                'parameters': {},
-            },
-            'out': {
-                'attributes': {
-                    'name': exit_name,
-                    'type': 0,
-                    'characterOrder': 0,
-                },
-                'parameters': {},
-            },
-        }
-        self._data.setdefault('effects', []).append(record)
-        return GenericBehaviorEffect(record)
+        from camtasia.templates.behavior_presets import get_behavior_preset
+        effect = get_behavior_preset(preset, self.duration)
+        self._data.setdefault('effects', []).append(effect)
+        return self
