@@ -1174,10 +1174,9 @@ class Track:
                 a = m
             elif m.get('id') == clip_id_b:
                 b = m
-        if a is None:
-            raise KeyError(f'No clip with id={clip_id_a}')
-        if b is None:
-            raise KeyError(f'No clip with id={clip_id_b}')
+        if a is None or b is None:
+            missing = clip_id_a if a is None else clip_id_b
+            raise KeyError(f'No clip with id={missing}')
         a['start'], b['start'] = b['start'], a['start']
 
     def _next_clip_id(self) -> int:
