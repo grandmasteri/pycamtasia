@@ -51,3 +51,23 @@ def test_duplicate_existing_dest_raises(source_project, tmp_path):
     dst.mkdir()
     with pytest.raises(FileExistsError):
         duplicate_project(source_project.file_path, dst)
+
+
+# ---------------------------------------------------------------------------
+# Project.copy_to
+# ---------------------------------------------------------------------------
+
+
+def test_copy_to_creates_copy(source_project, tmp_path):
+    dst = tmp_path / "copy_to_dest.cmproj"
+    copy = source_project.copy_to(dst)
+    assert dst.exists()
+    assert copy.file_path == dst.resolve()
+    assert copy.width == source_project.width
+
+
+def test_copy_to_existing_raises(source_project, tmp_path):
+    dst = tmp_path / "copy_to_dest.cmproj"
+    dst.mkdir()
+    with pytest.raises(FileExistsError):
+        source_project.copy_to(dst)
