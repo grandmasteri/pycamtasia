@@ -1179,6 +1179,32 @@ class Track:
             raise KeyError(f'No clip with id={missing}')
         a['start'], b['start'] = b['start'], a['start']
 
+    def replace_clip(self, clip_id: int, new_clip_data: dict) -> BaseClip:
+        """Replace a clip with new data, preserving the timeline position.
+
+        The new clip inherits the original's start time and gets a new ID.
+
+        Args:
+            clip_id: ID of the clip to replace.
+            new_clip_data: Dict for the replacement clip (from clone() or manual construction).
+
+        Returns:
+            The new clip.
+        """
+        medias = self._data.get('medias', [])
+        for i, m in enumerate(medias):
+            if m.get('id') == clip_id:
+                new_clip_data['id'] = self._next_clip_id()
+                new_clip_data['start'] = m['start']
+                medias[i] = new_clip_data
+                transitions = self._data.get('transitions', [])
+                self._data['transitions'] = [
+                    t for t in transitions
+                    if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
+                ]
+                return clip_from_dict(new_clip_data)
+        raise KeyError(f'No clip with id={clip_id}')
+
     def _next_clip_id(self) -> int:
         """Scan all medias for the max ID and increment.
 
