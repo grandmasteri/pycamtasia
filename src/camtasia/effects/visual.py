@@ -26,38 +26,38 @@ class RoundCorners(Effect):
     @property
     def top_left(self) -> bool:
         """Whether the top-left corner is rounded."""
-        return self.get_parameter("topLeft")
+        return self.get_parameter("top-left")
 
     @top_left.setter
     def top_left(self, value: bool) -> None:
-        self.set_parameter("topLeft", value)
+        self.set_parameter("top-left", value)
 
     @property
     def top_right(self) -> bool:
         """Whether the top-right corner is rounded."""
-        return self.get_parameter("topRight")
+        return self.get_parameter("top-right")
 
     @top_right.setter
     def top_right(self, value: bool) -> None:
-        self.set_parameter("topRight", value)
+        self.set_parameter("top-right", value)
 
     @property
     def bottom_left(self) -> bool:
         """Whether the bottom-left corner is rounded."""
-        return self.get_parameter("bottomLeft")
+        return self.get_parameter("bottom-left")
 
     @bottom_left.setter
     def bottom_left(self, value: bool) -> None:
-        self.set_parameter("bottomLeft", value)
+        self.set_parameter("bottom-left", value)
 
     @property
     def bottom_right(self) -> bool:
         """Whether the bottom-right corner is rounded."""
-        return self.get_parameter("bottomRight")
+        return self.get_parameter("bottom-right")
 
     @bottom_right.setter
     def bottom_right(self, value: bool) -> None:
-        self.set_parameter("bottomRight", value)
+        self.set_parameter("bottom-right", value)
 
 
 def _color_rgba(params: dict[str, Any], prefix: str) -> tuple[float, float, float, float]:
@@ -159,8 +159,8 @@ class Mask(Effect):
     """Mask effect.
 
     Parameters:
-        mask_shape, mask_opacity, mask_blend, mask_invert, mask_rotation,
-        mask_width, mask_height, mask_position_x, mask_position_y.
+        mask-shape, mask-opacity, mask-blend, mask-invert, mask-rotation,
+        mask-width, mask-height, mask-positionX, mask-positionY, mask-cornerRadius.
 
     Width, height, and position parameters may be keyframed (dict with
     ``keyframes`` array) or simple scalar values.
@@ -169,83 +169,92 @@ class Mask(Effect):
     @property
     def mask_shape(self) -> int:
         """Mask shape identifier."""
-        return self.get_parameter("mask_shape")
+        return self.get_parameter("mask-shape")
 
     @mask_shape.setter
     def mask_shape(self, value: int) -> None:
-        self.set_parameter("mask_shape", value)
+        self.set_parameter("mask-shape", value)
 
     @property
     def mask_opacity(self) -> float:
         """Mask opacity from 0.0 (transparent) to 1.0 (opaque)."""
-        return self.get_parameter("mask_opacity")
+        return self.get_parameter("mask-opacity")
 
     @mask_opacity.setter
     def mask_opacity(self, value: float) -> None:
-        self.set_parameter("mask_opacity", value)
+        self.set_parameter("mask-opacity", value)
 
     @property
     def mask_blend(self) -> float:
         """Mask edge blend (feather) amount."""
-        return self.get_parameter("mask_blend")
+        return self.get_parameter("mask-blend")
 
     @mask_blend.setter
     def mask_blend(self, value: float) -> None:
-        self.set_parameter("mask_blend", value)
+        self.set_parameter("mask-blend", value)
 
     @property
     def mask_invert(self) -> int:
         """Whether the mask is inverted (1) or normal (0)."""
-        return self.get_parameter("mask_invert")
+        return self.get_parameter("mask-invert")
 
     @mask_invert.setter
     def mask_invert(self, value: int) -> None:
-        self.set_parameter("mask_invert", value)
+        self.set_parameter("mask-invert", value)
 
     @property
     def mask_rotation(self) -> float:
         """Mask rotation angle in degrees."""
-        return self.get_parameter("mask_rotation")
+        return self.get_parameter("mask-rotation")
 
     @mask_rotation.setter
     def mask_rotation(self, value: float) -> None:
-        self.set_parameter("mask_rotation", value)
+        self.set_parameter("mask-rotation", value)
 
     @property
     def mask_width(self) -> float | dict:
         """Mask width, scalar or keyframed dict."""
-        return self.get_parameter("mask_width")
+        return self.get_parameter("mask-width")
 
     @mask_width.setter
     def mask_width(self, value: float | dict) -> None:
-        self.set_parameter("mask_width", value)
+        self.set_parameter("mask-width", value)
 
     @property
     def mask_height(self) -> float | dict:
         """Mask height, scalar or keyframed dict."""
-        return self.get_parameter("mask_height")
+        return self.get_parameter("mask-height")
 
     @mask_height.setter
     def mask_height(self, value: float | dict) -> None:
-        self.set_parameter("mask_height", value)
+        self.set_parameter("mask-height", value)
 
     @property
     def mask_position_x(self) -> float | dict:
         """Mask horizontal position, scalar or keyframed dict."""
-        return self.get_parameter("mask_positionX")
+        return self.get_parameter("mask-positionX")
 
     @mask_position_x.setter
     def mask_position_x(self, value: float | dict) -> None:
-        self.set_parameter("mask_positionX", value)
+        self.set_parameter("mask-positionX", value)
 
     @property
     def mask_position_y(self) -> float | dict:
         """Mask vertical position, scalar or keyframed dict."""
-        return self.get_parameter("mask_positionY")
+        return self.get_parameter("mask-positionY")
 
     @mask_position_y.setter
     def mask_position_y(self, value: float | dict) -> None:
-        self.set_parameter("mask_positionY", value)
+        self.set_parameter("mask-positionY", value)
+
+    @property
+    def mask_corner_radius(self) -> float:
+        """Mask corner radius."""
+        return self.get_parameter("mask-cornerRadius")
+
+    @mask_corner_radius.setter
+    def mask_corner_radius(self, value: float) -> None:
+        self.set_parameter("mask-cornerRadius", value)
 
 
 @register_effect("Glow")

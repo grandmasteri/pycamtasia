@@ -1,6 +1,7 @@
 """Source effects for shader videos."""
 from __future__ import annotations
 
+from typing import Any
 
 from camtasia.effects.base import Effect, register_effect
 
@@ -48,31 +49,45 @@ class SourceEffect(Effect):
     def color1(self, rgba: tuple[float, float, float, float]) -> None:
         self._set_color(1, rgba)
 
+    def _get_value(self, val: Any) -> float:
+        """Extract scalar from a parameter value (dict or raw)."""
+        return val['defaultValue'] if isinstance(val, dict) else val
+
     @property
-    def color2(self) -> tuple[float, float, float, float]:
-        """Third shader color as RGBA floats."""
-        return self._get_color(2)
+    def color2(self) -> tuple[float, float, float, float] | None:
+        """Third shader color as RGBA floats, or None if not present."""
+        try:
+            return self._get_color(2)
+        except KeyError:
+            return None
 
     @color2.setter
     def color2(self, rgba: tuple[float, float, float, float]) -> None:
         self._set_color(2, rgba)
 
     @property
-    def color3(self) -> tuple[float, float, float, float]:
-        """Fourth shader color as RGBA floats."""
-        return self._get_color(3)
+    def color3(self) -> tuple[float, float, float, float] | None:
+        """Fourth shader color as RGBA floats, or None if not present."""
+        try:
+            return self._get_color(3)
+        except KeyError:
+            return None
 
     @color3.setter
     def color3(self, rgba: tuple[float, float, float, float]) -> None:
         self._set_color(3, rgba)
 
     @property
-    def mid_point(self) -> tuple[float, float]:
-        """Mid point as ``(x, y)``."""
-        return (
-            self.get_parameter("MidPointX"),
-            self.get_parameter("MidPointY"),
-        )
+    def mid_point(self) -> tuple[float, float] | float:
+        """Mid point position. Returns (x, y) tuple for four-corner gradients or a single float for radial gradients."""
+        params = self._data.get('parameters', {})
+        if 'MidPointX' in params:
+            x = self._get_value(params.get('MidPointX', 0.5))
+            y = self._get_value(params.get('MidPointY', 0.5))
+            return (x, y)
+        elif 'MidPoint' in params:
+            return self._get_value(params.get('MidPoint', 0.5))
+        return (0.5, 0.5)
 
     @mid_point.setter
     def mid_point(self, xy: tuple[float, float]) -> None:
