@@ -1162,6 +1162,24 @@ class Track:
 
         return (clip_from_dict(left_data), clip_from_dict(right_data))
 
+    def swap_clips(self, clip_id_a: int, clip_id_b: int) -> None:
+        """Swap the timeline positions of two clips.
+
+        Exchanges the start times of the two clips.
+        """
+        medias = self._data.get('medias', [])
+        a = b = None
+        for m in medias:
+            if m.get('id') == clip_id_a:
+                a = m
+            elif m.get('id') == clip_id_b:
+                b = m
+        if a is None:
+            raise KeyError(f'No clip with id={clip_id_a}')
+        if b is None:
+            raise KeyError(f'No clip with id={clip_id_b}')
+        a['start'], b['start'] = b['start'], a['start']
+
     def _next_clip_id(self) -> int:
         """Scan all medias for the max ID and increment.
 

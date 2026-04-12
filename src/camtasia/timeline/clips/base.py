@@ -221,6 +221,15 @@ class BaseClip:
     def duration_seconds(self, value: float) -> None:
         self.duration = seconds_to_ticks(value)
 
+    def set_time_range(self, start_seconds: float, duration_seconds: float) -> Self:
+        """Set both start position and duration in seconds.
+
+        Returns self for chaining.
+        """
+        self._data['start'] = seconds_to_ticks(start_seconds)
+        self._data['duration'] = seconds_to_ticks(duration_seconds)
+        return self
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, BaseClip):
             return NotImplemented
