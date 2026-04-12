@@ -39,7 +39,15 @@ Forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-
 - Export: SRT subtitles, project reports (JSON/Markdown), timeline JSON
 - Builders: `TimelineBuilder` for cursor-based assembly, `CalloutBuilder` for styled text
 - Project introspection: `summary()`, `statistics()`, `validate()`
-- 1349 tests
+- 1353 tests
+
+## Reliability
+
+- **Camtasia integration tests** — 11 tests that open saved projects in Camtasia and check for errors (10 passing, 1 expected failure)
+- **Hypothesis property-based tests** — 6 invariant tests that fuzz timeline operations with random inputs
+- **Validated against real projects** — 4 production projects + TechSmith's official sample project
+- **Cascade bug-free** — All clip mutations (remove, split, move, duplicate, ripple delete) correctly clean up associated transitions
+- **Parameter key names validated** — Effect parameters (Mask, RoundCorners, SourceEffect) verified against TechSmith reference data
 
 ## Installation
 

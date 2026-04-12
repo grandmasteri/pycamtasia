@@ -47,6 +47,7 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 - [x] **Lower third kwargs** — `track.add_lower_third()` supports `font_weight`, `scale`, `template_ident`.
 - [x] **Marker consolidation** — Two separate Marker classes exist; unify into a single implementation.
 - [x] **Type annotations on `color.py`** — Add full type hints to the color module.
+- [x] **Round-trip `.trec` tests** — Load/save/validate round-trip tests for `.trec`-containing projects.
 
 ## High-Level API (Screenplay-Driven Workflow)
 
@@ -56,6 +57,12 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 - [x] **`proj.add_voiceover_sequence(vo_files, pauses)`** — Takes a list of voiceover file paths and pause durations, imports them, places them sequentially on an audio track. Returns a dict mapping filenames to timeline positions and durations.
 - [x] **`proj.add_four_corner_gradient(shader_path, duration)`** — Import and place the 4-corner animated gradient shader background. Distinct from `add_gradient_background()` which creates a simple 2-color gradient.
 - [ ] **`proj.build_from_screenplay(screenplay_path)`** — Parse a screenplay markdown file with VO block IDs and automatically build the entire timeline. The ultimate high-level API for the video production pipeline.
+
+## Future
+
+- [ ] **Fix `add_behavior`** — GenericBehaviorEffect requires preset-specific attributes (spring physics, character order, overlap proportions) that the library doesn't yet generate. Causes Camtasia `boost::bad_rational` crash.
+- [ ] **Lottie animation support** — Import Lottie JSON animations as timeline elements for motion graphics overlays.
+- [ ] **Caption/subtitle API** — First-class API for creating, editing, and exporting captions and subtitles on the timeline.
 
 ## Testing
 

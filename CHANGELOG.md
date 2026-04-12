@@ -4,7 +4,19 @@ All notable changes to pycamtasia are documented in this file.
 
 ## Unreleased
 
-26 commits. Test count: 925 → 1267 (+342 tests, +37%). 100% coverage maintained throughout.
+44 commits. Test count: 925 → 1353 (+428 tests, +46%). 100% coverage maintained throughout.
+
+### Reliability & Testing
+- Fixed cascade bugs: `remove_clip`, `clear`, `split_clip`, `move_clip`, `duplicate_clip`, `ripple_delete`, `pack_track`, `set_internal_segment_speeds` all cascade-delete transitions referencing affected clips
+- Fixed parameter key names: Mask (hyphens), RoundCorners (hyphens), SourceEffect (radial gradient support)
+- Fixed `merge_tracks`: recursive Group internal ID/src remapping
+- Fixed `set_shader_colors`: variable color count for radial/four-corner gradients
+- Fixed `snap_to_grid`: negative start time clamping
+- Added `validate()` transition reference checking
+- Added Hypothesis property-based invariant tests (6 tests)
+- Added Camtasia integration test suite (11 tests, 10 passing)
+- Added `pytest-xdist` for parallel test execution
+- Documented `add_behavior` limitation (GenericBehaviorEffect crash)
 
 ### Core Infrastructure
 - `timeline.next_clip_id()` — project-wide safe clip ID allocator
