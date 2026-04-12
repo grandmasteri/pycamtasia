@@ -938,6 +938,12 @@ class Track:
         for m in self._data.get('medias', []):
             if m.get('id') == clip_id:
                 m['start'] = seconds_to_ticks(new_start_seconds)
+                # Remove transitions referencing the moved clip
+                transitions = self._data.get('transitions', [])
+                self._data['transitions'] = [
+                    t for t in transitions
+                    if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
+                ]
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1020,6 +1026,13 @@ class Track:
 
         # Insert right half after left half
         medias.insert(left_idx + 1, right_data)
+
+        # Cascade: remove transitions referencing the split clip
+        transitions = self._data.get('transitions', [])
+        self._data['transitions'] = [
+            t for t in transitions
+            if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
+        ]
 
         return (clip_from_dict(left_data), clip_from_dict(right_data))
 

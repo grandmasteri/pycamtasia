@@ -14,6 +14,7 @@ def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
     medias = track._data.get('medias', [])
     if not medias:
         return
+    track._data['transitions'] = []
     medias.sort(key=lambda m: m.get('start', 0))
     gap_ticks = seconds_to_ticks(gap_seconds)
     cursor = 0

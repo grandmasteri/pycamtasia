@@ -108,6 +108,14 @@ class TestSplitClip:
         track.split_clip(1, 15.0)
         assert [m['_type'] for m in data['medias']] == ['VMFile', 'VMFile']
 
+    def test_split_clip_removes_transitions(self):
+        track, data = _make_track(_simple_clip(1, 0.0, 10.0), _simple_clip(2, 10.0, 10.0))
+        data['transitions'] = [
+            {'leftMedia': 1, 'rightMedia': 2, 'duration': 100},
+        ]
+        track.split_clip(1, 5.0)
+        assert data['transitions'] == []
+
     def test_split_durations_add_up(self):
         orig_dur = seconds_to_ticks(10.0)
         track, data = _make_track(_simple_clip())
