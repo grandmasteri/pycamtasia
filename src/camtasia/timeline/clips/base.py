@@ -560,6 +560,111 @@ class BaseClip:
             },
         })
 
+    def add_color_adjustment(
+        self,
+        *,
+        brightness: float = 0.0,
+        contrast: float = 0.0,
+        saturation: float = 1.0,
+    ) -> Self:
+        """Add a color adjustment effect.
+
+        Args:
+            brightness: -1.0 to 1.0 (0 = no change).
+            contrast: -1.0 to 1.0 (0 = no change).
+            saturation: 0.0 to 3.0 (1.0 = no change).
+        """
+        self.add_effect({
+            'effectName': 'ColorAdjustment',
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {
+                'brightness': {'type': 'double', 'defaultValue': brightness, 'interp': 'linr'},
+                'contrast': {'type': 'double', 'defaultValue': contrast, 'interp': 'linr'},
+                'saturation': {'type': 'double', 'defaultValue': saturation, 'interp': 'linr'},
+            },
+        })
+        return self
+
+    def add_border(
+        self,
+        *,
+        width: float = 4.0,
+        color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
+        corner_radius: float = 0.0,
+    ) -> Self:
+        """Add a border effect.
+
+        Args:
+            width: Border width in pixels.
+            color: RGBA color as 0.0-1.0 floats.
+            corner_radius: Corner rounding radius.
+        """
+        r, g, b, a = color
+        self.add_effect({
+            'effectName': 'Border',
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {
+                'width': {'type': 'double', 'defaultValue': width, 'interp': 'linr'},
+                'color-red': {'type': 'double', 'defaultValue': r, 'interp': 'linr'},
+                'color-green': {'type': 'double', 'defaultValue': g, 'interp': 'linr'},
+                'color-blue': {'type': 'double', 'defaultValue': b, 'interp': 'linr'},
+                'color-alpha': {'type': 'double', 'defaultValue': a, 'interp': 'linr'},
+                'corner-radius': {'type': 'double', 'defaultValue': corner_radius, 'interp': 'linr'},
+            },
+        })
+        return self
+
+    def add_colorize(
+        self,
+        *,
+        color: tuple[float, float, float] = (0.5, 0.5, 0.5),
+        intensity: float = 0.5,
+    ) -> Self:
+        """Add a colorize/tint effect.
+
+        Args:
+            color: RGB color as 0.0-1.0 floats.
+            intensity: Effect intensity 0.0-1.0.
+        """
+        r, g, b = color
+        self.add_effect({
+            'effectName': 'Colorize',
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {
+                'color-red': {'type': 'double', 'defaultValue': r, 'interp': 'linr'},
+                'color-green': {'type': 'double', 'defaultValue': g, 'interp': 'linr'},
+                'color-blue': {'type': 'double', 'defaultValue': b, 'interp': 'linr'},
+                'intensity': {'type': 'double', 'defaultValue': intensity, 'interp': 'linr'},
+            },
+        })
+        return self
+
+    def add_spotlight(
+        self,
+        *,
+        dim_opacity: float = 0.7,
+    ) -> Self:
+        """Add a spotlight/dim effect.
+
+        Dims the clip to the specified opacity, useful for
+        creating focus effects when combined with masks.
+
+        Args:
+            dim_opacity: Background dimming 0.0-1.0.
+        """
+        self.add_effect({
+            'effectName': 'Spotlight',
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {
+                'dim-opacity': {'type': 'double', 'defaultValue': dim_opacity, 'interp': 'linr'},
+            },
+        })
+        return self
+
     def remove_effects(self) -> Self:
         """Remove all effects from this clip.
 

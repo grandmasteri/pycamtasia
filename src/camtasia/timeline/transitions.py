@@ -170,6 +170,83 @@ class TransitionList:
             },
         )
 
+    @staticmethod
+    def _clip_id(clip: Any) -> int:
+        """Extract clip ID from a BaseClip or plain int."""
+        return clip.id if hasattr(clip, 'id') else int(clip)
+
+    def add_dissolve(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 0.5,
+    ) -> Transition:
+        """Add a dissolve transition between two clips."""
+        ticks = int(duration_seconds * EDIT_RATE)
+        return self.add('Dissolve', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
+    def add_fade_to_white(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 0.5,
+    ) -> Transition:
+        """Add a fade-through-white transition."""
+        ticks = int(duration_seconds * EDIT_RATE)
+        t = self.add('FadeThroughColor', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        t._data['attributes']['Color-red'] = 1.0
+        t._data['attributes']['Color-green'] = 1.0
+        t._data['attributes']['Color-blue'] = 1.0
+        return t
+
+    def add_slide(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 0.5,
+        *,
+        direction: str = 'left',
+    ) -> Transition:
+        """Add a slide transition.
+
+        Args:
+            direction: 'left', 'right', 'up', or 'down'.
+        """
+        name_map = {
+            'left': 'SlideLeft',
+            'right': 'SlideRight',
+            'up': 'SlideUp',
+            'down': 'SlideDown',
+        }
+        if direction not in name_map:
+            raise ValueError(f'Invalid direction {direction!r}. Use: {sorted(name_map)}')
+        ticks = int(duration_seconds * EDIT_RATE)
+        return self.add(name_map[direction], self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
+    def add_wipe(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 0.5,
+        *,
+        direction: str = 'left',
+    ) -> Transition:
+        """Add a wipe transition.
+
+        Args:
+            direction: 'left', 'right', 'up', or 'down'.
+        """
+        name_map = {
+            'left': 'WipeLeft',
+            'right': 'WipeRight',
+            'up': 'WipeUp',
+            'down': 'WipeDown',
+        }
+        if direction not in name_map:
+            raise ValueError(f'Invalid direction {direction!r}. Use: {sorted(name_map)}')
+        ticks = int(duration_seconds * EDIT_RATE)
+        return self.add(name_map[direction], self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
     def remove(self, index: int) -> None:
         """Remove a transition by index.
 
