@@ -45,3 +45,28 @@ class TestStatisticsWithMedia:
         actual_stats = project.statistics()
         assert actual_stats['total_media'] >= 1
         assert 'Audio' in actual_stats['media_by_type']
+
+
+def test_info_returns_comprehensive_dict(project):
+    info = project.info()
+    # Stats keys
+    assert 'total_tracks' in info
+    assert 'total_clips' in info
+    assert 'canvas' in info
+    # Structural / validation keys
+    assert 'validation_errors' in info
+    assert 'validation_warnings' in info
+    assert 'structural_issues' in info
+    # Project metadata keys
+    assert 'has_screen_recording' in info
+    assert 'title' in info
+    assert 'author' in info
+    assert 'frame_rate' in info
+    assert 'sample_rate' in info
+
+
+def test_info_includes_validation(project):
+    info = project.info()
+    assert isinstance(info['validation_errors'], list)
+    assert isinstance(info['validation_warnings'], list)
+    assert isinstance(info['structural_issues'], list)

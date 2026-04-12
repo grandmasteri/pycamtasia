@@ -574,6 +574,28 @@ class Project:
             'canvas': {'width': self.width, 'height': self.height},
         }
 
+    def info(self) -> dict[str, Any]:
+        """Return comprehensive project information.
+
+        Combines statistics, validation, and structural analysis
+        into a single dict for debugging and inspection.
+        """
+        stats = self.statistics()
+        issues = self.validate()
+        structure = self.timeline.validate_structure()
+
+        return {
+            **stats,
+            'validation_errors': [i.message for i in issues if i.level == 'error'],
+            'validation_warnings': [i.message for i in issues if i.level == 'warning'],
+            'structural_issues': structure,
+            'has_screen_recording': self.has_screen_recording,
+            'title': self.title,
+            'author': self.author,
+            'frame_rate': self.frame_rate,
+            'sample_rate': self.sample_rate,
+        }
+
     def compact(self) -> dict[str, int]:
         """Run all cleanup operations and validate.
 
