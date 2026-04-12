@@ -892,6 +892,17 @@ class BaseClip:
             }
         return self
 
+    def clone(self) -> dict:
+        """Return a deep copy of this clip's data dict.
+
+        The copy has no ID assigned — the caller must set one before
+        adding to a track.
+        """
+        import copy
+        data = copy.deepcopy(self._data)
+        data.pop('id', None)
+        return data
+
     def clear_keyframes(self, parameter: str | None = None) -> Self:
         """Remove keyframes from a parameter, or all parameters if *parameter* is ``None``.
 
