@@ -324,6 +324,16 @@ class Timeline:
         self._data['zoomNPan'] = []
 
     # ------------------------------------------------------------------
+    # Caption attributes
+    # ------------------------------------------------------------------
+
+    @property
+    def caption_attributes(self) -> CaptionAttributes:
+        """Caption styling configuration."""
+        from camtasia.timeline.captions import CaptionAttributes
+        return CaptionAttributes(self._data.setdefault('captionAttributes', {}))
+
+    # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
 
