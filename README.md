@@ -39,7 +39,17 @@ Forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-
 - Export: SRT subtitles, project reports (JSON/Markdown), timeline JSON
 - Builders: `TimelineBuilder` for cursor-based assembly, `CalloutBuilder` for styled text
 - Project introspection: `summary()`, `statistics()`, `validate()`
-- 1437 tests
+- Native `.trec` screen recording import via pymediainfo stream probing
+- Behavior presets (text reveal, fade, fly-in, etc.) for callout animations
+- CaptionAttributes API for caption styling (font, color, alignment, opacity)
+- EDL (Edit Decision List) export for video editor interop
+- Project merge utility for combining timelines
+- Clip manipulation: `trim_clip()`, `extend_clip()`, `swap_clips()`, `copy_effects_from()`, `set_time_range()`
+- Project utilities: `Project.compact()`, `Project.copy_to()`, `Project.info()`
+- Timeline utilities: `Timeline.shift_all()`, `Timeline.validate_structure()`
+- Track analysis: `gaps()`, `overlaps()`, `total_duration_seconds`
+- Track iteration: `__iter__`, `__contains__` on tracks and clip lists
+- 1463 tests
 
 ## Reliability
 
@@ -331,22 +341,31 @@ The public API is available directly from `import camtasia`:
 - **Project**: `load_project()`, `new_project()`, `use_project()`, `Project`, `ValidationIssue`
   - `project.width`, `project.height`, `project.import_shader()`
   - `project.summary()`, `project.statistics()`, `project.validate()`
+  - `project.info()`, `project.compact()`, `project.copy_to()`, `project.total_duration_seconds`
 - **Timeline**: `Timeline`, `Track`, `Marker`, `MarkerList`, `Transition`, `TransitionList`
   - `timeline.move_track()`, `reorder_tracks()`, `move_track_to_front()`, `move_track_to_back()`, `find_clip()`, `find_track()`, `next_clip_id()`, `remove_empty_tracks()`
   - `timeline.clips_in_range()`, `clips_of_type()`, `audio_clips`, `image_clips`, `video_clips`
+  - `timeline.shift_all()`, `timeline.validate_structure()`, `timeline.total_duration_seconds`
   - `track.clear()`, `track.mute()`, `track.unmute()`, `track.hide()`, `track.show()`
   - `track.duplicate_clip()`, `track.move_clip()`, `track.find_clip()`
+  - `track.trim_clip()`, `track.extend_clip()`, `track.swap_clips()`
+  - `track.gaps()`, `track.overlaps()`, `track.total_duration_seconds`
   - `track.add_lower_third()`, `track.add_screen_recording()`, `track.add_group()`
+  - Track iteration: `__iter__`, `__contains__`
 - **Clips**: `BaseClip`, `AMFile`, `VMFile`, `IMFile`, `ScreenVMFile`, `ScreenIMFile`, `StitchedMedia`, `Group`, `Callout`
   - Transforms: `move_to()`, `scale_to()`, `scale_to_xy()`, `crop()`, `rotation`
   - Animation: `fade_in()`, `fade_out()`, `fade()`, `set_opacity()`, `add_keyframe()`, `clear_keyframes()`
-  - Effects: `add_drop_shadow()`, `add_round_corners()`, `add_glow()`
+  - Effects: `add_drop_shadow()`, `add_round_corners()`, `add_glow()`, `copy_effects_from()`
+  - Time: `set_time_range()`
   - Audio: `AMFile.is_muted`, `set_gain()`, `normalize_gain()`
   - Group: `is_screen_recording`, `internal_media_src`, `set_internal_segment_speeds()`
   - Media: `media.duration_seconds`
+- **CaptionAttributes** (`camtasia.timeline.captions`): `enabled`, `font_name`, `font_size`, `background_color`, `foreground_color`, `lang`, `alignment`, `opacity`, `background_enabled`
 - **Effects**: `Effect`, `Glow`, `RoundCorners`, `DropShadow`, `CursorPhysics`, `CursorMotionBlur`, `CursorShadow`, `LeftClickScaling`, `SourceEffect`
+- **Behaviors** (`camtasia.templates.behavior_presets`): `get_behavior_preset()` — preset-based callout animations
 - **Audiate**: `AudiateProject`, `Transcript`, `Word`
 - **Timing**: `EDIT_RATE`, `seconds_to_ticks()`, `ticks_to_seconds()`, `format_duration()`, `speed_to_scalar()`, `scalar_to_speed()`
+- **Media Import** (`camtasia.media_bin.trec_probe`): `probe_trec()` — native `.trec` stream probing via pymediainfo
 - **Operations** (`camtasia.operations`):
   - Layout: `pack_track()`, `ripple_insert()`, `ripple_delete()`, `snap_to_grid()`
   - Batch: `apply_to_clips()`, `apply_to_track()`, `apply_to_all_tracks()`, `set_opacity_all()`, `fade_all()`, `scale_all()`, `move_all()`
@@ -355,10 +374,12 @@ The public API is available directly from `import camtasia`:
   - Speed: `rescale_project()`, `set_audio_speed()`
   - Sync: `plan_sync()`, `match_marker_to_transcript()`, `SyncSegment`
   - Template: `clone_project_structure()`, `replace_media_source()`, `duplicate_project()`
+  - Merge: `merge_tracks()` — combine tracks from multiple projects
 - **Export** (`camtasia.export`):
   - `export_markers_as_srt()` — SRT subtitle export
   - `export_project_report()` — JSON or Markdown project reports
   - `export_timeline_json()`, `load_timeline_json()` — portable timeline JSON
+  - `export_edl()` — EDL (Edit Decision List) export for video editor interop
 - **Builders** (`camtasia.builders`):
   - `TimelineBuilder` — cursor-based fluent API for video assembly
   - `CalloutBuilder` — fluent API for styled text callouts
@@ -389,7 +410,6 @@ The library uses thin wrappers over the underlying JSON dicts — mutations go d
 
 ## Known Limitations
 
-- `.trec` screen recordings cannot be imported into new projects — start from the existing Camtasia Rev project
 - Audio source metadata from ffprobe is approximate — Camtasia corrects values on open
 
 ## License

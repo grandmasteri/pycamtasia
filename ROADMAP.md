@@ -60,9 +60,15 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 
 ## Future
 
-- [x] **Fix `add_behavior`** — GenericBehaviorEffect requires preset-specific attributes (spring physics, character order, overlap proportions) that the library doesn't yet generate. Causes Camtasia `boost::bad_rational` crash.
+- [x] **Fix `add_behavior`** — ~~GenericBehaviorEffect requires preset-specific attributes.~~ Fixed: replaced with preset-based implementation using validated Camtasia templates.
 - [ ] **Lottie animation support** — Import Lottie JSON animations as timeline elements for motion graphics overlays.
-- [ ] **Caption/subtitle API** — First-class API for creating, editing, and exporting captions and subtitles on the timeline.
+- [x] **Caption/subtitle API** — `CaptionAttributes` class for caption styling (font, color, alignment, opacity, background).
+- [x] **EDL export** — `export_edl()` for Edit Decision List export to video editors.
+- [x] **Project merge** — `merge_tracks()` for combining timelines from multiple projects.
+- [x] **Clip manipulation** — `trim_clip()`, `extend_clip()`, `swap_clips()`, `copy_effects_from()`, `set_time_range()`.
+- [x] **Project utilities** — `Project.compact()`, `Project.copy_to()`, `Project.info()`.
+- [x] **Timeline utilities** — `Timeline.shift_all()`, `Timeline.validate_structure()`.
+- [x] **Track analysis** — `gaps()`, `overlaps()`, `total_duration_seconds`, `__iter__`, `__contains__`.
 
 ## Testing
 
