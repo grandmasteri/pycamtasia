@@ -60,7 +60,7 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 
 ## Future
 
-- [ ] **Fix `add_behavior`** — GenericBehaviorEffect requires preset-specific attributes (spring physics, character order, overlap proportions) that the library doesn't yet generate. Causes Camtasia `boost::bad_rational` crash.
+- [x] **Fix `add_behavior`** — GenericBehaviorEffect requires preset-specific attributes (spring physics, character order, overlap proportions) that the library doesn't yet generate. Causes Camtasia `boost::bad_rational` crash.
 - [ ] **Lottie animation support** — Import Lottie JSON animations as timeline elements for motion graphics overlays.
 - [ ] **Caption/subtitle API** — First-class API for creating, editing, and exporting captions and subtitles on the timeline.
 
