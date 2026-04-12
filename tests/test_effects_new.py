@@ -22,10 +22,10 @@ def _round_corners_dict(**overrides) -> dict:
         "category": "visual",
         "parameters": {
             "radius": _param(16.0),
-            "topLeft": _param(True, type_="bool"),
-            "topRight": _param(True, type_="bool"),
-            "bottomLeft": _param(False, type_="bool"),
-            "bottomRight": _param(False, type_="bool"),
+            "top-left": _param(True, type_="bool"),
+            "top-right": _param(True, type_="bool"),
+            "bottom-left": _param(False, type_="bool"),
+            "bottom-right": _param(False, type_="bool"),
         },
     }
     d.update(overrides)

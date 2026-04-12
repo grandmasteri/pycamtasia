@@ -418,19 +418,19 @@ def _round_corners_data():
         "effectName": "RoundCorners",
         "parameters": {
             "radius": _param(16.0),
-            "topLeft": _param(True, "bool"),
-            "topRight": _param(True, "bool"),
-            "bottomLeft": _param(False, "bool"),
-            "bottomRight": _param(False, "bool"),
+            "top-left": _param(True, "bool"),
+            "top-right": _param(True, "bool"),
+            "bottom-left": _param(False, "bool"),
+            "bottom-right": _param(False, "bool"),
         },
     }
 
 
 @pytest.mark.parametrize("prop,param_key", [
-    ("top_left", "topLeft"),
-    ("top_right", "topRight"),
-    ("bottom_left", "bottomLeft"),
-    ("bottom_right", "bottomRight"),
+    ("top_left", "top-left"),
+    ("top_right", "top-right"),
+    ("bottom_left", "bottom-left"),
+    ("bottom_right", "bottom-right"),
 ], ids=["top_left", "top_right", "bottom_left", "bottom_right"])
 def test_round_corners_corner_setters(prop, param_key):
     """Lines 31, 39, 47, 55."""
@@ -482,28 +482,28 @@ def _mask_data():
     return {
         "effectName": "Mask",
         "parameters": {
-            "mask_shape": _param(0),
-            "mask_opacity": _param(1.0),
-            "mask_blend": _param(0.0),
-            "mask_invert": _param(0),
-            "mask_rotation": _param(0.0),
-            "mask_width": _param(0.5),
-            "mask_height": _param(0.5),
-            "mask_positionX": _param(0.0),
-            "mask_positionY": _param(0.0),
+            "mask-shape": _param(0),
+            "mask-opacity": _param(1.0),
+            "mask-blend": _param(0.0),
+            "mask-invert": _param(0),
+            "mask-rotation": _param(0.0),
+            "mask-width": _param(0.5),
+            "mask-height": _param(0.5),
+            "mask-positionX": _param(0.0),
+            "mask-positionY": _param(0.0),
         },
     }
 
 
 @pytest.mark.parametrize("prop,param_key,new_val", [
-    ("mask_opacity", "mask_opacity", 0.7),
-    ("mask_blend", "mask_blend", 0.3),
-    ("mask_invert", "mask_invert", 1),
-    ("mask_rotation", "mask_rotation", 45.0),
-    ("mask_width", "mask_width", 0.8),
-    ("mask_height", "mask_height", 0.6),
-    ("mask_position_x", "mask_positionX", 0.25),
-    ("mask_position_y", "mask_positionY", 0.75),
+    ("mask_opacity", "mask-opacity", 0.7),
+    ("mask_blend", "mask-blend", 0.3),
+    ("mask_invert", "mask-invert", 1),
+    ("mask_rotation", "mask-rotation", 45.0),
+    ("mask_width", "mask-width", 0.8),
+    ("mask_height", "mask-height", 0.6),
+    ("mask_position_x", "mask-positionX", 0.25),
+    ("mask_position_y", "mask-positionY", 0.75),
 ], ids=["opacity", "blend", "invert", "rotation", "width", "height", "posX", "posY"])
 def test_mask_setters(prop, param_key, new_val):
     """Lines 171, 179, 187, 195, 203, 211, 219, 227."""
