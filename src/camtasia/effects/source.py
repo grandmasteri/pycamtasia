@@ -90,9 +90,13 @@ class SourceEffect(Effect):
         return (0.5, 0.5)
 
     @mid_point.setter
-    def mid_point(self, xy: tuple[float, float]) -> None:
-        self.set_parameter("MidPointX", xy[0])
-        self.set_parameter("MidPointY", xy[1])
+    def mid_point(self, value: tuple[float, float] | float) -> None:
+        params = self._data.setdefault('parameters', {})
+        if isinstance(value, (int, float)):
+            params['MidPoint'] = value
+        else:
+            params['MidPointX'] = value[0]
+            params['MidPointY'] = value[1]
 
     @property
     def speed(self) -> float:
@@ -108,22 +112,19 @@ class SourceEffect(Effect):
         """Source file type identifier for the shader."""
         return self.get_parameter("sourceFileType")
 
-    def set_shader_colors(
-        self,
-        color0: tuple[int, int, int],
-        color1: tuple[int, int, int],
-        color2: tuple[int, int, int],
-        color3: tuple[int, int, int],
-    ) -> None:
-        """Set all four shader colours from 0-255 RGB tuples.
+    def set_shader_colors(self, *colors: tuple[int, int, int]) -> None:
+        """Set shader colours from 0-255 RGB tuples.
 
+        Accepts 2 colors (radial gradient) or 4 colors (four-corner gradient).
         Alpha is set to 1.0 for all colours.
 
         Args:
-            color0: ``(r, g, b)`` with values 0–255.
-            color1: ``(r, g, b)`` with values 0–255.
-            color2: ``(r, g, b)`` with values 0–255.
-            color3: ``(r, g, b)`` with values 0–255.
+            colors: ``(r, g, b)`` tuples with values 0–255.
         """
-        for i, rgb in enumerate((color0, color1, color2, color3)):
-            self._set_color(i, (rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1.0))
+        params = self._data.setdefault('parameters', {})
+        for i, rgb in enumerate(colors):
+            r, g, b = rgb[0] / 255, rgb[1] / 255, rgb[2] / 255
+            params[f'Color{i}-red'] = r
+            params[f'Color{i}-green'] = g
+            params[f'Color{i}-blue'] = b
+            params[f'Color{i}-alpha'] = 1.0

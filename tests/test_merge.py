@@ -129,3 +129,52 @@ class TestMergeReusesExistingMedia:
         merged_track = list(project.timeline.tracks)[-1]
         actual_src = list(merged_track.clips)[0].source_id
         assert actual_src == target_media.id
+
+
+def _add_group_clip(track_data, clip_id, inner_ids, src_id, start=0):
+    """Append a Group clip with internal tracks containing inner clips."""
+    inner_medias = []
+    for iid in inner_ids:
+        inner_medias.append({
+            '_type': 'VMFile', 'id': iid, 'src': src_id,
+            'start': 0, 'duration': seconds_to_ticks(2.0),
+            'video': {'id': iid + 100, 'src': src_id},
+            'audio': {'id': iid + 200, 'src': src_id},
+        })
+    track_data['medias'].append({
+        '_type': 'Group', 'id': clip_id, 'start': start,
+        'duration': seconds_to_ticks(5.0),
+        'tracks': [{'medias': inner_medias}],
+    })
+
+
+class TestMergeRemapsGroupInternalIds:
+    def test_merge_remaps_group_internal_ids(self, project):
+        from pathlib import Path
+        resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
+        source = load_project(resources / 'new.cmproj')
+        _add_source(source, 10, 'clip')
+        track = source.timeline.add_track('Group Track')
+        _add_group_clip(track._data, clip_id=1, inner_ids=[2, 3], src_id=10)
+
+        merge_tracks(source, project)
+
+        new_track = list(project.timeline.tracks)[-1]
+        group = new_track._data['medias'][0]
+
+        # Collect all IDs recursively
+        all_ids = []
+
+        def collect_ids(d):
+            if 'id' in d:
+                all_ids.append(d['id'])
+            for key in ('video', 'audio'):
+                if key in d:
+                    collect_ids(d[key])
+            for t in d.get('tracks', []):
+                for m in t.get('medias', []):
+                    collect_ids(m)
+
+        collect_ids(group)
+        # All IDs must be unique
+        assert len(all_ids) == len(set(all_ids))
