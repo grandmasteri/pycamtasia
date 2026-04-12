@@ -173,3 +173,14 @@ class TestNewProject:
         assert isinstance(project.timeline, Timeline)
         assert isinstance(project.media_bin, MediaBin)
         assert list(project.media_bin) is not None
+
+
+class TestProjectRepr:
+    def test_project_repr(self, tmp_path: Path):
+        proj_dir = _create_cmproj(tmp_path)
+        project = Project(proj_dir)
+        r = repr(project)
+        assert r.startswith("Project(path='test.cmproj'")
+        assert "tracks=" in r
+        assert "duration=" in r
+        assert r.endswith("s)")

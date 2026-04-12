@@ -136,3 +136,11 @@ class TestAddSpotlight:
         clip = BaseClip(data)
         clip.add_spotlight(dim_opacity=0.3)
         assert data["effects"][0]["parameters"]["dim-opacity"] == 0.3
+
+
+class TestEffectRepr:
+    def test_effect_repr(self):
+        from camtasia.effects.base import Effect
+        data = {"effectName": "Glow", "bypassed": False, "category": "", "parameters": {}}
+        effect = Effect(data)
+        assert repr(effect) == "Effect(name='Glow')"
