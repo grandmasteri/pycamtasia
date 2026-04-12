@@ -159,12 +159,11 @@ class TestEffectsAndAnnotations:
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
 
     @pytest.mark.integration
-    @pytest.mark.xfail(reason='add_behavior produces boost::bad_rational in Camtasia - needs investigation')
     def test_callout_with_behavior_opens(self, tmp_path):
         proj = _make_project(tmp_path)
         track = proj.timeline.add_track('Callouts')
         callout = track.add_callout('Hello World', start_seconds=0.0, duration_seconds=5.0)
-        callout.add_behavior('Reveal', 'reveal', 'reveal')
+        callout.add_behavior('Reveal')
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
 
