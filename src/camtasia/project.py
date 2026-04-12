@@ -481,6 +481,47 @@ class Project:
 
         return media
 
+    def import_trec(self, trec_path: str | Path) -> 'Media':
+        """Import a .trec screen recording with full stream metadata.
+
+        Uses pymediainfo to probe the multi-track container and build
+        correct source bin entries with all stream metadata.
+
+        Args:
+            trec_path: Path to the .trec file.
+
+        Returns:
+            The Media entry.
+
+        Raises:
+            ImportError: pymediainfo not installed.
+        """
+        from camtasia.media_bin.trec_probe import probe_trec
+
+        path = Path(trec_path)
+
+        # Check if already imported
+        existing = self.find_media_by_name(path.stem)
+        if existing:
+            return existing
+
+        # Import the file (copies into project bundle)
+        media = self.import_media(path)
+
+        # Probe and apply accurate metadata
+        probe_data = probe_trec(path)
+
+        # Update the source bin entry with probed metadata
+        for sb in self._data['sourceBin']:
+            if sb['id'] == media.id:
+                sb['rect'] = probe_data['rect']
+                sb['sourceTracks'] = probe_data['sourceTracks']
+                sb['lastMod'] = probe_data['lastMod']
+                sb['loudnessNormalization'] = probe_data['loudnessNormalization']
+                break
+
+        return media
+
     def statistics(self) -> dict[str, Any]:
         """Return detailed project statistics.
 
