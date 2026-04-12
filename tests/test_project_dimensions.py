@@ -43,6 +43,58 @@ class TestWidth:
         assert actual_width == 3840
 
 
+class TestTitle:
+    def test_default_empty(self, tmp_path: Path):
+        assert _make_project(tmp_path).title == ''
+
+    def test_setter(self, tmp_path: Path):
+        proj = _make_project(tmp_path)
+        proj.title = 'My Project'
+        assert proj.title == 'My Project'
+
+
+class TestDescription:
+    def test_default_empty(self, tmp_path: Path):
+        assert _make_project(tmp_path).description == ''
+
+
+class TestAuthor:
+    def test_default_empty(self, tmp_path: Path):
+        assert _make_project(tmp_path).author == ''
+
+
+class TestTargetLoudness:
+    def test_default(self, tmp_path: Path):
+        assert _make_project(tmp_path).target_loudness == -18.0
+
+
+class TestFrameRate:
+    def test_default(self, tmp_path: Path):
+        assert _make_project(tmp_path).frame_rate == 30
+
+
+class TestSampleRate:
+    def test_default(self, tmp_path: Path):
+        assert _make_project(tmp_path).sample_rate == 44100
+
+
+class TestAllSetters:
+    def test_all_setters_work(self, tmp_path: Path):
+        proj = _make_project(tmp_path)
+        proj.title = 'T'
+        proj.description = 'D'
+        proj.author = 'A'
+        proj.target_loudness = -24.0
+        proj.frame_rate = 60
+        proj.sample_rate = 48000
+        assert proj.title == 'T'
+        assert proj.description == 'D'
+        assert proj.author == 'A'
+        assert proj.target_loudness == -24.0
+        assert proj.frame_rate == 60
+        assert proj.sample_rate == 48000
+
+
 class TestHeight:
     def test_default_is_1080(self, tmp_path: Path):
         actual_height = _make_project(tmp_path).height
