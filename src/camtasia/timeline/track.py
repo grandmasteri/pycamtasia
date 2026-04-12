@@ -785,6 +785,29 @@ class Track:
 
         return clips
 
+    def extend_clip(self, clip_id: int, *, extend_seconds: float) -> None:
+        """Extend or shorten a clip's duration.
+
+        Positive values extend, negative values shorten.
+
+        Args:
+            clip_id: ID of the clip to extend.
+            extend_seconds: Seconds to add (positive) or remove (negative).
+
+        Raises:
+            KeyError: Clip not found.
+            ValueError: Would result in zero or negative duration.
+        """
+        extend = seconds_to_ticks(extend_seconds)
+        for m in self._data.get('medias', []):
+            if m.get('id') == clip_id:
+                new_dur = m.get('duration', 0) + extend
+                if new_dur <= 0:
+                    raise ValueError(f'Extension would result in non-positive duration for clip {clip_id}')
+                m['duration'] = new_dur
+                return
+        raise KeyError(f'No clip with id={clip_id}')
+
     def sort_clips(self) -> None:
         """Sort clips by start time."""
         self._data.get('medias', []).sort(key=lambda m: m.get('start', 0))

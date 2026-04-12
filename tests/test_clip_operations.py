@@ -101,3 +101,38 @@ class TestDuplicateGroupClip:
         # The nested clip should have a different ID than the original
         inner_id = data['medias'][1]['tracks'][0]['medias'][0]['id']
         assert inner_id != 2
+
+
+class TestExtendClip:
+    def test_extend_clip_positive(self):
+        track = _make_track()
+        clip = track.add_callout("Hello", 0, 5)
+        original_dur = clip.duration
+
+        track.extend_clip(clip.id, extend_seconds=3.0)
+
+        updated = list(track.clips)[0]
+        assert updated.duration == original_dur + seconds_to_ticks(3.0)
+
+    def test_extend_clip_negative(self):
+        track = _make_track()
+        clip = track.add_callout("Hello", 0, 5)
+        original_dur = clip.duration
+
+        track.extend_clip(clip.id, extend_seconds=-2.0)
+
+        updated = list(track.clips)[0]
+        assert updated.duration == original_dur + seconds_to_ticks(-2.0)
+
+    def test_extend_clip_too_much_raises(self):
+        track = _make_track()
+        clip = track.add_callout("Hello", 0, 5)
+
+        with pytest.raises(ValueError, match="non-positive duration"):
+            track.extend_clip(clip.id, extend_seconds=-10.0)
+
+    def test_extend_clip_nonexistent_raises(self):
+        track = _make_track()
+
+        with pytest.raises(KeyError, match="No clip with id=999"):
+            track.extend_clip(999, extend_seconds=1.0)

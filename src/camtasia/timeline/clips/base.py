@@ -240,6 +240,23 @@ class BaseClip:
     # L2 convenience — time-bounded effects
     # ------------------------------------------------------------------
 
+    def copy_effects_from(self, source: BaseClip) -> Self:
+        """Copy all effects from another clip.
+
+        Deep copies the source clip's effects array into this clip.
+        Existing effects on this clip are preserved (new effects appended).
+
+        Args:
+            source: Clip to copy effects from.
+
+        Returns:
+            self for chaining.
+        """
+        import copy
+        source_effects = source._data.get('effects', [])
+        self._data.setdefault('effects', []).extend(copy.deepcopy(source_effects))
+        return self
+
     def add_glow_timed(
         self,
         start_seconds: float,
