@@ -265,3 +265,56 @@ def test_all_operations_leave_valid_state(operations):
     # INVARIANT: no duplicate IDs
     all_ids = [m['id'] for m in data.get('medias', [])]
     assert len(all_ids) == len(set(all_ids)), f'Duplicate IDs: {all_ids}'
+
+
+# ------------------------------------------------------------------
+# 10. trim_clip preserves non-negative duration
+# ------------------------------------------------------------------
+
+@given(st.floats(min_value=0.01, max_value=0.49))
+@settings(max_examples=20, deadline=None)
+def test_trim_preserves_positive_duration(trim_fraction):
+    """Trimming should never produce zero or negative duration."""
+    track, data = _make_track()
+    clip = track.add_clip('AMFile', 1, 0, TICK * 10)
+    trim_amount = trim_fraction * 10.0
+    track.trim_clip(clip.id, trim_start_seconds=trim_amount)
+    actual_dur = data['medias'][0]['duration']
+    assert actual_dur > 0
+
+
+# ------------------------------------------------------------------
+# 11. extend_clip preserves positive duration
+# ------------------------------------------------------------------
+
+@given(st.floats(min_value=-4.9, max_value=10.0))
+@settings(max_examples=20, deadline=None)
+def test_extend_preserves_positive_duration(extend_amount):
+    """Extending should keep duration positive."""
+    track, data = _make_track()
+    clip = track.add_clip('AMFile', 1, 0, TICK * 5)
+    try:
+        track.extend_clip(clip.id, extend_seconds=extend_amount)
+        assert data['medias'][0]['duration'] > 0
+    except ValueError:
+        pass  # Expected for large negative extensions
+
+
+# ------------------------------------------------------------------
+# 12. swap_clips is its own inverse
+# ------------------------------------------------------------------
+
+@given(st.integers(min_value=2, max_value=5))
+@settings(max_examples=20, deadline=None)
+def test_swap_is_own_inverse(num_clips):
+    """Swapping twice returns to original state."""
+    track, data = _make_track()
+    ids = []
+    for i in range(num_clips):
+        clip = track.add_clip('AMFile', 1, i * TICK, TICK)
+        ids.append(clip.id)
+    original_starts = {m['id']: m['start'] for m in data['medias']}
+    track.swap_clips(ids[0], ids[-1])
+    track.swap_clips(ids[0], ids[-1])
+    restored_starts = {m['id']: m['start'] for m in data['medias']}
+    assert original_starts == restored_starts
