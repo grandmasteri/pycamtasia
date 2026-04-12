@@ -186,3 +186,51 @@ class TestEffectsAndAnnotations:
             track.add_clip('IMFile', media.id, 0, seconds_to_ticks(5))
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+
+class TestNewEffects:
+    @pytest.mark.integration
+    def test_colorize_effect_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        img = _create_test_image(tmp_path)
+        media = proj.import_media(img)
+        track = proj.timeline.add_track('Content')
+        clip = track.add_clip('IMFile', media.id, 0, seconds_to_ticks(5))
+        clip.add_colorize(color=(0.2, 0.4, 0.8), intensity=0.5)
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_spotlight_effect_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        img = _create_test_image(tmp_path)
+        media = proj.import_media(img)
+        track = proj.timeline.add_track('Content')
+        clip = track.add_clip('IMFile', media.id, 0, seconds_to_ticks(5))
+        clip.add_spotlight(dim_opacity=0.7)
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_multiple_effects_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        img = _create_test_image(tmp_path)
+        media = proj.import_media(img)
+        track = proj.timeline.add_track('Content')
+        clip = track.add_clip('IMFile', media.id, 0, seconds_to_ticks(5))
+        clip.add_drop_shadow()
+        clip.add_round_corners(radius=16.0)
+        clip.add_color_adjustment(brightness=0.1, contrast=0.2)
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_dissolve_transition_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        media = proj.import_media(EMPTY_WAV)
+        track = proj.timeline.add_track('Audio')
+        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=2.0)
+        c2 = track.add_audio(media.id, start_seconds=2.0, duration_seconds=2.0)
+        track.transitions.add_dissolve(c1.id, c2.id, seconds_to_ticks(0.5))
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
