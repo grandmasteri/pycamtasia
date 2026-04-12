@@ -107,3 +107,64 @@ def test_validate_clean_after_operations(operations):
 
     errors = [i for i in proj.validate() if i.level == 'error']
     assert errors == [], f'Validation errors: {[e.message for e in errors]}'
+
+
+# ------------------------------------------------------------------
+# 4. Split clip preserves total duration
+# ------------------------------------------------------------------
+
+@given(st.floats(min_value=0.1, max_value=0.9))
+@settings(max_examples=30, deadline=None)
+def test_split_preserves_total_duration(split_fraction):
+    """Splitting a clip should preserve the total duration."""
+    track, _ = _make_track()
+    dur_ticks = TICK * 10  # 10 seconds
+    clip = track.add_clip('AMFile', 1, 0, dur_ticks)
+    original_dur = clip.duration
+
+    split_point = split_fraction * 10.0  # 0.1s to 9.0s
+    left, right = track.split_clip(clip.id, split_point)
+
+    assert left.duration + right.duration == original_dur
+
+
+# ------------------------------------------------------------------
+# 5. Track.clear() leaves no clips or transitions
+# ------------------------------------------------------------------
+
+@given(st.integers(min_value=1, max_value=10))
+@settings(max_examples=20, deadline=None)
+def test_clear_leaves_empty_track(num_clips):
+    """clear() should remove all clips and transitions."""
+    track, data = _make_track()
+    ids = []
+    for i in range(num_clips):
+        clip = track.add_clip('AMFile', 1, i * TICK, TICK)
+        ids.append(clip.id)
+    # Add some transitions
+    if len(ids) >= 2:
+        data.setdefault('transitions', []).append(
+            {'leftMedia': ids[0], 'rightMedia': ids[1], 'name': 'FadeThroughBlack', 'duration': 100}
+        )
+    track.clear()
+    assert data.get('medias', []) == []
+    assert data.get('transitions', []) == []
+
+
+# ------------------------------------------------------------------
+# 6. Duplicate clip creates unique IDs
+# ------------------------------------------------------------------
+
+@given(st.integers(min_value=1, max_value=5))
+@settings(max_examples=20, deadline=None)
+def test_duplicate_creates_unique_ids(num_duplicates):
+    """Duplicating clips should never create ID collisions."""
+    track, _ = _make_track()
+    original = track.add_clip('AMFile', 1, 0, TICK)
+
+    all_ids = [original.id]
+    for _ in range(num_duplicates):
+        dup = track.duplicate_clip(all_ids[-1])
+        all_ids.append(dup.id)
+
+    assert len(all_ids) == len(set(all_ids)), f'Duplicate IDs: {all_ids}'
