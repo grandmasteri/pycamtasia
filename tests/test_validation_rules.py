@@ -1,7 +1,7 @@
 """Tests for duplicate clip ID and track index consistency validation rules."""
 from __future__ import annotations
 
-from camtasia.validation import _check_duplicate_clip_ids, _check_track_indices
+from camtasia.validation import _check_duplicate_clip_ids, _check_track_indices, _check_transition_references
 
 
 def _make_data(tracks):
@@ -83,3 +83,36 @@ class TestDuplicateIdsWithNestedMedia:
         ])
         actual_issues = _check_duplicate_clip_ids(data)
         assert any('Duplicate clip ID 1' in i.message for i in actual_issues)
+
+
+# --- Transition references ---
+
+def test_stale_transition_detected():
+    data = _make_data([
+        {'medias': [{'id': 1}, {'id': 2}],
+         'transitions': [{'leftMedia': 1, 'rightMedia': 999}]},
+    ])
+    issues = _check_transition_references(data)
+    assert len(issues) == 1
+    assert issues[0].level == 'error'
+    assert 'rightMedia=999' in issues[0].message
+
+
+def test_valid_transitions_pass():
+    data = _make_data([
+        {'medias': [{'id': 1}, {'id': 2}],
+         'transitions': [{'leftMedia': 1, 'rightMedia': 2}]},
+    ])
+    issues = _check_transition_references(data)
+    assert issues == []
+
+
+class TestStaleLeftMediaTransition:
+    def test_stale_left_media_detected(self):
+        data = _make_data(tracks=[{
+            'trackIndex': 0,
+            'medias': [{'id': 1, '_type': 'AMFile'}],
+            'transitions': [{'leftMedia': 999, 'rightMedia': 1, 'name': 'FadeThroughBlack', 'duration': 100}],
+        }])
+        actual_issues = _check_transition_references(data)
+        assert any('leftMedia=999' in i.message for i in actual_issues)

@@ -53,6 +53,37 @@ class TestRemoveOrphanedMedia:
         assert removed == []
         assert project._data['sourceBin'] == []
 
+    def test_preserves_group_nested_sources(self, project):
+        """Sources referenced inside Group internal tracks must not be removed."""
+        _add_source(project, 10)
+        _add_source(project, 20)
+        _add_source(project, 30)
+        # Add a Group clip whose internal tracks reference src 10 and 20
+        tracks = project._data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
+        tracks[0]['medias'].append({
+            '_type': 'Group', 'id': 1, 'src': 10,
+            'start': 0, 'duration': seconds_to_ticks(5.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+            'scalar': 1, 'metadata': {}, 'parameters': {},
+            'effects': [], 'attributes': {}, 'animationTracks': {},
+            'tracks': [
+                {'medias': [{
+                    '_type': 'VMFile', 'id': 2, 'src': 20,
+                    'start': 0, 'duration': seconds_to_ticks(5.0),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+                    'scalar': 1, 'metadata': {}, 'parameters': {},
+                    'effects': [], 'attributes': {}, 'animationTracks': {},
+                }]},
+            ],
+        })
+
+        removed = remove_orphaned_media(project)
+
+        assert removed == [30]
+        remaining = {e['id'] for e in project._data['sourceBin']}
+        assert 10 in remaining
+        assert 20 in remaining
+
 
 class TestRemoveEmptyTracks:
     def test_remove_empty_tracks(self, project):
@@ -77,3 +108,26 @@ class TestCompactProject:
         assert result['orphaned_media_removed'] == 1
         assert result['empty_tracks_removed'] >= 0
         assert set(result.keys()) == {'orphaned_media_removed', 'empty_tracks_removed'}
+
+
+class TestCollectSourceIdsFromUnifiedMedia:
+    def test_preserves_unified_media_video_audio_sources(self, project):
+        # Add a Group with UnifiedMedia containing video.src and audio.src
+        track = project.timeline.add_track('Screen')
+        track._data['medias'] = [{
+            'id': 100, '_type': 'Group', 'start': 0, 'duration': 100,
+            'tracks': [{'medias': [{
+                'id': 101, '_type': 'UnifiedMedia',
+                'video': {'id': 102, '_type': 'ScreenVMFile', 'src': 50},
+                'audio': {'id': 103, '_type': 'AMFile', 'src': 51},
+            }]}],
+        }]
+        # Add source bin entries for 50 and 51
+        project._data['sourceBin'].append({'id': 50, 'src': 'video.trec'})
+        project._data['sourceBin'].append({'id': 51, 'src': 'audio.trec'})
+        from camtasia.operations.cleanup import remove_orphaned_media
+        removed = remove_orphaned_media(project)
+        # Sources 50 and 51 should NOT be removed
+        remaining_ids = {s['id'] for s in project._data['sourceBin']}
+        assert 50 in remaining_ids
+        assert 51 in remaining_ids

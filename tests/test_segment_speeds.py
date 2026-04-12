@@ -76,3 +76,46 @@ def test_media_start_accumulates():
     assert pieces[0]._data['mediaStart'] == 0
     assert pieces[1]._data['mediaStart'] > 0
     assert pieces[2]._data['mediaStart'] > pieces[1]._data['mediaStart']
+
+
+def test_set_internal_segment_speeds_clears_transitions():
+    """Internal transitions must be cleared when segment speeds are applied."""
+    clip_data = {
+        'id': 1, '_type': 'Group', 'src': 0,
+        'start': seconds_to_ticks(0.0),
+        'duration': seconds_to_ticks(100.0),
+        'mediaStart': 0,
+        'mediaDuration': seconds_to_ticks(100.0),
+        'scalar': 1,
+        'metadata': {}, 'parameters': {}, 'effects': [],
+        'attributes': {'ident': ''}, 'animationTracks': {},
+        'tracks': [
+            {'medias': [{
+                'id': 10, '_type': 'VMFile', 'src': 1,
+                'start': 0, 'duration': seconds_to_ticks(100.0),
+                'mediaStart': 0, 'mediaDuration': seconds_to_ticks(100.0),
+                'scalar': 1, 'metadata': {}, 'parameters': {},
+                'effects': [], 'attributes': {}, 'animationTracks': {},
+            }]},
+            {'medias': [{
+                'id': 11, '_type': 'UnifiedMedia',
+                'video': {
+                    'src': 1,
+                    'attributes': {'ident': 'recording'},
+                    'parameters': {},
+                    'effects': [],
+                },
+                'start': 0, 'duration': seconds_to_ticks(100.0),
+                'mediaStart': 0, 'mediaDuration': seconds_to_ticks(100.0),
+                'scalar': 1, 'metadata': {}, 'parameters': {},
+                'effects': [], 'attributes': {}, 'animationTracks': {},
+            }], 'transitions': [
+                {'leftMedia': 11, 'rightMedia': 12, 'duration': 100},
+            ]},
+        ],
+    }
+    from camtasia.timeline.clips.group import Group
+    group = Group(clip_data)
+    group.set_internal_segment_speeds([(0, 50, 50.0), (50, 100, 50.0)])
+    media_track = clip_data['tracks'][1]
+    assert media_track.get('transitions', []) == []

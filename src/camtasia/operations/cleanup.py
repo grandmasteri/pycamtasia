@@ -7,6 +7,21 @@ if TYPE_CHECKING:
     from camtasia.project import Project
 
 
+def _collect_source_ids(clip_data: dict) -> set[int]:
+    ids = set()
+    src = clip_data.get('src')
+    if src is not None:
+        ids.add(src)
+    for track in clip_data.get('tracks', []):
+        for media in track.get('medias', []):
+            ids.update(_collect_source_ids(media))
+            if 'video' in media:
+                ids.update(_collect_source_ids(media['video']))
+            if 'audio' in media:
+                ids.update(_collect_source_ids(media['audio']))
+    return ids
+
+
 def remove_orphaned_media(project: Project) -> list[int]:
     """Remove media entries not referenced by any clip.
 
@@ -14,10 +29,8 @@ def remove_orphaned_media(project: Project) -> list[int]:
     """
     referenced_ids: set[int] = set()
     for track in project.timeline.tracks:
-        for clip in track.clips:
-            src = clip.source_id
-            if src is not None:
-                referenced_ids.add(src)
+        for m in track._data.get('medias', []):
+            referenced_ids.update(_collect_source_ids(m))
 
     removed = []
     source_bin = project._data.get('sourceBin', [])

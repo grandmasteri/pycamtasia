@@ -14,7 +14,7 @@ from camtasia.authoring_client import AuthoringClient
 from camtasia.media_bin import Media, MediaBin, MediaType
 from camtasia.timeline import Timeline
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
-from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_indices
+from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_indices, _check_transition_references
 
 
 import subprocess as _sp
@@ -233,6 +233,9 @@ class Project:
 
         # Track index consistency
         issues.extend(_check_track_indices(self._data))
+
+        # Transition references
+        issues.extend(_check_transition_references(self._data))
 
         return issues
 
