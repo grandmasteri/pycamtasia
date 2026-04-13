@@ -1376,6 +1376,20 @@ class Track:
             count += 1
         return count
 
+    def set_opacity(self, value: float) -> None:
+        """Set opacity for all clips on this track."""
+        if not 0.0 <= value <= 1.0:
+            raise ValueError(f'opacity must be 0.0-1.0, got {value}')
+        for clip in self.clips:
+            clip.opacity = value
+
+    def set_volume(self, value: float) -> None:
+        """Set volume for all clips on this track."""
+        if value < 0.0:
+            raise ValueError(f'volume must be >= 0.0, got {value}')
+        for clip in self.clips:
+            clip.volume = value
+
     def to_list(self) -> list[dict]:
         """Return a list of clip summary dicts."""
         return [c.to_dict() for c in self.clips]

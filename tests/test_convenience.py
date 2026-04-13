@@ -1275,3 +1275,86 @@ def test_interpolation_type_values():
     assert InterpolationType.EASE_IN_OUT_ELASTIC == 'eioe'
     assert InterpolationType.HOLD == 'hold'
     assert len(InterpolationType) == 3
+
+
+# ---------------------------------------------------------------------------
+# Track.set_opacity
+# ---------------------------------------------------------------------------
+
+def test_track_set_opacity():
+    from camtasia.timeline.clips import clip_from_dict
+    medias = [
+        {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 100},
+        {'_type': 'VMFile', 'id': 2, 'start': 100, 'duration': 100},
+    ]
+    track = _make_track(medias=medias)
+    track.set_opacity(0.5)
+    for clip in track.clips:
+        assert clip.opacity == 0.5
+    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+        track.set_opacity(1.5)
+    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+        track.set_opacity(-0.1)
+
+
+# ---------------------------------------------------------------------------
+# Track.set_volume
+# ---------------------------------------------------------------------------
+
+def test_track_set_volume():
+    medias = [
+        {'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100},
+        {'_type': 'AMFile', 'id': 2, 'start': 100, 'duration': 100},
+    ]
+    track = _make_track(medias=medias)
+    track.set_volume(0.75)
+    for clip in track.clips:
+        assert clip.volume == 0.75
+    with pytest.raises(ValueError, match='volume must be >= 0.0'):
+        track.set_volume(-1.0)
+
+
+# ---------------------------------------------------------------------------
+# Project.set_canvas_size
+# ---------------------------------------------------------------------------
+
+def test_set_canvas_size():
+    from camtasia.project import Project
+    from pathlib import Path
+    from unittest.mock import patch
+    proj = Project.__new__(Project)
+    proj._data = {
+        'sourceBin': [],
+        'timeline': {
+            'sceneTrack': {'scenes': [{'csml': {'tracks': []}}]},
+            'trackAttributes': [],
+        },
+        'editRate': 30,
+    }
+    proj._file_path = Path('/tmp/fake.tscproj')
+    proj._encoding = 'utf-8'
+    proj.set_canvas_size(3840, 2160)
+    assert proj.width == 3840
+    assert proj.height == 2160
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.set_opacity_fade
+# ---------------------------------------------------------------------------
+
+def test_set_opacity_fade():
+    from camtasia.timeline.clips import clip_from_dict
+    from camtasia.timing import seconds_to_ticks
+    clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 9000})
+    result = clip.set_opacity_fade(1.0, 0.0, 3.0)
+    assert result is clip  # returns self
+    params = clip._data['parameters']['opacity']
+    assert params['defaultValue'] == 1.0
+    assert len(params['keyframes']) == 2
+    assert params['keyframes'][0]['value'] == 1.0
+    assert params['keyframes'][1]['value'] == 0.0
+    assert params['keyframes'][1]['time'] == seconds_to_ticks(3.0)
+    # without duration_seconds — uses clip duration
+    clip2 = clip_from_dict({'_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 9000})
+    clip2.set_opacity_fade(0.5, 1.0)
+    assert clip2._data['parameters']['opacity']['keyframes'][1]['time'] == 9000

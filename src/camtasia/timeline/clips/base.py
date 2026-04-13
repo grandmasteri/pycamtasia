@@ -1098,6 +1098,20 @@ class BaseClip:
         self._data['effects'] = []
         return self
 
+    def set_opacity_fade(self, start_opacity: float = 1.0, end_opacity: float = 0.0, duration_seconds: float | None = None) -> Self:
+        """Add an opacity fade keyframe animation."""
+        from camtasia.timing import seconds_to_ticks
+        dur = seconds_to_ticks(duration_seconds) if duration_seconds else self.duration
+        self._data.setdefault('parameters', {})['opacity'] = {
+            'type': 'double',
+            'defaultValue': start_opacity,
+            'keyframes': [
+                {'endTime': 0, 'time': 0, 'value': start_opacity, 'duration': 0},
+                {'endTime': dur, 'time': dur, 'value': end_opacity, 'duration': 0},
+            ],
+        }
+        return self
+
     def to_dict(self) -> ClipSummary:
         """Return a summary dict of this clip's key properties."""
         from camtasia.timing import ticks_to_seconds

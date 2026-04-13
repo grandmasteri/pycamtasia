@@ -1073,6 +1073,11 @@ class Project:
         results['edl'] = export_edl(self, out / 'timeline.edl')
         return results
 
+    def set_canvas_size(self, width: int, height: int) -> None:
+        """Set the project canvas dimensions."""
+        self.width = width
+        self.height = height
+
     def __repr__(self) -> str:
         return (f'Project(path={self.file_path.name!r}, '
                 f'{self.width}x{self.height}, '
