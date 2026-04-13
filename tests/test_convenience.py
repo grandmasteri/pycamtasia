@@ -1950,3 +1950,40 @@ def test_clip_effect_names():
     clips = list(track.clips)
     assert clips[0].effect_names == ['Blur', 'Glow']
     assert clips[1].effect_names == []
+
+
+# ---------------------------------------------------------------------------
+# Project.summary_table
+# ---------------------------------------------------------------------------
+
+def test_summary_table():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+
+    medias0 = [
+        {'id': 1, '_type': 'ScreenRecording', 'start': 0, 'duration': 300, 'effects': [
+            {'effectName': 'Blur'},
+        ]},
+        {'id': 2, '_type': 'UnifiedMedia', 'start': 300, 'duration': 600, 'effects': []},
+    ]
+    medias1 = []
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([medias0, medias1])
+    proj.timeline = Timeline(proj._data['timeline'])
+    proj.clip_count = 2
+    proj.duration_seconds = 30.0
+
+    result = Project.summary_table(proj)
+    lines = result.split('\n')
+    assert lines[0] == '| Track | Clips | Types | Duration | Effects |'
+    assert lines[1].startswith('|---')
+    # Track0 row
+    assert '| Track0 |' in lines[2]
+    assert '| 2 |' in lines[2]
+    # Track1 row (empty)
+    assert '| Track1 |' in lines[3]
+    assert '| 0 |' in lines[3]
+    # Total row
+    assert '**Total**' in lines[4]
+    assert '**2**' in lines[4]
+    assert '**30.0s**' in lines[4]

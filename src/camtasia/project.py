@@ -1126,6 +1126,16 @@ class Project:
                 clip._data['effects'] = []
         return count
 
+    def summary_table(self) -> str:
+        """Return a markdown table summarizing all tracks and clips."""
+        lines = ['| Track | Clips | Types | Duration | Effects |', '|-------|-------|-------|----------|---------|']
+        for track in self.timeline.tracks:
+            types = ', '.join(sorted(track.clip_types)) if track.clip_types else '-'
+            effects = ', '.join(sorted(track.effect_names)) if track.effect_names else '-'
+            lines.append(f'| {track.name or "(unnamed)"} | {len(track)} | {types} | {track.total_duration_seconds:.1f}s | {effects} |')
+        lines.append(f'| **Total** | **{self.clip_count}** | | **{self.duration_seconds:.1f}s** | |')
+        return '\n'.join(lines)
+
     def to_dict(self) -> dict:
         """Return a deep copy of the project data dict."""
         import copy
