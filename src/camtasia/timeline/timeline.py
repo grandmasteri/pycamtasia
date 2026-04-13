@@ -384,6 +384,32 @@ class Timeline:
 
         return issues
 
+    def flatten_to_track(self, target_track_name: str = 'Flattened') -> Track:
+        """Copy all clips from all tracks onto a single target track.
+
+        Creates a new track and copies all clips to it. Original tracks
+        are not modified. Clips keep their original timing.
+
+        Args:
+            target_track_name: Name for the target track.
+
+        Returns:
+            The target track with all clips.
+        """
+        import copy
+        target = self.add_track(target_track_name)
+        target_idx = target.index
+        next_id = self.next_clip_id()
+        for track in self.tracks:
+            if track.index == target_idx:
+                continue
+            for m in track._data.get('medias', []):
+                new_clip = copy.deepcopy(m)
+                new_clip['id'] = next_id
+                next_id += 1
+                target._data.setdefault('medias', []).append(new_clip)
+        return target
+
     def shift_all(self, seconds: float) -> None:
         """Shift all clips on all tracks by the given number of seconds.
 

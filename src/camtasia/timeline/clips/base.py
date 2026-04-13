@@ -130,6 +130,16 @@ class BaseClip:
         self.scalar = Fraction(1, 1) / Fraction(speed).limit_denominator(10000)
 
     @property
+    def has_effects(self) -> bool:
+        """Whether this clip has any effects applied."""
+        return bool(self._data.get('effects'))
+
+    @property
+    def effect_count(self) -> int:
+        """Number of effects on this clip."""
+        return len(self._data.get('effects', []))
+
+    @property
     def effects(self) -> list[dict[str, Any]]:
         """Raw effect dicts (will be wrapped by the effects module later)."""
         return self._data.get('effects', [])

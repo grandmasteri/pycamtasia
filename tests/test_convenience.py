@@ -306,3 +306,54 @@ def test_shift_all_backward_clamps():
     # Both should be clamped to 0
     assert raw_tracks[0]['medias'][0]['start'] == 0
     assert raw_tracks[1]['medias'][0]['start'] == 0
+
+
+# ---------------------------------------------------------------------------
+# Timeline.flatten_to_track
+# ---------------------------------------------------------------------------
+
+def test_flatten_to_track():
+    tl = _make_timeline([
+        ('A', [{'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}]),
+        ('B', [{'id': 2, '_type': 'AMFile', 'start': 50, 'duration': 200}]),
+    ])
+    target = tl.flatten_to_track('Merged')
+    assert target.name == 'Merged'
+    clips = list(target.clips)
+    assert len(clips) == 2
+    # Clips get new unique IDs
+    ids = {c.id for c in clips}
+    assert ids.isdisjoint({1, 2})
+    # Original tracks unchanged
+    orig_a = tl.find_track('A')
+    assert len(list(orig_a.clips)) == 1
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.has_effects
+# ---------------------------------------------------------------------------
+
+def test_has_effects_true():
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip({'id': 1, 'effects': [{'effectName': 'Glow'}]})
+    assert clip.has_effects is True
+
+
+def test_has_effects_false():
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip({'id': 1, 'effects': []})
+    assert clip.has_effects is False
+    clip2 = BaseClip({'id': 2})
+    assert clip2.has_effects is False
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.effect_count
+# ---------------------------------------------------------------------------
+
+def test_effect_count():
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip({'id': 1, 'effects': [{'effectName': 'Glow'}, {'effectName': 'Border'}]})
+    assert clip.effect_count == 2
+    empty = BaseClip({'id': 2})
+    assert empty.effect_count == 0
