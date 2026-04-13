@@ -726,21 +726,42 @@ class BaseClip:
         self,
         *,
         dim_opacity: float = 0.7,
+        color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0),
+        brightness: float = 0.0,
+        concentration: float = 0.5,
+        opacity: float = 1.0,
+        position: tuple[float, float] = (0.5, 0.5),
+        direction: tuple[float, float] = (0.0, 0.0),
     ) -> Self:
         """Add a spotlight/dim effect.
 
-        Dims the clip to the specified opacity, useful for
-        creating focus effects when combined with masks.
-
         Args:
             dim_opacity: Background dimming 0.0-1.0.
+            color: RGBA color as 0.0-1.0 floats.
+            brightness: Spotlight brightness.
+            concentration: Spotlight concentration 0.0-1.0.
+            opacity: Spotlight opacity 0.0-1.0.
+            position: (x, y) spotlight center, 0.0-1.0.
+            direction: (x, y) spotlight direction.
         """
+        r, g, b, a = color
         self.add_effect({
             'effectName': 'Spotlight',
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
                 'dim-opacity': dim_opacity,
+                'color-red': r,
+                'color-green': g,
+                'color-blue': b,
+                'color-alpha': a,
+                'brightness': brightness,
+                'concentration': concentration,
+                'opacity': opacity,
+                'positionX': position[0],
+                'positionY': position[1],
+                'directionX': direction[0],
+                'directionY': direction[1],
             },
         })
         return self
@@ -808,23 +829,27 @@ class BaseClip:
         })
         return self
 
-    def add_blend_mode(self, *, mode: str = 'normal') -> Self:
-        """Add a blend mode effect."""
+    def add_blend_mode(self, *, mode: int = 16, intensity: float = 1.0) -> Self:
+        """Add a blend mode compositing effect.
+
+        Args:
+            mode: Blend mode (3=multiply, 16=normal, etc.).
+            intensity: Effect intensity 0.0-1.0.
+        """
         self.add_effect({
             'effectName': 'BlendModeEffect',
             'bypassed': False,
             'category': 'categoryVisualEffects',
-            'parameters': {'blendMode': mode},
-        })
-        return self
-
-    def add_fade_effect(self, *, opacity: float = 0.0) -> Self:
-        """Add a fade visual effect."""
-        self.add_effect({
-            'effectName': 'fade',
-            'bypassed': False,
-            'category': 'categoryVisualEffects',
-            'parameters': {'opacity': opacity},
+            'parameters': {
+                'mode': mode,
+                'intensity': intensity,
+                'invert': 0,
+                'channel': 0,
+                'shadowRampStart': 0.0,
+                'shadowRampEnd': 0.0,
+                'highlightRampStart': 1.0,
+                'highlightRampEnd': 1.0,
+            },
         })
         return self
 

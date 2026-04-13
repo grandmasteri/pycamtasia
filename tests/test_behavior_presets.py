@@ -27,6 +27,33 @@ def test_sliding_preset_structure():
     assert effect['out']['attributes']['name'] == 'sliding'
 
 
+def test_fade_preset_structure():
+    effect = get_behavior_preset('Fade', 30 * 60 * 5880000)
+    assert REQUIRED_FIELDS <= set(effect.keys())
+    assert effect['_type'] == 'GenericBehaviorEffect'
+    assert effect['effectName'] == 'fade'
+    assert effect['in']['attributes']['name'] == 'fadeIn'
+    assert effect['metadata']['presetName'] == 'Fade'
+
+
+def test_flyin_preset_structure():
+    effect = get_behavior_preset('FlyIn', 30 * 60 * 5880000)
+    assert REQUIRED_FIELDS <= set(effect.keys())
+    assert effect['_type'] == 'GenericBehaviorEffect'
+    assert effect['effectName'] == 'flyIn'
+    assert effect['in']['attributes']['name'] == 'flyIn'
+    assert effect['metadata']['presetName'] == 'FlyIn'
+
+
+def test_popup_preset_structure():
+    effect = get_behavior_preset('PopUp', 30 * 60 * 5880000)
+    assert REQUIRED_FIELDS <= set(effect.keys())
+    assert effect['_type'] == 'GenericBehaviorEffect'
+    assert effect['effectName'] == 'popUp'
+    assert effect['in']['attributes']['name'] == 'popUp'
+    assert effect['metadata']['presetName'] == 'PopUp'
+
+
 def test_unknown_preset_raises():
     with pytest.raises(ValueError, match="Unknown behavior preset 'Bogus'"):
         get_behavior_preset('Bogus', 1000)
@@ -39,3 +66,6 @@ def test_preset_duration_calculated():
 
     sliding = get_behavior_preset('Sliding', clip_dur)
     assert sliding['duration'] == clip_dur - sliding['start']
+
+    fade = get_behavior_preset('Fade', clip_dur)
+    assert fade['duration'] == clip_dur - fade['start']

@@ -247,6 +247,46 @@ class TransitionList:
         ticks = int(duration_seconds * EDIT_RATE)
         return self.add(name_map[direction], self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
+    def add_card_flip(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 0.5,
+    ) -> Transition:
+        """Add a card-flip transition."""
+        ticks = int(duration_seconds * EDIT_RATE)
+        return self.add('CardFlip', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
+    def add_glitch(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 0.5,
+    ) -> Transition:
+        """Add a glitch transition."""
+        ticks = int(duration_seconds * EDIT_RATE)
+        return self.add('Glitch', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
+    def add_linear_blur(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 0.5,
+    ) -> Transition:
+        """Add a linear-blur transition."""
+        ticks = int(duration_seconds * EDIT_RATE)
+        return self.add('LinearBlur', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
+    def add_stretch(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 0.5,
+    ) -> Transition:
+        """Add a stretch transition."""
+        ticks = int(duration_seconds * EDIT_RATE)
+        return self.add('Stretch', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
     def remove(self, index: int) -> None:
         """Remove a transition by index.
 

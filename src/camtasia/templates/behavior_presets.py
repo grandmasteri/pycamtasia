@@ -67,6 +67,55 @@ PRESETS = {
             'presetName': 'Reveal',
         },
     },
+    'Fade': {
+        'effectName': 'fade',
+        'start': 470400000,
+        'in': {
+            'attributes': {
+                'name': 'fadeIn', 'type': 1, 'characterOrder': 6,
+                'offsetBetweenCharacters': 35280000,
+                'suggestedDurationPerCharacter': 705600000,
+                'overlapProportion': 0, 'movement': 0,
+                'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
+            },
+        },
+        'center': _NONE_CENTER,
+        'out': _NONE_OUT,
+        'metadata': {'presetName': 'Fade'},
+    },
+    'FlyIn': {
+        'effectName': 'flyIn',
+        'start': 0,
+        'in': {
+            'attributes': {
+                'name': 'flyIn', 'type': 0, 'characterOrder': 6,
+                'offsetBetweenCharacters': 35280000,
+                'suggestedDurationPerCharacter': 705600000,
+                'overlapProportion': 0, 'movement': 16,
+                'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
+            },
+            'parameters': {'direction': _DIRECTION_PARAM},
+        },
+        'center': _NONE_CENTER,
+        'out': _NONE_OUT,
+        'metadata': {'presetName': 'FlyIn'},
+    },
+    'PopUp': {
+        'effectName': 'popUp',
+        'start': 0,
+        'in': {
+            'attributes': {
+                'name': 'popUp', 'type': 1, 'characterOrder': 6,
+                'offsetBetweenCharacters': 35280000,
+                'suggestedDurationPerCharacter': 705600000,
+                'overlapProportion': 0, 'movement': 0,
+                'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
+            },
+        },
+        'center': _NONE_CENTER,
+        'out': _NONE_OUT,
+        'metadata': {'presetName': 'PopUp'},
+    },
     'Sliding': {
         'effectName': 'sliding',
         'start': 0,

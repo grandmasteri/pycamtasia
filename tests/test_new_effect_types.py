@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from camtasia.timeline.clips import BaseClip
+from camtasia.timeline.transitions import TransitionList
 
 
 def _base_clip_dict(**overrides) -> dict:
@@ -82,29 +83,25 @@ class TestAddMediaMatte:
 
 
 class TestAddBlendMode:
-    def test_add_blend_mode(self):
+    def test_add_blend_mode_defaults(self):
         data = _base_clip_dict()
         clip = BaseClip(data)
-        result = clip.add_blend_mode(mode='multiply')
+        result = clip.add_blend_mode()
         effect = data["effects"][0]
         assert effect["effectName"] == "BlendModeEffect"
-        assert effect["bypassed"] is False
-        assert effect["category"] == "categoryVisualEffects"
-        assert effect["parameters"]["blendMode"] == "multiply"
+        assert effect["parameters"]["mode"] == 16
+        assert effect["parameters"]["intensity"] == 1.0
+        assert effect["parameters"]["invert"] == 0
+        assert effect["parameters"]["channel"] == 0
         assert result is clip
 
-
-class TestAddFadeEffect:
-    def test_add_fade_effect(self):
+    def test_add_blend_mode_multiply(self):
         data = _base_clip_dict()
         clip = BaseClip(data)
-        result = clip.add_fade_effect(opacity=0.5)
-        effect = data["effects"][0]
-        assert effect["effectName"] == "fade"
-        assert effect["bypassed"] is False
-        assert effect["category"] == "categoryVisualEffects"
-        assert effect["parameters"]["opacity"] == 0.5
-        assert result is clip
+        clip.add_blend_mode(mode=3, intensity=0.8)
+        params = data["effects"][0]["parameters"]
+        assert params["mode"] == 3
+        assert params["intensity"] == 0.8
 
 
 class TestPlaceholderMediaLoads:
@@ -124,3 +121,30 @@ class TestPlaceholderMediaLoads:
         assert isinstance(clip, BaseClip)
         assert clip.clip_type == "PlaceholderMedia"
         assert clip.id == 99
+
+
+class TestNewTransitionTypes:
+    def _make_list(self) -> TransitionList:
+        return TransitionList({"transitions": []})
+
+    def test_add_card_flip(self):
+        tl = self._make_list()
+        t = tl.add_card_flip(1, 2, duration_seconds=0.5)
+        assert t.name == "CardFlip"
+        assert t.left_media_id == 1
+        assert t.right_media_id == 2
+
+    def test_add_glitch(self):
+        tl = self._make_list()
+        t = tl.add_glitch(1, 2, duration_seconds=0.5)
+        assert t.name == "Glitch"
+
+    def test_add_linear_blur(self):
+        tl = self._make_list()
+        t = tl.add_linear_blur(1, 2, duration_seconds=0.5)
+        assert t.name == "LinearBlur"
+
+    def test_add_stretch(self):
+        tl = self._make_list()
+        t = tl.add_stretch(1, 2, duration_seconds=0.5)
+        assert t.name == "Stretch"
