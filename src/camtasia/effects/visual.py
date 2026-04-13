@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from camtasia.effects.base import Effect, register_effect
+from camtasia.types import MaskShape
 
 
 @register_effect("RoundCorners")
@@ -172,7 +173,7 @@ class Mask(Effect):
         return self.get_parameter("mask-shape")
 
     @mask_shape.setter
-    def mask_shape(self, value: int) -> None:
+    def mask_shape(self, value: int | MaskShape) -> None:
         self.set_parameter("mask-shape", value)
 
     @property

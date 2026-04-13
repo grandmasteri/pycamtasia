@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Self
 
-from camtasia.types import BehaviorPreset
+from camtasia.types import BehaviorPreset, CalloutShape
 
 from .base import BaseClip
 
@@ -109,6 +109,10 @@ class Callout(BaseClip):
     def shape(self) -> str:
         """Callout shape (e.g. ``'text'``)."""
         return self.definition.get('shape', '')
+
+    @shape.setter
+    def shape(self, value: str | CalloutShape) -> None:
+        self._data.setdefault('def', {})['shape'] = str(value.value if isinstance(value, CalloutShape) else value)
 
     @property
     def style(self) -> str:

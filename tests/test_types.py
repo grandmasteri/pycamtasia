@@ -1,5 +1,5 @@
 """Tests for camtasia.types enums."""
-from camtasia.types import ClipType, EffectName, BlendMode
+from camtasia.types import ClipType, EffectName, BlendMode, MaskShape, CalloutShape
 
 
 class TestClipTypeValues:
@@ -61,3 +61,48 @@ class TestStrEnumComparison:
         assert ClipType.AUDIO == 'AMFile'
         assert ClipType.VIDEO == 'VMFile'
         assert ClipType.CALLOUT == 'Callout'
+
+
+class TestMaskShapeEnumValues:
+    """Verify MaskShape int values."""
+
+    def test_mask_shape_enum_values(self):
+        assert MaskShape.RECTANGLE == 0
+        assert MaskShape.ELLIPSE == 1
+        assert isinstance(MaskShape.RECTANGLE, int)
+
+
+class TestCalloutShapeEnumValues:
+    """Verify CalloutShape string values."""
+
+    def test_callout_shape_enum_values(self):
+        expected = {
+            'RECTANGLE': 'rectangle',
+            'ROUNDED_RECTANGLE': 'roundedRectangle',
+            'ELLIPSE': 'ellipse',
+            'TRIANGLE': 'triangle',
+            'ARROW': 'arrow',
+            'DIAMOND': 'diamond',
+            'STAR': 'star',
+        }
+        for name, value in expected.items():
+            assert CalloutShape[name].value == value
+        # str enum comparison
+        assert CalloutShape.RECTANGLE == 'rectangle'
+
+
+class TestCalloutShapeSetter:
+    def test_set_shape_with_enum(self):
+        from camtasia.timeline.clips.callout import Callout
+        from camtasia.types import CalloutShape
+        data = {'_type': 'Callout', 'id': 1, 'start': 0, 'duration': 100, 'def': {'shape': 'rectangle'}}
+        c = Callout(data)
+        c.shape = CalloutShape.ELLIPSE
+        assert data['def']['shape'] == 'ellipse'
+
+    def test_set_shape_with_string(self):
+        from camtasia.timeline.clips.callout import Callout
+        data = {'_type': 'Callout', 'id': 1, 'start': 0, 'duration': 100, 'def': {'shape': 'rectangle'}}
+        c = Callout(data)
+        c.shape = 'triangle'
+        assert data['def']['shape'] == 'triangle'

@@ -81,6 +81,24 @@ class BlendMode(IntEnum):
     # Add more as discovered from Camtasia projects
 
 
+class MaskShape(IntEnum):
+    """Mask shape values."""
+    RECTANGLE = 0
+    ELLIPSE = 1
+    # Add more as discovered
+
+
+class CalloutShape(str, Enum):
+    """Callout annotation shapes."""
+    RECTANGLE = 'rectangle'
+    ROUNDED_RECTANGLE = 'roundedRectangle'
+    ELLIPSE = 'ellipse'
+    TRIANGLE = 'triangle'
+    ARROW = 'arrow'
+    DIAMOND = 'diamond'
+    STAR = 'star'
+
+
 class ValidationLevel(str, Enum):
     """Validation issue severity levels."""
     ERROR = 'error'
