@@ -11,7 +11,7 @@ from camtasia.timeline.transitions import Transition, TransitionList
 from camtasia.timeline.markers import MarkerList
 from camtasia.timeline.marker import Marker
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
-from camtasia.types import ClipType
+from camtasia.types import ClipType, EffectName
 
 
 _VALID_CLIP_TYPES = frozenset({
@@ -996,6 +996,14 @@ class Track:
             for e in clip._data.get('effects', []):
                 names.add(e.get('effectName', '?'))
         return names
+
+    def find_clips_with_effect(self, effect_name: str | EffectName) -> list[BaseClip]:
+        """Find all clips that have a specific effect applied."""
+        return [c for c in self.clips if any(e.get('effectName') == effect_name for e in c._data.get('effects', []))]
+
+    def find_clips_without_effects(self) -> list[BaseClip]:
+        """Find all clips that have no effects applied."""
+        return [c for c in self.clips if not c.has_effects]
 
     def end_time_ticks(self) -> int:
         """End time of the last clip on this track, in ticks."""

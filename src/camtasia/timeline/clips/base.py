@@ -190,6 +190,11 @@ class BaseClip:
         return len(self._data.get('effects', []))
 
     @property
+    def effect_names(self) -> list[str]:
+        """Names of all effects on this clip."""
+        return [e.get('effectName', '?') for e in self._data.get('effects', [])]
+
+    @property
     def effects(self) -> list[dict[str, Any]]:
         """Raw effect dicts (will be wrapped by the effects module later)."""
         return self._data.get('effects', [])

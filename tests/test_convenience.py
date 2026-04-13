@@ -1890,3 +1890,63 @@ def test_project_clip_type_summary():
     proj.timeline = Timeline(proj._data['timeline'])
     result = Project.clip_type_summary.fget(proj)
     assert result == {'ScreenRecording': 2, 'UnifiedMedia': 1}
+
+
+# ---------------------------------------------------------------------------
+# Track.find_clips_with_effect
+# ---------------------------------------------------------------------------
+
+def test_find_clips_with_effect():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': 100, 'effects': [
+            {'effectName': 'Blur'},
+        ]},
+        {'id': 2, 'start': 100, 'duration': 100, 'effects': []},
+        {'id': 3, 'start': 200, 'duration': 100, 'effects': [
+            {'effectName': 'Glow'},
+            {'effectName': 'Blur'},
+        ]},
+    ]
+    track = _make_track(medias)
+    result = track.find_clips_with_effect('Blur')
+    assert len(result) == 2
+    assert result[0].id == 1
+    assert result[1].id == 3
+    assert track.find_clips_with_effect('Nonexistent') == []
+
+
+# ---------------------------------------------------------------------------
+# Track.find_clips_without_effects
+# ---------------------------------------------------------------------------
+
+def test_find_clips_without_effects():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': 100, 'effects': [
+            {'effectName': 'Blur'},
+        ]},
+        {'id': 2, 'start': 100, 'duration': 100},
+        {'id': 3, 'start': 200, 'duration': 100, 'effects': []},
+    ]
+    track = _make_track(medias)
+    result = track.find_clips_without_effects()
+    assert len(result) == 2
+    assert result[0].id == 2
+    assert result[1].id == 3
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.effect_names
+# ---------------------------------------------------------------------------
+
+def test_clip_effect_names():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': 100, 'effects': [
+            {'effectName': 'Blur'},
+            {'effectName': 'Glow'},
+        ]},
+        {'id': 2, 'start': 100, 'duration': 100},
+    ]
+    track = _make_track(medias)
+    clips = list(track.clips)
+    assert clips[0].effect_names == ['Blur', 'Glow']
+    assert clips[1].effect_names == []
