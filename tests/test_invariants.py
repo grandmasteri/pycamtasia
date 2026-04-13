@@ -362,3 +362,36 @@ def test_replace_cascades_transitions(num_clips):
             assert t['leftMedia'] in existing_ids
         if t.get('rightMedia') is not None:
             assert t['rightMedia'] in existing_ids
+
+
+# ------------------------------------------------------------------
+# 15. reorder_clips preserves all clip IDs
+# ------------------------------------------------------------------
+
+@given(st.permutations(range(3)))
+@settings(max_examples=20, deadline=None)
+def test_reorder_preserves_all_ids(perm):
+    track, data = _make_track()
+    ids = []
+    for i in range(3):
+        clip = track.add_clip('AMFile', 1, i * TICK, TICK)
+        ids.append(clip.id)
+    reordered = [ids[i] for i in perm]
+    track.reorder_clips(reordered)
+    actual_ids = {m['id'] for m in data['medias']}
+    assert actual_ids == set(ids)
+
+
+# ------------------------------------------------------------------
+# 16. insert_clip_at preserves existing clips
+# ------------------------------------------------------------------
+
+@given(st.integers(min_value=1, max_value=5))
+@settings(max_examples=20, deadline=None)
+def test_insert_preserves_existing(num_existing):
+    track, data = _make_track()
+    for i in range(num_existing):
+        track.add_clip('AMFile', 1, i * TICK * 2, TICK)
+    original_count = len(data['medias'])
+    track.insert_clip_at('AMFile', 1, 0.5, 0.5)
+    assert len(data['medias']) == original_count + 1
