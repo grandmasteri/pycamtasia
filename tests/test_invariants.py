@@ -318,3 +318,47 @@ def test_swap_is_own_inverse(num_clips):
     track.swap_clips(ids[0], ids[-1])
     restored_starts = {m['id']: m['start'] for m in data['medias']}
     assert original_starts == restored_starts
+
+
+# ------------------------------------------------------------------
+# 13. replace_clip preserves clip count
+# ------------------------------------------------------------------
+
+@given(st.integers(min_value=2, max_value=5))
+@settings(max_examples=20, deadline=None)
+def test_replace_preserves_clip_count(num_clips):
+    track, data = _make_track()
+    ids = []
+    for i in range(num_clips):
+        clip = track.add_clip('AMFile', 1, i * TICK, TICK)
+        ids.append(clip.id)
+    original_count = len(data['medias'])
+    new_data = {'_type': 'VMFile', 'src': 2, 'start': 0, 'duration': TICK}
+    track.replace_clip(ids[0], new_data)
+    assert len(data['medias']) == original_count
+
+
+# ------------------------------------------------------------------
+# 14. replace_clip cascades transitions
+# ------------------------------------------------------------------
+
+@given(st.integers(min_value=2, max_value=5))
+@settings(max_examples=20, deadline=None)
+def test_replace_cascades_transitions(num_clips):
+    track, data = _make_track()
+    ids = []
+    for i in range(num_clips):
+        clip = track.add_clip('AMFile', 1, i * TICK, TICK)
+        ids.append(clip.id)
+    if len(ids) >= 2:
+        data.setdefault('transitions', []).append(
+            {'leftMedia': ids[0], 'rightMedia': ids[1], 'name': 'X', 'duration': 100}
+        )
+    new_data = {'_type': 'VMFile', 'src': 2, 'start': 0, 'duration': TICK}
+    track.replace_clip(ids[0], new_data)
+    existing_ids = {m['id'] for m in data['medias']}
+    for t in data.get('transitions', []):
+        if t.get('leftMedia') is not None:
+            assert t['leftMedia'] in existing_ids
+        if t.get('rightMedia') is not None:
+            assert t['rightMedia'] in existing_ids
