@@ -868,3 +868,53 @@ def test_remove_tracks_by_name_none_found():
     removed = tl.remove_tracks_by_name('Effects')
     assert removed == 0
     assert len(list(tl.tracks)) == 2
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.to_dict
+# ---------------------------------------------------------------------------
+
+def test_clip_to_dict():
+    from camtasia.timeline.clips.base import BaseClip
+    start = seconds_to_ticks(1.0)
+    dur = seconds_to_ticks(2.0)
+    clip = BaseClip({
+        'id': 42, '_type': 'VMFile', 'start': start, 'duration': dur,
+        'src': 7, 'effects': [{'effectName': 'Blur'}],
+    })
+    d = clip.to_dict()
+    assert d['id'] == 42
+    assert d['type'] == 'VMFile'
+    assert d['start_seconds'] == pytest.approx(1.0)
+    assert d['duration_seconds'] == pytest.approx(2.0)
+    assert d['end_seconds'] == pytest.approx(3.0)
+    assert d['source_id'] == 7
+    assert d['effects'] == ['Blur']
+
+    # Without source_id or effects
+    clip2 = BaseClip({'id': 1, '_type': 'AMFile', 'start': 0, 'duration': start})
+    d2 = clip2.to_dict()
+    assert 'source_id' not in d2
+    assert 'effects' not in d2
+
+
+# ---------------------------------------------------------------------------
+# Track.to_list
+# ---------------------------------------------------------------------------
+
+def test_track_to_list():
+    start1 = seconds_to_ticks(0.0)
+    dur1 = seconds_to_ticks(1.5)
+    start2 = seconds_to_ticks(2.0)
+    dur2 = seconds_to_ticks(3.0)
+    track = _make_track(medias=[
+        {'id': 1, '_type': 'VMFile', 'start': start1, 'duration': dur1},
+        {'id': 2, '_type': 'AMFile', 'start': start2, 'duration': dur2},
+    ])
+    result = track.to_list()
+    assert len(result) == 2
+    assert result[0]['id'] == 1
+    assert result[0]['type'] == 'VMFile'
+    assert result[0]['start_seconds'] == pytest.approx(0.0)
+    assert result[1]['id'] == 2
+    assert result[1]['duration_seconds'] == pytest.approx(3.0)

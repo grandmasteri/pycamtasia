@@ -1323,6 +1323,10 @@ class Track:
     def __repr__(self) -> str:
         return f'Track(name={self.name!r}, index={self.index})'
 
+    def to_list(self) -> list[dict]:
+        """Return a list of clip summary dicts."""
+        return [c.to_dict() for c in self.clips]
+
 
 class _ClipAccessor:
     """Lightweight iterable/indexable accessor over a track's clips."""

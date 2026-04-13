@@ -999,3 +999,19 @@ class BaseClip:
                 if isinstance(p, dict):
                     p.pop('keyframes', None)
         return self
+
+    def to_dict(self) -> dict:
+        """Return a summary dict of this clip's key properties."""
+        from camtasia.timing import ticks_to_seconds
+        result = {
+            'id': self.id,
+            'type': self.clip_type,
+            'start_seconds': ticks_to_seconds(self.start),
+            'duration_seconds': ticks_to_seconds(self.duration),
+            'end_seconds': self.end_seconds,
+        }
+        if self.source_id is not None:
+            result['source_id'] = self.source_id
+        if self.has_effects:
+            result['effects'] = [e.get('effectName', '?') for e in self._data.get('effects', [])]
+        return result
