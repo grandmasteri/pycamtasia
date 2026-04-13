@@ -34,6 +34,8 @@ class CaptionAttributes:
     
     @font_size.setter
     def font_size(self, value: int) -> None:
+        if value < 1:
+            raise ValueError(f'font_size must be >= 1, got {value}')
         self._data['fontSize'] = value
     
     @property
@@ -66,6 +68,8 @@ class CaptionAttributes:
     
     @alignment.setter
     def alignment(self, value: int) -> None:
+        if value not in (0, 1, 2):
+            raise ValueError(f'alignment must be 0 (left), 1 (center), or 2 (right), got {value}')
         self._data['alignment'] = value
     
     @property
@@ -74,6 +78,8 @@ class CaptionAttributes:
     
     @opacity.setter
     def opacity(self, value: float) -> None:
+        if not 0.0 <= value <= 1.0:
+            raise ValueError(f'opacity must be 0.0-1.0, got {value}')
         self._data['opacity'] = value
     
     @property

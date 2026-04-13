@@ -1,6 +1,16 @@
 """Strong types for the pycamtasia library."""
 from __future__ import annotations
 from enum import Enum, IntEnum
+from typing import Literal
+
+# Effect categories
+EffectCategory = Literal['categoryVisualEffects', 'categoryAudioEffects', 'categoryCursorEffects']
+
+# Alignment values for CaptionAttributes
+Alignment = Literal[0, 1, 2]  # left, center, right
+
+# Export formats
+ReportFormat = Literal['markdown', 'json']
 
 
 class ClipType(str, Enum):

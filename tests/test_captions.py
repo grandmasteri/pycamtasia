@@ -62,3 +62,39 @@ def test_timeline_caption_attributes_property(project):
     # Mutations through the property should persist
     ca.font_name = 'Impact'
     assert tl.caption_attributes.font_name == 'Impact'
+
+
+import pytest
+
+
+def test_caption_alignment_validation():
+    attrs = CaptionAttributes({})
+    for valid in (0, 1, 2):
+        attrs.alignment = valid
+        assert attrs.alignment == valid
+    with pytest.raises(ValueError, match='alignment must be 0'):
+        attrs.alignment = 3
+    with pytest.raises(ValueError, match='alignment must be 0'):
+        attrs.alignment = -1
+
+
+def test_caption_opacity_validation():
+    attrs = CaptionAttributes({})
+    attrs.opacity = 0.0
+    assert attrs.opacity == 0.0
+    attrs.opacity = 1.0
+    assert attrs.opacity == 1.0
+    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+        attrs.opacity = -0.1
+    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+        attrs.opacity = 1.1
+
+
+def test_caption_font_size_validation():
+    attrs = CaptionAttributes({})
+    attrs.font_size = 1
+    assert attrs.font_size == 1
+    with pytest.raises(ValueError, match='font_size must be >= 1'):
+        attrs.font_size = 0
+    with pytest.raises(ValueError, match='font_size must be >= 1'):
+        attrs.font_size = -5

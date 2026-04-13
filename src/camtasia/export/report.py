@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING
+from camtasia.types import ReportFormat
 if TYPE_CHECKING:
     from camtasia.project import Project
 
@@ -10,7 +11,7 @@ def export_project_report(
     project: Project,
     output_path: str | Path,
     *,
-    format: str = 'markdown',
+    format: ReportFormat = 'markdown',
 ) -> Path:
     """Export a detailed project report."""
     path = Path(output_path)
