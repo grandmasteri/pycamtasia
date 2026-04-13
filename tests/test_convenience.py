@@ -761,3 +761,64 @@ def test_end_seconds():
                      'duration': dur, 'metadata': {},
                      'animationTracks': {}})
     assert clip.end_seconds == pytest.approx(5.0)
+
+# ---------------------------------------------------------------------------
+# BaseClip.time_range
+# ---------------------------------------------------------------------------
+
+def test_time_range():
+    from camtasia.timeline.clips import clip_from_dict
+    from camtasia.timing import seconds_to_ticks
+    data = {
+        '_type': 'AMFile', 'id': 1,
+        'start': seconds_to_ticks(2.0),
+        'duration': seconds_to_ticks(3.0),
+        'parameters': {}, 'effects': [],
+        'metadata': {}, 'animationTracks': {},
+    }
+    clip = clip_from_dict(data)
+    assert clip.time_range[0] == pytest.approx(2.0)
+    assert clip.time_range[1] == pytest.approx(5.0)
+
+
+# ---------------------------------------------------------------------------
+# Track.duration_seconds
+# ---------------------------------------------------------------------------
+
+def test_track_duration_seconds():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(1.5)},
+        {'id': 2, 'start': seconds_to_ticks(2.0), 'duration': seconds_to_ticks(2.5)},
+    ]
+    t = _make_track(medias)
+    assert t.duration_seconds == t.total_duration_seconds
+
+
+# ---------------------------------------------------------------------------
+# Timeline.has_clips
+# ---------------------------------------------------------------------------
+
+def test_has_clips_true():
+    medias = [{'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100}]
+    tl = _make_timeline([('A', medias)])
+    assert tl.has_clips is True
+
+
+def test_has_clips_false():
+    tl = _make_timeline([('A', [])])
+    assert tl.has_clips is False
+
+
+# ---------------------------------------------------------------------------
+# Project.is_empty
+# ---------------------------------------------------------------------------
+
+def test_project_is_empty_true(project):
+    assert project.is_empty is True
+
+def test_project_is_empty_false():
+    from camtasia.project import load_project
+    from pathlib import Path
+    fixture = Path(__file__).parent / 'fixtures' / 'test_project_c.tscproj'
+    proj = load_project(fixture)
+    assert proj.is_empty is False

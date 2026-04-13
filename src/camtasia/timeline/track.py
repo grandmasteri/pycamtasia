@@ -893,6 +893,11 @@ class Track:
         total = sum(m.get('duration', 0) for m in self._data.get('medias', []))
         return ticks_to_seconds(total)
 
+    @property
+    def duration_seconds(self) -> float:
+        """Total duration of all clips (alias for total_duration_seconds)."""
+        return self.total_duration_seconds
+
     def gaps(self) -> list[tuple[float, float]]:
         """Find gaps between clips on this track.
 

@@ -58,6 +58,11 @@ class Timeline:
         """Total number of clips across all tracks."""
         return sum(len(track) for track in self.tracks)
 
+    @property
+    def has_clips(self) -> bool:
+        """Whether any track has clips."""
+        return self.total_clip_count > 0
+
     def add_track(self, name: str = '') -> Track:
         """Append a new empty track.
 

@@ -84,6 +84,11 @@ class BaseClip:
         return ticks_to_seconds(self.start + self.duration)
 
     @property
+    def time_range(self) -> tuple[float, float]:
+        """(start_seconds, end_seconds) tuple."""
+        return (self.start_seconds, self.end_seconds)
+
+    @property
     def gain(self) -> float:
         """Audio gain (0.0 = muted, 1.0 = full volume)."""
         return self._data.get('attributes', {}).get('gain', 1.0)

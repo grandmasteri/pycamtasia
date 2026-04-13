@@ -225,6 +225,11 @@ class Project:
         return Timeline(self._data['timeline'])
 
     @property
+    def is_empty(self) -> bool:
+        """Whether the project has no clips on any track."""
+        return not self.timeline.has_clips
+
+    @property
     def has_screen_recording(self) -> bool:
         """Whether the project contains any screen recording clips."""
         from camtasia.timeline.clips.group import Group
