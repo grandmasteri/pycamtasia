@@ -49,6 +49,11 @@ class BaseClip:
         return self.clip_type in (ClipType.VIDEO, ClipType.SCREEN_VIDEO)
 
     @property
+    def is_visible(self) -> bool:
+        """Whether this clip is a visual clip (not audio-only)."""
+        return not self.is_audio
+
+    @property
     def is_image(self) -> bool:
         return self.clip_type == ClipType.IMAGE
 

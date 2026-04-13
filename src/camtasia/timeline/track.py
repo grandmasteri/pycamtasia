@@ -980,6 +980,11 @@ class Track:
         return self.filter_clips(lambda c: c.is_video)
 
     @property
+    def visible_clips(self) -> list[BaseClip]:
+        """All non-audio clips on this track."""
+        return self.filter_clips(lambda c: c.is_visible)
+
+    @property
     def image_clips(self) -> list[BaseClip]:
         return self.filter_clips(lambda c: c.is_image)
 

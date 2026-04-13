@@ -1987,3 +1987,34 @@ def test_summary_table():
     assert '**Total**' in lines[4]
     assert '**2**' in lines[4]
     assert '**30.0s**' in lines[4]
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.is_visible / Track.visible_clips / Project.has_audio / has_video
+# ---------------------------------------------------------------------------
+
+def test_is_visible():
+    audio = _make_track([{'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100}])
+    video = _make_track([{'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 100}])
+    assert list(audio.clips)[0].is_visible is False
+    assert list(video.clips)[0].is_visible is True
+
+
+def test_visible_clips():
+    medias = [
+        {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100},
+        {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 100},
+        {'id': 3, '_type': 'IMFile', 'start': 200, 'duration': 100},
+    ]
+    track = _make_track(medias)
+    visible = track.visible_clips
+    assert len(visible) == 2
+    assert all(c.is_visible for c in visible)
+
+
+def test_has_audio(project):
+    assert project.has_audio is False  # empty project has no audio
+
+
+def test_has_video(project):
+    assert project.has_video is False  # empty project has no video
