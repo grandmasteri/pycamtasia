@@ -277,3 +277,49 @@ class TestAdvancedOperations:
         )
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+
+class TestNewTransitions:
+    @pytest.mark.integration
+    def test_card_flip_transition_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        media = proj.import_media(EMPTY_WAV)
+        track = proj.timeline.add_track('Audio')
+        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
+        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
+        track.transitions.add_card_flip(c1.id, c2.id, seconds_to_ticks(0.5))
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_glitch_transition_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        media = proj.import_media(EMPTY_WAV)
+        track = proj.timeline.add_track('Audio')
+        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
+        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
+        track.transitions.add_glitch(c1.id, c2.id, seconds_to_ticks(0.5))
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_linear_blur_transition_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        media = proj.import_media(EMPTY_WAV)
+        track = proj.timeline.add_track('Audio')
+        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
+        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
+        track.transitions.add_linear_blur(c1.id, c2.id, seconds_to_ticks(0.5))
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_stretch_transition_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        media = proj.import_media(EMPTY_WAV)
+        track = proj.timeline.add_track('Audio')
+        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
+        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
+        track.transitions.add_stretch(c1.id, c2.id, seconds_to_ticks(0.5))
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
