@@ -1355,6 +1355,14 @@ class Track:
     def __repr__(self) -> str:
         return f'Track(name={self.name!r}, index={self.index})'
 
+    def apply_to_all(self, fn) -> int:
+        """Apply a function to every clip on this track. Returns count."""
+        count = 0
+        for clip in self.clips:
+            fn(clip)
+            count += 1
+        return count
+
     def to_list(self) -> list[dict]:
         """Return a list of clip summary dicts."""
         return [c.to_dict() for c in self.clips]

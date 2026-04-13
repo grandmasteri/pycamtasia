@@ -1026,6 +1026,18 @@ class BaseClip:
                     p.pop('keyframes', None)
         return self
 
+    def reset_transforms(self) -> Self:
+        """Reset position, scale, and rotation to defaults."""
+        self.move_to(0, 0)
+        self.scale_to(1.0)
+        self.rotation = 0.0
+        return self
+
+    def remove_all_effects(self) -> Self:
+        """Remove all effects from this clip."""
+        self._data['effects'] = []
+        return self
+
     def to_dict(self) -> dict:
         """Return a summary dict of this clip's key properties."""
         from camtasia.timing import ticks_to_seconds

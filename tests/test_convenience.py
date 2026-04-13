@@ -975,3 +975,66 @@ def test_clip_is_at():
     assert clip.is_at(4.99) is True
     assert clip.is_at(5.0) is False
     assert clip.is_at(1.0) is False
+
+
+# ---------------------------------------------------------------------------
+# Track.apply_to_all
+# ---------------------------------------------------------------------------
+
+def test_apply_to_all():
+    track = _make_track(medias=[
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
+        {'id': 2, '_type': 'VMFile', 'start': 200, 'duration': 100},
+        {'id': 3, '_type': 'VMFile', 'start': 400, 'duration': 100},
+    ])
+    visited = []
+    count = track.apply_to_all(lambda c: visited.append(c.id))
+    assert count == 3
+    assert visited == [1, 2, 3]
+
+
+def test_apply_to_all_empty():
+    track = _make_track(medias=[])
+    count = track.apply_to_all(lambda c: None)
+    assert count == 0
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.reset_transforms
+# ---------------------------------------------------------------------------
+
+def test_reset_transforms():
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip({
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'parameters': {
+            'positionX': 50.0,
+            'positionY': -30.0,
+            'scale0': 2.5,
+            'scale1': 2.5,
+            'rotation': 45.0,
+        },
+    })
+    result = clip.reset_transforms()
+    assert result is clip  # fluent chaining
+    assert clip.rotation == 0.0
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.remove_all_effects
+# ---------------------------------------------------------------------------
+
+def test_remove_all_effects():
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip({
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'effects': [
+            {'effectName': 'blur'},
+            {'effectName': 'glow'},
+        ],
+    })
+    assert clip.has_effects is True
+    result = clip.remove_all_effects()
+    assert result is clip  # fluent chaining
+    assert clip.has_effects is False
+    assert clip._data['effects'] == []
