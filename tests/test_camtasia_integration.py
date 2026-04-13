@@ -323,3 +323,33 @@ class TestNewTransitions:
         track.transitions.add_stretch(c1.id, c2.id, seconds_to_ticks(0.5))
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+
+class TestBehaviorPresets:
+    @pytest.mark.integration
+    def test_fade_behavior_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        track = proj.timeline.add_track('Callouts')
+        callout = track.add_callout('Hello World', start_seconds=0.0, duration_seconds=5.0)
+        callout.add_behavior('Fade')
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_fly_in_behavior_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        track = proj.timeline.add_track('Callouts')
+        callout = track.add_callout('Hello World', start_seconds=0.0, duration_seconds=5.0)
+        callout.add_behavior('FlyIn')
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    @pytest.mark.xfail(reason="PopUp preset grow behavior not recognized by Camtasia")
+    def test_pop_up_behavior_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        track = proj.timeline.add_track('Callouts')
+        callout = track.add_callout('Hello World', start_seconds=0.0, duration_seconds=5.0)
+        callout.add_behavior('PopUp')
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
