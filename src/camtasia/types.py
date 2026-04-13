@@ -163,3 +163,25 @@ class HealthCheckResult(TypedDict):
     warnings: list[str]
     structural_issues: list[str]
     statistics: dict
+
+
+class CompactResult(TypedDict):
+    """Result of compact_project()."""
+    orphaned_media_removed: int
+    empty_tracks_removed: int
+
+
+class TimelineSummary(TypedDict):
+    """Result of Timeline.to_dict()."""
+    track_count: int
+    total_clip_count: int
+    duration_seconds: float
+    has_clips: bool
+    track_names: list[str]
+
+
+class ScreenplayBuildResult(TypedDict):
+    """Result of build_from_screenplay()."""
+    clips_placed: int
+    pauses_added: int
+    total_duration: float

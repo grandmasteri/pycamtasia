@@ -8,6 +8,7 @@ from camtasia.timeline.clips import BaseClip
 from camtasia.timeline.markers import Marker, MarkerList
 from camtasia.timeline.track import Track
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+from camtasia.types import TimelineSummary
 
 
 @dataclass
@@ -232,7 +233,7 @@ class Timeline:
         """Names of all tracks."""
         return [t.name for t in self.tracks]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> TimelineSummary:
         """Return a summary dict of the timeline structure."""
         return {
             'track_count': self.track_count,

@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from camtasia.project import Project
 
+from camtasia.types import CompactResult
+
 
 def _collect_source_ids(clip_data: dict) -> set[int]:
     ids = set()
@@ -52,7 +54,7 @@ def remove_empty_tracks(project: Project) -> int:
     return project.timeline.remove_empty_tracks()
 
 
-def compact_project(project: Project) -> dict[str, int]:
+def compact_project(project: Project) -> CompactResult:
     """Run all cleanup operations on a project.
 
     Returns a summary dict with counts of items cleaned.

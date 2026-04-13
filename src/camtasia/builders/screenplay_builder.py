@@ -8,6 +8,8 @@ if TYPE_CHECKING:
     from camtasia.project import Project
     from camtasia.screenplay import Screenplay, VOBlock
 
+from camtasia.types import ScreenplayBuildResult
+
 
 def build_from_screenplay(
     project: Project,
@@ -17,7 +19,7 @@ def build_from_screenplay(
     audio_track_name: str = 'Audio',
     default_pause: float = 1.0,
     vo_file_resolver: Callable[['VOBlock'], str | Path | None] | None = None,
-) -> dict:
+) -> ScreenplayBuildResult:
     """Build a timeline from a parsed screenplay.
 
     Places voiceover audio clips sequentially with pauses between them.
