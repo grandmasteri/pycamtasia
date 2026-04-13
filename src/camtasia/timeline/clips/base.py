@@ -40,6 +40,26 @@ class BaseClip:
         return self._data['_type']
 
     @property
+    def is_audio(self) -> bool:
+        return self.clip_type == 'AMFile'
+
+    @property
+    def is_video(self) -> bool:
+        return self.clip_type in ('VMFile', 'ScreenVMFile')
+
+    @property
+    def is_image(self) -> bool:
+        return self.clip_type == 'IMFile'
+
+    @property
+    def is_group(self) -> bool:
+        return self.clip_type == 'Group'
+
+    @property
+    def is_callout(self) -> bool:
+        return self.clip_type == 'Callout'
+
+    @property
     def start(self) -> int:
         """Timeline position in ticks."""
         return self._data['start']

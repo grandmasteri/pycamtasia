@@ -930,6 +930,18 @@ class Track:
         """Return clips matching a predicate function."""
         return [c for c in self.clips if predicate(c)]
 
+    @property
+    def audio_clips(self) -> list[BaseClip]:
+        return self.filter_clips(lambda c: c.is_audio)
+
+    @property
+    def video_clips(self) -> list[BaseClip]:
+        return self.filter_clips(lambda c: c.is_video)
+
+    @property
+    def image_clips(self) -> list[BaseClip]:
+        return self.filter_clips(lambda c: c.is_image)
+
     def end_time_ticks(self) -> int:
         """End time of the last clip on this track, in ticks."""
         max_end = 0

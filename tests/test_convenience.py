@@ -677,3 +677,43 @@ def test_track_describe_with_overlaps():
     t = Track({'ident': 'Overlap'}, data)
     actual = t.describe()
     assert 'Overlaps: 1' in actual
+
+
+# ---------------------------------------------------------------------------
+# Clip type-check properties
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize('type_str, prop, expected', [
+    ('AMFile', 'is_audio', True),
+    ('VMFile', 'is_video', True),
+    ('ScreenVMFile', 'is_video', True),
+    ('IMFile', 'is_image', True),
+    ('Group', 'is_group', True),
+    ('Callout', 'is_callout', True),
+    ('AMFile', 'is_video', False),
+    ('VMFile', 'is_audio', False),
+    ('IMFile', 'is_callout', False),
+])
+def test_clip_type_properties(type_str, prop, expected):
+    from camtasia.timeline.clips import clip_from_dict
+    data = {'_type': type_str, 'id': 1, 'start': 0, 'duration': 100,
+            'mediaSource': {}, 'parameters': {}, 'effects': [],
+            'metadata': {}, 'animationTracks': {}}
+    clip = clip_from_dict(data)
+    assert getattr(clip, prop) is expected
+
+
+def test_track_typed_clips():
+    medias = [
+        {'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100},
+        {'_type': 'VMFile', 'id': 2, 'start': 100, 'duration': 100},
+        {'_type': 'IMFile', 'id': 3, 'start': 200, 'duration': 100},
+        {'_type': 'AMFile', 'id': 4, 'start': 300, 'duration': 100},
+    ]
+    t = _make_track(medias)
+    assert len(t.audio_clips) == 2
+    assert all(c.is_audio for c in t.audio_clips)
+    assert len(t.video_clips) == 1
+    assert t.video_clips[0].clip_type == 'VMFile'
+    assert len(t.image_clips) == 1
+    assert t.image_clips[0].clip_type == 'IMFile'
