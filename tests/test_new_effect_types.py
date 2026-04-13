@@ -79,3 +79,48 @@ class TestAddMediaMatte:
         assert params["intensity"] == 0.7
         assert params["matteMode"] == 2
         assert params["trackDepth"] == 10005
+
+
+class TestAddBlendMode:
+    def test_add_blend_mode(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        result = clip.add_blend_mode(mode='multiply')
+        effect = data["effects"][0]
+        assert effect["effectName"] == "BlendModeEffect"
+        assert effect["bypassed"] is False
+        assert effect["category"] == "categoryVisualEffects"
+        assert effect["parameters"]["blendMode"] == "multiply"
+        assert result is clip
+
+
+class TestAddFadeEffect:
+    def test_add_fade_effect(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        result = clip.add_fade_effect(opacity=0.5)
+        effect = data["effects"][0]
+        assert effect["effectName"] == "fade"
+        assert effect["bypassed"] is False
+        assert effect["category"] == "categoryVisualEffects"
+        assert effect["parameters"]["opacity"] == 0.5
+        assert result is clip
+
+
+class TestPlaceholderMediaLoads:
+    def test_placeholder_media_loads(self):
+        from camtasia.timeline.clips import clip_from_dict
+        data = {
+            "id": 99,
+            "_type": "PlaceholderMedia",
+            "src": 1,
+            "start": 0,
+            "duration": 705600000,
+            "mediaStart": 0,
+            "mediaDuration": 705600000,
+            "scalar": 1,
+        }
+        clip = clip_from_dict(data)
+        assert isinstance(clip, BaseClip)
+        assert clip.clip_type == "PlaceholderMedia"
+        assert clip.id == 99

@@ -808,6 +808,26 @@ class BaseClip:
         })
         return self
 
+    def add_blend_mode(self, *, mode: str = 'normal') -> Self:
+        """Add a blend mode effect."""
+        self.add_effect({
+            'effectName': 'BlendModeEffect',
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {'blendMode': mode},
+        })
+        return self
+
+    def add_fade_effect(self, *, opacity: float = 0.0) -> Self:
+        """Add a fade visual effect."""
+        self.add_effect({
+            'effectName': 'fade',
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {'opacity': opacity},
+        })
+        return self
+
     def remove_effects(self) -> Self:
         """Remove all effects from this clip.
 

@@ -30,6 +30,7 @@ _TYPE_MAP: dict[str, type[BaseClip]] = {
     'Group': Group,
     'Callout': Callout,
     'UnifiedMedia': UnifiedMedia,
+    'PlaceholderMedia': BaseClip,
 }
 
 
