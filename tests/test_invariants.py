@@ -395,3 +395,31 @@ def test_insert_preserves_existing(num_existing):
     original_count = len(data['medias'])
     track.insert_clip_at('AMFile', 1, 0.5, 0.5)
     assert len(data['medias']) == original_count + 1
+
+
+# ------------------------------------------------------------------
+# 17. opacity stays in valid range after set
+# ------------------------------------------------------------------
+
+@given(st.floats(min_value=0.0, max_value=1.0))
+@settings(max_examples=20, deadline=None)
+def test_opacity_stays_valid(value):
+    from camtasia.timeline.clips.base import BaseClip
+    data = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': TICK, 'parameters': {}}
+    clip = BaseClip(data)
+    clip.opacity = value
+    assert 0.0 <= clip.opacity <= 1.0
+
+
+# ------------------------------------------------------------------
+# 18. volume stays non-negative after set
+# ------------------------------------------------------------------
+
+@given(st.floats(min_value=0.0, max_value=10.0))
+@settings(max_examples=20, deadline=None)
+def test_volume_stays_non_negative(value):
+    from camtasia.timeline.clips.base import BaseClip
+    data = {'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': TICK, 'parameters': {}}
+    clip = BaseClip(data)
+    clip.volume = value
+    assert clip.volume >= 0.0
