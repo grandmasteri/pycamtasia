@@ -253,6 +253,15 @@ class Timeline:
                     results.append((track, clip, eff))
         return results
 
+    def remove_all_transitions(self) -> int:
+        """Remove all transitions from all tracks. Returns count removed."""
+        count = 0
+        for track in self.tracks:
+            transitions = track._data.get('transitions', [])
+            count += len(transitions)
+            track._data['transitions'] = []
+        return count
+
     def remove_empty_tracks(self) -> int:
         """Remove all empty tracks. Returns count removed."""
         empty_indices = [t.index for t in self.tracks if t.is_empty]

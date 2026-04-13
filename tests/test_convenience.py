@@ -1645,3 +1645,81 @@ def test_animate_fade_out():
     opacity = data['parameters']['opacity']
     assert opacity['defaultValue'] == 1.0
     assert opacity['keyframes'][-1]['value'] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Track.split_at_time
+# ---------------------------------------------------------------------------
+
+def test_split_at_time():
+    """split_at_time splits all clips spanning the given time."""
+    media = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(10.0)},
+        {'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(10.0), 'duration': seconds_to_ticks(10.0)},
+    ]
+    track = _make_track(medias=media)
+    count = track.split_at_time(5.0)
+    assert count == 1
+    # Should now have 3 clips (clip 1 split into two, clip 2 untouched)
+    assert len(list(track.clips)) == 3
+
+
+# ---------------------------------------------------------------------------
+# Timeline.remove_all_transitions
+# ---------------------------------------------------------------------------
+
+def test_remove_all_transitions():
+    """remove_all_transitions clears transitions from all tracks."""
+    tl = _make_timeline([
+        ('Track1', [{'id': 1, 'start': 0, 'duration': 100}]),
+        ('Track2', [{'id': 2, 'start': 0, 'duration': 100}]),
+    ])
+    # Inject transitions into raw data
+    for track in tl.tracks:
+        track._data['transitions'] = [{'type': 'fade'}, {'type': 'dissolve'}]
+    count = tl.remove_all_transitions()
+    assert count == 4
+    for track in tl.tracks:
+        assert track._data.get('transitions') == []
+
+
+# ---------------------------------------------------------------------------
+# Project.strip_audio
+# ---------------------------------------------------------------------------
+
+def test_strip_audio():
+    """strip_audio removes all AMFile clips from all tracks."""
+    from camtasia.project import Project
+    tl_data = {
+        'sceneTrack': {'scenes': [{'csml': {'tracks': [
+            {'trackIndex': 0, 'medias': [
+                {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
+            ], 'transitions': []},
+            {'trackIndex': 1, 'medias': [
+                {'id': 2, '_type': 'AMFile', 'start': 0, 'duration': 100},
+                {'id': 3, '_type': 'AMFile', 'start': 100, 'duration': 100},
+            ], 'transitions': []},
+        ]}}]},
+        'trackAttributes': [{'ident': 'Video'}, {'ident': 'Audio'}],
+    }
+    proj = object.__new__(Project)
+    proj._data = {'timeline': tl_data}
+    count = proj.strip_audio()
+    assert count == 2
+    # Video clip should remain
+    all_clips = [c for t in proj.timeline.tracks for c in t.clips]
+    assert len(all_clips) == 1
+    assert all_clips[0].clip_type == 'VMFile'
+
+
+def test_split_at_time_at_boundary():
+    """split_at_time at exact clip start should not crash."""
+    from camtasia.timeline.track import Track
+    from camtasia.timing import seconds_to_ticks
+    data = {'trackIndex': 0, 'medias': [
+        {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': seconds_to_ticks(5.0)},
+    ], 'transitions': []}
+    t = Track({'ident': 'test'}, data)
+    # Split at exact start - should handle gracefully
+    actual = t.split_at_time(0.0)
+    assert isinstance(actual, int)

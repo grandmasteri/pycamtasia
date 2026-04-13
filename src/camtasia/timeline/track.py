@@ -907,6 +907,17 @@ class Track:
                 result.append(clip)
         return result
 
+    def split_at_time(self, time_seconds: float) -> int:
+        """Split all clips that span the given time point. Returns count split."""
+        count = 0
+        for clip in list(self.clips_at(time_seconds)):
+            try:
+                self.split_clip(clip.id, time_seconds)
+                count += 1
+            except ValueError:
+                pass  # Can't split at exact start/end
+        return count
+
     def find_clip_at(self, time_seconds: float) -> BaseClip | None:
         """Return the first clip at the given time, or None."""
         clips = self.clips_at(time_seconds)

@@ -1089,6 +1089,13 @@ class Project:
                 f'tracks={self.timeline.track_count}, '
                 f'duration={self.total_duration_seconds():.1f}s)')
 
+    def strip_audio(self) -> int:
+        """Remove all audio clips from all tracks. Returns count removed."""
+        count = 0
+        for track in self.timeline.tracks:
+            count += track.remove_clips_by_type('AMFile')
+        return count
+
     def remove_all_effects(self) -> int:
         """Remove all effects from all clips. Returns count removed."""
         count = 0
