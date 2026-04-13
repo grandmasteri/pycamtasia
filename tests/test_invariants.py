@@ -423,3 +423,38 @@ def test_volume_stays_non_negative(value):
     clip = BaseClip(data)
     clip.volume = value
     assert clip.volume >= 0.0
+
+
+# ------------------------------------------------------------------
+# 19. merge_adjacent preserves total duration
+# ------------------------------------------------------------------
+
+@given(st.integers(min_value=2, max_value=5))
+@settings(max_examples=20, deadline=None)
+def test_merge_adjacent_preserves_total_duration(num_clips):
+    track, data = _make_track()
+    ids = []
+    total_dur = 0
+    for i in range(num_clips):
+        clip = track.add_clip('AMFile', 1, i * TICK, TICK)
+        ids.append(clip.id)
+        total_dur += TICK
+    # Merge first two
+    track.merge_adjacent_clips(ids[0], ids[1])
+    actual_total = sum(m['duration'] for m in data['medias'])
+    assert actual_total == total_dur
+
+
+# ------------------------------------------------------------------
+# 20. set_speed preserves clip start position
+# ------------------------------------------------------------------
+
+@given(st.floats(min_value=0.1, max_value=10.0))
+@settings(max_examples=20, deadline=None)
+def test_set_speed_preserves_start(speed):
+    from camtasia.timeline.clips.base import BaseClip
+    data = {'_type': 'VMFile', 'id': 1, 'start': TICK * 5, 'duration': TICK * 3, 'parameters': {}}
+    clip = BaseClip(data)
+    original_start = clip.start
+    clip.set_speed(speed)
+    assert clip.start == original_start
