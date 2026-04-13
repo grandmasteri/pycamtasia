@@ -1193,6 +1193,45 @@ class BaseClip:
         }
         return self
 
+    def animate(
+        self,
+        *,
+        fade_in: float = 0.0,
+        fade_out: float = 0.0,
+        scale_from: float | None = None,
+        scale_to: float | None = None,
+        move_from: tuple[float, float] | None = None,
+        move_to: tuple[float, float] | None = None,
+    ) -> Self:
+        """Apply common animations in one call.
+
+        Args:
+            fade_in: Fade-in duration in seconds (0 = no fade).
+            fade_out: Fade-out duration in seconds (0 = no fade).
+            scale_from: Starting scale (None = no scale animation).
+            scale_to: Ending scale (None = no scale animation).
+            move_from: Starting (x, y) position (None = no movement).
+            move_to: Ending (x, y) position (None = no movement).
+        """
+        from camtasia.timing import ticks_to_seconds
+        dur = ticks_to_seconds(self.duration)
+
+        if fade_in > 0:
+            self.set_opacity_fade(0.0, 1.0, fade_in)
+        elif fade_out > 0:
+            self.set_opacity_fade(1.0, 0.0, fade_out)
+
+        if scale_from is not None and scale_to is not None:
+            self.set_scale_keyframes([(0.0, scale_from), (dur, scale_to)])
+
+        if move_from is not None and move_to is not None:
+            self.set_position_keyframes([
+                (0.0, move_from[0], move_from[1]),
+                (dur, move_to[0], move_to[1]),
+            ])
+
+        return self
+
     def to_dict(self) -> ClipSummary:
         """Return a summary dict of this clip's key properties."""
         from camtasia.timing import ticks_to_seconds

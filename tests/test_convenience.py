@@ -1573,3 +1573,75 @@ def test_set_crop_keyframes():
     assert params['geometryCrop2']['keyframes'][1]['value'] == pytest.approx(0.3)
     assert params['geometryCrop3']['keyframes'][1]['value'] == pytest.approx(0.4)
     assert params['geometryCrop0']['keyframes'][1]['time'] == t(3.0)
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.animate
+# ---------------------------------------------------------------------------
+
+def test_animate_fade_in():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
+    result = clip.animate(fade_in=2.0)
+    assert result is clip
+    params = clip._data['parameters']['opacity']
+    assert params['keyframes'][0]['value'] == 0.0
+    assert params['keyframes'][1]['value'] == 1.0
+    assert params['keyframes'][1]['time'] == seconds_to_ticks(2.0)
+
+
+def test_animate_scale():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
+    clip.animate(scale_from=0.5, scale_to=1.5)
+    params = clip._data['parameters']
+    assert params['scale0']['keyframes'][0]['value'] == 0.5
+    assert params['scale0']['keyframes'][1]['value'] == 1.5
+    assert params['scale0']['keyframes'][1]['time'] == seconds_to_ticks(10.0)
+
+
+def test_animate_move():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
+    clip.animate(move_from=(0, 0), move_to=(100, 200))
+    params = clip._data['parameters']
+    assert params['translation0']['keyframes'][0]['value'] == 0
+    assert params['translation0']['keyframes'][1]['value'] == 100
+    assert params['translation1']['keyframes'][1]['value'] == 200
+    assert params['translation0']['keyframes'][1]['time'] == seconds_to_ticks(10.0)
+
+
+def test_animate_combined():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
+    clip.animate(fade_in=1.0, scale_from=0.0, scale_to=1.0, move_from=(0, 0), move_to=(50, 50))
+    params = clip._data['parameters']
+    # fade
+    assert params['opacity']['keyframes'][0]['value'] == 0.0
+    assert params['opacity']['keyframes'][1]['value'] == 1.0
+    # scale
+    assert params['scale0']['keyframes'][0]['value'] == 0.0
+    assert params['scale0']['keyframes'][1]['value'] == 1.0
+    # position
+    assert params['translation0']['keyframes'][1]['value'] == 50
+    assert params['translation1']['keyframes'][1]['value'] == 50
+
+
+def test_animate_chaining():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
+    result = clip.animate(fade_in=1.0).animate(scale_from=1.0, scale_to=2.0)
+    assert result is clip
+    params = clip._data['parameters']
+    assert 'opacity' in params
+    assert 'scale0' in params
+
+def test_animate_fade_out():
+    from camtasia.timeline.clips import clip_from_dict
+    from camtasia.timing import seconds_to_ticks
+    data = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(5.0), 'parameters': {}}
+    clip = clip_from_dict(data)
+    clip.animate(fade_out=1.0)
+    opacity = data['parameters']['opacity']
+    assert opacity['defaultValue'] == 1.0
+    assert opacity['keyframes'][-1]['value'] == 0.0
