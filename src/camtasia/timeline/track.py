@@ -11,6 +11,7 @@ from camtasia.timeline.transitions import Transition, TransitionList
 from camtasia.timeline.markers import MarkerList
 from camtasia.timeline.marker import Marker
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+from camtasia.types import ClipType
 
 
 _VALID_CLIP_TYPES = frozenset({
@@ -212,7 +213,7 @@ class Track:
 
     def add_clip(
         self,
-        clip_type: str,
+        clip_type: str | ClipType,
         source_id: int | None,
         start: int,
         duration: int,

@@ -7,6 +7,7 @@ from typing import Any, Self
 from camtasia.effects.base import Effect, effect_from_dict
 from camtasia.effects.visual import Glow
 from camtasia.timing import seconds_to_ticks
+from camtasia.types import BlendMode, ClipType
 
 EDIT_RATE = 705_600_000
 """Ticks per second. Divisible by 30fps, 60fps, 44100Hz, 48000Hz."""
@@ -41,23 +42,23 @@ class BaseClip:
 
     @property
     def is_audio(self) -> bool:
-        return self.clip_type == 'AMFile'
+        return self.clip_type == ClipType.AUDIO
 
     @property
     def is_video(self) -> bool:
-        return self.clip_type in ('VMFile', 'ScreenVMFile')
+        return self.clip_type in (ClipType.VIDEO, ClipType.SCREEN_VIDEO)
 
     @property
     def is_image(self) -> bool:
-        return self.clip_type == 'IMFile'
+        return self.clip_type == ClipType.IMAGE
 
     @property
     def is_group(self) -> bool:
-        return self.clip_type == 'Group'
+        return self.clip_type == ClipType.GROUP
 
     @property
     def is_callout(self) -> bool:
-        return self.clip_type == 'Callout'
+        return self.clip_type == ClipType.CALLOUT
 
     @property
     def start(self) -> int:
@@ -829,7 +830,7 @@ class BaseClip:
         })
         return self
 
-    def add_blend_mode(self, *, mode: int = 16, intensity: float = 1.0) -> Self:
+    def add_blend_mode(self, *, mode: int | BlendMode = BlendMode.NORMAL, intensity: float = 1.0) -> Self:
         """Add a blend mode compositing effect.
 
         Args:

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Self
 
+from camtasia.types import BehaviorPreset
+
 from .base import BaseClip
 
 
@@ -309,7 +311,7 @@ class Callout(BaseClip):
         d['resize-behavior'] = 'resizeText'
         return self
 
-    def add_behavior(self, preset: str = 'Reveal') -> Self:
+    def add_behavior(self, preset: str | BehaviorPreset = BehaviorPreset.REVEAL) -> Self:
         """Add a text behavior animation effect.
 
         Args:

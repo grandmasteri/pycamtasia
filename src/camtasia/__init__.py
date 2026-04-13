@@ -57,6 +57,17 @@ from camtasia.timing import (
     scalar_to_speed,
 )
 
+# Types
+from camtasia.types import (
+    ClipType,
+    EffectName,
+    TransitionType,
+    BehaviorPreset,
+    BlendMode,
+    ValidationLevel,
+    MediaType,
+)
+
 # Color
 from camtasia.color import RGBA, hex_rgb
 
@@ -132,4 +143,12 @@ __all__ = [
     # Color
     "RGBA",
     "hex_rgb",
+    # Types
+    "ClipType",
+    "EffectName",
+    "TransitionType",
+    "BehaviorPreset",
+    "BlendMode",
+    "ValidationLevel",
+    "MediaType",
 ]
