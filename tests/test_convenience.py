@@ -621,3 +621,59 @@ def test_track_names_empty_timeline():
 
 def test_media_count(project):
     assert project.media_count == 0
+
+
+# ---------------------------------------------------------------------------
+# Track.describe
+# ---------------------------------------------------------------------------
+
+def test_track_describe():
+    medias = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3.0)},
+        {'id': 2, '_type': 'AMFile', 'start': seconds_to_ticks(5.0), 'duration': seconds_to_ticks(2.0)},
+    ]
+    track = _make_track(medias=medias, name='Narration')
+    desc = track.describe()
+    assert 'Track 0: Narration' in desc
+    assert 'Clips: 2' in desc
+    assert 'AMFile' in desc and 'VMFile' in desc
+    assert 'Duration: 5.0s' in desc
+    assert 'Gaps: 1' in desc
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.describe
+# ---------------------------------------------------------------------------
+
+def test_clip_describe():
+    from camtasia.timeline.clips import clip_from_dict
+    data = {
+        'id': 42,
+        '_type': 'VMFile',
+        'start': seconds_to_ticks(1.0),
+        'duration': seconds_to_ticks(4.0),
+        'mediaStart': 0,
+        'mediaDuration': seconds_to_ticks(4.0),
+        'scalar': 1,
+        'effects': [{'effectName': 'Glow'}, {'effectName': 'DropShadow'}],
+        'parameters': {},
+        'metadata': {},
+        'animationTracks': {},
+    }
+    clip = clip_from_dict(data)
+    desc = clip.describe()
+    assert 'VMFile (id=42)' in desc
+    assert '1.00s' in desc
+    assert '5.00s' in desc
+    assert '4.00s' in desc
+    assert 'Effects: Glow, DropShadow' in desc
+
+def test_track_describe_with_overlaps():
+    data = {'trackIndex': 0, 'medias': [
+        {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 200},
+        {'id': 2, '_type': 'AMFile', 'start': 100, 'duration': 200},
+    ], 'transitions': []}
+    from camtasia.timeline.track import Track
+    t = Track({'ident': 'Overlap'}, data)
+    actual = t.describe()
+    assert 'Overlaps: 1' in actual

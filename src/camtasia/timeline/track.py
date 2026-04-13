@@ -1279,6 +1279,23 @@ class Track:
         sources = self._all_tracks if self._all_tracks is not None else [self._data]
         return _max_clip_id(sources) + 1
 
+    def describe(self) -> str:
+        """Human-readable track description."""
+        lines = [f'Track {self.index}: {self.name or "(unnamed)"}']
+        lines.append(f'  Clips: {len(self)}')
+        if not self.is_empty:
+            types = sorted({c.clip_type for c in self.clips})
+            lines.append(f'  Types: {", ".join(types)}')
+            from camtasia.timing import ticks_to_seconds
+            lines.append(f'  Duration: {self.total_duration_seconds:.1f}s')
+            gaps = self.gaps()
+            if gaps:
+                lines.append(f'  Gaps: {len(gaps)} ({self.total_gap_seconds:.1f}s total)')
+            overlaps = self.overlaps()
+            if overlaps:
+                lines.append(f'  Overlaps: {len(overlaps)}')
+        return '\n'.join(lines)
+
     def __repr__(self) -> str:
         return f'Track(name={self.name!r}, index={self.index})'
 

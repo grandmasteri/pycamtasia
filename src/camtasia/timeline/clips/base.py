@@ -931,6 +931,16 @@ class BaseClip:
             }
         return self
 
+    def describe(self) -> str:
+        """Human-readable clip description."""
+        from camtasia.timing import ticks_to_seconds
+        lines = [f'{type(self).__name__} (id={self.id})']
+        lines.append(f'  Time: {ticks_to_seconds(self.start):.2f}s - {ticks_to_seconds(self.start + self.duration):.2f}s ({ticks_to_seconds(self.duration):.2f}s)')
+        if self.has_effects:
+            names = [e.get('effectName', '?') for e in self._data.get('effects', [])]
+            lines.append(f'  Effects: {", ".join(names)}')
+        return '\n'.join(lines)
+
     def clone(self) -> dict:
         """Return a deep copy of this clip's data dict.
 
