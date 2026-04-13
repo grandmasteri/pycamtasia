@@ -293,6 +293,13 @@ class Track:
                 return
         raise KeyError(f'No clip with id={clip_id} on track {self.index}')
 
+    def remove_clips_by_type(self, clip_type: str) -> int:
+        """Remove all clips of a specific type. Returns count removed."""
+        to_remove = [c.id for c in self.clips if c.clip_type == clip_type]
+        for cid in to_remove:
+            self.remove_clip(cid)
+        return len(to_remove)
+
     # ------------------------------------------------------------------
     # L2 convenience methods — typed, seconds-based clip creation
     # ------------------------------------------------------------------

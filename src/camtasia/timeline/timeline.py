@@ -86,6 +86,13 @@ class Timeline:
         """
         del self.tracks[index]
 
+    def remove_tracks_by_name(self, name: str) -> int:
+        """Remove all tracks with the given name. Returns count removed."""
+        indices = [t.index for t in self.tracks if t.name == name]
+        for idx in reversed(indices):
+            self.remove_track(idx)
+        return len(indices)
+
     def next_clip_id(self) -> int:
         """Return the next available clip ID across ALL tracks.
 

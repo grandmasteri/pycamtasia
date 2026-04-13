@@ -822,3 +822,49 @@ def test_project_is_empty_false():
     fixture = Path(__file__).parent / 'fixtures' / 'test_project_c.tscproj'
     proj = load_project(fixture)
     assert proj.is_empty is False
+
+
+# ---------------------------------------------------------------------------
+# Track.remove_clips_by_type
+# ---------------------------------------------------------------------------
+
+def test_remove_clips_by_type():
+    medias = [
+        {'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100},
+        {'_type': 'VMFile', 'id': 2, 'start': 100, 'duration': 100},
+        {'_type': 'AMFile', 'id': 3, 'start': 200, 'duration': 100},
+    ]
+    t = _make_track(medias)
+    removed = t.remove_clips_by_type('AMFile')
+    assert removed == 2
+    assert len(list(t.clips)) == 1
+    assert list(t.clips)[0].id == 2
+
+
+def test_remove_clips_by_type_none_found():
+    medias = [
+        {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 100},
+    ]
+    t = _make_track(medias)
+    removed = t.remove_clips_by_type('AMFile')
+    assert removed == 0
+    assert len(list(t.clips)) == 1
+
+
+# ---------------------------------------------------------------------------
+# Timeline.remove_tracks_by_name
+# ---------------------------------------------------------------------------
+
+def test_remove_tracks_by_name():
+    tl = _make_timeline([('Audio', []), ('Video', []), ('Audio', [])])
+    removed = tl.remove_tracks_by_name('Audio')
+    assert removed == 2
+    assert len(list(tl.tracks)) == 1
+    assert list(tl.tracks)[0].name == 'Video'
+
+
+def test_remove_tracks_by_name_none_found():
+    tl = _make_timeline([('Video', []), ('Audio', [])])
+    removed = tl.remove_tracks_by_name('Effects')
+    assert removed == 0
+    assert len(list(tl.tracks)) == 2
