@@ -7,7 +7,7 @@ from typing import Any, Self
 from camtasia.effects.base import Effect, effect_from_dict
 from camtasia.effects.visual import Glow
 from camtasia.timing import seconds_to_ticks
-from camtasia.types import BlendMode, ClipType
+from camtasia.types import BlendMode, ClipType, EffectName
 
 EDIT_RATE = 705_600_000
 """Ticks per second. Divisible by 30fps, 60fps, 44100Hz, 48000Hz."""
@@ -182,7 +182,7 @@ class BaseClip:
         """Raw effect dicts (will be wrapped by the effects module later)."""
         return self._data.get('effects', [])
 
-    def remove_effect_by_name(self, effect_name: str) -> int:
+    def remove_effect_by_name(self, effect_name: str | EffectName) -> int:
         """Remove all effects with the given name. Returns count removed."""
         effects = self._data.get('effects', [])
         original = len(effects)
@@ -344,7 +344,7 @@ class BaseClip:
             The created :class:`Glow` effect.
         """
         record: dict[str, Any] = {
-            'effectName': 'Glow',
+            'effectName': EffectName.GLOW,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'start': seconds_to_ticks(start_seconds),
@@ -583,7 +583,7 @@ class BaseClip:
             Wrapped :class:`DropShadow` effect.
         """
         return self.add_effect({
-            'effectName': 'DropShadow',
+            'effectName': EffectName.DROP_SHADOW,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -610,7 +610,7 @@ class BaseClip:
             Wrapped :class:`Glow` effect.
         """
         return self.add_effect({
-            'effectName': 'Glow',
+            'effectName': EffectName.GLOW,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -629,7 +629,7 @@ class BaseClip:
             Wrapped :class:`RoundCorners` effect.
         """
         return self.add_effect({
-            'effectName': 'RoundCorners',
+            'effectName': EffectName.ROUND_CORNERS,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -656,7 +656,7 @@ class BaseClip:
             saturation: 0.0 to 3.0 (1.0 = no change).
         """
         self.add_effect({
-            'effectName': 'ColorAdjustment',
+            'effectName': EffectName.COLOR_ADJUSTMENT,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -683,7 +683,7 @@ class BaseClip:
         """
         r, g, b, a = color
         self.add_effect({
-            'effectName': 'Border',
+            'effectName': EffectName.BORDER,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -711,7 +711,7 @@ class BaseClip:
         """
         r, g, b = color
         self.add_effect({
-            'effectName': 'Colorize',
+            'effectName': EffectName.COLORIZE,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -747,7 +747,7 @@ class BaseClip:
         """
         r, g, b, a = color
         self.add_effect({
-            'effectName': 'Spotlight',
+            'effectName': EffectName.SPOTLIGHT,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -774,7 +774,7 @@ class BaseClip:
             intensity: Effect intensity 0.0-1.0.
         """
         self.add_effect({
-            'effectName': 'LutEffect',
+            'effectName': EffectName.LUT_EFFECT,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -800,7 +800,7 @@ class BaseClip:
             track_depth: Track depth for matte source.
         """
         self.add_effect({
-            'effectName': 'MediaMatte',
+            'effectName': EffectName.MEDIA_MATTE,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -818,7 +818,7 @@ class BaseClip:
             amount: Emphasis amount 0.0-1.0.
         """
         self.add_effect({
-            'effectName': 'Emphasize',
+            'effectName': EffectName.EMPHASIZE,
             'bypassed': False,
             'category': 'categoryAudioEffects',
             'parameters': {
@@ -838,7 +838,7 @@ class BaseClip:
             intensity: Effect intensity 0.0-1.0.
         """
         self.add_effect({
-            'effectName': 'BlendModeEffect',
+            'effectName': EffectName.BLEND_MODE,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {

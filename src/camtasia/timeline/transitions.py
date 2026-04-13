@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
+from camtasia.types import TransitionType
+
 EDIT_RATE = 705_600_000
 
 
@@ -154,7 +156,7 @@ class TransitionList:
             The newly created Transition.
         """
         return self.add(
-            'FadeThroughBlack',
+            TransitionType.FADE_THROUGH_BLACK,
             left_clip_id,
             right_clip_id,
             duration_ticks,
@@ -183,7 +185,7 @@ class TransitionList:
     ) -> Transition:
         """Add a dissolve transition between two clips."""
         ticks = int(duration_seconds * EDIT_RATE)
-        return self.add('Dissolve', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        return self.add(TransitionType.DISSOLVE, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_fade_to_white(
         self,
@@ -193,7 +195,7 @@ class TransitionList:
     ) -> Transition:
         """Add a fade-through-white transition."""
         ticks = int(duration_seconds * EDIT_RATE)
-        t = self.add('FadeThroughColor', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        t = self.add(TransitionType.FADE_TO_WHITE, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
         t._data['attributes']['Color-red'] = 1.0
         t._data['attributes']['Color-green'] = 1.0
         t._data['attributes']['Color-blue'] = 1.0
@@ -213,10 +215,10 @@ class TransitionList:
             direction: 'left', 'right', 'up', or 'down'.
         """
         name_map = {
-            'left': 'SlideLeft',
-            'right': 'SlideRight',
-            'up': 'SlideUp',
-            'down': 'SlideDown',
+            'left': TransitionType.SLIDE_LEFT,
+            'right': TransitionType.SLIDE_RIGHT,
+            'up': TransitionType.SLIDE_UP,
+            'down': TransitionType.SLIDE_DOWN,
         }
         if direction not in name_map:
             raise ValueError(f'Invalid direction {direction!r}. Use: {sorted(name_map)}')
@@ -237,10 +239,10 @@ class TransitionList:
             direction: 'left', 'right', 'up', or 'down'.
         """
         name_map = {
-            'left': 'WipeLeft',
-            'right': 'WipeRight',
-            'up': 'WipeUp',
-            'down': 'WipeDown',
+            'left': TransitionType.WIPE_LEFT,
+            'right': TransitionType.WIPE_RIGHT,
+            'up': TransitionType.WIPE_UP,
+            'down': TransitionType.WIPE_DOWN,
         }
         if direction not in name_map:
             raise ValueError(f'Invalid direction {direction!r}. Use: {sorted(name_map)}')
@@ -255,7 +257,7 @@ class TransitionList:
     ) -> Transition:
         """Add a card-flip transition."""
         ticks = int(duration_seconds * EDIT_RATE)
-        return self.add('CardFlip', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        return self.add(TransitionType.CARD_FLIP, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_glitch(
         self,
@@ -265,7 +267,7 @@ class TransitionList:
     ) -> Transition:
         """Add a glitch transition."""
         ticks = int(duration_seconds * EDIT_RATE)
-        return self.add('Glitch', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        return self.add(TransitionType.GLITCH, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_linear_blur(
         self,
@@ -275,7 +277,7 @@ class TransitionList:
     ) -> Transition:
         """Add a linear-blur transition."""
         ticks = int(duration_seconds * EDIT_RATE)
-        return self.add('LinearBlur', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        return self.add(TransitionType.LINEAR_BLUR, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_stretch(
         self,
@@ -285,7 +287,7 @@ class TransitionList:
     ) -> Transition:
         """Add a stretch transition."""
         ticks = int(duration_seconds * EDIT_RATE)
-        return self.add('Stretch', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        return self.add(TransitionType.STRETCH, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def remove(self, index: int) -> None:
         """Remove a transition by index.

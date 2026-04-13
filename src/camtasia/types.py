@@ -49,7 +49,7 @@ class TransitionType(str, Enum):
     WIPE_UP = 'WipeUp'
     WIPE_DOWN = 'WipeDown'
     CARD_FLIP = 'CardFlip'
-    GLITCH = 'Glitch3'
+    GLITCH = 'Glitch'
     LINEAR_BLUR = 'LinearBlur'
     STRETCH = 'Stretch'
     FADE = 'Fade'
