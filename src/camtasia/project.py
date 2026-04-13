@@ -240,6 +240,18 @@ class Project:
         return False
 
     @property
+    def track_count(self) -> int:
+        return self.timeline.track_count
+
+    @property
+    def clip_count(self) -> int:
+        return self.timeline.total_clip_count
+
+    @property
+    def duration_seconds(self) -> float:
+        return self.total_duration_seconds()
+
+    @property
     def all_clips(self) -> list[tuple[Track, BaseClip]]:
         """All clips across all tracks as (track, clip) tuples."""
         return [(t, c) for t in self.timeline.tracks for c in t.clips]

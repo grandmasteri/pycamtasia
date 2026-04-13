@@ -194,6 +194,14 @@ class Track:
         return TransitionList(self._data)
 
     @property
+    def has_transitions(self) -> bool:
+        return bool(self._data.get('transitions'))
+
+    @property
+    def transition_count(self) -> int:
+        return len(self._data.get('transitions', []))
+
+    @property
     def markers(self) -> MarkerList:
         """Per-media markers (TOC keyframes in track parameters)."""
         return MarkerList(self._data)

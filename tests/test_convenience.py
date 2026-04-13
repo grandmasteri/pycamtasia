@@ -1038,3 +1038,63 @@ def test_remove_all_effects():
     assert result is clip  # fluent chaining
     assert clip.has_effects is False
     assert clip._data['effects'] == []
+
+
+# ---------------------------------------------------------------------------
+# Project.track_count / clip_count / duration_seconds
+# ---------------------------------------------------------------------------
+
+def test_project_track_count():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+    media = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([[media], []])
+    proj.timeline = Timeline(proj._data['timeline'])
+    assert Project.track_count.fget(proj) == 2
+
+
+def test_project_clip_count():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+    m1 = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
+    m2 = {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200}
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([[m1], [m2]])
+    proj.timeline = Timeline(proj._data['timeline'])
+    assert Project.clip_count.fget(proj) == 2
+
+
+def test_project_duration_seconds(project):
+    actual = project.duration_seconds
+    assert isinstance(actual, float)
+    assert actual >= 0.0
+
+
+# ---------------------------------------------------------------------------
+# Track.has_transitions / transition_count
+# ---------------------------------------------------------------------------
+
+def test_track_has_transitions():
+    track_no = _make_track(medias=[])
+    assert track_no.has_transitions is False
+    track_yes = Track({'ident': 'T'}, {
+        'trackIndex': 0,
+        'medias': [],
+        'transitions': [{'start': 0, 'end': 100, 'duration': 50}],
+    })
+    assert track_yes.has_transitions is True
+
+
+def test_track_transition_count():
+    track_zero = _make_track(medias=[])
+    assert track_zero.transition_count == 0
+    track_two = Track({'ident': 'T'}, {
+        'trackIndex': 0,
+        'medias': [],
+        'transitions': [
+            {'start': 0, 'end': 100, 'duration': 50},
+            {'start': 200, 'end': 300, 'duration': 50},
+        ],
+    })
+    assert track_two.transition_count == 2
