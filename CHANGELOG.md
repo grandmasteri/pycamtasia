@@ -4,7 +4,29 @@ All notable changes to pycamtasia are documented in this file.
 
 ## Unreleased
 
-75 commits. Test count: 925 → 1463 (+538 tests, +58%). 100% coverage maintained throughout.
+85 commits. Test count: 925 → 1494 (+569 tests, +62%). 100% coverage maintained throughout.
+
+### Screenplay & High-Level Workflow
+- `parse_screenplay()` — markdown screenplay parser for structured VO/pause/image blocks
+- `ScreenplayBuilder` — automated VO+pause timeline assembly from parsed screenplays
+- `build_from_screenplay()` pipeline complete (parser + builder)
+
+### Clip API
+- `BaseClip.clone()` — deep copy a clip with new ID allocation
+- `Track.replace_clip()` — replace a clip in-place with transition cascade cleanup
+
+### Effects
+- `MediaMatte` effect class — matte/mask effect for compositing
+
+### Testing & Reliability
+- TechSmith library fixture with validation of 28 sample assets
+- 3 additional Hypothesis invariant tests (trim, extend, swap)
+- Fixed infinite loop in `flatten_to_track` when processing nested groups
+- Template cleanup: reduced template size from 265MB to 12KB
+- Added `pytest-timeout` for test safety
+- Restructured `swap_clips` error handling for 100% coverage in CI
+
+### Previous additions (75 commits)
 
 ### Reliability & Testing
 - Fixed cascade bugs: `remove_clip`, `clear`, `split_clip`, `move_clip`, `duplicate_clip`, `ripple_delete`, `pack_track`, `set_internal_segment_speeds` all cascade-delete transitions referencing affected clips

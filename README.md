@@ -19,7 +19,7 @@ Forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-
 - Speed changes with rational-precision scalars
 - Transform helpers (move, scale, crop, rotation)
 - Keyframe animation (fade in/out, opacity, custom keyframes)
-- Visual effects (drop shadow, round corners, glow)
+- Visual effects (drop shadow, round corners, glow, MediaMatte)
 - Cursor effects (motion blur, shadow, physics, click scaling)
 - Track reordering and clip search across the timeline
 - Word-level transcript parsing from Audiate and WhisperX
@@ -38,18 +38,20 @@ Forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-
 - Project diff: `diff_projects()` for comparing two projects
 - Export: SRT subtitles, project reports (JSON/Markdown), timeline JSON
 - Builders: `TimelineBuilder` for cursor-based assembly, `CalloutBuilder` for styled text
+- Screenplay parser and builder for automated timeline assembly from markdown screenplays
+- TechSmith library asset validation (28 sample assets)
 - Project introspection: `summary()`, `statistics()`, `validate()`
 - Native `.trec` screen recording import via pymediainfo stream probing
 - Behavior presets (text reveal, fade, fly-in, etc.) for callout animations
 - CaptionAttributes API for caption styling (font, color, alignment, opacity)
 - EDL (Edit Decision List) export for video editor interop
 - Project merge utility for combining timelines
-- Clip manipulation: `trim_clip()`, `extend_clip()`, `swap_clips()`, `copy_effects_from()`, `set_time_range()`
+- Clip manipulation: `trim_clip()`, `extend_clip()`, `swap_clips()`, `copy_effects_from()`, `set_time_range()`, `clone()`, `replace_clip()`
 - Project utilities: `Project.compact()`, `Project.copy_to()`, `Project.info()`
 - Timeline utilities: `Timeline.shift_all()`, `Timeline.validate_structure()`
 - Track analysis: `gaps()`, `overlaps()`, `total_duration_seconds`
 - Track iteration: `__iter__`, `__contains__` on tracks and clip lists
-- 1487 tests
+- 1494 tests
 
 ## Reliability
 
@@ -348,7 +350,7 @@ The public API is available directly from `import camtasia`:
   - `timeline.shift_all()`, `timeline.validate_structure()`, `timeline.total_duration_seconds`
   - `track.clear()`, `track.mute()`, `track.unmute()`, `track.hide()`, `track.show()`
   - `track.duplicate_clip()`, `track.move_clip()`, `track.find_clip()`
-  - `track.trim_clip()`, `track.extend_clip()`, `track.swap_clips()`
+  - `track.trim_clip()`, `track.extend_clip()`, `track.swap_clips()`, `track.replace_clip()`
   - `track.gaps()`, `track.overlaps()`, `track.total_duration_seconds`
   - `track.add_lower_third()`, `track.add_screen_recording()`, `track.add_group()`
   - Track iteration: `__iter__`, `__contains__`
@@ -357,11 +359,12 @@ The public API is available directly from `import camtasia`:
   - Animation: `fade_in()`, `fade_out()`, `fade()`, `set_opacity()`, `add_keyframe()`, `clear_keyframes()`
   - Effects: `add_drop_shadow()`, `add_round_corners()`, `add_glow()`, `copy_effects_from()`
   - Time: `set_time_range()`
+  - Clone: `clone()` — deep copy a clip with new ID
   - Audio: `AMFile.is_muted`, `set_gain()`, `normalize_gain()`
   - Group: `is_screen_recording`, `internal_media_src`, `set_internal_segment_speeds()`
   - Media: `media.duration_seconds`
 - **CaptionAttributes** (`camtasia.timeline.captions`): `enabled`, `font_name`, `font_size`, `background_color`, `foreground_color`, `lang`, `alignment`, `opacity`, `background_enabled`
-- **Effects**: `Effect`, `Glow`, `RoundCorners`, `DropShadow`, `CursorPhysics`, `CursorMotionBlur`, `CursorShadow`, `LeftClickScaling`, `SourceEffect`
+- **Effects**: `Effect`, `Glow`, `RoundCorners`, `DropShadow`, `MediaMatte`, `CursorPhysics`, `CursorMotionBlur`, `CursorShadow`, `LeftClickScaling`, `SourceEffect`
 - **Behaviors** (`camtasia.templates.behavior_presets`): `get_behavior_preset()` — preset-based callout animations
 - **Audiate**: `AudiateProject`, `Transcript`, `Word`
 - **Timing**: `EDIT_RATE`, `seconds_to_ticks()`, `ticks_to_seconds()`, `format_duration()`, `speed_to_scalar()`, `scalar_to_speed()`
@@ -383,6 +386,10 @@ The public API is available directly from `import camtasia`:
 - **Builders** (`camtasia.builders`):
   - `TimelineBuilder` — cursor-based fluent API for video assembly
   - `CalloutBuilder` — fluent API for styled text callouts
+  - `ScreenplayBuilder` — automated VO+pause timeline assembly from parsed screenplays
+- **Screenplay** (`camtasia.screenplay`):
+  - `parse_screenplay()` — parse markdown screenplays into structured VO/pause/image blocks
+- **TechSmith Library** — fixture-based validation of 28 TechSmith sample assets
 - **Protocols**: `__eq__`, `__hash__`, `__len__`, `__repr__` on all major types
 
 See the [full API documentation](https://grandmasteri.github.io/pycamtasia/) for detailed parameter docs, examples, and type signatures.
@@ -405,6 +412,8 @@ PYTHONPATH=src pytest tests/ --cov=camtasia --cov-report=term-missing
 # Run tests in parallel
 python -m pytest -n auto
 ```
+
+Test performance: ~13s without coverage, ~27s with coverage (1494 tests, 100% coverage).
 
 The library uses thin wrappers over the underlying JSON dicts — mutations go directly to the dict, so `project.save()` always writes the current state. See `ARCHITECTURE.md` for design details.
 
