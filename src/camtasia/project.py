@@ -261,6 +261,27 @@ class Project:
         """Find all clips of a specific type across all tracks."""
         return [(t, c) for t, c in self.all_clips if c.clip_type == clip_type]
 
+    @property
+    def effect_summary(self) -> dict[str, int]:
+        """Count of each effect type across all clips."""
+        from collections import Counter
+        counts: Counter[str] = Counter()
+        for track in self.timeline.tracks:
+            for clip in track.clips:
+                for e in clip._data.get('effects', []):
+                    counts[e.get('effectName', '?')] += 1
+        return dict(counts)
+
+    @property
+    def clip_type_summary(self) -> dict[str, int]:
+        """Count of each clip type across all tracks."""
+        from collections import Counter
+        counts: Counter[str] = Counter()
+        for track in self.timeline.tracks:
+            for clip in track.clips:
+                counts[clip.clip_type] += 1
+        return dict(counts)
+
     @classmethod
     def from_template(
         cls,

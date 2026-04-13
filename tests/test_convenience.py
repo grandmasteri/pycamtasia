@@ -1814,3 +1814,79 @@ def test_timeline_end_seconds():
     ]
     tl = _make_timeline([('Track1', medias)])
     assert tl.end_seconds == pytest.approx(10.0)
+
+
+# ---------------------------------------------------------------------------
+# Track.clip_types
+# ---------------------------------------------------------------------------
+
+def test_track_clip_types():
+    medias = [
+        {'id': 1, '_type': 'ScreenRecording', 'start': 0, 'duration': 100},
+        {'id': 2, '_type': 'UnifiedMedia', 'start': 100, 'duration': 100},
+        {'id': 3, '_type': 'ScreenRecording', 'start': 200, 'duration': 100},
+    ]
+    t = _make_track(medias)
+    assert t.clip_types == {'ScreenRecording', 'UnifiedMedia'}
+
+
+# ---------------------------------------------------------------------------
+# Track.effect_names
+# ---------------------------------------------------------------------------
+
+def test_track_effect_names():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': 100, 'effects': [
+            {'effectName': 'Blur'},
+            {'effectName': 'Glow'},
+        ]},
+        {'id': 2, 'start': 100, 'duration': 100, 'effects': [
+            {'effectName': 'Blur'},
+        ]},
+    ]
+    t = _make_track(medias)
+    assert t.effect_names == {'Blur', 'Glow'}
+
+
+# ---------------------------------------------------------------------------
+# Project.effect_summary
+# ---------------------------------------------------------------------------
+
+def test_project_effect_summary():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+
+    medias = [
+        {'id': 1, 'start': 0, 'duration': 100, 'effects': [
+            {'effectName': 'Blur'},
+            {'effectName': 'Glow'},
+        ]},
+        {'id': 2, 'start': 100, 'duration': 100, 'effects': [
+            {'effectName': 'Blur'},
+        ]},
+    ]
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([medias])
+    proj.timeline = Timeline(proj._data['timeline'])
+    result = Project.effect_summary.fget(proj)
+    assert result == {'Blur': 2, 'Glow': 1}
+
+
+# ---------------------------------------------------------------------------
+# Project.clip_type_summary
+# ---------------------------------------------------------------------------
+
+def test_project_clip_type_summary():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+
+    medias = [
+        {'id': 1, '_type': 'ScreenRecording', 'start': 0, 'duration': 100},
+        {'id': 2, '_type': 'UnifiedMedia', 'start': 100, 'duration': 100},
+        {'id': 3, '_type': 'ScreenRecording', 'start': 200, 'duration': 100},
+    ]
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([medias])
+    proj.timeline = Timeline(proj._data['timeline'])
+    result = Project.clip_type_summary.fget(proj)
+    assert result == {'ScreenRecording': 2, 'UnifiedMedia': 1}

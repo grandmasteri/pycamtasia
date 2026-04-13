@@ -983,6 +983,20 @@ class Track:
     def image_clips(self) -> list[BaseClip]:
         return self.filter_clips(lambda c: c.is_image)
 
+    @property
+    def clip_types(self) -> set[str]:
+        """Set of unique clip types on this track."""
+        return {c.clip_type for c in self.clips}
+
+    @property
+    def effect_names(self) -> set[str]:
+        """Set of unique effect names across all clips on this track."""
+        names = set()
+        for clip in self.clips:
+            for e in clip._data.get('effects', []):
+                names.add(e.get('effectName', '?'))
+        return names
+
     def end_time_ticks(self) -> int:
         """End time of the last clip on this track, in ticks."""
         max_end = 0
