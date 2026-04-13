@@ -144,6 +144,13 @@ class BaseClip:
         """Raw effect dicts (will be wrapped by the effects module later)."""
         return self._data.get('effects', [])
 
+    def remove_effect_by_name(self, effect_name: str) -> int:
+        """Remove all effects with the given name. Returns count removed."""
+        effects = self._data.get('effects', [])
+        original = len(effects)
+        self._data['effects'] = [e for e in effects if e.get('effectName') != effect_name]
+        return original - len(self._data['effects'])
+
     @property
     def parameters(self) -> dict[str, Any]:
         """Clip parameters dict."""

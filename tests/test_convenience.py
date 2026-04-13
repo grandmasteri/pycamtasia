@@ -493,3 +493,76 @@ def test_all_clips():
     clip_ids = [c.id for t, c in result]
     assert clip_ids == [1, 2, 3]
     assert track_names == ['Track0', 'Track1', 'Track1']
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.remove_effect_by_name
+# ---------------------------------------------------------------------------
+
+def test_remove_effect_by_name():
+    from camtasia.timeline.clips import clip_from_dict
+    data = {
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'effects': [
+            {'effectName': 'Glow'},
+            {'effectName': 'Border'},
+            {'effectName': 'Glow'},
+        ],
+    }
+    clip = clip_from_dict(data)
+    removed = clip.remove_effect_by_name('Glow')
+    assert removed == 2
+    assert len(clip.effects) == 1
+    assert clip.effects[0]['effectName'] == 'Border'
+
+
+def test_remove_effect_by_name_not_found():
+    from camtasia.timeline.clips import clip_from_dict
+    data = {
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'effects': [{'effectName': 'Border'}],
+    }
+    clip = clip_from_dict(data)
+    removed = clip.remove_effect_by_name('Glow')
+    assert removed == 0
+    assert len(clip.effects) == 1
+
+
+# ---------------------------------------------------------------------------
+# Track.clips_at
+# ---------------------------------------------------------------------------
+
+def test_clips_at():
+    medias = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(5.0)},
+        {'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(5.0), 'duration': seconds_to_ticks(3.0)},
+    ]
+    track = _make_track(medias=medias)
+    result = track.clips_at(2.0)
+    assert len(result) == 1
+    assert result[0].id == 1
+
+    result2 = track.clips_at(6.0)
+    assert len(result2) == 1
+    assert result2[0].id == 2
+
+
+def test_clips_at_empty():
+    track = _make_track(medias=[])
+    assert track.clips_at(1.0) == []
+
+
+# ---------------------------------------------------------------------------
+# Timeline.tracks_with_clips
+# ---------------------------------------------------------------------------
+
+def test_tracks_with_clips():
+    tl = _make_timeline([
+        ('A', [{'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}]),
+        ('B', []),
+        ('C', [{'id': 2, '_type': 'AMFile', 'start': 0, 'duration': 50}]),
+    ])
+    result = tl.tracks_with_clips
+    assert len(result) == 2
+    names = [t.name for t in result]
+    assert names == ['A', 'C']

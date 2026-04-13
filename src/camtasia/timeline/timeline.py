@@ -200,6 +200,11 @@ class Timeline:
         return [t for t in self.tracks if t.is_empty]
 
     @property
+    def tracks_with_clips(self) -> list[Track]:
+        """Return only tracks that have clips."""
+        return [t for t in self.tracks if not t.is_empty]
+
+    @property
     def all_effects(self) -> list[tuple[Track, BaseClip, dict]]:
         """All effects across all tracks as (track, clip, effect_dict) tuples."""
         results = []

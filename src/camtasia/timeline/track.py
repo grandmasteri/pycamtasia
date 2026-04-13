@@ -877,6 +877,16 @@ class Track:
         """True if this track has no clips."""
         return len(self) == 0
 
+    def clips_at(self, time_seconds: float) -> list[BaseClip]:
+        """Return all clips that span the given time point."""
+        from camtasia.timing import seconds_to_ticks
+        t = seconds_to_ticks(time_seconds)
+        result = []
+        for clip in self.clips:
+            if clip.start <= t < clip.start + clip.duration:
+                result.append(clip)
+        return result
+
     @property
     def total_duration_seconds(self) -> float:
         """Total duration of all clips on this track in seconds."""
