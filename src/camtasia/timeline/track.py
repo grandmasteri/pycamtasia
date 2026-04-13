@@ -1266,6 +1266,38 @@ class Track:
             raise KeyError(f'No clip with id={missing}')
         a['start'], b['start'] = b['start'], a['start']
 
+    def merge_adjacent_clips(self, clip_id_a: int, clip_id_b: int) -> BaseClip:
+        """Merge two adjacent clips into one by extending the first.
+
+        The first clip's duration is extended to cover both clips.
+        The second clip is removed. Transitions between them are removed.
+
+        Args:
+            clip_id_a: ID of the first (earlier) clip.
+            clip_id_b: ID of the second (later) clip to merge into the first.
+
+        Returns:
+            The extended first clip.
+
+        Raises:
+            KeyError: Either clip not found.
+        """
+        medias = self._data.get('medias', [])
+        a = b = None
+        for m in medias:
+            if m.get('id') == clip_id_a:
+                a = m
+            elif m.get('id') == clip_id_b:
+                b = m
+        if a is None or b is None:
+            missing = clip_id_a if a is None else clip_id_b
+            raise KeyError(f'No clip with id={missing}')
+        # Extend a to cover b
+        a['duration'] = (b['start'] + b['duration']) - a['start']
+        # Remove b (cascade-deletes transitions)
+        self.remove_clip(clip_id_b)
+        return clip_from_dict(a)
+
     def replace_clip(self, clip_id: int, new_clip_data: dict) -> BaseClip:
         """Replace a clip with new data, preserving the timeline position.
 

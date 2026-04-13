@@ -184,3 +184,22 @@ class TestInsertClipAt:
         # The existing clip that was at 5s should now be at 7s (shifted by 2s)
         updated = track.clips[existing.id]
         assert updated.start == seconds_to_ticks(7.0)
+
+
+class TestMergeAdjacentClips:
+    def test_merge_adjacent_clips(self):
+        track = _make_track()
+        c1 = track.add_callout("A", 0, 5)
+        c2 = track.add_callout("B", 5, 3)
+
+        merged = track.merge_adjacent_clips(c1.id, c2.id)
+
+        assert merged.duration == seconds_to_ticks(8)
+        assert len(list(track.clips)) == 1
+
+    def test_merge_adjacent_clips_nonexistent_raises(self):
+        track = _make_track()
+        c1 = track.add_callout("A", 0, 5)
+
+        with pytest.raises(KeyError, match="No clip with id=999"):
+            track.merge_adjacent_clips(c1.id, 999)
