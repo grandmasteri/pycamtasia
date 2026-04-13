@@ -1138,3 +1138,69 @@ def test_timeline_describe():
     assert 'Timeline:' in desc
     assert '2 tracks' in desc
     assert '1 clips' in desc
+
+
+# ---------------------------------------------------------------------------
+# StitchedMedia.min_media_start
+# ---------------------------------------------------------------------------
+
+def test_stitched_min_media_start():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': 100,
+                           'mediaStart': 0, 'mediaDuration': 100, 'minMediaStart': 42})
+    assert clip.min_media_start == 42
+    # default when key absent
+    clip2 = clip_from_dict({'_type': 'StitchedMedia', 'id': 2, 'start': 0, 'duration': 100,
+                            'mediaStart': 0, 'mediaDuration': 100})
+    assert clip2.min_media_start == 0
+
+
+# ---------------------------------------------------------------------------
+# PlaceholderMedia.subtitle
+# ---------------------------------------------------------------------------
+
+def test_placeholder_subtitle():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100,
+                           'metadata': {'placeHolderSubTitle': 'hello'}})
+    assert clip.subtitle == 'hello'
+    clip.subtitle = 'world'
+    assert clip.subtitle == 'world'
+    # default when absent
+    clip2 = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 2, 'start': 0, 'duration': 100})
+    assert clip2.subtitle == ''
+
+
+# ---------------------------------------------------------------------------
+# PlaceholderMedia.width / height
+# ---------------------------------------------------------------------------
+
+def test_placeholder_width_height():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100,
+                           'attributes': {'width': 1920.0, 'height': 1080.0}})
+    assert clip.width == 1920.0
+    assert clip.height == 1080.0
+    # defaults
+    clip2 = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 2, 'start': 0, 'duration': 100})
+    assert clip2.width == 0.0
+    assert clip2.height == 0.0
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.is_stitched / is_placeholder
+# ---------------------------------------------------------------------------
+
+def test_is_stitched():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': 100,
+                           'mediaStart': 0, 'mediaDuration': 100})
+    assert clip.is_stitched is True
+    assert clip.is_placeholder is False
+
+
+def test_is_placeholder():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100})
+    assert clip.is_placeholder is True
+    assert clip.is_stitched is False

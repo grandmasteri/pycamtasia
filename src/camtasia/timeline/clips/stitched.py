@@ -48,6 +48,10 @@ class StitchedMedia(BaseClip):
         """Number of nested clip segments."""
         return len(self._data.get('medias', []))
 
+    @property
+    def min_media_start(self) -> int:
+        return self._data.get('minMediaStart', 0)
+
     def clear_segments(self) -> None:
         """Remove all nested segments."""
         self._data['medias'] = []

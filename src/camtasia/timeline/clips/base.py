@@ -61,6 +61,14 @@ class BaseClip:
         return self.clip_type == ClipType.CALLOUT
 
     @property
+    def is_stitched(self) -> bool:
+        return self.clip_type == ClipType.STITCHED_MEDIA
+
+    @property
+    def is_placeholder(self) -> bool:
+        return self.clip_type == ClipType.PLACEHOLDER
+
+    @property
     def start(self) -> int:
         """Timeline position in ticks."""
         return self._data['start']
