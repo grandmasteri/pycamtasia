@@ -1723,3 +1723,45 @@ def test_split_at_time_at_boundary():
     # Split at exact start - should handle gracefully
     actual = t.split_at_time(0.0)
     assert isinstance(actual, int)
+
+
+# ---------------------------------------------------------------------------
+# Timeline.reverse_track_order
+# ---------------------------------------------------------------------------
+
+def test_reverse_track_order():
+    tl = _make_timeline([('A', []), ('B', []), ('C', [])])
+    tl.reverse_track_order()
+    names = [t.name for t in tl.tracks]
+    assert names == ['C', 'B', 'A']
+    for i, t in enumerate(tl.tracks):
+        assert t._data['trackIndex'] == i
+
+
+# ---------------------------------------------------------------------------
+# Track.remove_all_effects
+# ---------------------------------------------------------------------------
+
+def test_track_remove_all_effects():
+    data = {'trackIndex': 0, 'medias': [
+        {'id': 1, 'start': 0, 'duration': 100, 'effects': [{'type': 'blur'}, {'type': 'glow'}]},
+        {'id': 2, 'start': 100, 'duration': 100, 'effects': [{'type': 'shadow'}]},
+    ]}
+    t = Track({'ident': 'test'}, data)
+    removed = t.remove_all_effects()
+    assert removed == 3
+    for clip in t.clips:
+        assert clip._data['effects'] == []
+
+
+# ---------------------------------------------------------------------------
+# Timeline.sort_tracks_by_name
+# ---------------------------------------------------------------------------
+
+def test_sort_tracks_by_name():
+    tl = _make_timeline([('Zebra', []), ('Apple', []), ('Mango', [])])
+    tl.sort_tracks_by_name()
+    names = [t.name for t in tl.tracks]
+    assert names == ['Apple', 'Mango', 'Zebra']
+    for i, t in enumerate(tl.tracks):
+        assert t._data['trackIndex'] == i

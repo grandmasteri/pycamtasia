@@ -503,6 +503,26 @@ class Timeline:
             count += track.apply_to_all(fn)
         return count
 
+    def reverse_track_order(self) -> None:
+        """Reverse the order of all tracks."""
+        tracks = self._data['sceneTrack']['scenes'][0]['csml']['tracks']
+        attrs = self._data['trackAttributes']
+        tracks.reverse()
+        attrs.reverse()
+        for i, t in enumerate(tracks):
+            t['trackIndex'] = i
+
+    def sort_tracks_by_name(self) -> None:
+        """Sort tracks alphabetically by name."""
+        tracks = self._data['sceneTrack']['scenes'][0]['csml']['tracks']
+        attrs = self._data['trackAttributes']
+        pairs = list(zip(tracks, attrs))
+        pairs.sort(key=lambda p: p[1].get('ident', ''))
+        for i, (t, a) in enumerate(pairs):
+            t['trackIndex'] = i
+        tracks[:] = [p[0] for p in pairs]
+        attrs[:] = [p[1] for p in pairs]
+
     # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------

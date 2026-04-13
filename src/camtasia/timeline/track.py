@@ -1410,6 +1410,14 @@ class Track:
         """Return a list of clip summary dicts."""
         return [c.to_dict() for c in self.clips]
 
+    def remove_all_effects(self) -> int:
+        """Remove all effects from all clips on this track. Returns count."""
+        count = 0
+        for clip in self.clips:
+            count += len(clip._data.get('effects', []))
+            clip._data['effects'] = []
+        return count
+
 
 class _ClipAccessor:
     """Lightweight iterable/indexable accessor over a track's clips."""
