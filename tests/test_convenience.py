@@ -1438,3 +1438,69 @@ def test_find_media_by_extension(project):
     assert len(actual) >= 1
     actual_none = project.find_media_by_extension('xyz')
     assert actual_none == []
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.set_position_keyframes
+# ---------------------------------------------------------------------------
+
+def test_set_position_keyframes():
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = list(track.clips)[0]
+    result = clip.set_position_keyframes([(0.0, 100, 200), (2.0, 300, 400)])
+    assert result is clip  # fluent return
+    params = clip._data['parameters']
+    assert params['translation0']['defaultValue'] == 100
+    assert params['translation1']['defaultValue'] == 200
+    assert len(params['translation0']['keyframes']) == 2
+    assert len(params['translation1']['keyframes']) == 2
+    kf_x = params['translation0']['keyframes'][1]
+    assert kf_x['value'] == 300
+    assert kf_x['time'] == t(2.0)
+    kf_y = params['translation1']['keyframes'][1]
+    assert kf_y['value'] == 400
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.set_scale_keyframes
+# ---------------------------------------------------------------------------
+
+def test_set_scale_keyframes():
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = list(track.clips)[0]
+    result = clip.set_scale_keyframes([(0.0, 1.0), (3.0, 2.5)])
+    assert result is clip
+    params = clip._data['parameters']
+    assert params['scale0']['defaultValue'] == 1.0
+    assert params['scale1']['defaultValue'] == 1.0
+    assert len(params['scale0']['keyframes']) == 2
+    kf = params['scale0']['keyframes'][1]
+    assert kf['value'] == 2.5
+    assert kf['time'] == t(3.0)
+    # scale0 and scale1 should have independent lists
+    params['scale0']['keyframes'].append({'extra': True})
+    assert len(params['scale1']['keyframes']) == 2
+
+
+# ---------------------------------------------------------------------------
+# Project.remove_all_effects
+# ---------------------------------------------------------------------------
+
+def test_project_remove_all_effects(project):
+    # Add a clip with effects to the project
+    track = list(project.timeline.tracks)[0]
+    media = {
+        '_type': 'VMFile', 'id': 999, 'start': 0, 'duration': seconds_to_ticks(5.0),
+        'effects': [{'effectName': 'FakeEffect1'}, {'effectName': 'FakeEffect2'}],
+    }
+    track._data['medias'].append(media)
+    removed = project.remove_all_effects()
+    assert removed >= 2
+    # Verify effects are cleared
+    for t in project.timeline.tracks:
+        for clip in t.clips:
+            assert clip._data.get('effects', []) == []

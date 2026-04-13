@@ -1089,6 +1089,15 @@ class Project:
                 f'tracks={self.timeline.track_count}, '
                 f'duration={self.total_duration_seconds():.1f}s)')
 
+    def remove_all_effects(self) -> int:
+        """Remove all effects from all clips. Returns count removed."""
+        count = 0
+        for track in self.timeline.tracks:
+            for clip in track.clips:
+                count += len(clip._data.get('effects', []))
+                clip._data['effects'] = []
+        return count
+
     def to_dict(self) -> dict:
         """Return a deep copy of the project data dict."""
         import copy

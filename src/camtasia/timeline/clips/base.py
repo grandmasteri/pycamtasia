@@ -1112,6 +1112,40 @@ class BaseClip:
         }
         return self
 
+    def set_position_keyframes(self, keyframes: list[tuple[float, float, float]]) -> Self:
+        """Set position keyframes for animated movement.
+
+        Args:
+            keyframes: List of (time_seconds, x, y) tuples.
+        """
+        from camtasia.timing import seconds_to_ticks
+        params = self._data.setdefault('parameters', {})
+        x_kfs = []
+        y_kfs = []
+        for t, x, y in keyframes:
+            ticks = seconds_to_ticks(t)
+            x_kfs.append({'endTime': ticks, 'time': ticks, 'value': x, 'duration': 0})
+            y_kfs.append({'endTime': ticks, 'time': ticks, 'value': y, 'duration': 0})
+        params['translation0'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': x_kfs}
+        params['translation1'] = {'type': 'double', 'defaultValue': keyframes[0][2], 'keyframes': y_kfs}
+        return self
+
+    def set_scale_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
+        """Set scale keyframes for animated scaling.
+
+        Args:
+            keyframes: List of (time_seconds, scale) tuples.
+        """
+        from camtasia.timing import seconds_to_ticks
+        params = self._data.setdefault('parameters', {})
+        kfs = []
+        for t, s in keyframes:
+            ticks = seconds_to_ticks(t)
+            kfs.append({'endTime': ticks, 'time': ticks, 'value': s, 'duration': 0})
+        params['scale0'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': kfs}
+        params['scale1'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': list(kfs)}
+        return self
+
     def set_volume_fade(self, start_volume: float = 1.0, end_volume: float = 0.0, duration_seconds: float | None = None) -> Self:
         """Add a volume fade keyframe animation."""
         from camtasia.timing import seconds_to_ticks
