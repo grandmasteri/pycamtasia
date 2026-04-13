@@ -49,7 +49,7 @@ Forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-
 - Timeline utilities: `Timeline.shift_all()`, `Timeline.validate_structure()`
 - Track analysis: `gaps()`, `overlaps()`, `total_duration_seconds`
 - Track iteration: `__iter__`, `__contains__` on tracks and clip lists
-- 1463 tests
+- 1487 tests
 
 ## Reliability
 
