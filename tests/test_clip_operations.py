@@ -168,3 +168,19 @@ class TestSwapClips:
         t = Track({'ident': 'test'}, data)
         with pytest.raises(KeyError, match='999'):
             t.swap_clips(1, 999)
+
+
+class TestInsertClipAt:
+    def test_insert_clip_at_shifts_subsequent(self):
+        track = _make_track()
+        # Place a clip at 5s with duration 3s
+        existing = track.add_clip('AMFile', 1, seconds_to_ticks(5), seconds_to_ticks(3))
+
+        # Insert a 2s clip at 4s — should push the existing clip forward by 2s
+        inserted = track.insert_clip_at('AMFile', 2, position_seconds=4.0, duration_seconds=2.0)
+
+        assert inserted.start == seconds_to_ticks(4.0)
+        assert inserted.duration == seconds_to_ticks(2.0)
+        # The existing clip that was at 5s should now be at 7s (shifted by 2s)
+        updated = track.clips[existing.id]
+        assert updated.start == seconds_to_ticks(7.0)

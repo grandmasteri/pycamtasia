@@ -252,6 +252,26 @@ class Track:
         self._data.setdefault('medias', []).append(record)
         return clip_from_dict(record)
 
+    def insert_clip_at(
+        self,
+        clip_type: str,
+        source_id: int | None,
+        position_seconds: float,
+        duration_seconds: float,
+    ) -> BaseClip:
+        """Insert a clip at a position, shifting subsequent clips forward.
+
+        Combines add_clip with ripple_insert behavior.
+        """
+        from camtasia.timing import seconds_to_ticks
+        from camtasia.operations.layout import ripple_insert
+        ripple_insert(self, position_seconds, duration_seconds)
+        return self.add_clip(
+            clip_type, source_id,
+            seconds_to_ticks(position_seconds),
+            seconds_to_ticks(duration_seconds),
+        )
+
     def remove_clip(self, clip_id: int) -> None:
         """Remove a clip by its ID.
 
