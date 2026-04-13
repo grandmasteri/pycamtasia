@@ -24,6 +24,7 @@ EMPTY_WAV = FIXTURES / 'empty.wav'
 pytestmark = [
     pytest.mark.skipif(not CAMTASIA_APP.exists(), reason='Camtasia not installed'),
     pytest.mark.integration,
+    pytest.mark.timeout(30),  # Integration tests need 15s+ for Camtasia launch
 ]
 
 
@@ -231,5 +232,48 @@ class TestNewEffects:
         c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=2.0)
         c2 = track.add_audio(media.id, start_seconds=2.0, duration_seconds=2.0)
         track.transitions.add_dissolve(c1.id, c2.id, seconds_to_ticks(0.5))
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+
+class TestAdvancedOperations:
+    @pytest.mark.integration
+    @pytest.mark.xfail(reason="split_clip after transition needs investigation")
+    def test_split_and_transition_opens(self, tmp_path):
+        """Project with split clip and transition opens without exceptions."""
+        proj = _make_project(tmp_path)
+        media = proj.import_media(EMPTY_WAV)
+        track = proj.timeline.add_track('Audio')
+        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
+        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
+        track.transitions.add_fade_through_black(c1.id, c2.id, seconds_to_ticks(0.5))
+        _left, _right = track.split_clip(c1.id, split_at_seconds=2.0)
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_media_matte_opens(self, tmp_path):
+        """Project with media matte effect opens without exceptions."""
+        proj = _make_project(tmp_path)
+        img = _create_test_image(tmp_path)
+        media = proj.import_media(img)
+        matte_track = proj.timeline.add_track('Matte')
+        matte_track.add_image(media.id, start_seconds=0.0, duration_seconds=5.0)
+        content_track = proj.timeline.add_track('Content')
+        clip = content_track.add_image(media.id, start_seconds=0.0, duration_seconds=5.0)
+        clip.add_media_matte()
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    @pytest.mark.integration
+    def test_title_card_opens(self, tmp_path):
+        """Project with styled lower third title opens without exceptions."""
+        proj = _make_project(tmp_path)
+        track = proj.timeline.add_track('Titles')
+        track.add_lower_third(
+            'Presenter Name', 'Senior Engineer',
+            start_seconds=0.0, duration_seconds=5.0,
+            font_weight=700, scale=1.2,
+        )
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
