@@ -203,6 +203,32 @@ class BaseClip:
         return self._data.get('parameters', {})
 
     @property
+    def opacity(self) -> float:
+        """Clip opacity (0.0–1.0)."""
+        params = self._data.get('parameters', {})
+        val = params.get('opacity', 1.0)
+        return val['defaultValue'] if isinstance(val, dict) else val
+
+    @opacity.setter
+    def opacity(self, value: float) -> None:
+        if not 0.0 <= value <= 1.0:
+            raise ValueError(f'opacity must be 0.0-1.0, got {value}')
+        self._data.setdefault('parameters', {})['opacity'] = value
+
+    @property
+    def volume(self) -> float:
+        """Audio volume (>= 0.0)."""
+        params = self._data.get('parameters', {})
+        val = params.get('volume', 1.0)
+        return val['defaultValue'] if isinstance(val, dict) else val
+
+    @volume.setter
+    def volume(self, value: float) -> None:
+        if value < 0.0:
+            raise ValueError(f'volume must be >= 0.0, got {value}')
+        self._data.setdefault('parameters', {})['volume'] = value
+
+    @property
     def metadata(self) -> dict[str, Any]:
         """Clip metadata dict."""
         return self._data.get('metadata', {})

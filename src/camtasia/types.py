@@ -99,6 +99,21 @@ class CalloutShape(str, Enum):
     STAR = 'star'
 
 
+class InterpolationType(str, Enum):
+    """Keyframe interpolation types."""
+    LINEAR = 'linr'
+    EASE_IN_OUT_ELASTIC = 'eioe'
+    HOLD = 'hold'
+
+
+class TrackType(str, Enum):
+    """Track content types (for future use)."""
+    AUDIO = 'audio'
+    VIDEO = 'video'
+    ANNOTATION = 'annotation'
+    MIXED = 'mixed'
+
+
 class ValidationLevel(str, Enum):
     """Validation issue severity levels."""
     ERROR = 'error'

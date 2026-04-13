@@ -55,6 +55,10 @@ class Track:
         """Set the track name."""
         self._attributes['ident'] = value
 
+    def rename(self, new_name: str) -> None:
+        """Rename this track."""
+        self._attributes['ident'] = new_name
+
     @property
     def index(self) -> int:
         """Track index (position in the track list)."""

@@ -1204,3 +1204,74 @@ def test_is_placeholder():
     clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100})
     assert clip.is_placeholder is True
     assert clip.is_stitched is False
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.opacity
+# ---------------------------------------------------------------------------
+
+def test_clip_opacity_get_set():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 100})
+    assert clip.opacity == 1.0  # default
+    clip.opacity = 0.5
+    assert clip.opacity == 0.5
+    # keyframe-style dict
+    clip2 = clip_from_dict({'_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 100,
+                            'parameters': {'opacity': {'type': 'float', 'defaultValue': 0.75, 'keyframes': []}}})
+    assert clip2.opacity == 0.75
+
+
+def test_clip_opacity_validation():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 100})
+    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+        clip.opacity = 1.5
+    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+        clip.opacity = -0.1
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.volume
+# ---------------------------------------------------------------------------
+
+def test_clip_volume_get_set():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100})
+    assert clip.volume == 1.0  # default
+    clip.volume = 2.0
+    assert clip.volume == 2.0
+    # keyframe-style dict
+    clip2 = clip_from_dict({'_type': 'AMFile', 'id': 2, 'start': 0, 'duration': 100,
+                            'parameters': {'volume': {'type': 'float', 'defaultValue': 0.5, 'keyframes': []}}})
+    assert clip2.volume == 0.5
+
+
+def test_clip_volume_validation():
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict({'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100})
+    with pytest.raises(ValueError, match='volume must be >= 0.0'):
+        clip.volume = -0.5
+
+
+# ---------------------------------------------------------------------------
+# Track.rename
+# ---------------------------------------------------------------------------
+
+def test_track_rename():
+    track = _make_track(name='Original')
+    assert track.name == 'Original'
+    track.rename('Renamed')
+    assert track.name == 'Renamed'
+
+
+# ---------------------------------------------------------------------------
+# InterpolationType enum
+# ---------------------------------------------------------------------------
+
+def test_interpolation_type_values():
+    from camtasia.types import InterpolationType
+    assert InterpolationType.LINEAR == 'linr'
+    assert InterpolationType.EASE_IN_OUT_ELASTIC == 'eioe'
+    assert InterpolationType.HOLD == 'hold'
+    assert len(InterpolationType) == 3
