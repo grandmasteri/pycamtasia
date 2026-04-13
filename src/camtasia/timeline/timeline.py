@@ -487,6 +487,13 @@ class Timeline:
                 new_start = m.get('start', 0) + offset
                 m['start'] = max(0, new_start)
 
+    def apply_to_all_clips(self, fn) -> int:
+        """Apply a function to every clip on every track. Returns count."""
+        count = 0
+        for track in self.tracks:
+            count += track.apply_to_all(fn)
+        return count
+
     # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------

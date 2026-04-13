@@ -1504,3 +1504,72 @@ def test_project_remove_all_effects(project):
     for t in project.timeline.tracks:
         for clip in t.clips:
             assert clip._data.get('effects', []) == []
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.set_rotation_keyframes
+# ---------------------------------------------------------------------------
+
+def test_set_rotation_keyframes():
+    import math
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = list(track.clips)[0]
+    result = clip.set_rotation_keyframes([(0.0, 0), (2.0, 90), (5.0, 180)])
+    assert result is clip  # fluent
+    params = clip._data['parameters']
+    rot = params['rotation']
+    assert rot['type'] == 'double'
+    assert rot['defaultValue'] == pytest.approx(math.radians(0))
+    assert len(rot['keyframes']) == 3
+    assert rot['keyframes'][1]['value'] == pytest.approx(math.radians(90))
+    assert rot['keyframes'][1]['time'] == t(2.0)
+    assert rot['keyframes'][2]['value'] == pytest.approx(math.radians(180))
+
+
+# ---------------------------------------------------------------------------
+# Timeline.apply_to_all_clips
+# ---------------------------------------------------------------------------
+
+def test_timeline_apply_to_all_clips():
+    t = seconds_to_ticks
+    tl = _make_timeline([
+        ('A', [{'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(5.0)}]),
+        ('B', [
+            {'_type': 'VMFile', 'id': 2, 'start': 0, 'duration': t(3.0)},
+            {'_type': 'VMFile', 'id': 3, 'start': t(3.0), 'duration': t(2.0)},
+        ]),
+    ])
+    touched = []
+    count = tl.apply_to_all_clips(lambda c: touched.append(c.id))
+    assert count == 3
+    assert sorted(touched) == [1, 2, 3]
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.set_crop_keyframes
+# ---------------------------------------------------------------------------
+
+def test_set_crop_keyframes():
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = list(track.clips)[0]
+    result = clip.set_crop_keyframes([
+        (0.0, 0.0, 0.0, 0.0, 0.0),
+        (3.0, 0.1, 0.2, 0.3, 0.4),
+    ])
+    assert result is clip  # fluent
+    params = clip._data['parameters']
+    for i, name in enumerate(['geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3']):
+        assert name in params
+        assert params[name]['type'] == 'double'
+        assert len(params[name]['keyframes']) == 2
+        assert params[name]['keyframes'][0]['value'] == 0.0
+    # Check second keyframe values: left=0.1, top=0.2, right=0.3, bottom=0.4
+    assert params['geometryCrop0']['keyframes'][1]['value'] == pytest.approx(0.1)
+    assert params['geometryCrop1']['keyframes'][1]['value'] == pytest.approx(0.2)
+    assert params['geometryCrop2']['keyframes'][1]['value'] == pytest.approx(0.3)
+    assert params['geometryCrop3']['keyframes'][1]['value'] == pytest.approx(0.4)
+    assert params['geometryCrop0']['keyframes'][1]['time'] == t(3.0)

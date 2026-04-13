@@ -1146,6 +1146,39 @@ class BaseClip:
         params['scale1'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': list(kfs)}
         return self
 
+    def set_rotation_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
+        """Set rotation keyframes for animated rotation.
+
+        Args:
+            keyframes: List of (time_seconds, rotation_degrees) tuples.
+        """
+        from camtasia.timing import seconds_to_ticks
+        import math
+        params = self._data.setdefault('parameters', {})
+        kfs = []
+        for t, deg in keyframes:
+            ticks = seconds_to_ticks(t)
+            kfs.append({'endTime': ticks, 'time': ticks, 'value': math.radians(deg), 'duration': 0})
+        params['rotation'] = {'type': 'double', 'defaultValue': kfs[0]['value'], 'keyframes': kfs}
+        return self
+
+    def set_crop_keyframes(self, keyframes: list[tuple[float, float, float, float, float]]) -> Self:
+        """Set crop keyframes for animated cropping.
+
+        Args:
+            keyframes: List of (time_seconds, left, top, right, bottom) tuples.
+                Values 0.0-1.0.
+        """
+        from camtasia.timing import seconds_to_ticks
+        params = self._data.setdefault('parameters', {})
+        for i, name in enumerate(['geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3']):
+            kfs = []
+            for kf in keyframes:
+                ticks = seconds_to_ticks(kf[0])
+                kfs.append({'endTime': ticks, 'time': ticks, 'value': kf[i + 1], 'duration': 0})
+            params[name] = {'type': 'double', 'defaultValue': kfs[0]['value'], 'keyframes': kfs}
+        return self
+
     def set_volume_fade(self, start_volume: float = 1.0, end_volume: float = 0.0, duration_seconds: float | None = None) -> Self:
         """Add a volume fade keyframe animation."""
         from camtasia.timing import seconds_to_ticks
