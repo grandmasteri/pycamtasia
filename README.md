@@ -51,7 +51,7 @@ Forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-
 - Timeline utilities: `Timeline.shift_all()`, `Timeline.validate_structure()`
 - Track analysis: `gaps()`, `overlaps()`, `total_duration_seconds`
 - Track iteration: `__iter__`, `__contains__` on tracks and clip lists
-- 1543 tests
+- 1554 tests
 
 ## Reliability
 
@@ -413,7 +413,7 @@ PYTHONPATH=src pytest tests/ --cov=camtasia --cov-report=term-missing
 python -m pytest -n auto
 ```
 
-Test performance: ~13s without coverage, ~27s with coverage (1543 tests, 100% coverage).
+Test performance: ~13s without coverage, ~27s with coverage (1554 tests, 100% coverage).
 
 The library uses thin wrappers over the underlying JSON dicts — mutations go directly to the dict, so `project.save()` always writes the current state. See `ARCHITECTURE.md` for design details.
 
