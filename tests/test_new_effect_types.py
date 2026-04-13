@@ -55,3 +55,27 @@ class TestAddEmphasize:
         clip = BaseClip(data)
         clip.add_emphasize(amount=0.8)
         assert data["effects"][0]["parameters"]["emphasizeAmount"] == 0.8
+
+
+class TestAddMediaMatte:
+    def test_add_media_matte_creates_effect(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        result = clip.add_media_matte()
+        effect = data["effects"][0]
+        assert effect["effectName"] == "MediaMatte"
+        assert effect["bypassed"] is False
+        assert effect["category"] == "categoryVisualEffects"
+        assert effect["parameters"]["intensity"] == 1.0
+        assert effect["parameters"]["matteMode"] == 1
+        assert effect["parameters"]["trackDepth"] == 10002
+        assert result is clip
+
+    def test_add_media_matte_custom_values(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        clip.add_media_matte(intensity=0.7, matte_mode=2, track_depth=10005)
+        params = data["effects"][0]["parameters"]
+        assert params["intensity"] == 0.7
+        assert params["matteMode"] == 2
+        assert params["trackDepth"] == 10005

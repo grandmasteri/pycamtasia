@@ -1,0 +1,2947 @@
+{
+  "width" : 1920.0,
+  "height" : 1080.0,
+  "ident" : "AUDIATE INTRO",
+  "version" : "5.0",
+  "editRate" : 30,
+  "sourceBin" : [
+      {
+        "id" : 1,
+        "src" : "./gradient-white2transparent.png",
+        "rect" : [0, 0, 1920, 1080],
+        "lastMod" : "20220615T093510",
+        "loudnessNormalization" : true,
+        "sourceTracks" : [
+          {
+            "range" : [0, 1],
+            "type" : 1,
+            "editRate" : 600,
+            "trackRect" : [0, 0, 1920, 1080],
+            "sampleRate" : 0,
+            "bitDepth" : 0,
+            "numChannels" : 0,
+            "integratedLUFS" : 100.0,
+            "peakLevel" : -1.0,
+            "metaData" : ""
+          }
+        ],
+        "metadata" : {
+          "timeAdded" : "20220615T095237.364654"
+        }
+      },
+      {
+        "id" : 2,
+        "src" : "./Icon_Audiate-512px.png",
+        "rect" : [0, 0, 512, 512],
+        "lastMod" : "20220615T093510",
+        "loudnessNormalization" : true,
+        "sourceTracks" : [
+          {
+            "range" : [0, 1],
+            "type" : 1,
+            "editRate" : 600,
+            "trackRect" : [0, 0, 512, 512],
+            "sampleRate" : 0,
+            "bitDepth" : 0,
+            "numChannels" : 0,
+            "integratedLUFS" : 100.0,
+            "peakLevel" : -1.0,
+            "metaData" : ""
+          }
+        ],
+        "metadata" : {
+          "timeAdded" : "20220615T095512.702450"
+        }
+      },
+      {
+        "id" : 3,
+        "src" : "./TS-Rise-MST.wav",
+        "rect" : [0, 0, 0, 0],
+        "lastMod" : "20220615T093510",
+        "loudnessNormalization" : true,
+        "sourceTracks" : [
+          {
+            "range" : [0, 407077],
+            "type" : 2,
+            "editRate" : 44100,
+            "trackRect" : [0, 0, 0, 0],
+            "sampleRate" : 44100,
+            "bitDepth" : 16,
+            "numChannels" : 2,
+            "integratedLUFS" : -12.3458236090951,
+            "peakLevel" : 0.9605712890625,
+            "metaData" : ""
+          }
+        ],
+        "metadata" : {
+          "timeAdded" : "20220615T095237.364679"
+        }
+      }
+    ],
+    "timeline" : {
+      "id" : 4,
+      "sceneTrack" : {
+        "scenes" : [
+          {
+            "csml" : {
+              "tracks" : [
+                {
+                  "trackIndex" : 0,
+                  "medias" : [
+                    {
+                      "id" : 5,
+                      "_type" : "Group",
+                      "parameters" : {
+                        "sourceCrop0" : 0.0,
+                        "sourceCrop1" : 0.0,
+                        "sourceCrop2" : 0.0,
+                        "sourceCrop3" : 0.0,
+                        "geometryCrop0" : 0.0,
+                        "geometryCrop1" : 0.0,
+                        "geometryCrop2" : 0.0,
+                        "geometryCrop3" : 0.0,
+                        "volume" : 1.0
+                      },
+                      "tracks" : [
+                        {
+                          "trackIndex" : 0,
+                          "medias" : [
+                            {
+                              "id" : 6,
+                              "_type" : "Group",
+                              "parameters" : {
+                                "sourceCrop0" : 0.0,
+                                "sourceCrop1" : 0.0,
+                                "sourceCrop2" : 0.0,
+                                "sourceCrop3" : 0.0,
+                                "geometryCrop0" : 0.0,
+                                "geometryCrop1" : 0.0,
+                                "geometryCrop2" : 0.0,
+                                "geometryCrop3" : 0.0,
+                                "volume" : 1.0
+                              },
+                              "tracks" : [
+                                {
+                                  "trackIndex" : 0,
+                                  "medias" : [
+                                    {
+                                      "id" : 7,
+                                      "_type" : "Group",
+                                      "parameters" : {
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0,
+                                        "volume" : 1.0
+                                      },
+                                      "tracks" : [
+                                        {
+                                          "trackIndex" : 0,
+                                          "medias" : [
+                                            {
+                                              "id" : 8,
+                                              "_type" : "Callout",
+                                              "def" : {
+                                                "kind" : "remix",
+                                                "shape" : "shape-rectangle",
+                                                "style" : "bold",
+                                                "fill-color-blue" : 0.5217677951,
+                                                "fill-color-green" : 0.1555306613,
+                                                "fill-color-opacity" : 1.0,
+                                                "fill-color-red" : 0.2147989869,
+                                                "hasDropShadow" : 0.0,
+                                                "height" : 1088.37271915682,
+                                                "savedXScale" : 1.0,
+                                                "savedYScale" : 1.0,
+                                                "stroke-color-blue" : 1.0,
+                                                "stroke-color-green" : 1.0,
+                                                "stroke-color-opacity" : 1.0,
+                                                "stroke-color-red" : 1.0,
+                                                "stroke-width" : 0.0,
+                                                "width" : 1920.0,
+                                                "custom" : "Y",
+                                                "fill-style" : "solid",
+                                                "stroke-style" : "solid"
+                                              },
+                                              "attributes" : {
+                                                "ident" : "",
+                                                "autoRotateText" : true
+                                              },
+                                              "parameters" : {
+                                                "translation0" : 3.41060513164848e-13,
+                                                "translation1" : -4.18635957841127,
+                                                "sourceCrop0" : 0.0,
+                                                "sourceCrop1" : 0.0,
+                                                "sourceCrop2" : 0.0,
+                                                "sourceCrop3" : 0.0,
+                                                "geometryCrop0" : 0.0,
+                                                "geometryCrop1" : 0.0,
+                                                "geometryCrop2" : 0.0,
+                                                "geometryCrop3" : 0.0
+                                              },
+                                              "effects" : [
+
+                                              ],
+                                              "start" : -4,
+                                              "duration" : 769,
+                                              "mediaStart" : -4,
+                                              "mediaDuration" : 769,
+                                              "scalar" : 1,
+                                              "metadata" : {
+                                                "AppliedThemeId" : "",
+                                                "clipSpeedAttribute" : false,
+                                                "default-callout-fill-color" : "(253,225,179,255)",
+                                                "default-scale" : "1",
+                                                "effectApplied" : "none",
+                                                "lockAspectRatio" : true
+                                              },
+                                              "animationTracks" : {
+
+                                              }
+                                            }
+                                          ],
+                                            "ident" : "",
+                                            "audioMuted" : false,
+                                            "videoHidden" : false,
+                                            "magnetic" : false,
+                                            "matte" : 0,
+                                            "solo" : false,
+                                            "metadata" : {
+                                              "IsLocked" : "False",
+                                              "trackHeight" : "54"
+                                            }
+                                        },
+                                        {
+                                          "trackIndex" : 1,
+                                          "medias" : [
+                                            {
+                                              "id" : 9,
+                                              "_type" : "Callout",
+                                              "def" : {
+                                                "kind" : "remix",
+                                                "shape" : "shape-rectangle",
+                                                "style" : "bold",
+                                                "fill-color-blue" : 0.706044921875,
+                                                "fill-color-green" : 0.202974926275267,
+                                                "fill-color-opacity" : 1.0,
+                                                "fill-color-red" : 0.284386977504015,
+                                                "hasDropShadow" : 0.0,
+                                                "height" : 1080.0,
+                                                "savedXScale" : 1.0,
+                                                "savedYScale" : 1.0,
+                                                "stroke-color-blue" : 1.0,
+                                                "stroke-color-green" : 1.0,
+                                                "stroke-color-opacity" : 1.0,
+                                                "stroke-color-red" : 1.0,
+                                                "stroke-width" : 0.0,
+                                                "width" : 1928.19634462391,
+                                                "custom" : "Y",
+                                                "fill-style" : "solid",
+                                                "stroke-style" : "solid"
+                                              },
+                                              "attributes" : {
+                                                "ident" : "",
+                                                "autoRotateText" : true
+                                              },
+                                              "parameters" : {
+                                                "translation0" : 4.09817231195757,
+                                                "sourceCrop0" : 0.0,
+                                                "sourceCrop1" : 0.0,
+                                                "sourceCrop2" : 0.0,
+                                                "sourceCrop3" : 0.0,
+                                                "geometryCrop0" : 0.0,
+                                                "geometryCrop1" : 0.0,
+                                                "geometryCrop2" : 0.0,
+                                                "geometryCrop3" : 0.0
+                                              },
+                                              "effects" : [
+
+                                              ],
+                                              "start" : -4,
+                                              "duration" : 769,
+                                              "mediaStart" : -4,
+                                              "mediaDuration" : 769,
+                                              "scalar" : 1,
+                                              "metadata" : {
+                                                "AppliedThemeId" : "",
+                                                "clipSpeedAttribute" : false,
+                                                "default-callout-fill-color" : "(253,225,179,255)",
+                                                "default-scale" : "1",
+                                                "effectApplied" : "none",
+                                                "lockAspectRatio" : true
+                                              },
+                                              "animationTracks" : {
+
+                                              }
+                                            }
+                                          ],
+                                            "ident" : "",
+                                            "audioMuted" : false,
+                                            "videoHidden" : false,
+                                            "magnetic" : false,
+                                            "matte" : 0,
+                                            "solo" : false,
+                                            "metadata" : {
+                                              "IsLocked" : "False",
+                                              "trackHeight" : "54"
+                                            }
+                                        },
+                                        {
+                                          "trackIndex" : 2,
+                                          "medias" : [
+                                            {
+                                              "id" : 10,
+                                              "_type" : "IMFile",
+                                              "src" : 1,
+                                              "trackNumber" : 0,
+                                              "trimStartSum" : -4,
+                                              "attributes" : {
+                                                "ident" : "gradient-white2transparent"
+                                              },
+                                              "parameters" : {
+                                                "translation0" : 0.00223594555495765,
+                                                "rotation2" : 1.5707963267949,
+                                                "scale0" : 0.5625,
+                                                "scale1" : 1.77777777777778,
+                                                "sourceCrop0" : 0.0,
+                                                "sourceCrop1" : 0.0,
+                                                "sourceCrop2" : 0.0,
+                                                "sourceCrop3" : 0.0,
+                                                "geometryCrop0" : 0.0,
+                                                "geometryCrop1" : 0.0,
+                                                "geometryCrop2" : 0.0,
+                                                "geometryCrop3" : 0.0
+                                              },
+                                              "effects" : [
+                                                  {
+                                                    "effectName" : "MediaMatte",
+                                                    "bypassed" : false,
+                                                    "category" : "categoryVisualEffects",
+                                                    "parameters" : {
+                                                      "intensity" : 1.0,
+                                                      "matteMode" : 3,
+                                                      "trackDepth" : 10002
+                                                    }
+                                                  }
+                                              ],
+                                              "start" : -4,
+                                              "duration" : 769,
+                                              "mediaStart" : 0,
+                                              "mediaDuration" : 1,
+                                              "scalar" : 1,
+                                              "metadata" : {
+                                                "clipSpeedAttribute" : false,
+                                                "default-MediaMatte-matteMode" : "1",
+                                                "effectApplied" : "MediaMatte",
+                                                "lockAspectRatio" : false
+                                              },
+                                              "animationTracks" : {
+
+                                              }
+                                            }
+                                          ],
+                                            "ident" : "",
+                                            "audioMuted" : false,
+                                            "videoHidden" : false,
+                                            "magnetic" : false,
+                                            "matte" : 0,
+                                            "solo" : false,
+                                            "metadata" : {
+                                              "IsLocked" : "False",
+                                              "trackHeight" : "54"
+                                            }
+                                        },
+                                        {
+                                          "trackIndex" : 3,
+                                          "medias" : [
+                                            {
+                                              "id" : 11,
+                                              "_type" : "Callout",
+                                              "def" : {
+                                                "kind" : "TypeWinBlur",
+                                                "shape" : "",
+                                                "style" : "",
+                                                "blur-invert" : 0.0,
+                                                "height" : 200.0,
+                                                "intensity" : 0.8125,
+                                                "width" : 400.0
+                                              },
+                                              "attributes" : {
+                                                "ident" : "",
+                                                "autoRotateText" : true
+                                              },
+                                              "parameters" : {
+                                                "translation0" : 14.557878139691,
+                                                "translation1" : -4.18635957841116,
+                                                "scale0" : 4.87278939069846,
+                                                "scale1" : 5.44186359578411,
+                                                "sourceCrop0" : 0.0,
+                                                "sourceCrop1" : 0.0,
+                                                "sourceCrop2" : 0.0,
+                                                "sourceCrop3" : 0.0,
+                                                "geometryCrop0" : 0.0,
+                                                "geometryCrop1" : 0.0,
+                                                "geometryCrop2" : 0.0,
+                                                "geometryCrop3" : 0.0
+                                              },
+                                              "effects" : [
+
+                                              ],
+                                              "start" : -4,
+                                              "duration" : 769,
+                                              "mediaStart" : -4,
+                                              "mediaDuration" : 769,
+                                              "scalar" : 1,
+                                              "metadata" : {
+                                                "AppliedThemeId" : "",
+                                                "clipSpeedAttribute" : false,
+                                                "default-scale" : "1",
+                                                "effectApplied" : "none",
+                                                "lockAspectRatio" : true
+                                              },
+                                              "animationTracks" : {
+
+                                              }
+                                            }
+                                          ],
+                                            "ident" : "",
+                                            "audioMuted" : false,
+                                            "videoHidden" : false,
+                                            "magnetic" : false,
+                                            "matte" : 0,
+                                            "solo" : false,
+                                            "metadata" : {
+                                              "IsLocked" : "False",
+                                              "trackHeight" : "54"
+                                            }
+                                        },
+                                        {
+                                          "trackIndex" : 4,
+                                          "medias" : [
+                                          ],
+                                            "ident" : "",
+                                            "audioMuted" : false,
+                                            "videoHidden" : false,
+                                            "magnetic" : false,
+                                            "matte" : 0,
+                                            "solo" : false,
+                                            "metadata" : {
+                                              "IsLocked" : "False",
+                                              "trackHeight" : "54"
+                                            }
+                                        }
+                                      ],
+                                      "attributes" : {
+                                        "ident" : "2 Color Gradient -v3-1",
+                                        "widthAttr" : 1920.0,
+                                        "heightAttr" : 1080.0,
+                                        "gain" : 1.0,
+                                        "mixToMono" : false,
+                                        "assetProperties" : [
+                                          {
+                                            "type" : 1,
+                                            "name" : "Callout",
+                                            "objects" : [ 8 ],
+                                            "themeMappings" :  {
+                                              "fill" : "background-1"
+                                            }
+                                          },
+                                          {
+                                            "type" : 1,
+                                            "name" : "Callout",
+                                            "objects" : [ 9 ],
+                                            "themeMappings" :  {
+                                              "fill" : "background-1"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : -4,
+                                      "duration" : 769,
+                                      "mediaStart" : -4.0,
+                                      "mediaDuration" : 769.0,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "clipSpeedAttribute" : false,
+                                        "effectApplied" : "none",
+                                        "isOpen" : false
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 1,
+                                  "medias" : [
+                                    {
+                                      "id" : 12,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.701960784313725,
+                                        "fill-color-green" : 0.882352941176471,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 0.992156862745098,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : {
+                                          "type" : "double",
+                                          "defaultValue" : 1080.26503965076,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 149,
+                                              "time" : 139,
+                                              "value" : 1080.26501464844,
+                                              "interp" : "eioe",
+                                              "duration" : 10
+                                            }
+                                          ]
+                                        },
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 1.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : {
+                                          "type" : "double",
+                                          "defaultValue" : 1919.72149437587,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 149,
+                                              "time" : 139,
+                                              "value" : 0.278534762604068,
+                                              "interp" : "eioe",
+                                              "duration" : 10
+                                            }
+                                          ]
+                                        },
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : {
+                                          "type" : "double",
+                                          "defaultValue" : 0.139267519259874,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 149,
+                                              "time" : 139,
+                                              "value" : 0.139267519259874,
+                                              "interp" : "eioe",
+                                              "duration" : 10
+                                            },
+                                            {
+                                              "endTime" : 154,
+                                              "time" : 149,
+                                              "value" : 0.139267519259874,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "translation1" : {
+                                          "type" : "double",
+                                          "defaultValue" : 0.132505118143968,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 149,
+                                              "time" : 139,
+                                              "value" : 0.132505118143968,
+                                              "interp" : "eioe",
+                                              "duration" : 10
+                                            },
+                                            {
+                                              "endTime" : 154,
+                                              "time" : 149,
+                                              "value" : 0.132505118143968,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "scale0" : {
+                                          "type" : "double",
+                                          "defaultValue" : 1.0,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 154,
+                                              "time" : 149,
+                                              "value" : 0.00999999977648258,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "scale1" : {
+                                          "type" : "double",
+                                          "defaultValue" : 1.0,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 154,
+                                              "time" : 149,
+                                              "value" : 0.00999999977648258,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0,
+                                        "opacity" : {
+                                          "type" : "double",
+                                          "defaultValue" : 1.0,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 154,
+                                              "time" : 149,
+                                              "value" : 1.0,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "effects" : [
+                                          {
+                                            "effectName" : "MediaMatte",
+                                            "bypassed" : false,
+                                            "category" : "categoryVisualEffects",
+                                            "parameters" : {
+                                              "intensity" : 1.0,
+                                              "matteMode" : 1,
+                                              "trackDepth" : 10002
+                                            }
+                                          },
+                                          {
+                                            "effectName" : "MotionBlur",
+                                            "bypassed" : false,
+                                            "category" : "categoryVisualEffects",
+                                            "parameters" : {
+                                              "intensity" : {
+                                                "type" : "double",
+                                                "defaultValue" : 1.0,
+                                                "uiHints" : {
+                                                  "userInterfaceType" : 0,
+                                                  "unitType" : 0
+                                                },
+                                                "keyframes" : [
+                                                  {
+                                                    "endTime" : 149,
+                                                    "time" : 139,
+                                                    "value" : 2.0,
+                                                    "interp" : "eioe",
+                                                    "duration" : 10
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          }
+                                      ],
+                                      "start" : -4,
+                                      "duration" : 191,
+                                      "mediaStart" : -4,
+                                      "mediaDuration" : 191,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-MotionBlur-intensity" : "1",
+                                        "default-scale" : "1",
+                                        "effectApplied" : "MotionBlur",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+                                        "visual" : [
+                                          {
+                                            "endTime" : 149,
+                                            "duration" : 10,
+                                            "range" : [ 139, 10],
+                                            "interp" : "eioe"
+                                          },
+                                          {
+                                            "endTime" : 154,
+                                            "duration" : 5,
+                                            "range" : [ 149, 5],
+                                            "interp" : "eioe"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 2,
+                                  "medias" : [
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 3,
+                                  "medias" : [
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 4,
+                                  "medias" : [
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                }
+                              ],
+                              "attributes" : {
+                                "ident" : "2 Color Gradient -v3",
+                                "widthAttr" : 1920.0,
+                                "heightAttr" : 1080.0,
+                                "gain" : 1.0,
+                                "mixToMono" : false,
+                                "assetProperties" : [
+                                  {
+                                    "type" : 1,
+                                    "name" : "Callout",
+                                    "objects" : [ 8 ],
+                                    "themeMappings" :  {
+                                      "fill" : "accent-1"
+                                    }
+                                  },
+                                  {
+                                    "type" : 1,
+                                    "name" : "Callout",
+                                    "objects" : [ 9 ],
+                                    "themeMappings" :  {
+                                      "fill" : "accent-2"
+                                    }
+                                  }
+                                ]
+                              },
+                              "effects" : [
+                                  {
+                                    "effectName" : "MotionBlur",
+                                    "bypassed" : false,
+                                    "category" : "categoryVisualEffects",
+                                    "parameters" : {
+                                      "intensity" : 2.0
+                                    }
+                                  }
+                              ],
+                              "start" : 0,
+                              "duration" : 180,
+                              "mediaStart" : -4.0,
+                              "mediaDuration" : 180.0,
+                              "scalar" : 1,
+                              "metadata" : {
+                                "AppliedThemeId" : "d26df1c2-9460-4cb6-8a30-8d5a1da2258e",
+                                "clipSpeedAttribute" : false,
+                                "default-MotionBlur-intensity" : "1",
+                                "effectApplied" : "MotionBlur",
+                                "isOpen" : false,
+                                "lockAspectRatio" : true
+                              },
+                              "animationTracks" : {
+
+                              }
+                            }
+                          ],
+                            "ident" : "",
+                            "audioMuted" : false,
+                            "videoHidden" : false,
+                            "magnetic" : false,
+                            "matte" : 0,
+                            "solo" : false,
+                            "metadata" : {
+                              "IsLocked" : "False",
+                              "trackHeight" : "54"
+                            }
+                        },
+                        {
+                          "trackIndex" : 1,
+                          "medias" : [
+                            {
+                              "id" : 13,
+                              "_type" : "Group",
+                              "parameters" : {
+                                "sourceCrop0" : 0.0,
+                                "sourceCrop1" : 0.0,
+                                "sourceCrop2" : 0.0,
+                                "sourceCrop3" : 0.0,
+                                "geometryCrop0" : 0.0,
+                                "geometryCrop1" : 0.0,
+                                "geometryCrop2" : 0.0,
+                                "geometryCrop3" : 0.0,
+                                "volume" : 1.0
+                              },
+                              "tracks" : [
+                                {
+                                  "trackIndex" : 0,
+                                  "medias" : [
+                                    {
+                                      "id" : 14,
+                                      "_type" : "IMFile",
+                                      "src" : 2,
+                                      "trackNumber" : 0,
+                                      "trimStartSum" : 0,
+                                      "attributes" : {
+                                        "ident" : "Icon_Audiate-512px"
+                                      },
+                                      "parameters" : {
+                                        "translation0" : {
+                                          "type" : "double",
+                                          "defaultValue" : 490.44132078704,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 30,
+                                              "time" : 15,
+                                              "value" : -479.55867921296,
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 125,
+                                              "time" : 114,
+                                              "value" : 490.44132078704,
+                                              "duration" : 11
+                                            }
+                                          ]
+                                        },
+                                        "translation1" : {
+                                          "type" : "double",
+                                          "defaultValue" : -0.156728457006238,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 30,
+                                              "time" : 15,
+                                              "value" : -0.156728457006238,
+                                              "duration" : 15
+                                            }
+                                          ]
+                                        },
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+                                          {
+                                            "effectName" : "MotionBlur",
+                                            "bypassed" : false,
+                                            "category" : "categoryVisualEffects",
+                                            "parameters" : {
+                                              "intensity" : 1.0
+                                            }
+                                          }
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 150,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 1,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "clipSpeedAttribute" : false,
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+                                        "visual" : [
+                                          {
+                                            "endTime" : 30,
+                                            "duration" : 15,
+                                            "range" : [ 15, 15]
+                                          },
+                                          {
+                                            "endTime" : 125,
+                                            "duration" : 11,
+                                            "range" : [ 114, 11]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 1,
+                                  "medias" : [
+                                    {
+                                      "id" : 15,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.796078431372549,
+                                        "fill-color-green" : 0.294117647058824,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 0.682352941176471,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 1080.90336590497,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 1.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 959.646262662885,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : -480.176858741081,
+                                        "translation1" : 0.451666774549324,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+                                          {
+                                            "effectName" : "MediaMatte",
+                                            "bypassed" : false,
+                                            "category" : "categoryVisualEffects",
+                                            "parameters" : {
+                                              "intensity" : 1.0,
+                                              "matteMode" : 1,
+                                              "trackDepth" : 10002
+                                            }
+                                          }
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 126,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 126,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-callout-fill-color" : "(253,225,179,255)",
+                                        "default-scale" : "1",
+                                        "effectApplied" : "MediaMatte",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                }
+                              ],
+                              "attributes" : {
+                                "ident" : "LEFT LOGO",
+                                "widthAttr" : 1920.0,
+                                "heightAttr" : 1080.0,
+                                "gain" : 1.0,
+                                "mixToMono" : false,
+                                "assetProperties" : [
+                                  {
+                                    "type" : 1,
+                                    "name" : "Callout",
+                                    "objects" : [ 15 ]
+                                  }
+                                ]
+                              },
+                              "effects" : [
+
+                              ],
+                              "start" : 4,
+                              "duration" : 126,
+                              "mediaStart" : 0.0,
+                              "mediaDuration" : 126.0,
+                              "scalar" : 1,
+                              "metadata" : {
+                                "clipSpeedAttribute" : false,
+                                "effectApplied" : "none",
+                                "isOpen" : false,
+                                "lockAspectRatio" : true
+                              },
+                              "animationTracks" : {
+
+                              }
+                            }
+                          ],
+                            "ident" : "",
+                            "audioMuted" : false,
+                            "videoHidden" : false,
+                            "magnetic" : false,
+                            "matte" : 0,
+                            "solo" : false,
+                            "metadata" : {
+                              "IsLocked" : "False",
+                              "trackHeight" : "54"
+                            }
+                        },
+                        {
+                          "trackIndex" : 2,
+                          "medias" : [
+                            {
+                              "id" : 16,
+                              "_type" : "Group",
+                              "parameters" : {
+                                "translation0" : 70.0,
+                                "translation1" : -1.0,
+                                "sourceCrop0" : 0.0,
+                                "sourceCrop1" : 0.0,
+                                "sourceCrop2" : 0.0,
+                                "sourceCrop3" : 0.0,
+                                "geometryCrop0" : 0.0,
+                                "geometryCrop1" : 0.0,
+                                "geometryCrop2" : 0.0,
+                                "geometryCrop3" : 0.0,
+                                "volume" : 1.0
+                              },
+                              "tracks" : [
+                                {
+                                  "trackIndex" : 0,
+                                  "medias" : [
+                                    {
+                                      "id" : 17,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "text",
+                                        "style" : "basic",
+                                        "enable-ligatures" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 907.927490234373,
+                                        "line-spacing" : {
+                                          "type" : "double",
+                                          "defaultValue" : 0.548899273616011,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 30,
+                                              "time" : 15,
+                                              "value" : 0.521337076822917,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 125,
+                                              "time" : 114,
+                                              "value" : 0.695162150065104,
+                                              "interp" : "eioe",
+                                              "duration" : 11
+                                            }
+                                          ]
+                                        },
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "width" : 648.268950008706,
+                                        "word-wrap" : 1.0,
+                                        "custom" : "Y",
+                                        "horizontal-alignment" : "left",
+                                        "resize-behavior" : "resizeText",
+                                        "text" : "GETTING STARTED WITH AUDIATE",
+                                        "vertical-alignment" : "center",
+                                        "font" : {
+                                          "color-blue" : 1.0,
+                                          "color-green" : 1.0,
+                                          "color-red" : 1.0,
+                                          "size" : 96.0,
+                                          "tracking" : 0.0,
+                                          "name" : "Futura",
+                                          "weight" : "Regular"
+                                        },
+                                        "textAttributes" : {
+                                          "type" : "textAttributeList",
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 0,
+                                              "time" : 0,
+                                              "value" : [{"name":"strikethrough","rangeEnd":28,"rangeStart":0,"value":0,"valueType":"int"},{"name":"fgColor","rangeEnd":28,"rangeStart":0,"value":"(255,255,255,255)","valueType":"color"},{"name":"kerning","rangeEnd":28,"rangeStart":0,"value":0.2230096816196237,"valueType":"double"},{"name":"fontName","rangeEnd":28,"rangeStart":0,"value":"LEMON MILK Pro VAR","valueType":"string"},{"name":"fontSize","rangeEnd":28,"rangeStart":0,"value":79,"valueType":"double"},{"name":"fontWeight","rangeEnd":28,"rangeStart":0,"value":700,"valueType":"int"},{"name":"fontItalic","rangeEnd":28,"rangeStart":0,"value":0,"valueType":"int"},{"name":"underline","rangeEnd":28,"rangeStart":0,"value":0,"valueType":"int"}],
+                                              "duration" : 0
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : {
+                                          "type" : "double",
+                                          "defaultValue" : -565.134475004351,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 30,
+                                              "time" : 15,
+                                              "value" : 404.865524995649,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 125,
+                                              "time" : 114,
+                                              "value" : -565.134475004351,
+                                              "interp" : "eioe",
+                                              "duration" : 11
+                                            }
+                                          ]
+                                        },
+                                        "translation1" : {
+                                          "type" : "double",
+                                          "defaultValue" : -4.03623971042617,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 30,
+                                              "time" : 15,
+                                              "value" : -4.03623971042617,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 125,
+                                              "time" : 114,
+                                              "value" : -4.03623971042617,
+                                              "interp" : "eioe",
+                                              "duration" : 11
+                                            }
+                                          ]
+                                        },
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+                                          {
+                                            "effectName" : "MotionBlur",
+                                            "bypassed" : false,
+                                            "category" : "categoryVisualEffects",
+                                            "parameters" : {
+                                              "intensity" : 1.0
+                                            }
+                                          }
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 126,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 126,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-callout-line-spacing" : "0",
+                                        "default-scale" : "1",
+                                        "default-text" : "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2580\n\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 Futura-Bold;}\n{\\colortbl;\\red255\\green255\\blue255;\\red26\\green72\\blue105;}\n{\\*\\expandedcolortbl;;\\cssrgb\\c12549\\c35686\\c48627;}\n\\pard\\tx560\\tx1120\\tx1680\\tx2240\\tx2800\\tx3360\\tx3920\\tx4480\\tx5040\\tx5600\\tx6160\\tx6720\\pardirnatural\\partightenfactor0\n\n\\f0\\b\\fs192 \\cf2 \\expnd0\\expndtw0\\kerning0\n\\ulnone ABC}",
+                                        "effectApplied" : "MotionBlur",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+                                        "visual" : [
+                                          {
+                                            "endTime" : 30,
+                                            "duration" : 15,
+                                            "range" : [ 15, 15],
+                                            "interp" : "eioe"
+                                          },
+                                          {
+                                            "endTime" : 125,
+                                            "duration" : 11,
+                                            "range" : [ 114, 11],
+                                            "interp" : "eioe"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 1,
+                                  "medias" : [
+                                    {
+                                      "id" : 18,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.796078431372549,
+                                        "fill-color-green" : 0.294117647058824,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 0.682352941176471,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 1080.90336590497,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 1.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 959.646262662885,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : 409.823141258919,
+                                        "translation1" : 0.451666774549324,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+                                          {
+                                            "effectName" : "MediaMatte",
+                                            "bypassed" : false,
+                                            "category" : "categoryVisualEffects",
+                                            "parameters" : {
+                                              "intensity" : 1.0,
+                                              "matteMode" : 1,
+                                              "trackDepth" : 10002
+                                            }
+                                          }
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 126,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 126,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-callout-fill-color" : "(253,225,179,255)",
+                                        "default-scale" : "1",
+                                        "effectApplied" : "MediaMatte",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                }
+                              ],
+                              "attributes" : {
+                                "ident" : "RIGHT TEXT",
+                                "widthAttr" : 1780.0,
+                                "heightAttr" : 1082.0,
+                                "gain" : 1.0,
+                                "mixToMono" : false,
+                                "assetProperties" : [
+                                  {
+                                    "type" : 0,
+                                    "name" : "Text",
+                                    "objects" : [ 17 ],
+                                    "themeMappings" :  {
+                                      "font-color" : "foreground-1"
+                                    }
+                                  },
+                                  {
+                                    "type" : 1,
+                                    "name" : "Callout",
+                                    "objects" : [ 18 ],
+                                    "themeMappings" :  {
+                                      "fill" : "background-1"
+                                    }
+                                  }
+                                ]
+                              },
+                              "effects" : [
+
+                              ],
+                              "start" : 4,
+                              "duration" : 126,
+                              "mediaStart" : 0.0,
+                              "mediaDuration" : 126.0,
+                              "scalar" : 1,
+                              "metadata" : {
+                                "clipSpeedAttribute" : false,
+                                "effectApplied" : "none",
+                                "isOpen" : false,
+                                "lockAspectRatio" : true
+                              },
+                              "animationTracks" : {
+
+                              }
+                            }
+                          ],
+                            "ident" : "",
+                            "audioMuted" : false,
+                            "videoHidden" : false,
+                            "magnetic" : false,
+                            "matte" : 0,
+                            "solo" : false,
+                            "metadata" : {
+                              "IsLocked" : "False",
+                              "trackHeight" : "54"
+                            }
+                        },
+                        {
+                          "trackIndex" : 3,
+                          "medias" : [
+                            {
+                              "id" : 19,
+                              "_type" : "Group",
+                              "parameters" : {
+                                "translation0" : 2.0,
+                                "translation1" : -5.0,
+                                "sourceCrop0" : 0.0,
+                                "sourceCrop1" : 0.0,
+                                "sourceCrop2" : 0.0,
+                                "sourceCrop3" : 0.0,
+                                "geometryCrop0" : 0.0,
+                                "geometryCrop1" : 0.0,
+                                "geometryCrop2" : 0.0,
+                                "geometryCrop3" : 0.0,
+                                "volume" : 1.0
+                              },
+                              "tracks" : [
+                                {
+                                  "trackIndex" : 0,
+                                  "medias" : [
+                                    {
+                                      "id" : 20,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : {
+                                          "type" : "double",
+                                          "defaultValue" : 0.996078431372549,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 15,
+                                              "time" : 0,
+                                              "value" : 0.996078431372549,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 136,
+                                              "time" : 121,
+                                              "value" : 0.996078431372549,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 141,
+                                              "time" : 136,
+                                              "value" : 0.996078431372549,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            },
+                                            {
+                                              "endTime" : 229,
+                                              "time" : 214,
+                                              "value" : 0.996078431372549,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 234,
+                                              "time" : 229,
+                                              "value" : 0.996078431372549,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "fill-color-green" : {
+                                          "type" : "double",
+                                          "defaultValue" : 0.635294117647059,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 15,
+                                              "time" : 0,
+                                              "value" : 0.635294117647059,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 136,
+                                              "time" : 121,
+                                              "value" : 0.635294117647059,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 141,
+                                              "time" : 136,
+                                              "value" : 0.635294117647059,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            },
+                                            {
+                                              "endTime" : 229,
+                                              "time" : 214,
+                                              "value" : 0.635294117647059,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 234,
+                                              "time" : 229,
+                                              "value" : 0.635294117647059,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : {
+                                          "type" : "double",
+                                          "defaultValue" : 0.701960784313725,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 15,
+                                              "time" : 0,
+                                              "value" : 0.701960784313725,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 136,
+                                              "time" : 121,
+                                              "value" : 0.701960784313725,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 141,
+                                              "time" : 136,
+                                              "value" : 0.701960784313725,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            },
+                                            {
+                                              "endTime" : 229,
+                                              "time" : 214,
+                                              "value" : 0.701960784313725,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 234,
+                                              "time" : 229,
+                                              "value" : 0.701960784313725,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "hasDropShadow" : 0.0,
+                                        "height" : {
+                                          "type" : "double",
+                                          "defaultValue" : 19.0018761806423,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 15,
+                                              "time" : 0,
+                                              "value" : 907.927490234375,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 136,
+                                              "time" : 121,
+                                              "value" : 19.0019,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 229,
+                                              "time" : 214,
+                                              "value" : 19.0018761806423,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            }
+                                          ]
+                                        },
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 1.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 4.09817266380439,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : {
+                                          "type" : "double",
+                                          "defaultValue" : 0.0490859834186974,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 15,
+                                              "time" : 0,
+                                              "value" : 0.0490859834186974,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 136,
+                                              "time" : 121,
+                                              "value" : 0.049086,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 229,
+                                              "time" : 214,
+                                              "value" : 0.0490859834186974,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 234,
+                                              "time" : 229,
+                                              "value" : 0.0490859834186974,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "translation1" : {
+                                          "type" : "double",
+                                          "defaultValue" : -0.0362397104263437,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 15,
+                                              "time" : 0,
+                                              "value" : -0.0362397104263437,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 136,
+                                              "time" : 121,
+                                              "value" : -0.0362397,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 229,
+                                              "time" : 214,
+                                              "value" : -0.0362397104263437,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 234,
+                                              "time" : 229,
+                                              "value" : -0.0362397104263437,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "scale0" : {
+                                          "type" : "double",
+                                          "defaultValue" : 1.0,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 141,
+                                              "time" : 136,
+                                              "value" : 0.01,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            },
+                                            {
+                                              "endTime" : 229,
+                                              "time" : 214,
+                                              "value" : 1.0,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 234,
+                                              "time" : 229,
+                                              "value" : 0.00999999977648258,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "scale1" : {
+                                          "type" : "double",
+                                          "defaultValue" : 1.0,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 141,
+                                              "time" : 136,
+                                              "value" : 0.01,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            },
+                                            {
+                                              "endTime" : 229,
+                                              "time" : 214,
+                                              "value" : 1.0,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            },
+                                            {
+                                              "endTime" : 234,
+                                              "time" : 229,
+                                              "value" : 0.00999999977648258,
+                                              "interp" : "eioe",
+                                              "duration" : 5
+                                            }
+                                          ]
+                                        },
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0,
+                                        "opacity" : {
+                                          "type" : "double",
+                                          "defaultValue" : 1.0,
+                                          "keyframes" : [
+                                            {
+                                              "endTime" : 15,
+                                              "time" : 0,
+                                              "value" : 1.0,
+                                              "interp" : "eioe",
+                                              "duration" : 15
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "effects" : [
+                                          {
+                                            "effectName" : "MotionBlur",
+                                            "bypassed" : false,
+                                            "category" : "categoryVisualEffects",
+                                            "parameters" : {
+                                              "intensity" : {
+                                                "type" : "double",
+                                                "defaultValue" : 2.0,
+                                                "uiHints" : {
+                                                  "userInterfaceType" : 0,
+                                                  "unitType" : 0
+                                                },
+                                                "keyframes" : [
+                                                  {
+                                                    "endTime" : 15,
+                                                    "time" : 0,
+                                                    "value" : 2.0,
+                                                    "interp" : "eioe",
+                                                    "duration" : 15
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          }
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 217,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 217,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "d26df1c2-9460-4cb6-8a30-8d5a1da2258e",
+                                        "clipSpeedAttribute" : false,
+                                        "default-MotionBlur-intensity" : "1",
+                                        "default-scale" : "1",
+                                        "effectApplied" : "MotionBlur",
+                                        "lockAspectRatio" : false
+                                      },
+                                      "animationTracks" : {
+                                        "visual" : [
+                                          {
+                                            "endTime" : 15,
+                                            "duration" : 15,
+                                            "range" : [ 0, 15],
+                                            "interp" : "eioe"
+                                          },
+                                          {
+                                            "endTime" : 136,
+                                            "duration" : 15,
+                                            "range" : [ 121, 15],
+                                            "interp" : "eioe"
+                                          },
+                                          {
+                                            "endTime" : 141,
+                                            "duration" : 5,
+                                            "range" : [ 136, 5],
+                                            "interp" : "eioe"
+                                          },
+                                          {
+                                            "endTime" : 229,
+                                            "duration" : 15,
+                                            "range" : [ 214, 15],
+                                            "interp" : "eioe"
+                                          },
+                                          {
+                                            "endTime" : 234,
+                                            "duration" : 5,
+                                            "range" : [ 229, 5],
+                                            "interp" : "eioe"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                }
+                              ],
+                              "attributes" : {
+                                "ident" : "CENTER LINE",
+                                "widthAttr" : 6.0,
+                                "heightAttr" : 908.0,
+                                "gain" : 1.0,
+                                "mixToMono" : false,
+                                "assetProperties" : [
+                                  {
+                                    "type" : 1,
+                                    "name" : "Callout",
+                                    "objects" : [ 20 ]
+                                  }
+                                ]
+                              },
+                              "effects" : [
+
+                              ],
+                              "start" : 4,
+                              "duration" : 176,
+                              "mediaStart" : 0.0,
+                              "mediaDuration" : 176.0,
+                              "scalar" : 1,
+                              "metadata" : {
+                                "clipSpeedAttribute" : false,
+                                "effectApplied" : "none",
+                                "isOpen" : false,
+                                "lockAspectRatio" : true
+                              },
+                              "animationTracks" : {
+
+                              }
+                            }
+                          ],
+                            "ident" : "",
+                            "audioMuted" : false,
+                            "videoHidden" : false,
+                            "magnetic" : false,
+                            "matte" : 0,
+                            "solo" : false,
+                            "metadata" : {
+                              "IsLocked" : "False",
+                              "trackHeight" : "54"
+                            }
+                        },
+                        {
+                          "trackIndex" : 4,
+                          "medias" : [
+                            {
+                              "id" : 21,
+                              "_type" : "AMFile",
+                              "src" : 3,
+                              "trackNumber" : 0,
+                              "attributes" : {
+                                "ident" : "TS-Rise-MST",
+                                "gain" : 1.0,
+                                "mixToMono" : false,
+                                "loudnessNormalization" : true,
+                                "sourceFileOffset" : 0
+                              },
+                                "channelNumber" : "0,1",
+                              "effects" : [
+
+                              ],
+                              "start" : 4,
+                              "duration" : 176,
+                              "mediaStart" : 17,
+                              "mediaDuration" : 176,
+                              "scalar" : 1,
+                              "metadata" : {
+                                "clipSpeedAttribute" : false,
+                                "effectApplied" : "none",
+                                "lockAspectRatio" : true
+                              },
+                              "animationTracks" : {
+
+                              }
+                            }
+                          ],
+                            "ident" : "",
+                            "audioMuted" : false,
+                            "videoHidden" : false,
+                            "magnetic" : false,
+                            "matte" : 0,
+                            "solo" : false,
+                            "metadata" : {
+                              "IsLocked" : "False",
+                              "trackHeight" : "54"
+                            }
+                        },
+                        {
+                          "trackIndex" : 5,
+                          "medias" : [
+                            {
+                              "id" : 22,
+                              "_type" : "Group",
+                              "parameters" : {
+                                "sourceCrop0" : 0.0,
+                                "sourceCrop1" : 0.0,
+                                "sourceCrop2" : 0.0,
+                                "sourceCrop3" : 0.0,
+                                "geometryCrop0" : 0.0,
+                                "geometryCrop1" : 0.0,
+                                "geometryCrop2" : 0.0,
+                                "geometryCrop3" : 0.0,
+                                "opacity" : 0.54946756362915,
+                                "volume" : 1.0
+                              },
+                              "tracks" : [
+                                {
+                                  "trackIndex" : 0,
+                                  "medias" : [
+                                    {
+                                      "id" : 23,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 1080.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 4.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : -149.0,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 1,
+                                  "medias" : [
+                                    {
+                                      "id" : 24,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 0.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 1080.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 4.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : -479.0,
+                                        "translation1" : 1.0,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-callout-fill-color-opacity" : "1",
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 2,
+                                  "medias" : [
+                                    {
+                                      "id" : 25,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 1080.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 4.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : -818.0,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 3,
+                                  "medias" : [
+                                    {
+                                      "id" : 26,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 1080.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 4.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 4,
+                                  "medias" : [
+                                    {
+                                      "id" : 27,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 1080.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 4.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : 150.0,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 5,
+                                  "medias" : [
+                                    {
+                                      "id" : 28,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 0.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 1080.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 4.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : 479.0,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-callout-fill-color-opacity" : "1",
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 6,
+                                  "medias" : [
+                                    {
+                                      "id" : 29,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 1080.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 4.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation0" : 799.0,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 7,
+                                  "medias" : [
+                                    {
+                                      "id" : 30,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 4.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 1920.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 8,
+                                  "medias" : [
+                                    {
+                                      "id" : 31,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 0.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 4.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 1920.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation1" : -179.0,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-callout-fill-color-opacity" : "1",
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 9,
+                                  "medias" : [
+                                    {
+                                      "id" : 32,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 4.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 1920.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation1" : -459.0,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 10,
+                                  "medias" : [
+                                    {
+                                      "id" : 33,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 0.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 4.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 1920.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation1" : 179.0,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-callout-fill-color-opacity" : "1",
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                },
+                                {
+                                  "trackIndex" : 11,
+                                  "medias" : [
+                                    {
+                                      "id" : 34,
+                                      "_type" : "Callout",
+                                      "def" : {
+                                        "kind" : "remix",
+                                        "shape" : "shape-rectangle",
+                                        "style" : "bold",
+                                        "fill-color-blue" : 0.0313725490196078,
+                                        "fill-color-green" : 0.980392156862745,
+                                        "fill-color-opacity" : 1.0,
+                                        "fill-color-red" : 1.0,
+                                        "hasDropShadow" : 0.0,
+                                        "height" : 4.0,
+                                        "savedXScale" : 1.0,
+                                        "savedYScale" : 1.0,
+                                        "stroke-color-blue" : 1.0,
+                                        "stroke-color-green" : 1.0,
+                                        "stroke-color-opacity" : 0.0,
+                                        "stroke-color-red" : 1.0,
+                                        "stroke-width" : 0.0,
+                                        "width" : 1920.0,
+                                        "custom" : "Y",
+                                        "fill-style" : "solid",
+                                        "stroke-style" : "solid"
+                                      },
+                                      "attributes" : {
+                                        "ident" : "",
+                                        "autoRotateText" : true
+                                      },
+                                      "parameters" : {
+                                        "translation1" : 449.0,
+                                        "sourceCrop0" : 0.0,
+                                        "sourceCrop1" : 0.0,
+                                        "sourceCrop2" : 0.0,
+                                        "sourceCrop3" : 0.0,
+                                        "geometryCrop0" : 0.0,
+                                        "geometryCrop1" : 0.0,
+                                        "geometryCrop2" : 0.0,
+                                        "geometryCrop3" : 0.0
+                                      },
+                                      "effects" : [
+
+                                      ],
+                                      "start" : 0,
+                                      "duration" : 54000,
+                                      "mediaStart" : 0,
+                                      "mediaDuration" : 54000,
+                                      "scalar" : 1,
+                                      "metadata" : {
+                                        "AppliedThemeId" : "",
+                                        "clipSpeedAttribute" : false,
+                                        "default-scale" : "1",
+                                        "effectApplied" : "none",
+                                        "lockAspectRatio" : true
+                                      },
+                                      "animationTracks" : {
+
+                                      }
+                                    }
+                                  ],
+                                    "ident" : "",
+                                    "audioMuted" : false,
+                                    "videoHidden" : false,
+                                    "magnetic" : false,
+                                    "matte" : 0,
+                                    "solo" : false,
+                                    "metadata" : {
+                                      "IsLocked" : "False",
+                                      "trackHeight" : "54"
+                                    }
+                                }
+                              ],
+                              "attributes" : {
+                                "ident" : "Troys Grid2",
+                                "widthAttr" : 1920.0,
+                                "heightAttr" : 1080.0,
+                                "gain" : 1.0,
+                                "mixToMono" : false,
+                                "assetProperties" : [
+                                  {
+                                    "type" : 1,
+                                    "name" : "Color",
+                                    "objects" : [ 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34 ],
+                                    "themeMappings" :  {
+                                      "fill" : "accent-1"
+                                    }
+                                  }
+                                ]
+                              },
+                              "effects" : [
+
+                              ],
+                              "start" : 0,
+                              "duration" : 180,
+                              "mediaStart" : 0.0,
+                              "mediaDuration" : 180.0,
+                              "scalar" : 1,
+                              "metadata" : {
+                                "AppliedThemeId" : "df4e0ea7-5fb8-4dac-b6a8-81792d5ac9fb",
+                                "clipSpeedAttribute" : false,
+                                "effectApplied" : "none",
+                                "isOpen" : false,
+                                "lockAspectRatio" : true
+                              },
+                              "animationTracks" : {
+
+                              }
+                            }
+                          ],
+                            "ident" : "",
+                            "audioMuted" : true,
+                            "videoHidden" : true,
+                            "magnetic" : false,
+                            "matte" : 0,
+                            "solo" : false,
+                            "metadata" : {
+                              "IsLocked" : "False",
+                              "trackHeight" : "54"
+                            }
+                        }
+                      ],
+                      "attributes" : {
+                        "ident" : "AUDIATE INTRO",
+                        "widthAttr" : 1920.0,
+                        "heightAttr" : 1080.0,
+                        "gain" : 1.0,
+                        "mixToMono" : false,
+                        "assetProperties" : [
+                          {
+                            "type" : 0,
+                            "name" : "Text",
+                            "objects" : [ 17 ]
+                          }
+                        ]
+                      },
+                      "effects" : [
+
+                      ],
+                      "start" : 0,
+                      "duration" : 180,
+                      "mediaStart" : 0.0,
+                      "mediaDuration" : 180.0,
+                      "scalar" : 1,
+                      "metadata" : {
+                        "clipSpeedAttribute" : false,
+                        "effectApplied" : "none",
+                        "isOpen" : false
+                      },
+                      "animationTracks" : {
+
+                      }
+                    }
+                  ]
+                }              ]
+            }
+          }
+        ]
+      },
+      "trackAttributes" : [
+        {
+          "ident" : "",
+          "audioMuted" : false,
+          "videoHidden" : false,
+          "magnetic" : false,
+          "matte" : 0,
+          "solo" : false
+        }
+      ],
+      "captionAttributes" : {
+        "enabled" : true,
+        "fontName" : "Arial",
+        "fontSize" : 32,
+        "backgroundColor" : [ 0, 0, 0, 191],
+        "foregroundColor" : [ 255, 255, 255, 255],
+        "lang" : "en",
+        "alignment" : 0,
+        "defaultFontSize" : true,
+        "opacity" : 0.5,
+        "backgroundEnabled" : true,
+        "backgroundOnlyAroundText" : true
+      },
+      "gain" : 1.0,
+      "legacyAttenuateAudioMix" : false,
+      "backgroundColor" : [ 0, 0, 0, 255]
+    },
+  "duration" : 0
+}

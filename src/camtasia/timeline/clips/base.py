@@ -723,6 +723,28 @@ class BaseClip:
         })
         return self
 
+    def add_media_matte(self, *, intensity: float = 1.0, matte_mode: int = 1, track_depth: int = 10002) -> Self:
+        """Add a media matte compositing effect.
+
+        Uses one track as a transparency mask for this clip.
+
+        Args:
+            intensity: Effect intensity 0.0-1.0.
+            matte_mode: Matte mode (1 = alpha, 2 = inverted alpha).
+            track_depth: Track depth for matte source.
+        """
+        self.add_effect({
+            'effectName': 'MediaMatte',
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {
+                'intensity': intensity,
+                'matteMode': matte_mode,
+                'trackDepth': track_depth,
+            },
+        })
+        return self
+
     def add_emphasize(self, *, amount: float = 0.5) -> Self:
         """Add an audio emphasis effect.
 
