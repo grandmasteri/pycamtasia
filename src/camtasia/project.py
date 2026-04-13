@@ -628,6 +628,29 @@ class Project:
             'sample_rate': self.sample_rate,
         }
 
+    def health_check(self) -> dict:
+        """Run comprehensive project health check.
+
+        Returns dict with:
+        - healthy: bool (True if no errors)
+        - errors: list of error messages
+        - warnings: list of warning messages
+        - structural_issues: list from timeline.validate_structure()
+        - statistics: dict from statistics()
+        """
+        issues = self.validate()
+        structure = self.timeline.validate_structure()
+        stats = self.statistics()
+        errors = [i.message for i in issues if i.level == 'error']
+        warnings = [i.message for i in issues if i.level == 'warning']
+        return {
+            'healthy': not errors and not structure,
+            'errors': errors,
+            'warnings': warnings,
+            'structural_issues': structure,
+            'statistics': stats,
+        }
+
     def compact(self) -> dict[str, int]:
         """Run all cleanup operations and validate.
 

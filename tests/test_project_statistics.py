@@ -70,3 +70,30 @@ def test_info_includes_validation(project):
     assert isinstance(info['validation_errors'], list)
     assert isinstance(info['validation_warnings'], list)
     assert isinstance(info['structural_issues'], list)
+
+
+def test_health_check_healthy(project):
+    result = project.health_check()
+    assert result['healthy'] is True
+    assert result['errors'] == []
+    assert result['warnings'] == []
+    assert result['structural_issues'] == []
+    assert isinstance(result['statistics'], dict)
+    assert 'total_clips' in result['statistics']
+
+
+def test_health_check_with_issues(project):
+    from unittest.mock import patch, PropertyMock
+    from camtasia.validation import ValidationIssue
+
+    fake_issues = [
+        ValidationIssue('error', 'bad clip'),
+        ValidationIssue('warning', 'missing file'),
+    ]
+    with patch.object(project, 'validate', return_value=fake_issues):
+        result = project.health_check()
+
+    assert result['healthy'] is False
+    assert result['errors'] == ['bad clip']
+    assert result['warnings'] == ['missing file']
+    assert isinstance(result['statistics'], dict)
