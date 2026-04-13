@@ -378,3 +378,46 @@ def test_project_has_screen_recording_with_real_data():
     # TechSmith sample has ScreenVMFile clips
     # (may or may not be inside Groups depending on the sample)
     assert isinstance(has_screen, bool)
+
+
+# ---------------------------------------------------------------------------
+# Track.reorder_clips
+# ---------------------------------------------------------------------------
+
+def test_reorder_clips():
+    medias = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100, 'effects': []},
+        {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200, 'effects': []},
+        {'id': 3, '_type': 'VMFile', 'start': 300, 'duration': 150, 'effects': []},
+    ]
+    data = {'trackIndex': 0, 'medias': medias, 'transitions': [{'leftMedia': 1, 'rightMedia': 2}]}
+    track = Track({'ident': 'T'}, data)
+    track.reorder_clips([3, 1, 2])
+    ids = [m['id'] for m in track._data['medias']]
+    starts = [m['start'] for m in track._data['medias']]
+    assert ids == [3, 1, 2]
+    assert starts == [0, 150, 250]
+    assert track._data['transitions'] == []
+
+
+def test_reorder_clips_wrong_ids_raises():
+    medias = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100, 'effects': []},
+        {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200, 'effects': []},
+    ]
+    track = _make_track(medias=medias)
+    with pytest.raises(ValueError):
+        track.reorder_clips([1, 99])
+
+
+# ---------------------------------------------------------------------------
+# Timeline.total_duration_ticks (property)
+# ---------------------------------------------------------------------------
+
+def test_total_duration_ticks():
+    tl = _make_timeline([
+        ('A', [{'id': 1, 'start': 0, 'duration': 500}]),
+        ('B', [{'id': 2, 'start': 100, 'duration': 600}]),
+        ('C', []),
+    ])
+    assert tl.total_duration_ticks == 700  # max(500, 100+600, 0)

@@ -28,7 +28,7 @@ def _timeline_data(num_tracks: int = 1) -> dict[str, Any]:
 class TestTimelineTotalDuration:
     def test_empty_timeline_returns_zero(self):
         tl = Timeline(_timeline_data())
-        assert tl.total_duration_ticks() == 0
+        assert tl.total_duration_ticks == 0
         assert tl.total_duration_seconds() == 0.0
 
     def test_duration_from_clips(self):
@@ -40,7 +40,7 @@ class TestTimelineTotalDuration:
              "src": 1, "metadata": {}, "animationTracks": {}, "parameters": {}, "effects": []},
         ]
         tl = Timeline(data)
-        assert tl.total_duration_ticks() == clip_end
+        assert tl.total_duration_ticks == clip_end
         assert tl.total_duration_seconds() == pytest.approx(5.0)
 
 

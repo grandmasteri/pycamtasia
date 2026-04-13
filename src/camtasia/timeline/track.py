@@ -828,6 +828,30 @@ class Track:
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
+    def reorder_clips(self, clip_ids: list[int]) -> None:
+        """Reorder clips by ID list, packing them end-to-end starting at 0.
+
+        All transitions on the track are cleared. Raises ValueError if
+        the provided IDs don't exactly match the current clip IDs.
+
+        Args:
+            clip_ids: Clip IDs in the desired order.
+        """
+        medias = self._data.get('medias', [])
+        current_ids = {m['id'] for m in medias}
+        if set(clip_ids) != current_ids or len(clip_ids) != len(medias):
+            raise ValueError(
+                f'clip_ids must match current clip IDs exactly: {sorted(current_ids)}'
+            )
+        by_id = {m['id']: m for m in medias}
+        pos = 0
+        for cid in clip_ids:
+            m = by_id[cid]
+            m['start'] = pos
+            pos += m['duration']
+        self._data['medias'] = [by_id[cid] for cid in clip_ids]
+        self._data['transitions'] = []
+
     def sort_clips(self) -> None:
         """Sort clips by start time."""
         self._data.get('medias', []).sort(key=lambda m: m.get('start', 0))

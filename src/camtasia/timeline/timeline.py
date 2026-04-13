@@ -140,19 +140,17 @@ class Timeline:
     # L2 convenience methods
     # ------------------------------------------------------------------
 
+    @property
     def total_duration_ticks(self) -> int:
         """Maximum end time across all tracks, in ticks.
 
         Returns:
             The tick position of the latest clip end, or 0 if empty.
         """
-        max_end = 0
-        for track in self.tracks:
-            for clip in track.clips:
-                end = clip.start + clip.duration
-                if end > max_end:
-                    max_end = end
-        return max_end
+        return max(
+            (track.end_time_ticks() for track in self.tracks),
+            default=0,
+        )
 
     def total_duration_seconds(self) -> float:
         """Maximum end time across all tracks, in seconds.
@@ -160,7 +158,7 @@ class Timeline:
         Returns:
             Duration in seconds, or 0.0 if the timeline is empty.
         """
-        return ticks_to_seconds(self.total_duration_ticks())
+        return ticks_to_seconds(self.total_duration_ticks)
 
     @property
     def duration_seconds(self) -> float:
