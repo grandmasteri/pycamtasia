@@ -163,17 +163,21 @@ class BaseClip:
     def scalar(self, value: Fraction | int | float | str) -> None:
         self._data['scalar'] = str(Fraction(value))
 
-    def set_speed(self, speed: float) -> None:
-        """Set playback speed.
+    def set_speed(self, speed: float) -> Self:
+        """Set playback speed multiplier.
 
         Args:
-            speed: Multiplier where 1.0 is normal, 2.0 is double speed.
-                Internally stored as ``1/speed`` since scalar represents
-                the fraction of source consumed per output tick.
+            speed: Speed multiplier (1.0 = normal, 2.0 = double speed, 0.5 = half speed).
         """
         if speed <= 0:
-            raise ValueError(f'Speed must be positive, got {speed}')
-        self.scalar = Fraction(1, 1) / Fraction(speed).limit_denominator(10000)
+            raise ValueError(f'speed must be > 0, got {speed}')
+        self._data['scalar'] = speed
+        return self
+
+    @property
+    def speed(self) -> float:
+        """Current playback speed multiplier."""
+        return self._data.get('scalar', 1)
 
     @property
     def has_effects(self) -> bool:

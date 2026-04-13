@@ -207,8 +207,7 @@ def test_baseclip_set_speed_mutates_dict() -> None:
     data = _base_clip_dict()
     clip = BaseClip(data)
     clip.set_speed(2.0)
-    expected_scalar = str(Fraction(1, 2))
-    assert data["scalar"] == expected_scalar
+    assert data["scalar"] == 2.0
 
 
 def test_baseclip_start_seconds() -> None:

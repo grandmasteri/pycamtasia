@@ -1000,6 +1000,11 @@ class Track:
         """
         return ticks_to_seconds(self.end_time_ticks())
 
+    @property
+    def total_end_seconds(self) -> float:
+        """End time of the last clip in seconds."""
+        return ticks_to_seconds(self.end_time_ticks())
+
     def set_segment_speeds(
         self,
         clip_id: int,

@@ -1765,3 +1765,52 @@ def test_sort_tracks_by_name():
     assert names == ['Apple', 'Mango', 'Zebra']
     for i, t in enumerate(tl.tracks):
         assert t._data['trackIndex'] == i
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.speed / set_speed
+# ---------------------------------------------------------------------------
+
+def test_clip_speed_get_set():
+    media = {'id': 1, 'start': 0, 'duration': 100}
+    t = _make_track([media])
+    clip = list(t.clips)[0]
+    assert clip.speed == 1  # default
+    result = clip.set_speed(2.0)
+    assert clip.speed == 2.0
+    assert result is clip  # fluent return
+
+
+def test_clip_speed_validation():
+    media = {'id': 1, 'start': 0, 'duration': 100}
+    t = _make_track([media])
+    clip = list(t.clips)[0]
+    with pytest.raises(ValueError):
+        clip.set_speed(0)
+    with pytest.raises(ValueError):
+        clip.set_speed(-1)
+
+
+# ---------------------------------------------------------------------------
+# Track.total_end_seconds
+# ---------------------------------------------------------------------------
+
+def test_track_total_end_seconds():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(5)},
+        {'id': 2, 'start': seconds_to_ticks(5), 'duration': seconds_to_ticks(3)},
+    ]
+    t = _make_track(medias)
+    assert t.total_end_seconds == pytest.approx(8.0)
+
+
+# ---------------------------------------------------------------------------
+# Timeline.end_seconds
+# ---------------------------------------------------------------------------
+
+def test_timeline_end_seconds():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(10)},
+    ]
+    tl = _make_timeline([('Track1', medias)])
+    assert tl.end_seconds == pytest.approx(10.0)

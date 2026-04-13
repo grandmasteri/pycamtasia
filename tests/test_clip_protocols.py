@@ -98,19 +98,16 @@ class TestSetOpacityValidation:
 class TestSetSpeedValidation:
     def test_set_speed_zero_raises(self) -> None:
         clip = _make_clip()
-        with pytest.raises(ValueError, match='Speed must be positive'):
+        with pytest.raises(ValueError, match='speed must be > 0'):
             clip.set_speed(0)
 
     def test_set_speed_negative_raises(self) -> None:
         clip = _make_clip()
-        with pytest.raises(ValueError, match='Speed must be positive'):
+        with pytest.raises(ValueError, match='speed must be > 0'):
             clip.set_speed(-1.5)
 
     def test_set_speed_positive_works(self) -> None:
         clip = _make_clip()
-        clip.set_speed(2.0)
-        actual = clip.scalar
-        expected_numerator = 1
-        expected_denominator = 2
-        assert actual.numerator == expected_numerator
-        assert actual.denominator == expected_denominator
+        result = clip.set_speed(2.0)
+        assert clip.speed == 2.0
+        assert result is clip  # fluent chaining
