@@ -114,3 +114,42 @@ class TestTechSmithLibraryAsset:
             return False
         found = any(_has_effect(t.get('medias', []), 'MediaMatte') for t in tracks)
         assert found
+
+class TestTechSmithComplexAsset:
+    @pytest.fixture
+    def complex_data(self):
+        path = FIXTURES / 'techsmith_complex_asset.tscproj'
+        return json.loads(path.read_text())
+
+    def test_all_clips_load(self, complex_data):
+        tracks = complex_data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
+        count = [0]
+        def _check(medias):
+            for m in medias:
+                clip = clip_from_dict(m)
+                assert clip.id is not None
+                count[0] += 1
+                for t in m.get('tracks', []):
+                    _check(t.get('medias', []))
+        for track in tracks:
+            _check(track.get('medias', []))
+        assert count[0] >= 40
+
+    def test_has_stitched_media(self, complex_data):
+        tracks = complex_data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
+        found = False
+        def _search(medias):
+            nonlocal found
+            for m in medias:
+                if m.get('_type') == 'StitchedMedia':
+                    found = True
+                for t in m.get('tracks', []):
+                    _search(t.get('medias', []))
+        for t in tracks:
+            _search(t.get('medias', []))
+        assert found
+
+    def test_no_validation_issues(self, complex_data):
+        assert _check_duplicate_clip_ids(complex_data) == []
+        assert _check_track_indices(complex_data) == []
+        assert _check_transition_references(complex_data) == []
