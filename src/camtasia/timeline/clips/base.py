@@ -93,6 +93,12 @@ class BaseClip:
         """Audio gain (0.0 = muted, 1.0 = full volume)."""
         return self._data.get('attributes', {}).get('gain', 1.0)
 
+    def is_at(self, time_seconds: float) -> bool:
+        """Whether this clip spans the given time point."""
+        from camtasia.timing import seconds_to_ticks
+        t = seconds_to_ticks(time_seconds)
+        return self.start <= t < self.start + self.duration
+
     @gain.setter
     def gain(self, value: float) -> None:
         self._data.setdefault('attributes', {})['gain'] = value

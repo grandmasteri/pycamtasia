@@ -221,6 +221,16 @@ class Timeline:
         """Names of all tracks."""
         return [t.name for t in self.tracks]
 
+    def to_dict(self) -> dict:
+        """Return a summary dict of the timeline structure."""
+        return {
+            'track_count': self.track_count,
+            'total_clip_count': self.total_clip_count,
+            'duration_seconds': self.total_duration_seconds(),
+            'has_clips': self.has_clips,
+            'track_names': self.track_names,
+        }
+
     @property
     def all_effects(self) -> list[tuple[Track, BaseClip, dict]]:
         """All effects across all tracks as (track, clip, effect_dict) tuples."""

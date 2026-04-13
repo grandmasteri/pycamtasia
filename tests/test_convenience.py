@@ -945,3 +945,33 @@ def test_project_describe_unhealthy(project):
     with patch.object(project, 'validate', return_value=[ValidationIssue('error', 'bad')]):
         actual = project.describe()
         assert '❌' in actual
+
+# ---------------------------------------------------------------------------
+# Timeline.to_dict
+# ---------------------------------------------------------------------------
+
+def test_timeline_to_dict():
+    media = {'id': 1, 'start': 0, 'duration': seconds_to_ticks(5.0)}
+    tl = _make_timeline([('Video', [media]), ('Audio', [])])
+    d = tl.to_dict()
+    assert d['track_count'] == 2
+    assert d['total_clip_count'] == 1
+    assert d['duration_seconds'] == pytest.approx(5.0)
+    assert d['has_clips'] is True
+    assert d['track_names'] == ['Video', 'Audio']
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.is_at
+# ---------------------------------------------------------------------------
+
+def test_clip_is_at():
+    from camtasia.timeline.clips.base import BaseClip
+    start = seconds_to_ticks(2.0)
+    dur = seconds_to_ticks(3.0)
+    clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': start, 'duration': dur})
+    assert clip.is_at(2.0) is True
+    assert clip.is_at(3.5) is True
+    assert clip.is_at(4.99) is True
+    assert clip.is_at(5.0) is False
+    assert clip.is_at(1.0) is False
