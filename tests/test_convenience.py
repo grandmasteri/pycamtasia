@@ -1098,3 +1098,43 @@ def test_track_transition_count():
         ],
     })
     assert track_two.transition_count == 2
+
+
+# ---------------------------------------------------------------------------
+# Project.find_clips_by_type
+# ---------------------------------------------------------------------------
+
+def test_find_clips_by_type():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+
+    vm = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
+    am = {'id': 2, '_type': 'AMFile', 'start': 0, 'duration': 200}
+    vm2 = {'id': 3, '_type': 'VMFile', 'start': 100, 'duration': 50}
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([[vm, am], [vm2]])
+    proj.timeline = Timeline(proj._data['timeline'])
+    proj.all_clips = Project.all_clips.fget(proj)
+
+    result = Project.find_clips_by_type(proj, 'VMFile')
+    assert len(result) == 2
+    assert all(c.clip_type == 'VMFile' for _, c in result)
+
+    result_am = Project.find_clips_by_type(proj, 'AMFile')
+    assert len(result_am) == 1
+    assert result_am[0][1].clip_type == 'AMFile'
+
+    assert Project.find_clips_by_type(proj, 'NoSuchType') == []
+
+
+# ---------------------------------------------------------------------------
+# Timeline.describe
+# ---------------------------------------------------------------------------
+
+def test_timeline_describe():
+    media = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 300}
+    tl = _make_timeline([('Video', [media]), ('Audio', [])])
+    desc = tl.describe()
+    assert 'Timeline:' in desc
+    assert '2 tracks' in desc
+    assert '1 clips' in desc

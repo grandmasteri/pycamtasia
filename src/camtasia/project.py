@@ -256,6 +256,10 @@ class Project:
         """All clips across all tracks as (track, clip) tuples."""
         return [(t, c) for t in self.timeline.tracks for c in t.clips]
 
+    def find_clips_by_type(self, clip_type: str) -> list[tuple[Track, BaseClip]]:
+        """Find all clips of a specific type across all tracks."""
+        return [(t, c) for t, c in self.all_clips if c.clip_type == clip_type]
+
     @classmethod
     def from_template(
         cls,

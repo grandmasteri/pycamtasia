@@ -177,6 +177,17 @@ class Timeline:
         """Total timeline duration in seconds."""
         return self.total_duration_seconds()
 
+    def describe(self) -> str:
+        """Human-readable timeline description."""
+        lines = [
+            f'Timeline: {self.track_count} tracks, {self.total_clip_count} clips, {self.total_duration_seconds():.1f}s',
+            '',
+        ]
+        for track in self.tracks:
+            lines.append(track.describe())
+            lines.append('')
+        return '\n'.join(lines)
+
     def get_or_create_track(self, name: str) -> Track:
         """Find a track by name, or create a new one if it doesn't exist.
 
