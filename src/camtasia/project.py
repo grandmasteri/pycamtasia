@@ -950,6 +950,31 @@ class Project:
             )
         return self.file_path
 
+    def export_all(self, output_dir: str | Path) -> dict[str, Path]:
+        """Export project in all available formats.
+
+        Creates: report.md, report.json, timeline.json, markers.srt, timeline.edl
+
+        Returns dict mapping format name to output path.
+        """
+        from camtasia.export import (
+            export_project_report,
+            export_markers_as_srt,
+            export_edl,
+        )
+        from camtasia.export.timeline_json import export_timeline_json
+
+        out = Path(output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+
+        results = {}
+        results['report_md'] = export_project_report(self, out / 'report.md', format='markdown')
+        results['report_json'] = export_project_report(self, out / 'report.json', format='json')
+        results['timeline_json'] = export_timeline_json(self, out / 'timeline.json')
+        results['markers_srt'] = export_markers_as_srt(self, out / 'markers.srt')
+        results['edl'] = export_edl(self, out / 'timeline.edl')
+        return results
+
     def __repr__(self) -> str:
         return (f'Project(path={self.file_path.name!r}, '
                 f'{self.width}x{self.height}, '
