@@ -184,3 +184,24 @@ class TestProjectRepr:
         assert "tracks=" in r
         assert "duration=" in r
         assert r.endswith("s)")
+
+
+class TestFromTemplate:
+    def test_from_template_creates_project(self, tmp_path: Path):
+        dest = tmp_path / "templated.cmproj"
+        proj = Project.from_template(dest)
+        assert dest.exists()
+        assert isinstance(proj, Project)
+        assert proj.width == 1920
+        assert proj.height == 1080
+        assert proj.frame_rate == 30
+
+    def test_from_template_custom_settings(self, tmp_path: Path):
+        dest = tmp_path / "custom.cmproj"
+        proj = Project.from_template(
+            dest, width=3840, height=2160, title="My Video", frame_rate=60
+        )
+        assert proj.width == 3840
+        assert proj.height == 2160
+        assert proj.title == "My Video"
+        assert proj.frame_rate == 60

@@ -227,6 +227,26 @@ class Project:
                     return True
         return False
 
+    @classmethod
+    def from_template(
+        cls,
+        dest_path: str | Path,
+        *,
+        width: int = 1920,
+        height: int = 1080,
+        title: str = '',
+        frame_rate: int = 30,
+    ) -> Project:
+        """Create a new project from the built-in template with custom settings."""
+        new_project(str(dest_path))
+        proj = load_project(str(dest_path))
+        proj.width = width
+        proj.height = height
+        if title:
+            proj.title = title
+        proj.frame_rate = frame_rate
+        return proj
+
     @staticmethod
     def _flatten_parameters(obj: Any) -> None:
         """Convert parameter dicts without keyframes to bare defaultValues.
