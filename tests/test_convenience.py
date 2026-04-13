@@ -566,3 +566,58 @@ def test_tracks_with_clips():
     assert len(result) == 2
     names = [t.name for t in result]
     assert names == ['A', 'C']
+
+
+# ---------------------------------------------------------------------------
+# Track.total_gap_seconds
+# ---------------------------------------------------------------------------
+
+def test_total_gap_seconds():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(2.0)},
+        {'id': 2, 'start': seconds_to_ticks(5.0), 'duration': seconds_to_ticks(1.0)},
+        {'id': 3, 'start': seconds_to_ticks(8.0), 'duration': seconds_to_ticks(2.0)},
+    ]
+    track = _make_track(medias=medias)
+    # gap1: 2.0→5.0 = 3.0s, gap2: 6.0→8.0 = 2.0s → total 5.0s
+    assert track.total_gap_seconds == pytest.approx(5.0)
+
+
+def test_total_gap_seconds_no_gaps():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(3.0)},
+        {'id': 2, 'start': seconds_to_ticks(3.0), 'duration': seconds_to_ticks(2.0)},
+    ]
+    track = _make_track(medias=medias)
+    assert track.total_gap_seconds == 0.0
+
+
+def test_total_gap_seconds_empty():
+    track = _make_track(medias=[])
+    assert track.total_gap_seconds == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Timeline.track_names
+# ---------------------------------------------------------------------------
+
+def test_track_names():
+    tl = _make_timeline([
+        ('Video', [{'id': 1, 'start': 0, 'duration': 100}]),
+        ('Audio', []),
+        ('Captions', []),
+    ])
+    assert tl.track_names == ['Video', 'Audio', 'Captions']
+
+
+def test_track_names_empty_timeline():
+    tl = _make_timeline([])
+    assert tl.track_names == []
+
+
+# ---------------------------------------------------------------------------
+# Project.media_count
+# ---------------------------------------------------------------------------
+
+def test_media_count(project):
+    assert project.media_count == 0

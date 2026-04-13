@@ -907,6 +907,11 @@ class Track:
                 result.append((ticks_to_seconds(end), ticks_to_seconds(next_start)))
         return result
 
+    @property
+    def total_gap_seconds(self) -> float:
+        """Total gap time between clips in seconds."""
+        return sum(end - start for start, end in self.gaps())
+
     def overlaps(self) -> list[tuple[int, int]]:
         """Find overlapping clips on this track.
 

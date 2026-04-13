@@ -205,6 +205,11 @@ class Timeline:
         return [t for t in self.tracks if not t.is_empty]
 
     @property
+    def track_names(self) -> list[str]:
+        """Names of all tracks."""
+        return [t.name for t in self.tracks]
+
+    @property
     def all_effects(self) -> list[tuple[Track, BaseClip, dict]]:
         """All effects across all tracks as (track, clip, effect_dict) tuples."""
         results = []

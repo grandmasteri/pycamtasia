@@ -215,6 +215,11 @@ class Project:
         return MediaBin(self._data.setdefault('sourceBin', []), self._file_path)
 
     @property
+    def media_count(self) -> int:
+        """Number of media entries in the source bin."""
+        return len(self.media_bin)
+
+    @property
     def timeline(self) -> Timeline:
         """The project's timeline."""
         return Timeline(self._data['timeline'])
