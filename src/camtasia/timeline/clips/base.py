@@ -78,6 +78,12 @@ class BaseClip:
         self._data['duration'] = value
 
     @property
+    def end_seconds(self) -> float:
+        """End time in seconds (start + duration)."""
+        from camtasia.timing import ticks_to_seconds
+        return ticks_to_seconds(self.start + self.duration)
+
+    @property
     def gain(self) -> float:
         """Audio gain (0.0 = muted, 1.0 = full volume)."""
         return self._data.get('attributes', {}).get('gain', 1.0)

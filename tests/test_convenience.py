@@ -717,3 +717,47 @@ def test_track_typed_clips():
     assert t.video_clips[0].clip_type == 'VMFile'
     assert len(t.image_clips) == 1
     assert t.image_clips[0].clip_type == 'IMFile'
+
+
+# ---------------------------------------------------------------------------
+# Timeline.clear_all
+# ---------------------------------------------------------------------------
+
+def test_clear_all():
+    medias_a = [{'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100}]
+    medias_b = [{'_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 200}]
+    tl = _make_timeline([('A', medias_a), ('B', medias_b)])
+    assert sum(len(t) for t in tl.tracks) == 2
+    tl.clear_all()
+    assert all(len(t) == 0 for t in tl.tracks)
+
+
+# ---------------------------------------------------------------------------
+# Project.to_dict
+# ---------------------------------------------------------------------------
+
+def test_to_dict():
+    from camtasia.project import load_project
+    from pathlib import Path
+    fixture = Path(__file__).parent / 'fixtures' / 'test_project_c.tscproj'
+    proj = load_project(fixture)
+    d = proj.to_dict()
+    assert isinstance(d, dict)
+    # Deep copy: mutating the returned dict must not affect the project
+    d['__test_sentinel'] = True
+    assert '__test_sentinel' not in proj._data
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.end_seconds
+# ---------------------------------------------------------------------------
+
+def test_end_seconds():
+    from camtasia.timing import EDIT_RATE
+    from camtasia.timeline.clips.base import BaseClip
+    start = EDIT_RATE * 2   # 2 seconds
+    dur = EDIT_RATE * 3     # 3 seconds
+    clip = BaseClip({'_type': 'AMFile', 'id': 1, 'start': start,
+                     'duration': dur, 'metadata': {},
+                     'animationTracks': {}})
+    assert clip.end_seconds == pytest.approx(5.0)

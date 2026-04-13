@@ -1036,6 +1036,11 @@ class Project:
                 f'tracks={self.timeline.track_count}, '
                 f'duration={self.total_duration_seconds():.1f}s)')
 
+    def to_dict(self) -> dict:
+        """Return a deep copy of the project data dict."""
+        import copy
+        return copy.deepcopy(self._data)
+
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
     """Load a Camtasia project from disk.

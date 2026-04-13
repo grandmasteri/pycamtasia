@@ -226,6 +226,11 @@ class Timeline:
             self.remove_track(idx)
         return len(empty_indices)
 
+    def clear_all(self) -> None:
+        """Clear all clips and transitions from all tracks."""
+        for track in self.tracks:
+            track.clear()
+
     def add_marker(self, label: str, time_seconds: float) -> Marker:
         """Add a timeline marker at the given time.
 
