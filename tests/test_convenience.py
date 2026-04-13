@@ -1358,3 +1358,83 @@ def test_set_opacity_fade():
     clip2 = clip_from_dict({'_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 9000})
     clip2.set_opacity_fade(0.5, 1.0)
     assert clip2._data['parameters']['opacity']['keyframes'][1]['time'] == 9000
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.set_volume_fade
+# ---------------------------------------------------------------------------
+
+def test_set_volume_fade():
+    from camtasia.timeline.clips import clip_from_dict
+    from camtasia.timing import seconds_to_ticks
+    clip = clip_from_dict({'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 9000})
+    result = clip.set_volume_fade(1.0, 0.0, 3.0)
+    assert result is clip  # returns self
+    params = clip._data['parameters']['volume']
+    assert params['defaultValue'] == 1.0
+    assert len(params['keyframes']) == 2
+    assert params['keyframes'][0]['value'] == 1.0
+    assert params['keyframes'][1]['value'] == 0.0
+    assert params['keyframes'][1]['time'] == seconds_to_ticks(3.0)
+    # without duration_seconds — uses clip duration
+    clip2 = clip_from_dict({'_type': 'AMFile', 'id': 2, 'start': 0, 'duration': 9000})
+    clip2.set_volume_fade(0.5, 1.0)
+    assert clip2._data['parameters']['volume']['keyframes'][1]['time'] == 9000
+
+
+# ---------------------------------------------------------------------------
+# Track.find_clip_at
+# ---------------------------------------------------------------------------
+
+def test_find_clip_at():
+    medias = [
+        {'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(5.0)},
+        {'_type': 'AMFile', 'id': 2, 'start': seconds_to_ticks(10.0), 'duration': seconds_to_ticks(5.0)},
+    ]
+    track = _make_track(medias=medias)
+    clip = track.find_clip_at(2.0)
+    assert clip is not None
+    assert clip.id == 1
+    clip2 = track.find_clip_at(12.0)
+    assert clip2 is not None
+    assert clip2.id == 2
+
+
+def test_find_clip_at_empty():
+    track = _make_track(medias=[])
+    assert track.find_clip_at(5.0) is None
+    # Also test a gap between clips
+    medias = [
+        {'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(3.0)},
+    ]
+    track2 = _make_track(medias=medias)
+    assert track2.find_clip_at(5.0) is None
+
+
+# ---------------------------------------------------------------------------
+# Timeline.find_all_clips_at
+# ---------------------------------------------------------------------------
+
+def test_find_all_clips_at():
+    t = seconds_to_ticks
+    tl = _make_timeline([
+        ('Track1', [{'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}]),
+        ('Track2', [{'_type': 'AMFile', 'id': 2, 'start': 0, 'duration': t(10.0)}]),
+        ('Track3', [{'_type': 'VMFile', 'id': 3, 'start': t(20.0), 'duration': t(5.0)}]),
+    ])
+    results = tl.find_all_clips_at(5.0)
+    assert len(results) == 2
+    clip_ids = {clip.id for _, clip in results}
+    assert clip_ids == {1, 2}
+    # Time outside all clips
+    assert tl.find_all_clips_at(30.0) == []
+
+
+def test_find_media_by_extension(project):
+    from pathlib import Path
+    wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
+    project.import_media(wav)
+    actual = project.find_media_by_extension('wav')
+    assert len(actual) >= 1
+    actual_none = project.find_media_by_extension('xyz')
+    assert actual_none == []

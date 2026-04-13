@@ -907,6 +907,11 @@ class Track:
                 result.append(clip)
         return result
 
+    def find_clip_at(self, time_seconds: float) -> BaseClip | None:
+        """Return the first clip at the given time, or None."""
+        clips = self.clips_at(time_seconds)
+        return clips[0] if clips else None
+
     @property
     def total_duration_seconds(self) -> float:
         """Total duration of all clips on this track in seconds."""

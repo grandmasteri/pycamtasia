@@ -828,6 +828,11 @@ class Project:
         """
         return [m for m in self.media_bin if str(m.source).endswith(suffix)]
 
+    def find_media_by_extension(self, ext: str) -> list[Media]:
+        """Find all media entries with the given file extension."""
+        ext = ext.lower().lstrip('.')
+        return [m for m in self.media_bin if str(m.source).lower().endswith(f'.{ext}')]
+
     def add_gradient_background(
         self,
         duration_seconds: float,

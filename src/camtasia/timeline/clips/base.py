@@ -1112,6 +1112,20 @@ class BaseClip:
         }
         return self
 
+    def set_volume_fade(self, start_volume: float = 1.0, end_volume: float = 0.0, duration_seconds: float | None = None) -> Self:
+        """Add a volume fade keyframe animation."""
+        from camtasia.timing import seconds_to_ticks
+        dur = seconds_to_ticks(duration_seconds) if duration_seconds else self.duration
+        self._data.setdefault('parameters', {})['volume'] = {
+            'type': 'double',
+            'defaultValue': start_volume,
+            'keyframes': [
+                {'endTime': 0, 'time': 0, 'value': start_volume, 'duration': 0},
+                {'endTime': dur, 'time': dur, 'value': end_volume, 'duration': 0},
+            ],
+        }
+        return self
+
     def to_dict(self) -> ClipSummary:
         """Return a summary dict of this clip's key properties."""
         from camtasia.timing import ticks_to_seconds

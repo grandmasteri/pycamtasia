@@ -302,6 +302,14 @@ class Timeline:
                     results.append((track, clip))
         return results
 
+    def find_all_clips_at(self, time_seconds: float) -> list[tuple[Track, BaseClip]]:
+        """Find all clips at a time point across all tracks."""
+        results = []
+        for track in self.tracks:
+            for clip in track.clips_at(time_seconds):
+                results.append((track, clip))
+        return results
+
     def clips_of_type(self, clip_type: str) -> list[tuple[Track, BaseClip]]:
         """Find all clips of a specific type across all tracks.
 
