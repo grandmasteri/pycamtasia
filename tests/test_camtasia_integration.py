@@ -30,13 +30,14 @@ pytestmark = [
 
 def _validate_in_camtasia(project_path: str, timeout: int = 15) -> int:
     """Launch Camtasia, wait, count EXCEPTION lines in stderr."""
-    subprocess.run(['pkill', '-f', 'Camtasia'], capture_output=True)
-    time.sleep(2)
+    subprocess.run(['pkill', '-9', '-f', 'Camtasia'], capture_output=True)
+    time.sleep(3)
 
     lock = Path(project_path) / '~project.tscproj'
     lock.unlink(missing_ok=True)
 
-    log = Path('/tmp/cam_integration_test.log')
+    import uuid
+    log = Path(f'/tmp/cam_test_{uuid.uuid4().hex[:8]}.log')
     with log.open('w') as log_fh:
         proc = subprocess.Popen(
             [str(CAMTASIA_BIN), project_path],
@@ -50,7 +51,9 @@ def _validate_in_camtasia(project_path: str, timeout: int = 15) -> int:
     except subprocess.TimeoutExpired:
         proc.kill()
 
-    return log.read_text().count('EXCEPTION') if log.exists() else 0
+    count = log.read_text().count('EXCEPTION') if log.exists() else 0
+    log.unlink(missing_ok=True)
+    return count
 
 
 def _create_test_image(tmp_path: Path) -> Path:
