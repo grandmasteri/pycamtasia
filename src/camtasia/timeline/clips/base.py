@@ -7,7 +7,7 @@ from typing import Any, Self
 from camtasia.effects.base import Effect, effect_from_dict
 from camtasia.effects.visual import Glow
 from camtasia.timing import seconds_to_ticks
-from camtasia.types import BlendMode, ClipType, EffectName
+from camtasia.types import BlendMode, ClipSummary, ClipType, EffectName
 
 EDIT_RATE = 705_600_000
 """Ticks per second. Divisible by 30fps, 60fps, 44100Hz, 48000Hz."""
@@ -1064,7 +1064,7 @@ class BaseClip:
         self._data['effects'] = []
         return self
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> ClipSummary:
         """Return a summary dict of this clip's key properties."""
         from camtasia.timing import ticks_to_seconds
         result = {

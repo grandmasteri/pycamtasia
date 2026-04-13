@@ -16,6 +16,7 @@ from camtasia.timeline import Timeline
 from camtasia.timeline.track import Track
 from camtasia.timeline.clips import BaseClip
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
+from camtasia.types import HealthCheckResult
 from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_indices, _check_transition_references
 
 
@@ -649,7 +650,7 @@ class Project:
             'sample_rate': self.sample_rate,
         }
 
-    def health_check(self) -> dict:
+    def health_check(self) -> HealthCheckResult:
         """Run comprehensive project health check.
 
         Returns dict with:

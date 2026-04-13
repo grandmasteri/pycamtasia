@@ -82,3 +82,74 @@ class MediaType(IntEnum):
     VIDEO = 0
     IMAGE = 1
     AUDIO = 2
+
+
+# ---------------------------------------------------------------------------
+# TypedDicts – structured data returned / consumed by the library
+# ---------------------------------------------------------------------------
+from typing import TypedDict, NotRequired
+
+
+class RGBA(TypedDict):
+    """RGBA color as 0.0-1.0 floats."""
+    red: float
+    green: float
+    blue: float
+    alpha: NotRequired[float]
+
+
+class DropShadowParams(TypedDict, total=False):
+    """Parameters for DropShadow effect."""
+    angle: float
+    offset: float
+    blur: float
+    opacity: float
+
+
+class RoundCornersParams(TypedDict, total=False):
+    """Parameters for RoundCorners effect."""
+    radius: float
+
+
+class ColorAdjustmentParams(TypedDict, total=False):
+    """Parameters for ColorAdjustment effect."""
+    brightness: float
+    contrast: float
+    saturation: float
+
+
+class EffectDict(TypedDict):
+    """Structure of an effect entry in the effects array."""
+    effectName: str
+    bypassed: bool
+    category: NotRequired[str]
+    parameters: NotRequired[dict]
+
+
+class TransitionDict(TypedDict):
+    """Structure of a transition entry."""
+    name: str
+    duration: int
+    leftMedia: NotRequired[int]
+    rightMedia: NotRequired[int]
+    attributes: NotRequired[dict]
+
+
+class ClipSummary(TypedDict):
+    """Summary dict returned by BaseClip.to_dict()."""
+    id: int
+    type: str
+    start_seconds: float
+    duration_seconds: float
+    end_seconds: float
+    source_id: NotRequired[int]
+    effects: NotRequired[list[str]]
+
+
+class HealthCheckResult(TypedDict):
+    """Result of Project.health_check()."""
+    healthy: bool
+    errors: list[str]
+    warnings: list[str]
+    structural_issues: list[str]
+    statistics: dict
