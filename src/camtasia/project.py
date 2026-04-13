@@ -13,6 +13,8 @@ from typing import Any, Iterator
 from camtasia.authoring_client import AuthoringClient
 from camtasia.media_bin import Media, MediaBin, MediaType
 from camtasia.timeline import Timeline
+from camtasia.timeline.track import Track
+from camtasia.timeline.clips import BaseClip
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_indices, _check_transition_references
 
@@ -226,6 +228,11 @@ class Project:
                 if isinstance(clip, Group) and clip.is_screen_recording:
                     return True
         return False
+
+    @property
+    def all_clips(self) -> list[tuple[Track, BaseClip]]:
+        """All clips across all tracks as (track, clip) tuples."""
+        return [(t, c) for t in self.timeline.tracks for c in t.clips]
 
     @classmethod
     def from_template(

@@ -199,6 +199,16 @@ class Timeline:
         """Return all tracks with no clips."""
         return [t for t in self.tracks if t.is_empty]
 
+    @property
+    def all_effects(self) -> list[tuple[Track, BaseClip, dict]]:
+        """All effects across all tracks as (track, clip, effect_dict) tuples."""
+        results = []
+        for track in self.tracks:
+            for clip in track.clips:
+                for eff in clip._data.get('effects', []):
+                    results.append((track, clip, eff))
+        return results
+
     def remove_empty_tracks(self) -> int:
         """Remove all empty tracks. Returns count removed."""
         empty_indices = [t.index for t in self.tracks if t.is_empty]

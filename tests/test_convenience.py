@@ -421,3 +421,75 @@ def test_total_duration_ticks():
         ('C', []),
     ])
     assert tl.total_duration_ticks == 700  # max(500, 100+600, 0)
+
+
+# ---------------------------------------------------------------------------
+# Track.filter_clips
+# ---------------------------------------------------------------------------
+
+def test_filter_clips():
+    medias = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
+        {'id': 2, '_type': 'AMFile', 'start': 100, 'duration': 200},
+        {'id': 3, '_type': 'VMFile', 'start': 300, 'duration': 150},
+    ]
+    track = _make_track(medias=medias)
+    result = track.filter_clips(lambda c: c.start == 0)
+    assert len(result) == 1
+    assert result[0].id == 1
+
+    all_clips = track.filter_clips(lambda c: True)
+    assert len(all_clips) == 3
+
+    none = track.filter_clips(lambda c: False)
+    assert none == []
+
+
+# ---------------------------------------------------------------------------
+# Timeline.all_effects
+# ---------------------------------------------------------------------------
+
+def test_all_effects():
+    medias_a = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+         'effects': [{'effectName': 'Glow'}, {'effectName': 'Border'}]},
+    ]
+    medias_b = [
+        {'id': 2, '_type': 'AMFile', 'start': 0, 'duration': 50, 'effects': []},
+        {'id': 3, '_type': 'VMFile', 'start': 50, 'duration': 50,
+         'effects': [{'effectName': 'Shadow'}]},
+    ]
+    tl = _make_timeline([('A', medias_a), ('B', medias_b)])
+    effects = tl.all_effects
+    assert len(effects) == 3
+    # Each entry is (track, clip, effect_dict)
+    names = [e[2]['effectName'] for e in effects]
+    assert names == ['Glow', 'Border', 'Shadow']
+    assert effects[0][0].name == 'A'
+    assert effects[0][1].id == 1
+    assert effects[2][0].name == 'B'
+    assert effects[2][1].id == 3
+
+
+# ---------------------------------------------------------------------------
+# Project.all_clips
+# ---------------------------------------------------------------------------
+
+def test_all_clips():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([
+        [{'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}],
+        [{'id': 2, '_type': 'AMFile', 'start': 0, 'duration': 50},
+         {'id': 3, '_type': 'VMFile', 'start': 50, 'duration': 50}],
+        [],
+    ])
+    proj.timeline = Timeline(proj._data['timeline'])
+    result = Project.all_clips.fget(proj)
+    assert len(result) == 3
+    track_names = [t.name for t, c in result]
+    clip_ids = [c.id for t, c in result]
+    assert clip_ids == [1, 2, 3]
+    assert track_names == ['Track0', 'Track1', 'Track1']

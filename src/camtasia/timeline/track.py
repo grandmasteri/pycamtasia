@@ -911,6 +911,10 @@ class Track:
                 result.append((medias[i]['id'], medias[i + 1]['id']))
         return result
 
+    def filter_clips(self, predicate) -> list[BaseClip]:
+        """Return clips matching a predicate function."""
+        return [c for c in self.clips if predicate(c)]
+
     def end_time_ticks(self) -> int:
         """End time of the last clip on this track, in ticks."""
         max_end = 0
