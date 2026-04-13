@@ -700,6 +700,27 @@ class Project:
                 lines.append(f'  Track {track.index} "{track.name}": empty')
         return '\n'.join(lines)
 
+    def describe(self) -> str:
+        """Comprehensive human-readable project description."""
+        lines = [
+            f'Project: {self.file_path.name}',
+            f'Canvas: {self.width}x{self.height} @ {self.frame_rate}fps',
+            f'Duration: {self.total_duration_seconds():.1f}s',
+            f'Tracks: {self.timeline.track_count} ({len(self.timeline.tracks_with_clips)} with clips)',
+            f'Clips: {self.timeline.total_clip_count}',
+            f'Media: {self.media_count} items',
+            '',
+        ]
+        for track in self.timeline.tracks:
+            lines.append(track.describe())
+            lines.append('')
+        health = self.health_check()
+        if health['healthy']:
+            lines.append('Health: ✅ Healthy')
+        else:
+            lines.append(f'Health: ❌ {len(health["errors"])} errors, {len(health["warnings"])} warnings')
+        return '\n'.join(lines)
+
     def total_duration_seconds(self) -> float:
         """Total timeline duration in seconds.
 

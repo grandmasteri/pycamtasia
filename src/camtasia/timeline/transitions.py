@@ -33,9 +33,9 @@ class Transition:
         return self.duration / EDIT_RATE
 
     @property
-    def left_media_id(self) -> int:
-        """Clip ID on the left side of the transition."""
-        return self._data['leftMedia']
+    def left_media_id(self) -> int | None:
+        """Clip ID on the left side, or None for fade-in at start."""
+        return self._data.get('leftMedia')
 
     @property
     def right_media_id(self) -> int | None:

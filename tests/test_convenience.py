@@ -918,3 +918,30 @@ def test_track_to_list():
     assert result[0]['start_seconds'] == pytest.approx(0.0)
     assert result[1]['id'] == 2
     assert result[1]['duration_seconds'] == pytest.approx(3.0)
+
+
+# ---------------------------------------------------------------------------
+# Project.describe
+# ---------------------------------------------------------------------------
+
+def test_project_describe():
+    from camtasia.project import load_project
+    from pathlib import Path
+    fixture = Path(__file__).parent / 'fixtures' / 'test_project_c.tscproj'
+    proj = load_project(fixture)
+    desc = proj.describe()
+    assert isinstance(desc, str)
+    assert f'Project: {proj.file_path.name}' in desc
+    assert f'{proj.frame_rate}fps' in desc
+    assert 'Duration:' in desc
+    assert 'Tracks:' in desc
+    assert 'Clips:' in desc
+    assert 'Media:' in desc
+    assert 'Health:' in desc
+
+def test_project_describe_unhealthy(project):
+    from unittest.mock import patch
+    from camtasia.validation import ValidationIssue
+    with patch.object(project, 'validate', return_value=[ValidationIssue('error', 'bad')]):
+        actual = project.describe()
+        assert '❌' in actual

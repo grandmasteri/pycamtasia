@@ -177,3 +177,10 @@ class TestDictMutationPassthrough:
         tl.add("FadeThroughBlack", 33, 34, 352_800_000)
         assert "transitions" in data
         assert tl[0].name == "FadeThroughBlack"
+
+
+class TestTransitionMissingLeftMedia:
+    def test_left_media_id_none_when_missing(self):
+        from camtasia.timeline.transitions import Transition
+        t = Transition({'name': 'FadeThroughBlack', 'duration': 100, 'rightMedia': 1, 'attributes': {}})
+        assert t.left_media_id is None
