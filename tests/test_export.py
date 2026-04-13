@@ -180,3 +180,26 @@ class TestEdlWithMedia:
         export_edl(project, output)
         actual_content = output.read_text()
         assert 'AX' in actual_content  # fallback source name
+
+
+# ── CSV export tests ───────────────────────────────────────────────
+
+from camtasia.export.csv_export import export_csv
+
+
+def test_csv_export_header(project, tmp_path):
+    out = export_csv(project, tmp_path / 'out.csv')
+    header = out.read_text().splitlines()[0]
+    assert header == 'track_name,track_index,clip_id,clip_type,start_seconds,duration_seconds,end_seconds,source_id,effect_count,effects'
+
+
+def test_csv_export_rows(project, tmp_path):
+    _add_clip(project, start_seconds=0.0, duration_seconds=5.0)
+    _add_clip(project, start_seconds=5.0, duration_seconds=3.0)
+    out = export_csv(project, tmp_path / 'out.csv')
+    lines = [l for l in out.read_text().splitlines() if l.strip()]
+    assert len(lines) == 3  # header + 2 data rows
+    row = lines[1].split(',')
+    assert row[0] == 'Test'  # track_name
+    assert row[4] == '0.000'  # start_seconds
+    assert row[5] == '5.000'  # duration_seconds
