@@ -56,7 +56,7 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 - [x] **`track.add_lower_third(title, subtitle, start_seconds, duration_seconds)`** — Add a right-angle lower third title overlay with customizable title/subtitle text, colors, and duration. Uses a JSON template with correct Camtasia v10 structure.
 - [x] **`proj.add_voiceover_sequence(vo_files, pauses)`** — Takes a list of voiceover file paths and pause durations, imports them, places them sequentially on an audio track. Returns a dict mapping filenames to timeline positions and durations.
 - [x] **`proj.add_four_corner_gradient(shader_path, duration)`** — Import and place the 4-corner animated gradient shader background. Distinct from `add_gradient_background()` which creates a simple 2-color gradient.
-- [ ] **`proj.build_from_screenplay(screenplay_path)`** — Parse a screenplay markdown file with VO block IDs and automatically build the entire timeline. The ultimate high-level API for the video production pipeline.
+- [x] **`proj.build_from_screenplay(screenplay_path)`** — Parse a screenplay markdown file with VO block IDs and automatically build the entire timeline. The ultimate high-level API for the video production pipeline.
 
 ## Future
 
