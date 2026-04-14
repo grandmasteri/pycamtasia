@@ -341,3 +341,19 @@ class TestGroupEdgeCases:
             'attributes': {'ident': ''},
         })
         assert group.internal_duration_seconds == 0.0
+
+    def test_group_clear_all_then_clip_count(self):
+        group = _make_group([[_clip_data(1, 'VMFile', 0, 100), _clip_data(2, 'AMFile', 50, 100)]])
+        group.clear_all_internal_clips()
+        assert group.clip_count == 0
+
+    def test_group_add_internal_track_then_add_clip(self):
+        group = _make_group([[]])
+        new_track = group.add_internal_track()
+        new_track.add_clip('IMFile', 5, 0, 705600000)
+        assert group.clip_count == 1
+
+    def test_group_ungroup_empty(self):
+        group = _make_group([[]])
+        extracted = group.ungroup()
+        assert extracted == []
