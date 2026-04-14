@@ -2336,3 +2336,63 @@ def test_distance_to_overlap():
     clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3)})
     clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(2), 'duration': seconds_to_ticks(2)})
     assert clip_a.distance_to(clip_b) == pytest.approx(-1.0)
+
+
+# ---------------------------------------------------------------------------
+# Timeline.insert_gap / Timeline.remove_gap
+# ---------------------------------------------------------------------------
+
+def test_insert_gap():
+    """insert_gap shifts clips at or after the position by the gap duration."""
+    medias_a = [
+        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(2)},
+        {'id': 2, 'start': seconds_to_ticks(3), 'duration': seconds_to_ticks(1)},
+    ]
+    medias_b = [
+        {'id': 3, 'start': seconds_to_ticks(1), 'duration': seconds_to_ticks(1)},
+    ]
+    tl = _make_timeline([('A', medias_a), ('B', medias_b)])
+
+    tl.insert_gap(position_seconds=2.0, gap_duration_seconds=5.0)
+
+    # Clip at 0s is before position → unchanged
+    assert medias_a[0]['start'] == 0
+    # Clip at 3s is after position → shifted by 5s
+    assert medias_a[1]['start'] == seconds_to_ticks(8)
+    # Clip at 1s is before position → unchanged
+    assert medias_b[0]['start'] == seconds_to_ticks(1)
+
+
+def test_remove_gap():
+    """remove_gap pulls clips after the gap region back by the gap duration."""
+    medias_a = [
+        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(2)},
+        {'id': 2, 'start': seconds_to_ticks(10), 'duration': seconds_to_ticks(1)},
+    ]
+    medias_b = [
+        {'id': 3, 'start': seconds_to_ticks(7), 'duration': seconds_to_ticks(1)},
+    ]
+    tl = _make_timeline([('A', medias_a), ('B', medias_b)])
+
+    tl.remove_gap(position_seconds=2.0, gap_duration_seconds=5.0)
+
+    # Clip at 0s is before gap region → unchanged
+    assert medias_a[0]['start'] == 0
+    # Clip at 10s is after gap region (2+5=7) → pulled back by 5s to 5s
+    assert medias_a[1]['start'] == seconds_to_ticks(5)
+    # Clip at 7s equals position+gap → pulled back by 5s to 2s
+    assert medias_b[0]['start'] == seconds_to_ticks(2)
+
+
+# ---------------------------------------------------------------------------
+# Project.duration_formatted
+# ---------------------------------------------------------------------------
+
+def test_duration_formatted():
+    """duration_formatted returns MM:SS string."""
+    from unittest.mock import PropertyMock, patch
+    from camtasia.project import Project
+
+    with patch.object(Project, 'duration_seconds', new_callable=PropertyMock, return_value=125.7):
+        proj = object.__new__(Project)
+        assert proj.duration_formatted == '2:05'

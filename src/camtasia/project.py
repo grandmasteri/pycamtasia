@@ -319,6 +319,14 @@ class Project:
         return self.total_duration_seconds()
 
     @property
+    def duration_formatted(self) -> str:
+        """Total duration as MM:SS string."""
+        total_seconds: float = self.duration_seconds
+        minutes: int = int(total_seconds // 60)
+        remaining_seconds: int = int(total_seconds % 60)
+        return f'{minutes}:{remaining_seconds:02d}'
+
+    @property
     def next_available_id(self) -> int:
         """Next available clip ID (max existing + 1)."""
         existing = self.timeline.all_clip_ids

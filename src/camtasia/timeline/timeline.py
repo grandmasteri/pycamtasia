@@ -564,6 +564,32 @@ class Timeline:
         attrs[:] = [p[1] for p in pairs]
 
     # ------------------------------------------------------------------
+    # Gap manipulation
+    # ------------------------------------------------------------------
+
+    def insert_gap(self, position_seconds: float, gap_duration_seconds: float) -> None:
+        """Insert a gap at a position across ALL tracks, shifting subsequent clips."""
+        from camtasia.timing import seconds_to_ticks
+        gap_ticks: int = seconds_to_ticks(gap_duration_seconds)
+        position_ticks: int = seconds_to_ticks(position_seconds)
+        for track in self.tracks:
+            for media_dict in track._data.get('medias', []):
+                clip_start: int = media_dict.get('start', 0)
+                if clip_start >= position_ticks:
+                    media_dict['start'] = clip_start + gap_ticks
+
+    def remove_gap(self, position_seconds: float, gap_duration_seconds: float) -> None:
+        """Remove a gap at a position across ALL tracks, pulling subsequent clips back."""
+        from camtasia.timing import seconds_to_ticks
+        gap_ticks: int = seconds_to_ticks(gap_duration_seconds)
+        position_ticks: int = seconds_to_ticks(position_seconds)
+        for track in self.tracks:
+            for media_dict in track._data.get('medias', []):
+                clip_start: int = media_dict.get('start', 0)
+                if clip_start >= position_ticks + gap_ticks:
+                    media_dict['start'] = max(0, clip_start - gap_ticks)
+
+    # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
 
