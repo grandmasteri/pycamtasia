@@ -59,6 +59,7 @@ from camtasia.timing import (
 )
 
 # Types
+from camtasia.history import ChangeHistory, ChangeRecord
 from camtasia.types import (
     ClipType,
     EffectName,
@@ -85,6 +86,9 @@ from camtasia.operations import (
 )
 
 __all__ = [
+    # History
+    "ChangeHistory",
+    "ChangeRecord",
     # Project
     "Project",
     "ValidationIssue",
