@@ -531,3 +531,39 @@ def test_distance_to_positive_when_gap_exists(start_a, duration_a, start_b, dura
     end_a = (start_a + duration_a) * TICK
     if start_b * TICK > end_a:
         assert clip_a.distance_to(clip_b) > 0
+
+
+# ---------------------------------------------------------------------------
+# 24. distribute_evenly produces no gaps when gap=0
+# ---------------------------------------------------------------------------
+
+@given(st.integers(min_value=2, max_value=6))
+@settings(max_examples=20, deadline=None)
+def test_distribute_evenly_no_gaps(num_clips):
+    """distribute_evenly with gap=0 should produce contiguous clips."""
+    track, data = _make_track()
+    for clip_index in range(num_clips):
+        track.add_clip('AMFile', 1, clip_index * TICK * 3, TICK)  # with gaps
+    track.distribute_evenly(gap_seconds=0.0)
+    sorted_medias = sorted(data['medias'], key=lambda m: m['start'])
+    for i in range(len(sorted_medias) - 1):
+        current_end = sorted_medias[i]['start'] + sorted_medias[i]['duration']
+        next_start = sorted_medias[i + 1]['start']
+        assert current_end == next_start, f'Gap between clips {i} and {i+1}'
+
+
+# ---------------------------------------------------------------------------
+# 25. align_clips_to_start always starts at 0
+# ---------------------------------------------------------------------------
+
+@given(st.lists(st.integers(min_value=1, max_value=100), min_size=1, max_size=5))
+@settings(max_examples=20, deadline=None)
+def test_align_always_starts_at_zero(start_offsets):
+    """align_clips_to_start should always result in first clip at 0."""
+    track, data = _make_track()
+    for i, offset in enumerate(start_offsets):
+        track.add_clip('AMFile', 1, offset * TICK, TICK)
+    track.align_clips_to_start()
+    if data['medias']:
+        first_start = min(m['start'] for m in data['medias'])
+        assert first_start == 0
