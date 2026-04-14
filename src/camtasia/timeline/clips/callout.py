@@ -84,12 +84,12 @@ class Callout(BaseClip):
     @property
     def definition(self) -> dict[str, Any]:
         """The full callout ``def`` dict."""
-        return self._data.get('def', {})
+        return self._data.get('def', {})  # type: ignore[no-any-return]
 
     @property
     def text(self) -> str:
         """Callout text content."""
-        return self.definition.get('text', '')
+        return str(self.definition.get('text', ''))
 
     @text.setter
     def text(self, value: str) -> None:
@@ -98,17 +98,17 @@ class Callout(BaseClip):
     @property
     def font(self) -> dict[str, Any]:
         """Font definition dict."""
-        return self.definition.get('font', {})
+        return self.definition.get('font', {})  # type: ignore[no-any-return]
 
     @property
     def kind(self) -> str:
         """Callout kind (e.g. ``'remix'``)."""
-        return self.definition.get('kind', '')
+        return str(self.definition.get('kind', ''))
 
     @property
     def shape(self) -> str:
         """Callout shape (e.g. ``'text'``)."""
-        return self.definition.get('shape', '')
+        return str(self.definition.get('shape', ''))
 
     @shape.setter
     def shape(self, value: str | CalloutShape) -> None:
@@ -117,7 +117,7 @@ class Callout(BaseClip):
     @property
     def style(self) -> str:
         """Callout style (e.g. ``'basic'``)."""
-        return self.definition.get('style', '')
+        return str(self.definition.get('style', ''))
 
     @style.setter
     def style(self, value: str) -> None:
@@ -126,7 +126,7 @@ class Callout(BaseClip):
     @property
     def width(self) -> float:
         """Callout width."""
-        return self.definition.get('width', 0.0)
+        return float(self.definition.get('width', 0.0))
 
     @width.setter
     def width(self, value: float) -> None:
@@ -135,7 +135,7 @@ class Callout(BaseClip):
     @property
     def height(self) -> float:
         """Callout height."""
-        return self.definition.get('height', 0.0)
+        return float(self.definition.get('height', 0.0))
 
     @height.setter
     def height(self, value: float) -> None:
@@ -144,7 +144,7 @@ class Callout(BaseClip):
     @property
     def horizontal_alignment(self) -> str:
         """Horizontal text alignment (e.g. ``'center'``)."""
-        return self.definition.get('horizontal-alignment', '')
+        return str(self.definition.get('horizontal-alignment', ''))
 
     @horizontal_alignment.setter
     def horizontal_alignment(self, value: str) -> None:
@@ -191,7 +191,7 @@ class Callout(BaseClip):
     @property
     def corner_radius(self) -> float:
         """Corner radius for rounded shapes."""
-        return self.definition.get('corner-radius', 0.0)
+        return float(self.definition.get('corner-radius', 0.0))
 
     @corner_radius.setter
     def corner_radius(self, value: float) -> None:

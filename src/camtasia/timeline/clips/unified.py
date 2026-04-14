@@ -35,17 +35,17 @@ class UnifiedMedia(BaseClip):
     @property
     def is_screen_recording(self) -> bool:
         """Whether the video child is a screen recording (vs camera)."""
-        return self._data.get('video', {}).get('_type') == 'ScreenVMFile'
+        return bool(self._data.get('video', {}).get('_type') == 'ScreenVMFile')
 
     @property
     def is_camera(self) -> bool:
         """Whether the video child is a camera recording."""
-        return self._data.get('video', {}).get('_type') == 'VMFile'
+        return bool(self._data.get('video', {}).get('_type') == 'VMFile')
 
     @property
     def source_id(self) -> int | None:
         """Source bin ID from the video child."""
-        return self._data.get('video', {}).get('src')
+        return self._data.get('video', {}).get('src')  # type: ignore[no-any-return]
 
     def mute_audio(self) -> Self:
         """Set audio gain to zero."""

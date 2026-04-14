@@ -18,7 +18,7 @@ class RoundCorners(Effect):
     @property
     def radius(self) -> float:
         """Corner radius in pixels."""
-        return self.get_parameter("radius")
+        return float(self.get_parameter("radius"))
 
     @radius.setter
     def radius(self, value: float) -> None:
@@ -27,7 +27,7 @@ class RoundCorners(Effect):
     @property
     def top_left(self) -> bool:
         """Whether the top-left corner is rounded."""
-        return self.get_parameter("top-left")
+        return bool(self.get_parameter("top-left"))
 
     @top_left.setter
     def top_left(self, value: bool) -> None:
@@ -36,7 +36,7 @@ class RoundCorners(Effect):
     @property
     def top_right(self) -> bool:
         """Whether the top-right corner is rounded."""
-        return self.get_parameter("top-right")
+        return bool(self.get_parameter("top-right"))
 
     @top_right.setter
     def top_right(self, value: bool) -> None:
@@ -45,7 +45,7 @@ class RoundCorners(Effect):
     @property
     def bottom_left(self) -> bool:
         """Whether the bottom-left corner is rounded."""
-        return self.get_parameter("bottom-left")
+        return bool(self.get_parameter("bottom-left"))
 
     @bottom_left.setter
     def bottom_left(self, value: bool) -> None:
@@ -54,7 +54,7 @@ class RoundCorners(Effect):
     @property
     def bottom_right(self) -> bool:
         """Whether the bottom-right corner is rounded."""
-        return self.get_parameter("bottom-right")
+        return bool(self.get_parameter("bottom-right"))
 
     @bottom_right.setter
     def bottom_right(self, value: bool) -> None:
@@ -65,7 +65,7 @@ def _color_rgba(params: dict[str, Any], prefix: str) -> tuple[float, float, floa
     """Read RGBA color from separate parameter keys."""
     def _val(key: str) -> float:
         v = params[key]
-        return v['defaultValue'] if isinstance(v, dict) else v
+        return float(v['defaultValue'] if isinstance(v, dict) else v)
     return (_val(f"{prefix}-red"), _val(f"{prefix}-green"),
             _val(f"{prefix}-blue"), _val(f"{prefix}-alpha"))
 
@@ -94,7 +94,7 @@ class DropShadow(Effect):
     @property
     def angle(self) -> float:
         """Shadow angle in degrees."""
-        return self.get_parameter("angle")
+        return float(self.get_parameter("angle"))
 
     @angle.setter
     def angle(self, value: float) -> None:
@@ -103,7 +103,7 @@ class DropShadow(Effect):
     @property
     def offset(self) -> float:
         """Shadow offset distance in pixels."""
-        return self.get_parameter("offset")
+        return float(self.get_parameter("offset"))
 
     @offset.setter
     def offset(self, value: float) -> None:
@@ -112,7 +112,7 @@ class DropShadow(Effect):
     @property
     def blur(self) -> float:
         """Shadow blur radius."""
-        return self.get_parameter("blur")
+        return float(self.get_parameter("blur"))
 
     @blur.setter
     def blur(self, value: float) -> None:
@@ -121,7 +121,7 @@ class DropShadow(Effect):
     @property
     def opacity(self) -> float:
         """Shadow opacity from 0.0 (transparent) to 1.0 (opaque)."""
-        return self.get_parameter("opacity")
+        return float(self.get_parameter("opacity"))
 
     @opacity.setter
     def opacity(self, value: float) -> None:
@@ -148,7 +148,7 @@ class MotionBlur(Effect):
     @property
     def intensity(self) -> float:
         """Blur intensity level."""
-        return self.get_parameter("intensity")
+        return float(self.get_parameter("intensity"))
 
     @intensity.setter
     def intensity(self, value: float) -> None:
@@ -170,7 +170,7 @@ class Mask(Effect):
     @property
     def mask_shape(self) -> int:
         """Mask shape identifier."""
-        return self.get_parameter("mask-shape")
+        return int(self.get_parameter("mask-shape"))
 
     @mask_shape.setter
     def mask_shape(self, value: int | MaskShape) -> None:
@@ -179,7 +179,7 @@ class Mask(Effect):
     @property
     def mask_opacity(self) -> float:
         """Mask opacity from 0.0 (transparent) to 1.0 (opaque)."""
-        return self.get_parameter("mask-opacity")
+        return float(self.get_parameter("mask-opacity"))
 
     @mask_opacity.setter
     def mask_opacity(self, value: float) -> None:
@@ -188,7 +188,7 @@ class Mask(Effect):
     @property
     def mask_blend(self) -> float:
         """Mask edge blend (feather) amount."""
-        return self.get_parameter("mask-blend")
+        return float(self.get_parameter("mask-blend"))
 
     @mask_blend.setter
     def mask_blend(self, value: float) -> None:
@@ -197,7 +197,7 @@ class Mask(Effect):
     @property
     def mask_invert(self) -> int:
         """Whether the mask is inverted (1) or normal (0)."""
-        return self.get_parameter("mask-invert")
+        return int(self.get_parameter("mask-invert"))
 
     @mask_invert.setter
     def mask_invert(self, value: int) -> None:
@@ -206,7 +206,7 @@ class Mask(Effect):
     @property
     def mask_rotation(self) -> float:
         """Mask rotation angle in degrees."""
-        return self.get_parameter("mask-rotation")
+        return float(self.get_parameter("mask-rotation"))
 
     @mask_rotation.setter
     def mask_rotation(self, value: float) -> None:
@@ -215,7 +215,7 @@ class Mask(Effect):
     @property
     def mask_width(self) -> float | dict:
         """Mask width, scalar or keyframed dict."""
-        return self.get_parameter("mask-width")
+        return self.get_parameter("mask-width")  # type: ignore[no-any-return]
 
     @mask_width.setter
     def mask_width(self, value: float | dict) -> None:
@@ -224,7 +224,7 @@ class Mask(Effect):
     @property
     def mask_height(self) -> float | dict:
         """Mask height, scalar or keyframed dict."""
-        return self.get_parameter("mask-height")
+        return self.get_parameter("mask-height")  # type: ignore[no-any-return]
 
     @mask_height.setter
     def mask_height(self, value: float | dict) -> None:
@@ -233,7 +233,7 @@ class Mask(Effect):
     @property
     def mask_position_x(self) -> float | dict:
         """Mask horizontal position, scalar or keyframed dict."""
-        return self.get_parameter("mask-positionX")
+        return self.get_parameter("mask-positionX")  # type: ignore[no-any-return]
 
     @mask_position_x.setter
     def mask_position_x(self, value: float | dict) -> None:
@@ -242,7 +242,7 @@ class Mask(Effect):
     @property
     def mask_position_y(self) -> float | dict:
         """Mask vertical position, scalar or keyframed dict."""
-        return self.get_parameter("mask-positionY")
+        return self.get_parameter("mask-positionY")  # type: ignore[no-any-return]
 
     @mask_position_y.setter
     def mask_position_y(self, value: float | dict) -> None:
@@ -251,7 +251,7 @@ class Mask(Effect):
     @property
     def mask_corner_radius(self) -> float:
         """Mask corner radius."""
-        return self.get_parameter("mask-cornerRadius")
+        return float(self.get_parameter("mask-cornerRadius"))
 
     @mask_corner_radius.setter
     def mask_corner_radius(self, value: float) -> None:
@@ -269,7 +269,7 @@ class Glow(Effect):
     @property
     def radius(self) -> float:
         """Glow spread radius."""
-        return self.get_parameter("radius")
+        return float(self.get_parameter("radius"))
 
     @radius.setter
     def radius(self, value: float) -> None:
@@ -278,7 +278,7 @@ class Glow(Effect):
     @property
     def intensity(self) -> float:
         """Glow intensity level."""
-        return self.get_parameter("intensity")
+        return float(self.get_parameter("intensity"))
 
     @intensity.setter
     def intensity(self, value: float) -> None:
@@ -296,7 +296,7 @@ class BlurRegion(Effect):
     @property
     def sigma(self) -> float:
         """Gaussian blur sigma value."""
-        return self.get_parameter("sigma")
+        return float(self.get_parameter("sigma"))
 
     @sigma.setter
     def sigma(self, value: float) -> None:
@@ -305,7 +305,7 @@ class BlurRegion(Effect):
     @property
     def mask_corner_radius(self) -> float:
         """Corner radius of the blur region mask."""
-        return self.get_parameter("mask-cornerRadius")
+        return float(self.get_parameter("mask-cornerRadius"))
 
     @mask_corner_radius.setter
     def mask_corner_radius(self, value: float) -> None:
@@ -314,7 +314,7 @@ class BlurRegion(Effect):
     @property
     def mask_invert(self) -> int:
         """Whether the blur region mask is inverted (1) or normal (0)."""
-        return self.get_parameter("mask-invert")
+        return int(self.get_parameter("mask-invert"))
 
     @mask_invert.setter
     def mask_invert(self, value: int) -> None:
@@ -323,7 +323,7 @@ class BlurRegion(Effect):
     @property
     def color_alpha(self) -> float:
         """Alpha channel of the blur region overlay color."""
-        return self.get_parameter("color-alpha")
+        return float(self.get_parameter("color-alpha"))
 
     @color_alpha.setter
     def color_alpha(self, value: float) -> None:

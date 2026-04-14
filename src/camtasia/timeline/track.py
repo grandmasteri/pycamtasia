@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
-from typing import Any, Iterator, TYPE_CHECKING
+from typing import Any, cast, Iterator, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from camtasia.timeline.clips.callout import CalloutBuilder
@@ -51,7 +51,7 @@ class Track:
     @property
     def name(self) -> str:
         """Track name from trackAttributes ``ident``."""
-        return self._attributes.get('ident', '')
+        return str(self._attributes.get('ident', ''))
 
     @name.setter
     def name(self, value: str) -> None:
@@ -65,7 +65,7 @@ class Track:
     @property
     def index(self) -> int:
         """Track index (position in the track list)."""
-        return self._data['trackIndex']
+        return int(self._data['trackIndex'])
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Track):
@@ -110,7 +110,7 @@ class Track:
     @property
     def audio_muted(self) -> bool:
         """Whether the track's audio is muted."""
-        return self._attributes.get('audioMuted', False)
+        return bool(self._attributes.get('audioMuted', False))
 
     @audio_muted.setter
     def audio_muted(self, value: bool) -> None:
@@ -120,7 +120,7 @@ class Track:
     @property
     def video_hidden(self) -> bool:
         """Whether the track's video is hidden."""
-        return self._attributes.get('videoHidden', False)
+        return bool(self._attributes.get('videoHidden', False))
 
     @video_hidden.setter
     def video_hidden(self, value: bool) -> None:
@@ -130,7 +130,7 @@ class Track:
     @property
     def magnetic(self) -> bool:
         """Whether the track has magnetic clip snapping enabled."""
-        return self._attributes.get('magnetic', False)
+        return bool(self._attributes.get('magnetic', False))
 
     @magnetic.setter
     def magnetic(self, value: bool) -> None:
@@ -140,7 +140,7 @@ class Track:
     @property
     def solo(self) -> bool:
         """Whether the track is soloed for exclusive playback."""
-        return self._attributes.get('solo', False)
+        return bool(self._attributes.get('solo', False))
 
     @solo.setter
     def solo(self, value: bool) -> None:
@@ -204,7 +204,7 @@ class Track:
     @property
     def is_locked(self) -> bool:
         """Whether the track is locked against editing."""
-        return self._attributes.get('metadata', {}).get('IsLocked', 'False') == 'True'
+        return bool(self._attributes.get('metadata', {}).get('IsLocked', 'False') == 'True')
 
     @is_locked.setter
     def is_locked(self, value: bool) -> None:
@@ -384,7 +384,7 @@ class Track:
             trimStartSum=1,
             **kwargs,
         )
-        return clip  # type: ignore[return-value]
+        return clip  # type: ignore[no-any-return, return-value]
 
     def add_audio(
         self,
@@ -413,7 +413,7 @@ class Track:
             channelNumber='0',
             **kwargs,
         )
-        return clip  # type: ignore[return-value]
+        return clip  # type: ignore[no-any-return, return-value]
 
     def add_video(
         self,
@@ -439,7 +439,7 @@ class Track:
             seconds_to_ticks(duration_seconds),
             **kwargs,
         )
-        return clip  # type: ignore[return-value]
+        return clip  # type: ignore[no-any-return, return-value]
 
     def add_callout(
         self,
@@ -472,7 +472,7 @@ class Track:
             seconds_to_ticks(duration_seconds),
             **{'def': callout_def, **kwargs},
         )
-        return clip  # type: ignore[return-value]
+        return clip  # type: ignore[no-any-return, return-value]
 
     def add_callout_from_builder(
         self,
@@ -657,7 +657,7 @@ class Track:
 
         # --- Insert into track ---
         self._data.setdefault('medias', []).append(tpl)
-        return clip_from_dict(tpl)  # type: ignore[return-value]
+        return clip_from_dict(tpl)  # type: ignore[no-any-return, return-value]
 
     def add_group(
         self,
@@ -688,7 +688,7 @@ class Track:
             }),
             **kwargs,
         )
-        return clip  # type: ignore[return-value]
+        return clip  # type: ignore[no-any-return, return-value]
 
     def add_screen_recording(
         self,
@@ -1501,7 +1501,7 @@ class _ClipAccessor:
 
     @property
     def _medias(self) -> list[dict[str, Any]]:
-        return self._data.get('medias', [])
+        return self._data.get('medias', [])  # type: ignore[no-any-return]
 
     def __len__(self) -> int:
         return len(self._medias)

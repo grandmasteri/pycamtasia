@@ -32,12 +32,12 @@ class StitchedMedia(BaseClip):
     @property
     def attributes(self) -> dict[str, Any]:
         """Clip attributes dict."""
-        return self._data.get('attributes', {})
+        return self._data.get('attributes', {})  # type: ignore[no-any-return]
 
     @property
     def volume(self) -> float:
         """Volume / gain from attributes."""
-        return self.attributes.get('gain', 1.0)
+        return float(self.attributes.get('gain', 1.0))
 
     @volume.setter
     def volume(self, value: float) -> None:
@@ -50,7 +50,7 @@ class StitchedMedia(BaseClip):
 
     @property
     def min_media_start(self) -> int:
-        return self._data.get('minMediaStart', 0)
+        return int(self._data.get('minMediaStart', 0))
 
     def clear_segments(self) -> None:
         """Remove all nested segments."""

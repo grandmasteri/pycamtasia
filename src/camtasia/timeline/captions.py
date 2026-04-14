@@ -14,7 +14,7 @@ class CaptionAttributes:
     
     @property
     def enabled(self) -> bool:
-        return self._data.get('enabled', True)
+        return bool(self._data.get('enabled', True))
     
     @enabled.setter
     def enabled(self, value: bool) -> None:
@@ -22,7 +22,7 @@ class CaptionAttributes:
     
     @property
     def font_name(self) -> str:
-        return self._data.get('fontName', 'Arial')
+        return self._data.get('fontName', 'Arial')  # type: ignore[no-any-return]
     
     @font_name.setter
     def font_name(self, value: str) -> None:
@@ -30,7 +30,7 @@ class CaptionAttributes:
     
     @property
     def font_size(self) -> int:
-        return self._data.get('fontSize', 32)
+        return int(self._data.get('fontSize', 32))
     
     @font_size.setter
     def font_size(self, value: int) -> None:
@@ -40,7 +40,7 @@ class CaptionAttributes:
     
     @property
     def background_color(self) -> list[int]:
-        return self._data.get('backgroundColor', [0, 0, 0, 204])
+        return self._data.get('backgroundColor', [0, 0, 0, 204])  # type: ignore[no-any-return]
     
     @background_color.setter
     def background_color(self, value: list[int]) -> None:
@@ -48,7 +48,7 @@ class CaptionAttributes:
     
     @property
     def foreground_color(self) -> list[int]:
-        return self._data.get('foregroundColor', [255, 255, 255, 255])
+        return self._data.get('foregroundColor', [255, 255, 255, 255])  # type: ignore[no-any-return]
     
     @foreground_color.setter
     def foreground_color(self, value: list[int]) -> None:
@@ -56,7 +56,7 @@ class CaptionAttributes:
     
     @property
     def lang(self) -> str:
-        return self._data.get('lang', 'en')
+        return self._data.get('lang', 'en')  # type: ignore[no-any-return]
     
     @lang.setter
     def lang(self, value: str) -> None:
@@ -64,7 +64,7 @@ class CaptionAttributes:
     
     @property
     def alignment(self) -> int:
-        return self._data.get('alignment', 0)
+        return int(self._data.get('alignment', 0))
     
     @alignment.setter
     def alignment(self, value: int) -> None:
@@ -74,7 +74,7 @@ class CaptionAttributes:
     
     @property
     def opacity(self) -> float:
-        return self._data.get('opacity', 0.5)
+        return float(self._data.get('opacity', 0.5))
     
     @opacity.setter
     def opacity(self, value: float) -> None:
@@ -84,7 +84,7 @@ class CaptionAttributes:
     
     @property
     def background_enabled(self) -> bool:
-        return self._data.get('backgroundEnabled', True)
+        return bool(self._data.get('backgroundEnabled', True))
     
     @background_enabled.setter
     def background_enabled(self, value: bool) -> None:

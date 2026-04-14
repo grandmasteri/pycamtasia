@@ -16,7 +16,7 @@ class CursorMotionBlur(Effect):
     @property
     def intensity(self) -> float:
         """Blur intensity level."""
-        return self.get_parameter("intensity")
+        return float(self.get_parameter("intensity"))
 
     @intensity.setter
     def intensity(self, value: float) -> None:
@@ -34,7 +34,7 @@ class CursorShadow(Effect):
     @property
     def angle(self) -> float:
         """Shadow angle in degrees."""
-        return self.get_parameter("angle")
+        return float(self.get_parameter("angle"))
 
     @angle.setter
     def angle(self, value: float) -> None:
@@ -43,7 +43,7 @@ class CursorShadow(Effect):
     @property
     def offset(self) -> float:
         """Shadow offset distance in pixels."""
-        return self.get_parameter("offset")
+        return float(self.get_parameter("offset"))
 
     @offset.setter
     def offset(self, value: float) -> None:
@@ -52,7 +52,7 @@ class CursorShadow(Effect):
     @property
     def blur(self) -> float:
         """Shadow blur radius."""
-        return self.get_parameter("blur")
+        return float(self.get_parameter("blur"))
 
     @blur.setter
     def blur(self, value: float) -> None:
@@ -61,7 +61,7 @@ class CursorShadow(Effect):
     @property
     def opacity(self) -> float:
         """Shadow opacity from 0.0 (transparent) to 1.0 (opaque)."""
-        return self.get_parameter("opacity")
+        return float(self.get_parameter("opacity"))
 
     @opacity.setter
     def opacity(self, value: float) -> None:
@@ -88,7 +88,7 @@ class CursorPhysics(Effect):
     @property
     def intensity(self) -> float:
         """Physics effect intensity."""
-        return self.get_parameter("intensity")
+        return float(self.get_parameter("intensity"))
 
     @intensity.setter
     def intensity(self, value: float) -> None:
@@ -97,7 +97,7 @@ class CursorPhysics(Effect):
     @property
     def tilt(self) -> float:
         """Cursor tilt amount."""
-        return self.get_parameter("tilt")
+        return float(self.get_parameter("tilt"))
 
     @tilt.setter
     def tilt(self, value: float) -> None:
@@ -115,7 +115,7 @@ class LeftClickScaling(Effect):
     @property
     def scale(self) -> float:
         """Click scale factor."""
-        return self.get_parameter("scale")
+        return float(self.get_parameter("scale"))
 
     @scale.setter
     def scale(self, value: float) -> None:
@@ -124,7 +124,7 @@ class LeftClickScaling(Effect):
     @property
     def speed(self) -> float:
         """Scaling animation speed."""
-        return self.get_parameter("speed")
+        return float(self.get_parameter("speed"))
 
     @speed.setter
     def speed(self, value: float) -> None:

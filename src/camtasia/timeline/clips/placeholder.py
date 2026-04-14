@@ -7,7 +7,7 @@ class PlaceholderMedia(BaseClip):
 
     @property
     def subtitle(self) -> str:
-        return self._data.get('metadata', {}).get('placeHolderSubTitle', '')
+        return self._data.get('metadata', {}).get('placeHolderSubTitle', '')  # type: ignore[no-any-return]
 
     @subtitle.setter
     def subtitle(self, value: str) -> None:
@@ -15,8 +15,8 @@ class PlaceholderMedia(BaseClip):
 
     @property
     def width(self) -> float:
-        return self._data.get('attributes', {}).get('width', 0.0)
+        return float(self._data.get('attributes', {}).get('width', 0.0))
 
     @property
     def height(self) -> float:
-        return self._data.get('attributes', {}).get('height', 0.0)
+        return float(self._data.get('attributes', {}).get('height', 0.0))

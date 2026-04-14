@@ -19,7 +19,7 @@ class AMFile(BaseClip):
     @property
     def channel_number(self) -> str:
         """Channel number string (e.g. ``'0'``, ``'0,1'``)."""
-        return self._data.get('channelNumber', '0')
+        return self._data.get('channelNumber', '0')  # type: ignore[no-any-return]
 
     @channel_number.setter
     def channel_number(self, value: str) -> None:
@@ -28,12 +28,12 @@ class AMFile(BaseClip):
     @property
     def attributes(self) -> dict[str, Any]:
         """Audio attributes dict (ident, gain, mixToMono, etc.)."""
-        return self._data.get('attributes', {})
+        return self._data.get('attributes', {})  # type: ignore[no-any-return]
 
     @property
     def gain(self) -> float:
         """Audio gain multiplier."""
-        return self.attributes.get('gain', 1.0)
+        return float(self.attributes.get('gain', 1.0))
 
     @gain.setter
     def gain(self, value: float) -> None:
@@ -42,7 +42,7 @@ class AMFile(BaseClip):
     @property
     def loudness_normalization(self) -> bool:
         """Whether loudness normalization is enabled."""
-        return self.attributes.get('loudnessNormalization', False)
+        return bool(self.attributes.get('loudnessNormalization', False))
 
     @loudness_normalization.setter
     def loudness_normalization(self, value: bool) -> None:

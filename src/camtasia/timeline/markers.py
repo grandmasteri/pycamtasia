@@ -45,7 +45,7 @@ class MarkerList:
 
     @property
     def _keyframes(self) -> list[dict[str, Any]]:
-        return (
+        return (  # type: ignore[no-any-return]
             self._data
             .get('parameters', {})
             .get('toc', {})
@@ -56,7 +56,7 @@ class MarkerList:
         """Return the keyframes list, creating the path if needed."""
         params = self._data.setdefault('parameters', {})
         toc = params.setdefault('toc', {'type': 'string'})
-        return toc.setdefault('keyframes', [])
+        return toc.setdefault('keyframes', [])  # type: ignore[no-any-return]
 
     def __len__(self) -> int:
         return len(self._keyframes)

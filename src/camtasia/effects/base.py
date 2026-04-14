@@ -28,11 +28,11 @@ class Effect:
 
     @property
     def name(self) -> str:
-        return self._data["effectName"]
+        return self._data["effectName"]  # type: ignore[no-any-return]
 
     @property
     def bypassed(self) -> bool:
-        return self._data.get("bypassed", False)
+        return bool(self._data.get("bypassed", False))
 
     @bypassed.setter
     def bypassed(self, value: bool) -> None:
@@ -40,16 +40,16 @@ class Effect:
 
     @property
     def category(self) -> str:
-        return self._data.get("category", "")
+        return self._data.get("category", "")  # type: ignore[no-any-return]
 
     @property
     def metadata(self) -> dict:
         """Top-level metadata dict for this effect."""
-        return self._data.get('metadata', {})
+        return self._data.get('metadata', {})  # type: ignore[no-any-return]
 
     @property
     def parameters(self) -> dict[str, Any]:
-        return self._data.get("parameters", {})
+        return self._data.get("parameters", {})  # type: ignore[no-any-return]
 
     def get_parameter(self, name: str) -> Any:
         """Get a parameter's default value by name.
@@ -104,12 +104,12 @@ class Effect:
     @property
     def left_edge_mods(self) -> list[dict[str, Any]]:
         """Left edge modifications (fade-in, etc.)."""
-        return self._data.get('leftEdgeMods', [])
+        return self._data.get('leftEdgeMods', [])  # type: ignore[no-any-return]
 
     @property
     def right_edge_mods(self) -> list[dict[str, Any]]:
         """Right edge modifications (fade-out, etc.)."""
-        return self._data.get('rightEdgeMods', [])
+        return self._data.get('rightEdgeMods', [])  # type: ignore[no-any-return]
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Effect):

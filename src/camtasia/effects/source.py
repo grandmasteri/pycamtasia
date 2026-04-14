@@ -51,7 +51,7 @@ class SourceEffect(Effect):
 
     def _get_value(self, val: Any) -> float:
         """Extract scalar from a parameter value (dict or raw)."""
-        return val['defaultValue'] if isinstance(val, dict) else val
+        return float(val['defaultValue'] if isinstance(val, dict) else val)
 
     @property
     def color2(self) -> tuple[float, float, float, float] | None:
@@ -101,7 +101,7 @@ class SourceEffect(Effect):
     @property
     def speed(self) -> float:
         """Shader animation speed."""
-        return self.get_parameter("Speed")
+        return float(self.get_parameter("Speed"))
 
     @speed.setter
     def speed(self, value: float) -> None:
@@ -110,7 +110,7 @@ class SourceEffect(Effect):
     @property
     def source_file_type(self) -> str:
         """Source file type identifier for the shader."""
-        return self.get_parameter("sourceFileType")
+        return str(self.get_parameter("sourceFileType"))
 
     def set_shader_colors(self, *colors: tuple[int, int, int]) -> None:
         """Set shader colours from 0-255 RGB tuples.

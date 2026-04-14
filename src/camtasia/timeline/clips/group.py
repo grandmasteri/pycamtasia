@@ -23,7 +23,7 @@ class GroupTrack:
     @property
     def track_index(self) -> int:
         """Track index within the group."""
-        return self._data.get('trackIndex', 0)
+        return int(self._data.get('trackIndex', 0))
 
     @property
     def clips(self) -> list[BaseClip]:
@@ -38,7 +38,7 @@ class GroupTrack:
     @property
     def parameters(self) -> dict[str, Any]:
         """Track parameters dict."""
-        return self._data.get('parameters', {})
+        return self._data.get('parameters', {})  # type: ignore[no-any-return]
 
     def __len__(self) -> int:
         """Number of clips in this group track."""
@@ -67,22 +67,22 @@ class Group(BaseClip):
     @property
     def attributes(self) -> dict[str, Any]:
         """Group attributes dict (ident, widthAttr, heightAttr)."""
-        return self._data.get('attributes', {})
+        return self._data.get('attributes', {})  # type: ignore[no-any-return]
 
     @property
     def ident(self) -> str:
         """Group name / identifier."""
-        return self.attributes.get('ident', '')
+        return str(self.attributes.get('ident', ''))
 
     @property
     def width(self) -> float:
         """Group width."""
-        return self.attributes.get('widthAttr', 0.0)
+        return float(self.attributes.get('widthAttr', 0.0))
 
     @property
     def height(self) -> float:
         """Group height."""
-        return self.attributes.get('heightAttr', 0.0)
+        return float(self.attributes.get('heightAttr', 0.0))
 
     @property
     def is_screen_recording(self) -> bool:
@@ -99,9 +99,9 @@ class Group(BaseClip):
         for track in self._data.get('tracks', []):
             for media in track.get('medias', []):
                 if media.get('_type') == 'UnifiedMedia':
-                    return media.get('video', {}).get('src')
+                    return media.get('video', {}).get('src')  # type: ignore[no-any-return]
                 if media.get('_type') == 'ScreenVMFile':
-                    return media.get('src')
+                    return media.get('src')  # type: ignore[no-any-return]
         return None
 
     def find_internal_clip(self, clip_type: str) -> BaseClip | None:

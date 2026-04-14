@@ -69,8 +69,8 @@ class ScreenVMFile(BaseClip):
             return default
         p = effect.get('parameters', {}).get(param, default)
         if isinstance(p, dict):
-            return p.get('defaultValue', default)
-        return p
+            return float(p.get('defaultValue', default))
+        return float(p)
 
     @property
     def cursor_motion_blur_intensity(self) -> float:
@@ -137,4 +137,4 @@ class ScreenIMFile(BaseClip):
             keys. ``value`` is ``[x, y, z]``.
         """
         loc = self.parameters.get('cursorLocation', {})
-        return loc.get('keyframes', [])
+        return loc.get('keyframes', [])  # type: ignore[no-any-return]

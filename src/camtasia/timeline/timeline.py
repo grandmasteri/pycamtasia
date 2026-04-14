@@ -411,7 +411,7 @@ class Timeline:
 
     @property
     def gain(self) -> float:
-        return self._data.get('gain', 1.0)
+        return float(self._data.get('gain', 1.0))
 
     @gain.setter
     def gain(self, value: float) -> None:
@@ -419,11 +419,11 @@ class Timeline:
 
     @property
     def legacy_attenuate_audio_mix(self) -> bool:
-        return self._data.get('legacyAttenuateAudioMix', True)
+        return bool(self._data.get('legacyAttenuateAudioMix', True))
 
     @property
     def background_color(self) -> list[int]:
-        return self._data.get('backgroundColor', [0, 0, 0, 255])
+        return self._data.get('backgroundColor', [0, 0, 0, 255])  # type: ignore[no-any-return]
 
     @background_color.setter
     def background_color(self, value: list[int]) -> None:
@@ -562,7 +562,7 @@ class Timeline:
     @property
     def _track_list(self) -> list[dict[str, Any]]:
         """The raw tracks array: ``sceneTrack.scenes[0].csml.tracks``."""
-        return self._data['sceneTrack']['scenes'][0]['csml']['tracks']
+        return self._data['sceneTrack']['scenes'][0]['csml']['tracks']  # type: ignore[no-any-return]
 
 
 class _TrackAccessor:
@@ -573,11 +573,11 @@ class _TrackAccessor:
 
     @property
     def _track_list(self) -> list[dict[str, Any]]:
-        return self._data['sceneTrack']['scenes'][0]['csml']['tracks']
+        return self._data['sceneTrack']['scenes'][0]['csml']['tracks']  # type: ignore[no-any-return]
 
     @property
     def _attrs(self) -> list[dict[str, Any]]:
-        return self._data.get('trackAttributes', [])
+        return self._data.get('trackAttributes', [])  # type: ignore[no-any-return]
 
     def __len__(self) -> int:
         return len(self._track_list)

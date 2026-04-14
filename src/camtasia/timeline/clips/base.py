@@ -33,12 +33,12 @@ class BaseClip:
     @property
     def id(self) -> int:
         """Unique clip ID."""
-        return self._data['id']
+        return int(self._data['id'])
 
     @property
     def clip_type(self) -> str:
         """The ``_type`` string (e.g. ``'AMFile'``, ``'VMFile'``)."""
-        return self._data['_type']
+        return self._data['_type']  # type: ignore[no-any-return]
 
     @property
     def is_audio(self) -> bool:
@@ -76,7 +76,7 @@ class BaseClip:
     @property
     def start(self) -> int:
         """Timeline position in ticks."""
-        return self._data['start']
+        return int(self._data['start'])
 
     @start.setter
     def start(self, value: int) -> None:
@@ -85,7 +85,7 @@ class BaseClip:
     @property
     def duration(self) -> int:
         """Playback duration in ticks."""
-        return self._data['duration']
+        return int(self._data['duration'])
 
     @duration.setter
     def duration(self, value: int) -> None:
@@ -105,7 +105,7 @@ class BaseClip:
     @property
     def gain(self) -> float:
         """Audio gain (0.0 = muted, 1.0 = full volume)."""
-        return self._data.get('attributes', {}).get('gain', 1.0)
+        return float(self._data.get('attributes', {}).get('gain', 1.0))
 
     @gain.setter
     def gain(self, value: float) -> None:
@@ -135,7 +135,7 @@ class BaseClip:
         raw = self._data['mediaStart']
         if isinstance(raw, str):
             return Fraction(raw)
-        return raw
+        return raw  # type: ignore[no-any-return]
 
     @media_start.setter
     def media_start(self, value: int | Fraction) -> None:
@@ -147,7 +147,7 @@ class BaseClip:
         raw = self._data['mediaDuration']
         if isinstance(raw, str):
             return Fraction(raw)
-        return raw
+        return raw  # type: ignore[no-any-return]
 
     @media_duration.setter
     def media_duration(self, value: int | Fraction) -> None:
@@ -182,7 +182,7 @@ class BaseClip:
     @property
     def speed(self) -> float:
         """Current playback speed multiplier."""
-        return self._data.get('scalar', 1)
+        return float(self._data.get('scalar', 1))
 
     @property
     def has_effects(self) -> bool:
@@ -202,7 +202,7 @@ class BaseClip:
     @property
     def effects(self) -> list[dict[str, Any]]:
         """Raw effect dicts (will be wrapped by the effects module later)."""
-        return self._data.get('effects', [])
+        return self._data.get('effects', [])  # type: ignore[no-any-return]
 
     def remove_effect_by_name(self, effect_name: str | EffectName) -> int:
         """Remove all effects with the given name. Returns count removed."""
@@ -214,14 +214,14 @@ class BaseClip:
     @property
     def parameters(self) -> dict[str, Any]:
         """Clip parameters dict."""
-        return self._data.get('parameters', {})
+        return self._data.get('parameters', {})  # type: ignore[no-any-return]
 
     @property
     def opacity(self) -> float:
         """Clip opacity (0.0–1.0)."""
         params = self._data.get('parameters', {})
         val = params.get('opacity', 1.0)
-        return val['defaultValue'] if isinstance(val, dict) else val
+        return float(val['defaultValue'] if isinstance(val, dict) else val)
 
     @opacity.setter
     def opacity(self, value: float) -> None:
@@ -234,7 +234,7 @@ class BaseClip:
         """Audio volume (>= 0.0)."""
         params = self._data.get('parameters', {})
         val = params.get('volume', 1.0)
-        return val['defaultValue'] if isinstance(val, dict) else val
+        return float(val['defaultValue'] if isinstance(val, dict) else val)
 
     @volume.setter
     def volume(self, value: float) -> None:
@@ -245,17 +245,17 @@ class BaseClip:
     @property
     def metadata(self) -> dict[str, Any]:
         """Clip metadata dict."""
-        return self._data.get('metadata', {})
+        return self._data.get('metadata', {})  # type: ignore[no-any-return]
 
     @property
     def animation_tracks(self) -> dict[str, Any]:
         """Animation tracks dict."""
-        return self._data.get('animationTracks', {})
+        return self._data.get('animationTracks', {})  # type: ignore[no-any-return]
 
     @property
     def visual_animations(self) -> list[dict[str, Any]]:
         """Visual animation array from animationTracks."""
-        return self.animation_tracks.get('visual', [])
+        return self.animation_tracks.get('visual', [])  # type: ignore[no-any-return]
 
     @property
     def source_id(self) -> int | None:
@@ -414,7 +414,7 @@ class BaseClip:
     def _ensure_visual_tracks(self) -> list[dict[str, Any]]:
         """Return the ``animationTracks.visual`` list, creating it if absent."""
         tracks = self._data.setdefault('animationTracks', {})
-        return tracks.setdefault('visual', [])
+        return tracks.setdefault('visual', [])  # type: ignore[no-any-return]
 
     def _remove_opacity_tracks(self) -> None:
         """Remove all opacity entries from ``animationTracks.visual``."""
@@ -938,8 +938,8 @@ class BaseClip:
         """Read a parameter value from either scalar or dict format."""
         param = self.parameters.get(key, default)
         if isinstance(param, dict):
-            return param.get('defaultValue', default)
-        return param
+            return float(param.get('defaultValue', default))
+        return float(param)
 
     def _set_param_value(self, key: str, value: float) -> None:
         """Write a parameter as compact scalar, or update defaultValue if dict exists."""

@@ -61,4 +61,4 @@ def load_timeline_json(path: str | Path) -> dict[str, Any]:
     Returns the parsed dict. Useful for comparing timelines
     or generating reports.
     """
-    return json.loads(Path(path).read_text())
+    return json.loads(Path(path).read_text())  # type: ignore[no-any-return]

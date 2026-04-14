@@ -126,7 +126,7 @@ class Project:
     @property
     def width(self) -> int:
         """Canvas width in pixels."""
-        return self._data.get('width', 1920)
+        return int(self._data.get('width', 1920))
 
     @width.setter
     def width(self, value: int) -> None:
@@ -136,7 +136,7 @@ class Project:
     @property
     def height(self) -> int:
         """Canvas height in pixels."""
-        return self._data.get('height', 1080)
+        return int(self._data.get('height', 1080))
 
     @height.setter
     def height(self, value: int) -> None:
@@ -146,7 +146,7 @@ class Project:
     @property
     def title(self) -> str:
         """Project title."""
-        return self._data.get('title', '')
+        return self._data.get('title', '')  # type: ignore[no-any-return]
 
     @title.setter
     def title(self, value: str) -> None:
@@ -155,7 +155,7 @@ class Project:
     @property
     def description(self) -> str:
         """Project description."""
-        return self._data.get('description', '')
+        return self._data.get('description', '')  # type: ignore[no-any-return]
 
     @description.setter
     def description(self, value: str) -> None:
@@ -164,7 +164,7 @@ class Project:
     @property
     def author(self) -> str:
         """Project author."""
-        return self._data.get('author', '')
+        return self._data.get('author', '')  # type: ignore[no-any-return]
 
     @author.setter
     def author(self, value: str) -> None:
@@ -173,7 +173,7 @@ class Project:
     @property
     def target_loudness(self) -> float:
         """Target loudness in LUFS for audio normalization."""
-        return self._data.get('targetLoudness', -18.0)
+        return float(self._data.get('targetLoudness', -18.0))
 
     @target_loudness.setter
     def target_loudness(self, value: float) -> None:
@@ -182,7 +182,7 @@ class Project:
     @property
     def frame_rate(self) -> int:
         """Video frame rate."""
-        return self._data.get('videoFormatFrameRate', 30)
+        return int(self._data.get('videoFormatFrameRate', 30))
 
     @frame_rate.setter
     def frame_rate(self, value: int) -> None:
@@ -191,7 +191,7 @@ class Project:
     @property
     def sample_rate(self) -> int:
         """Audio sample rate."""
-        return self._data.get('audioFormatSampleRate', 44100)
+        return int(self._data.get('audioFormatSampleRate', 44100))
 
     @sample_rate.setter
     def sample_rate(self, value: int) -> None:
@@ -203,7 +203,7 @@ class Project:
 
         Default is 705,600,000 — divisible by 30fps, 60fps, 44100Hz, 48000Hz.
         """
-        return self._data.get('editRate', EDIT_RATE)
+        return int(self._data.get('editRate', EDIT_RATE))
 
     @property
     def authoring_client(self) -> AuthoringClient:
@@ -443,7 +443,7 @@ class Project:
         # Step 4: Expand empty objects to multi-line with proper indentation
         def _expand_empty(m: re.Match) -> str:
             indent = m.group(1)
-            return '{\n' + indent + '  ' + '}'
+            return str('{\n' + indent + '  ' + '}')
         text = re.sub(r'\{\}(?=\n(\s*))', _expand_empty, text)
 
         # Step 5: Add trailing space after commas at end of lines

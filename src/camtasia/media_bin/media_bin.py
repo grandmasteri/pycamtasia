@@ -93,7 +93,7 @@ class Media:
     @property
     def rect(self) -> tuple[int, int, int, int]:
         """Native bounding rect as ``(x, y, width, height)``."""
-        return tuple(self._data["rect"])  # type: ignore[return-value]
+        return tuple(self._data["rect"])  # type: ignore[no-any-return]
 
     @property
     def dimensions(self) -> tuple[int, int]:
@@ -124,19 +124,19 @@ class Media:
                 range_val = st.get('range', [0, 0])
                 edit_rate = st.get('editRate', 1)
                 if edit_rate > 0 and len(range_val) >= 2:
-                    return range_val[1] / edit_rate
+                    return range_val[1] / edit_rate  # type: ignore[no-any-return]
         for st in self._data.get('sourceTracks', []):
             if st.get('type') == 2:  # audio track
                 range_val = st.get('range', [0, 0])
                 edit_rate = st.get('editRate', 1)
                 if edit_rate > 0 and len(range_val) >= 2:
-                    return range_val[1] / edit_rate
+                    return range_val[1] / edit_rate  # type: ignore[no-any-return]
         return None
 
     @property
     def source_tracks(self) -> list[dict[str, Any]]:
         """Raw source track metadata dicts."""
-        return self._data.get('sourceTracks', [])
+        return self._data.get('sourceTracks', [])  # type: ignore[no-any-return]
 
     @property
     def video_edit_rate(self) -> int | None:
@@ -149,7 +149,7 @@ class Media:
     @property
     def id(self) -> int:
         """Unique integer ID referenced by clips via ``src``."""
-        return self._data["id"]
+        return int(self._data["id"])
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Media):

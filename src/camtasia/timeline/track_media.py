@@ -42,7 +42,7 @@ class TrackMedia:
     @property
     def id(self) -> int:
         """ID of the media entry on the track."""
-        return self._data['id']
+        return int(self._data['id'])
 
     @property
     def markers(self) -> _Markers:
@@ -51,17 +51,17 @@ class TrackMedia:
     @property
     def start(self) -> int:
         "The offset (in frames) on the timeline at which the visible media starts."
-        return self._data['start']
+        return int(self._data['start'])
 
     @property
     def media_start(self) -> int:
         "The offset (in frames) into the underlying media at which the visible media starts."
-        return self._data['mediaStart']
+        return int(self._data['mediaStart'])
 
     @property
     def duration(self) -> int:
         "The duration (in frames) of the media on the timeline."
-        return self._data['duration']
+        return int(self._data['duration'])
 
     @property
     def source(self) -> int | None:
@@ -95,7 +95,7 @@ class TrackMediaEffects():
         effect_data = self._effects[index]
         effect_schema = EffectSchema()
         effect = effect_schema.load(effect_data)
-        return effect
+        return effect  # type: ignore[no-any-return]
 
     def __delitem__(self, index: int) -> None:
         effect = self[index]

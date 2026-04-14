@@ -41,12 +41,12 @@ class AudiateProject:
     @property
     def language(self) -> str:
         """Project language code (e.g. 'en')."""
-        return self._data["metadata"]["projectLanguage"]
+        return self._data["metadata"]["projectLanguage"]  # type: ignore[no-any-return]
 
     @property
     def session_id(self) -> str:
         """Camtasia linking UUID (caiCamtasiaSessionId)."""
-        return self._data["metadata"]["caiCamtasiaSessionId"]
+        return self._data["metadata"]["caiCamtasiaSessionId"]  # type: ignore[no-any-return]
 
     @property
     def audio_duration(self) -> float:
@@ -55,7 +55,7 @@ class AudiateProject:
             self._data["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]
         )
         media = track["medias"][0]
-        return media["duration"] / EDIT_RATE
+        return float(media["duration"] / EDIT_RATE)
 
     @property
     def source_audio_path(self) -> Path:
@@ -66,7 +66,7 @@ class AudiateProject:
         )
         for entry in self._data.get("sourceBin", []):
             if entry["id"] == src_id:
-                return (self._file_path.parent / entry["src"]).resolve()
+                return (self._file_path.parent / entry["src"]).resolve()  # type: ignore[no-any-return]
         raise FileNotFoundError(f"Source with id={src_id} not found in sourceBin")
 
     def __repr__(self) -> str:

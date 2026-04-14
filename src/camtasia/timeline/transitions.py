@@ -22,12 +22,12 @@ class Transition:
     @property
     def name(self) -> str:
         """Transition type name (e.g. 'FadeThroughBlack')."""
-        return self._data['name']
+        return self._data['name']  # type: ignore[no-any-return]
 
     @property
     def duration(self) -> int:
         """Duration in editRate ticks."""
-        return self._data['duration']
+        return int(self._data['duration'])
 
     @property
     def duration_seconds(self) -> float:
@@ -47,12 +47,12 @@ class Transition:
     @property
     def attributes(self) -> dict[str, Any]:
         """Raw attributes dict."""
-        return self._data.get('attributes', {})
+        return self._data.get('attributes', {})  # type: ignore[no-any-return]
 
     @property
     def bypassed(self) -> bool:
         """Whether the transition is bypassed (disabled)."""
-        return self.attributes.get('bypass', False)
+        return bool(self.attributes.get('bypass', False))
 
     @property
     def color(self) -> tuple[float, float, float]:
@@ -92,7 +92,7 @@ class TransitionList:
 
     @property
     def _transitions(self) -> list[dict[str, Any]]:
-        return self._data.setdefault('transitions', [])
+        return self._data.setdefault('transitions', [])  # type: ignore[no-any-return]
 
     def __len__(self) -> int:
         return len(self._transitions)
