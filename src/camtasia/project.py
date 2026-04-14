@@ -409,9 +409,12 @@ class Project:
         text = json.dumps(self._data, indent=2, ensure_ascii=False,
                           allow_nan=True)
         # Replace -Infinity/Infinity/NaN with the original extreme values
-        text = text.replace('-Infinity', '-1.79769313486232e+308')
-        text = text.replace('Infinity', '1.79769313486232e+308')
-        text = text.replace('NaN', '0.0')
+        # Only replace when they appear as bare JSON values (after : or , or [)
+        # not inside quoted strings
+        import re
+        text = re.sub(r'(?<=: )-Infinity\b', '-1.79769313486232e+308', text)
+        text = re.sub(r'(?<=: )Infinity\b', '1.79769313486232e+308', text)
+        text = re.sub(r'(?<=: )NaN\b', '0.0', text)
 
         # Step 2: Add space before colon (NSJSONSerialization style)
         # "key": value  ->  "key" : value
