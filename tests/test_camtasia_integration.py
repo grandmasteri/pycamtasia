@@ -356,3 +356,24 @@ class TestBehaviorPresets:
         callout.add_behavior('PopUp')
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+class TestNewTransitionTypes:
+    def test_paint_arcs_transition_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        media = proj.import_media(EMPTY_WAV)
+        track = proj.timeline.add_track('Audio')
+        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
+        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
+        track.transitions.add_paint_arcs(c1.id, c2.id, 0.5)
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
+
+    def test_spherical_spin_transition_opens(self, tmp_path):
+        proj = _make_project(tmp_path)
+        media = proj.import_media(EMPTY_WAV)
+        track = proj.timeline.add_track('Audio')
+        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
+        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
+        track.transitions.add_spherical_spin(c1.id, c2.id, 0.5)
+        proj.save()
+        assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
