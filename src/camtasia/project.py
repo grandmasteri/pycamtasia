@@ -315,6 +315,23 @@ class Project:
         return self.timeline.total_clip_count
 
     @property
+    def total_effect_count(self) -> int:
+        """Total number of effects across all clips on all tracks."""
+        return sum(
+            clip.effect_count
+            for track in self.timeline.tracks
+            for clip in track.clips
+        )
+
+    @property
+    def total_transition_count(self) -> int:
+        """Total number of transitions across all tracks."""
+        return sum(
+            track.transition_count
+            for track in self.timeline.tracks
+        )
+
+    @property
     def duration_seconds(self) -> float:
         return self.total_duration_seconds()
 

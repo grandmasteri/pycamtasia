@@ -195,6 +195,20 @@ class BaseClip:
         return len(self._data.get('effects', []))
 
     @property
+    def keyframe_count(self) -> int:
+        """Total number of keyframes across all parameters."""
+        total_keyframes: int = 0
+        for parameter_value in self._data.get('parameters', {}).values():
+            if isinstance(parameter_value, dict) and 'keyframes' in parameter_value:
+                total_keyframes += len(parameter_value['keyframes'])
+        return total_keyframes
+
+    @property
+    def is_at_origin(self) -> bool:
+        """Whether this clip starts at time 0."""
+        return self.start == 0
+
+    @property
     def effect_names(self) -> list[str]:
         """Names of all effects on this clip."""
         return [e.get('effectName', '?') for e in self._data.get('effects', [])]

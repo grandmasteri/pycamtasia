@@ -2572,3 +2572,91 @@ def test_normalize_timing_empty_track():
     track = Track({'ident': 'empty'}, data)
     track.normalize_timing()  # should not raise
     assert data['medias'] == []
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.keyframe_count
+# ---------------------------------------------------------------------------
+
+def test_keyframe_count():
+    media: dict[str, Any] = {
+        'id': 1,
+        'start': 0,
+        'duration': 300,
+        'parameters': {
+            'scale': {
+                'keyframes': [{'time': 0, 'value': 1.0}, {'time': 100, 'value': 2.0}],
+            },
+            'opacity': {
+                'keyframes': [{'time': 0, 'value': 1.0}],
+            },
+            'volume': 0.8,  # not a keyframed parameter
+        },
+    }
+    track = _make_track(medias=[media])
+    clip = list(track.clips)[0]
+    assert clip.keyframe_count == 3
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.is_at_origin
+# ---------------------------------------------------------------------------
+
+def test_is_at_origin():
+    at_zero: dict[str, Any] = {'id': 1, 'start': 0, 'duration': 100}
+    not_zero: dict[str, Any] = {'id': 2, 'start': 500, 'duration': 100}
+    track = _make_track(medias=[at_zero, not_zero])
+    clips = list(track.clips)
+    assert clips[0].is_at_origin is True
+    assert clips[1].is_at_origin is False
+
+
+# ---------------------------------------------------------------------------
+# Project.total_effect_count
+# ---------------------------------------------------------------------------
+
+def test_total_effect_count(project):
+    track = project.timeline.add_track('FX')
+    clip = track.add_clip('VMFile', None, 0, 705600000)
+    clip.add_drop_shadow()
+    clip.add_round_corners()
+    assert project.total_effect_count >= 2
+
+
+# ---------------------------------------------------------------------------
+# Project.total_transition_count
+# ---------------------------------------------------------------------------
+
+def test_total_transition_count():
+    track_data_a: dict[str, Any] = {
+        'trackIndex': 0,
+        'medias': [
+            {'id': 1, 'start': 0, 'duration': 100},
+            {'id': 2, 'start': 100, 'duration': 100},
+        ],
+        'transitions': [
+            {'start': 50, 'end': 150, 'duration': 100},
+        ],
+    }
+    track_data_b: dict[str, Any] = {
+        'trackIndex': 1,
+        'medias': [],
+        'transitions': [],
+    }
+    data: dict[str, Any] = {
+        'timeline': {
+            'id': 'test',
+            'sceneTrack': {'scenes': [{'csml': {'tracks': [track_data_a, track_data_b]}}]},
+            'trackAttributes': [{'ident': 'A'}, {'ident': 'B'}],
+            'parameters': {},
+            'authoringClientName': 'test',
+        },
+    }
+    timeline = Timeline(data['timeline'])
+
+    from camtasia.project import Project
+    project = Project.__new__(Project)
+    object.__setattr__(project, '_timeline', timeline)
+    object.__setattr__(project, '_data', data)
+    object.__setattr__(project, '_path', None)
+    assert project.total_transition_count == 1
