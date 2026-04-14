@@ -2262,3 +2262,77 @@ def test_longest_track():
 
     empty_timeline = _make_timeline([])
     assert empty_timeline.longest_track is None
+
+
+# ---------------------------------------------------------------------------
+# clip_before / clip_after / overlaps_with / distance_to
+# ---------------------------------------------------------------------------
+
+def test_clip_before():
+    """clip_before returns the last clip ending before the given time."""
+    track = _make_track([
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2)},
+        {'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(3), 'duration': seconds_to_ticks(1)},
+    ])
+    clip = track.clip_before(3.0)
+    assert clip is not None
+    assert clip.id == 1
+
+
+def test_clip_before_none():
+    """clip_before returns None when no clip ends before the given time."""
+    track = _make_track([
+        {'id': 1, '_type': 'VMFile', 'start': seconds_to_ticks(5), 'duration': seconds_to_ticks(1)},
+    ])
+    assert track.clip_before(1.0) is None
+
+
+def test_clip_after():
+    """clip_after returns the first clip starting after the given time."""
+    track = _make_track([
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2)},
+        {'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(5), 'duration': seconds_to_ticks(1)},
+    ])
+    clip = track.clip_after(3.0)
+    assert clip is not None
+    assert clip.id == 2
+
+
+def test_clip_after_none():
+    """clip_after returns None when no clip starts after the given time."""
+    track = _make_track([
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(1)},
+    ])
+    assert track.clip_after(5.0) is None
+
+
+def test_overlaps_with_true():
+    """overlaps_with returns True for overlapping clips."""
+    from camtasia.timeline.clips import BaseClip
+    clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3)})
+    clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(2), 'duration': seconds_to_ticks(2)})
+    assert clip_a.overlaps_with(clip_b) is True
+
+
+def test_overlaps_with_false():
+    """overlaps_with returns False for non-overlapping clips."""
+    from camtasia.timeline.clips import BaseClip
+    clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2)})
+    clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(3), 'duration': seconds_to_ticks(1)})
+    assert clip_a.overlaps_with(clip_b) is False
+
+
+def test_distance_to_gap():
+    """distance_to returns positive seconds for a gap between clips."""
+    from camtasia.timeline.clips import BaseClip
+    clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2)})
+    clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(5), 'duration': seconds_to_ticks(1)})
+    assert clip_a.distance_to(clip_b) == pytest.approx(3.0)
+
+
+def test_distance_to_overlap():
+    """distance_to returns negative seconds for overlapping clips."""
+    from camtasia.timeline.clips import BaseClip
+    clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3)})
+    clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(2), 'duration': seconds_to_ticks(2)})
+    assert clip_a.distance_to(clip_b) == pytest.approx(-1.0)

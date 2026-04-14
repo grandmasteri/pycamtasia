@@ -1291,3 +1291,17 @@ class BaseClip:
         """Media start offset in seconds."""
         from camtasia.timing import ticks_to_seconds
         return float(ticks_to_seconds(self.media_start))
+
+    def overlaps_with(self, other_clip: BaseClip) -> bool:
+        """Check if this clip's time range overlaps with another clip."""
+        self_end: int = self.start + self.duration
+        other_end: int = other_clip.start + other_clip.duration
+        return self.start < other_end and other_clip.start < self_end
+
+    def distance_to(self, other_clip: BaseClip) -> float:
+        """Gap in seconds between this clip and another (negative if overlapping)."""
+        from camtasia.timing import ticks_to_seconds
+        self_end: int = self.start + self.duration
+        other_start: int = other_clip.start
+        gap_ticks: int = other_start - self_end
+        return float(ticks_to_seconds(gap_ticks))

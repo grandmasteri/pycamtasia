@@ -1512,6 +1512,37 @@ class Track:
         return clip_from_dict(sorted_medias[clip_index])  # type: ignore[return-value]
 
 
+    def clip_before(self, time_seconds: float) -> BaseClip | None:
+        """Return the last clip that ends before the given time, or None."""
+        target_ticks: int = seconds_to_ticks(time_seconds)
+        candidates: list[dict[str, Any]] = [
+            media_dict for media_dict in self._data.get('medias', [])
+            if media_dict.get('start', 0) + media_dict.get('duration', 0) <= target_ticks
+        ]
+        if not candidates:
+            return None
+        nearest_media: dict[str, Any] = max(
+            candidates,
+            key=lambda media_dict: media_dict.get('start', 0) + media_dict.get('duration', 0),
+        )
+        return clip_from_dict(nearest_media)  # type: ignore[return-value]
+
+    def clip_after(self, time_seconds: float) -> BaseClip | None:
+        """Return the first clip that starts after the given time, or None."""
+        target_ticks: int = seconds_to_ticks(time_seconds)
+        candidates: list[dict[str, Any]] = [
+            media_dict for media_dict in self._data.get('medias', [])
+            if media_dict.get('start', 0) >= target_ticks
+        ]
+        if not candidates:
+            return None
+        nearest_media: dict[str, Any] = min(
+            candidates,
+            key=lambda media_dict: media_dict.get('start', 0),
+        )
+        return clip_from_dict(nearest_media)  # type: ignore[return-value]
+
+
 class _ClipAccessor:
     """Lightweight iterable/indexable accessor over a track's clips."""
 
