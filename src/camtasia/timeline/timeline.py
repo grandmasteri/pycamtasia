@@ -352,6 +352,32 @@ class Timeline:
             self.remove_track(idx)
         return len(empty_indices)
 
+    def remove_all_empty_tracks(self) -> int:
+        """Remove every track that contains no clips.
+
+        Returns:
+            Number of tracks removed.
+        """
+        return self.remove_empty_tracks()
+
+    def pack_all_tracks(self) -> int:
+        """Pack every track, removing intra-track gaps between clips.
+
+        Calls :func:`camtasia.operations.layout.pack_track` on each track
+        so clips are repositioned end-to-end with no gaps.
+
+        Returns:
+            Number of tracks packed (tracks with at least one clip).
+        """
+        from camtasia.operations.layout import pack_track
+
+        packed_count: int = 0
+        for track in self.tracks:
+            if not track.is_empty:
+                pack_track(track)
+                packed_count += 1
+        return packed_count
+
     def remove_short_clips_all_tracks(self, minimum_duration_seconds: float) -> int:
         """Remove short clips from all tracks. Returns total count removed."""
         total_removed: int = 0

@@ -1,0 +1,1922 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pycamtasia.readthedocs.io/camtasia-project-schema.json",
+  "title": "Camtasia Project Schema",
+  "description": "Strict JSON Schema for TechSmith Camtasia .tscproj / .assetproj project files.",
+  "type": "object",
+  "required": [
+    "width",
+    "height",
+    "version",
+    "editRate",
+    "sourceBin",
+    "timeline"
+  ],
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "targetLoudness": {
+      "type": "number"
+    },
+    "shouldApplyLoudnessNormalization": {
+      "type": "boolean"
+    },
+    "videoFormatFrameRate": {
+      "type": "number"
+    },
+    "audioFormatSampleRate": {
+      "type": "integer"
+    },
+    "allowSubFrameEditing": {
+      "type": "boolean"
+    },
+    "width": {
+      "type": "number"
+    },
+    "height": {
+      "type": "number"
+    },
+    "version": {
+      "type": "string",
+      "enum": [
+        "2.0",
+        "3.0",
+        "4.0",
+        "5.0",
+        "6.0",
+        "8.0",
+        "10.0"
+      ]
+    },
+    "editRate": {
+      "type": "integer"
+    },
+    "ident": {
+      "type": "string"
+    },
+    "duration": {
+      "type": "integer"
+    },
+    "clientName": {
+      "type": "string"
+    },
+    "authoringClientName": {
+      "$ref": "#/definitions/authoringClientName"
+    },
+    "sourceBin": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/sourceBinEntry"
+      }
+    },
+    "timeline": {
+      "$ref": "#/definitions/timeline"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "ProjectThumbnail": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "colorArray": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "parametersMap": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "array"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "double",
+                  "int",
+                  "point",
+                  "string"
+                ]
+              },
+              "defaultValue": {},
+              "interp": {
+                "type": "string",
+                "enum": [
+                  "bnce",
+                  "eioe",
+                  "linr",
+                  "sprg"
+                ]
+              },
+              "keyframes": {
+                "type": "array"
+              },
+              "uiHints": {
+                "type": "object"
+              },
+              "valueBounds": {
+                "type": "object"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "parameterValue": {
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "array"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "double",
+                "int",
+                "point",
+                "string"
+              ]
+            },
+            "defaultValue": {},
+            "interp": {
+              "type": "string"
+            },
+            "keyframes": {
+              "type": "array"
+            },
+            "uiHints": {
+              "type": "object"
+            },
+            "valueBounds": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    },
+    "effect": {
+      "type": "object",
+      "required": [
+        "effectName",
+        "category",
+        "parameters"
+      ],
+      "properties": {
+        "effectName": {
+          "type": "string",
+          "enum": [
+            "BlendModeEffect",
+            "ColorAdjustment",
+            "CursorMotionBlur",
+            "CursorPhysics",
+            "CursorShadow",
+            "DropShadow",
+            "Emphasize",
+            "Glow",
+            "LeftClickScaling",
+            "LutEffect",
+            "Mask",
+            "MediaMatte",
+            "MotionBlur",
+            "RoundCorners",
+            "SourceEffect",
+            "Spotlight",
+            "VSTEffect-DFN3NoiseRemoval",
+            "fade",
+            "flyIn",
+            "popUp",
+            "pulsating",
+            "reveal",
+            "shifting",
+            "sliding"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "",
+            "categoryAudioEffects",
+            "categoryClickEffects",
+            "categoryCursorEffects",
+            "categoryVisualEffects"
+          ]
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "double",
+                      "int",
+                      "point",
+                      "string"
+                    ]
+                  },
+                  "defaultValue": {},
+                  "interp": {
+                    "type": "string",
+                    "enum": [
+                      "bnce",
+                      "eioe",
+                      "linr",
+                      "sprg"
+                    ]
+                  },
+                  "keyframes": {
+                    "type": "array"
+                  },
+                  "uiHints": {
+                    "type": "object"
+                  },
+                  "valueBounds": {
+                    "type": "object"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "bypassed": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "leftEdgeMods": {
+          "type": "array"
+        },
+        "rightEdgeMods": {
+          "type": "array"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GenericBehaviorEffect": {
+      "type": "object",
+      "required": [
+        "_type",
+        "effectName",
+        "start",
+        "duration",
+        "in",
+        "center",
+        "out"
+      ],
+      "properties": {
+        "_type": {
+          "type": "string",
+          "const": "GenericBehaviorEffect"
+        },
+        "effectName": {
+          "type": "string",
+          "enum": [
+            "fade",
+            "flyIn",
+            "popUp",
+            "pulsating",
+            "reveal",
+            "shifting",
+            "sliding"
+          ]
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "in": {
+          "type": "object",
+          "properties": {
+            "attributes": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "enum": [
+                    "fadeIn",
+                    "fadeOut",
+                    "flyIn",
+                    "flyOut",
+                    "grow",
+                    "hinge",
+                    "none",
+                    "pulsate",
+                    "reveal",
+                    "shifting",
+                    "shrink",
+                    "sliding",
+                    "tremble"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "center": {
+          "type": "object",
+          "properties": {
+            "attributes": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "enum": [
+                    "fadeIn",
+                    "fadeOut",
+                    "flyIn",
+                    "flyOut",
+                    "grow",
+                    "hinge",
+                    "none",
+                    "pulsate",
+                    "reveal",
+                    "shifting",
+                    "shrink",
+                    "sliding",
+                    "tremble"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "out": {
+          "type": "object",
+          "properties": {
+            "attributes": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "enum": [
+                    "fadeIn",
+                    "fadeOut",
+                    "flyIn",
+                    "flyOut",
+                    "grow",
+                    "hinge",
+                    "none",
+                    "pulsate",
+                    "reveal",
+                    "shifting",
+                    "shrink",
+                    "sliding",
+                    "tremble"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "bypassed": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "animationTracks": {
+      "type": "object",
+      "properties": {
+        "visual": {
+          "type": "array"
+        }
+      },
+      "additionalProperties": false
+    },
+    "clipAttributes": {
+      "type": "object",
+      "properties": {
+        "ident": {
+          "type": "string"
+        },
+        "autoRotateText": {
+          "type": "boolean"
+        },
+        "gain": {
+          "type": "number"
+        },
+        "mixToMono": {
+          "type": "boolean"
+        },
+        "widthAttr": {
+          "type": "number"
+        },
+        "heightAttr": {
+          "type": "number"
+        },
+        "assetProperties": {
+          "type": "array"
+        },
+        "loudnessNormalization": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object"
+            }
+          ]
+        },
+        "sourceFileOffset": {
+          "type": "number"
+        },
+        "maxDurationAttr": {
+          "type": "number"
+        },
+        "isPathEdited": {
+          "type": "boolean"
+        },
+        "baseWidthAttr": {
+          "type": "number"
+        },
+        "baseHeightAttr": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "calloutDef": {
+      "type": "object",
+      "required": [
+        "kind",
+        "shape",
+        "style"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "remix",
+            "TypeWinBlur"
+          ]
+        },
+        "shape": {
+          "type": "string",
+          "enum": [
+            "",
+            "arrow",
+            "shape-ellipse",
+            "shape-rectangle",
+            "shape-triangle",
+            "text",
+            "text-arrow2",
+            "text-rectangle"
+          ]
+        },
+        "style": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "AMFile": {
+      "type": "object",
+      "required": [
+        "id",
+        "_type",
+        "src",
+        "trackNumber",
+        "attributes",
+        "channelNumber",
+        "effects",
+        "start",
+        "duration",
+        "mediaStart",
+        "mediaDuration",
+        "scalar",
+        "animationTracks"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "_type": {
+          "type": "string",
+          "const": "AMFile"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "mediaStart": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mediaDuration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "scalar": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "attributes": {
+          "$ref": "#/definitions/clipAttributes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/effect"
+              },
+              {
+                "$ref": "#/definitions/GenericBehaviorEffect"
+              }
+            ]
+          }
+        },
+        "animationTracks": {
+          "$ref": "#/definitions/animationTracks"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        },
+        "src": {
+          "type": "integer"
+        },
+        "trackNumber": {
+          "type": "integer"
+        },
+        "channelNumber": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "VMFile": {
+      "type": "object",
+      "required": [
+        "id",
+        "_type",
+        "src",
+        "trackNumber",
+        "attributes",
+        "parameters",
+        "effects",
+        "start",
+        "duration",
+        "mediaStart",
+        "mediaDuration",
+        "scalar",
+        "animationTracks"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "_type": {
+          "type": "string",
+          "const": "VMFile"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "mediaStart": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mediaDuration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "scalar": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "attributes": {
+          "$ref": "#/definitions/clipAttributes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/effect"
+              },
+              {
+                "$ref": "#/definitions/GenericBehaviorEffect"
+              }
+            ]
+          }
+        },
+        "animationTracks": {
+          "$ref": "#/definitions/animationTracks"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        },
+        "src": {
+          "type": "integer"
+        },
+        "trackNumber": {
+          "type": "integer"
+        },
+        "sourceEffect": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "IMFile": {
+      "type": "object",
+      "required": [
+        "id",
+        "_type",
+        "src",
+        "trackNumber",
+        "trimStartSum",
+        "attributes",
+        "effects",
+        "start",
+        "duration",
+        "mediaStart",
+        "mediaDuration",
+        "scalar",
+        "animationTracks"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "_type": {
+          "type": "string",
+          "const": "IMFile"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "mediaStart": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mediaDuration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "scalar": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "attributes": {
+          "$ref": "#/definitions/clipAttributes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/effect"
+              },
+              {
+                "$ref": "#/definitions/GenericBehaviorEffect"
+              }
+            ]
+          }
+        },
+        "animationTracks": {
+          "$ref": "#/definitions/animationTracks"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        },
+        "src": {
+          "type": "integer"
+        },
+        "trackNumber": {
+          "type": "integer"
+        },
+        "trimStartSum": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ScreenVMFile": {
+      "type": "object",
+      "required": [
+        "id",
+        "_type",
+        "src",
+        "trackNumber",
+        "attributes",
+        "parameters",
+        "effects",
+        "start",
+        "duration",
+        "mediaStart",
+        "mediaDuration",
+        "scalar",
+        "animationTracks"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "_type": {
+          "type": "string",
+          "const": "ScreenVMFile"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "mediaStart": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mediaDuration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "scalar": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "attributes": {
+          "$ref": "#/definitions/clipAttributes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/effect"
+              },
+              {
+                "$ref": "#/definitions/GenericBehaviorEffect"
+              }
+            ]
+          }
+        },
+        "animationTracks": {
+          "$ref": "#/definitions/animationTracks"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        },
+        "src": {
+          "type": "integer"
+        },
+        "trackNumber": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ScreenIMFile": {
+      "type": "object",
+      "required": [
+        "id",
+        "_type",
+        "src",
+        "trackNumber",
+        "trimStartSum",
+        "attributes",
+        "parameters",
+        "effects",
+        "start",
+        "duration",
+        "mediaStart",
+        "mediaDuration",
+        "scalar",
+        "animationTracks"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "_type": {
+          "type": "string",
+          "const": "ScreenIMFile"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "mediaStart": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mediaDuration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "scalar": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "attributes": {
+          "$ref": "#/definitions/clipAttributes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/effect"
+              },
+              {
+                "$ref": "#/definitions/GenericBehaviorEffect"
+              }
+            ]
+          }
+        },
+        "animationTracks": {
+          "$ref": "#/definitions/animationTracks"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        },
+        "src": {
+          "type": "integer"
+        },
+        "trackNumber": {
+          "type": "integer"
+        },
+        "trimStartSum": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Callout": {
+      "type": "object",
+      "required": [
+        "id",
+        "_type",
+        "def",
+        "attributes",
+        "parameters",
+        "effects",
+        "start",
+        "duration",
+        "mediaStart",
+        "mediaDuration",
+        "scalar",
+        "metadata",
+        "animationTracks"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "_type": {
+          "type": "string",
+          "const": "Callout"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "mediaStart": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mediaDuration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "scalar": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "attributes": {
+          "$ref": "#/definitions/clipAttributes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/effect"
+              },
+              {
+                "$ref": "#/definitions/GenericBehaviorEffect"
+              }
+            ]
+          }
+        },
+        "animationTracks": {
+          "$ref": "#/definitions/animationTracks"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        },
+        "def": {
+          "$ref": "#/definitions/calloutDef"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Group": {
+      "type": "object",
+      "required": [
+        "id",
+        "_type",
+        "parameters",
+        "tracks",
+        "attributes",
+        "effects",
+        "start",
+        "duration",
+        "mediaStart",
+        "mediaDuration",
+        "scalar",
+        "animationTracks"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "_type": {
+          "type": "string",
+          "const": "Group"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "mediaStart": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mediaDuration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "scalar": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "attributes": {
+          "$ref": "#/definitions/clipAttributes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/effect"
+              },
+              {
+                "$ref": "#/definitions/GenericBehaviorEffect"
+              }
+            ]
+          }
+        },
+        "animationTracks": {
+          "$ref": "#/definitions/animationTracks"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        },
+        "tracks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/track"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "StitchedMedia": {
+      "type": "object",
+      "required": [
+        "id",
+        "_type",
+        "minMediaStart",
+        "attributes",
+        "parameters",
+        "medias",
+        "effects",
+        "start",
+        "duration",
+        "mediaStart",
+        "mediaDuration",
+        "scalar",
+        "metadata",
+        "animationTracks"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "_type": {
+          "type": "string",
+          "const": "StitchedMedia"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "mediaStart": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mediaDuration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "scalar": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "attributes": {
+          "$ref": "#/definitions/clipAttributes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/effect"
+              },
+              {
+                "$ref": "#/definitions/GenericBehaviorEffect"
+              }
+            ]
+          }
+        },
+        "animationTracks": {
+          "$ref": "#/definitions/animationTracks"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        },
+        "minMediaStart": {
+          "type": "integer"
+        },
+        "medias": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/media"
+          }
+        },
+        "sourceEffect": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PlaceholderMedia": {
+      "type": "object",
+      "required": [
+        "id",
+        "_type",
+        "attributes",
+        "parameters",
+        "effects",
+        "start",
+        "duration",
+        "mediaStart",
+        "mediaDuration",
+        "scalar",
+        "metadata",
+        "animationTracks"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "_type": {
+          "type": "string",
+          "const": "PlaceholderMedia"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "mediaStart": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mediaDuration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "scalar": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "attributes": {
+          "$ref": "#/definitions/clipAttributes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/effect"
+              },
+              {
+                "$ref": "#/definitions/GenericBehaviorEffect"
+              }
+            ]
+          }
+        },
+        "animationTracks": {
+          "$ref": "#/definitions/animationTracks"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UnifiedMedia": {
+      "type": "object",
+      "required": [
+        "id",
+        "_type",
+        "video",
+        "audio",
+        "start",
+        "duration",
+        "mediaStart",
+        "mediaDuration",
+        "scalar"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "_type": {
+          "type": "string",
+          "const": "UnifiedMedia"
+        },
+        "video": {
+          "type": "object"
+        },
+        "audio": {
+          "type": "object"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "mediaStart": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mediaDuration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "scalar": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/effect"
+              },
+              {
+                "$ref": "#/definitions/GenericBehaviorEffect"
+              }
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "media": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/AMFile"
+        },
+        {
+          "$ref": "#/definitions/VMFile"
+        },
+        {
+          "$ref": "#/definitions/IMFile"
+        },
+        {
+          "$ref": "#/definitions/ScreenVMFile"
+        },
+        {
+          "$ref": "#/definitions/ScreenIMFile"
+        },
+        {
+          "$ref": "#/definitions/Callout"
+        },
+        {
+          "$ref": "#/definitions/Group"
+        },
+        {
+          "$ref": "#/definitions/StitchedMedia"
+        },
+        {
+          "$ref": "#/definitions/PlaceholderMedia"
+        },
+        {
+          "$ref": "#/definitions/UnifiedMedia"
+        },
+        {
+          "$ref": "#/definitions/GenericBehaviorEffect"
+        }
+      ]
+    },
+    "track": {
+      "type": "object",
+      "required": [
+        "trackIndex",
+        "medias"
+      ],
+      "properties": {
+        "trackIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "medias": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/media"
+          }
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        },
+        "ident": {
+          "type": "string"
+        },
+        "audioMuted": {
+          "type": "boolean"
+        },
+        "videoHidden": {
+          "type": "boolean"
+        },
+        "magnetic": {
+          "type": "boolean"
+        },
+        "matte": {
+          "type": "integer"
+        },
+        "solo": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "CardFlip",
+                  "Fade",
+                  "FadeThroughBlack",
+                  "Glitch3",
+                  "LinearBlur",
+                  "PaintArcs",
+                  "SlideLeft",
+                  "SlideRight",
+                  "SphericalSpin",
+                  "Stretch"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "scene": {
+      "type": "object",
+      "required": [
+        "csml"
+      ],
+      "properties": {
+        "csml": {
+          "type": "object",
+          "required": [
+            "tracks"
+          ],
+          "properties": {
+            "tracks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/track"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sourceTrack": {
+      "type": "object",
+      "required": [
+        "range",
+        "type",
+        "editRate",
+        "trackRect",
+        "sampleRate",
+        "bitDepth",
+        "numChannels",
+        "integratedLUFS",
+        "peakLevel",
+        "metaData"
+      ],
+      "properties": {
+        "range": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "type": {
+          "type": "integer"
+        },
+        "editRate": {
+          "type": "integer"
+        },
+        "trackRect": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "sampleRate": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "bitDepth": {
+          "type": "integer"
+        },
+        "numChannels": {
+          "type": "integer"
+        },
+        "integratedLUFS": {
+          "type": "number"
+        },
+        "peakLevel": {
+          "type": "number"
+        },
+        "metaData": {
+          "type": "string"
+        },
+        "tag": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sourceBinEntry": {
+      "type": "object",
+      "required": [
+        "id",
+        "src",
+        "rect",
+        "lastMod",
+        "sourceTracks"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "src": {
+          "type": "string"
+        },
+        "rect": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "lastMod": {
+          "type": "string"
+        },
+        "sourceTracks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/sourceTrack"
+          }
+        },
+        "loudnessNormalization": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object"
+            }
+          ]
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "effectDef": {
+          "oneOf": [
+            {
+              "type": "array"
+            },
+            {
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "trackAttribute": {
+      "type": "object",
+      "required": [
+        "ident",
+        "audioMuted",
+        "videoHidden"
+      ],
+      "properties": {
+        "ident": {
+          "type": "string"
+        },
+        "audioMuted": {
+          "type": "boolean"
+        },
+        "videoHidden": {
+          "type": "boolean"
+        },
+        "magnetic": {
+          "type": "boolean"
+        },
+        "matte": {
+          "type": "integer"
+        },
+        "solo": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "captionAttributes": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "fontName",
+        "fontSize",
+        "backgroundColor",
+        "foregroundColor",
+        "lang",
+        "alignment",
+        "defaultFontSize",
+        "opacity",
+        "backgroundEnabled",
+        "backgroundOnlyAroundText"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "fontName": {
+          "type": "string"
+        },
+        "fontSize": {
+          "type": "integer"
+        },
+        "backgroundColor": {
+          "$ref": "#/definitions/colorArray"
+        },
+        "foregroundColor": {
+          "$ref": "#/definitions/colorArray"
+        },
+        "lang": {
+          "type": "string"
+        },
+        "alignment": {
+          "type": "integer"
+        },
+        "defaultFontSize": {
+          "type": "boolean"
+        },
+        "opacity": {
+          "type": "number"
+        },
+        "backgroundEnabled": {
+          "type": "boolean"
+        },
+        "backgroundOnlyAroundText": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "authoringClientName": {
+      "type": "object",
+      "required": [
+        "name",
+        "platform",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "platform": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "timeline": {
+      "type": "object",
+      "required": [
+        "id",
+        "sceneTrack",
+        "trackAttributes",
+        "captionAttributes",
+        "backgroundColor"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "sceneTrack": {
+          "type": "object",
+          "required": [
+            "scenes"
+          ],
+          "properties": {
+            "scenes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/scene"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "trackAttributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/trackAttribute"
+          }
+        },
+        "captionAttributes": {
+          "$ref": "#/definitions/captionAttributes"
+        },
+        "backgroundColor": {
+          "$ref": "#/definitions/colorArray"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parametersMap"
+        },
+        "gain": {
+          "type": "number"
+        },
+        "legacyAttenuateAudioMix": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

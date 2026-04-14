@@ -834,11 +834,14 @@ class Track:
             KeyError: No clips found with the given IDs.
         """
         medias: list[dict[str, Any]] = self._data.get('medias', [])
+        clip_id_set: set[int] = set(clip_ids)
         clips_to_group: list[dict[str, Any]] = [
-            m for m in medias if m.get('id') in clip_ids
+            m for m in medias if m.get('id') in clip_id_set
         ]
-        if not clips_to_group:
-            raise KeyError(f'No clips found with ids {clip_ids}')
+        if len(clips_to_group) != len(clip_id_set):
+            found_ids = {m.get('id') for m in clips_to_group}
+            missing_ids = clip_id_set - found_ids
+            raise KeyError(f'Clips not found: {sorted(missing_ids)}')
 
         earliest_start: int = min(
             int(c.get('start', 0)) for c in clips_to_group
@@ -1064,7 +1067,7 @@ class Track:
         """Add a freeze frame from a source clip at a specific time.
 
         Creates an image clip that shows a single frame from the source,
-        placed immediately after the specified time point.
+        placed at the specified time point.
 
         Args:
             source_clip: The clip to capture a frame from.
@@ -1073,10 +1076,22 @@ class Track:
 
         Returns:
             The newly created freeze-frame clip.
+
+        Raises:
+            ValueError: If the source clip has no source ID or the
+                computed media offset is negative.
         """
+        if source_clip.source_id is None:
+            raise ValueError('source_clip has no source ID (source_id is None)')
+        media_offset_seconds: float = at_seconds - source_clip.start_seconds
+        if media_offset_seconds < 0:
+            raise ValueError(
+                f'at_seconds ({at_seconds}) is before source_clip start '
+                f'({source_clip.start_seconds}), resulting in negative offset'
+            )
         freeze_start_ticks: int = seconds_to_ticks(at_seconds)
         freeze_duration_ticks: int = seconds_to_ticks(freeze_duration_seconds)
-        media_offset_ticks: int = seconds_to_ticks(at_seconds - source_clip.start_seconds)
+        media_offset_ticks: int = seconds_to_ticks(media_offset_seconds)
         freeze_clip: BaseClip = self.add_clip(
             'IMFile',
             source_clip.source_id,
@@ -1198,6 +1213,31 @@ class Track:
             except ValueError:
                 pass  # Can't split at exact start/end
         return count
+
+    def split_all_clips_at(self, time_seconds: float) -> int:
+        """Split every clip that spans the given time point.
+
+        Iterates all clips returned by :meth:`clips_at` and calls
+        :meth:`split_clip` on each.  Clips where the split point
+        falls exactly on the start or end boundary are silently
+        skipped (since they cannot be split there).
+
+        Args:
+            time_seconds: Absolute timeline position in seconds at
+                which to split.
+
+        Returns:
+            The number of clips that were actually split.
+        """
+        spanning_clips: list[BaseClip] = list(self.clips_at(time_seconds))
+        split_count: int = 0
+        for clip in spanning_clips:
+            try:
+                self.split_clip(clip.id, time_seconds)
+                split_count += 1
+            except ValueError:
+                pass  # split point at exact start/end — skip
+        return split_count
 
     def find_clip_at(self, time_seconds: float) -> BaseClip | None:
         """Return the first clip at the given time, or None."""

@@ -218,7 +218,7 @@ class TestTrackGroupClips:
         assert internal_clip_count == 2
 
     def test_group_clips_raises_on_missing_ids(self, track: Track) -> None:
-        with pytest.raises(KeyError, match='No clips found'):
+        with pytest.raises(KeyError, match='Clips not found'):
             track.group_clips([999, 888])
 
     def test_group_clips_position_at_earliest(self, track: Track) -> None:

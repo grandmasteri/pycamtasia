@@ -1428,6 +1428,8 @@ class Project:
                     if source_tracks:
                         range_val = source_tracks[0].get('range', [0, 0])
                         edit_rate: int = source_tracks[0].get('editRate', 44100)
+                        if edit_rate == 0:
+                            edit_rate = 44100
                         duration_samples: int = range_val[1] - range_val[0]
                         duration_ticks = int(duration_samples / edit_rate * EDIT_RATE)
                     break
@@ -1692,6 +1694,28 @@ class Project:
             callout.fade_in(fade_seconds)
             callout.fade_out(fade_seconds)
         return callout
+
+    def apply_to_all_groups(self, operation: Callable[[Group], Any]) -> int:
+        """Apply a callable to every Group clip in the project.
+
+        Args:
+            operation: A callable that accepts a single :class:`Group` argument.
+
+        Returns:
+            The number of Group clips the operation was applied to.
+        """
+        group_pairs: list[tuple[Track, Group]] = self.all_groups
+        for _track, group in group_pairs:
+            operation(group)
+        return len(group_pairs)
+
+    def mute_all_groups(self) -> int:
+        """Mute every Group clip in the project.
+
+        Returns:
+            The number of Group clips that were muted.
+        """
+        return self.apply_to_all_groups(lambda group: group.mute())
 
     def add_subtitle_track(
         self,

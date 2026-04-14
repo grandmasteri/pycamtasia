@@ -155,7 +155,8 @@ class Group(BaseClip):
         """Extract all internal clips as a flat list.
 
         Returns the clips with their start times adjusted to be relative
-        to the Group's position on the timeline.
+        to the Group's position on the timeline.  Internal clip data is
+        deep-copied so the Group's own state is never mutated.
 
         Returns:
             List of clips with timeline-absolute start positions.
@@ -164,8 +165,10 @@ class Group(BaseClip):
         extracted_clips: list[BaseClip] = []
         for group_track in self.tracks:
             for clip in group_track.clips:
-                clip._data['start'] = clip.start + group_start
-                extracted_clips.append(clip)
+                cloned_data: dict[str, Any] = copy.deepcopy(clip._data)
+                cloned_data['start'] = cloned_data.get('start', 0) + group_start
+                from camtasia.timeline.clips import clip_from_dict
+                extracted_clips.append(clip_from_dict(cloned_data))
         return extracted_clips
 
     @property
