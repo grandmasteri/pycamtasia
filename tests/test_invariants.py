@@ -567,3 +567,28 @@ def test_align_always_starts_at_zero(start_offsets):
     if data['medias']:
         first_start = min(m['start'] for m in data['medias'])
         assert first_start == 0
+
+
+# ---------------------------------------------------------------------------
+# 26. remove_short_clips never removes clips above threshold
+# ---------------------------------------------------------------------------
+
+@given(st.floats(min_value=0.5, max_value=5.0))
+@settings(max_examples=20, deadline=None)
+def test_remove_short_clips_preserves_long_clips(threshold_seconds):
+    """remove_short_clips should never remove clips at or above the threshold."""
+    track, data = _make_track()
+    # Add clips of varying durations
+    track.add_clip('AMFile', 1, 0, TICK)                    # 1s
+    track.add_clip('AMFile', 1, TICK * 2, TICK * 3)         # 3s
+    track.add_clip('AMFile', 1, TICK * 6, TICK * 10)        # 10s
+    
+    original_long_clip_count = sum(
+        1 for m in data['medias']
+        if m.get('duration', 0) >= threshold_seconds * TICK
+    )
+    
+    track.remove_short_clips(threshold_seconds)
+    
+    remaining_count = len(data['medias'])
+    assert remaining_count >= original_long_clip_count
