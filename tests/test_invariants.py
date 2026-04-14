@@ -458,3 +458,35 @@ def test_set_speed_preserves_start(speed):
     original_start = clip.start
     clip.set_speed(speed)
     assert clip.start == original_start
+
+# ---------------------------------------------------------------------------
+# 21. undo fully reverts any operation sequence
+# ---------------------------------------------------------------------------
+
+@given(st.lists(st.sampled_from(['add', 'remove', 'clear']), min_size=1, max_size=5))
+@settings(max_examples=30, deadline=None)
+def test_undo_fully_reverts_operations(operations):
+    """Undoing a tracked change block restores the exact original state."""
+    import copy
+    from camtasia.history import ChangeHistory
+
+    original_data = {'tracks': [{'medias': [], 'transitions': []}]}
+    project_data = copy.deepcopy(original_data)
+    history = ChangeHistory()
+
+    snapshot_before = copy.deepcopy(project_data)
+    medias = project_data['tracks'][0]['medias']
+    next_id = 1
+    for operation in operations:
+        if operation == 'add':
+            medias.append({'id': next_id, '_type': 'AMFile', 'start': next_id * TICK, 'duration': TICK})
+            next_id += 1
+        elif operation == 'remove' and medias:
+            medias.pop(0)
+        elif operation == 'clear':
+            medias.clear()
+    history.record('batch', snapshot_before, project_data)
+
+    if history.can_undo:
+        history.undo(project_data)
+        assert project_data == original_data
