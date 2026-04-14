@@ -3035,3 +3035,44 @@ def test_set_source():
     result = clip.set_source(42)
     assert clip.source_id == 42
     assert result is clip  # fluent return
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.set_metadata / get_metadata
+# ---------------------------------------------------------------------------
+
+def test_set_get_metadata():
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip({'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100})
+    # get_metadata returns default when key missing
+    assert clip.get_metadata('author') is None
+    assert clip.get_metadata('author', 'unknown') == 'unknown'
+    # set_metadata returns self (fluent) and stores value
+    result = clip.set_metadata('author', 'Alice')
+    assert result is clip
+    assert clip.get_metadata('author') == 'Alice'
+    # metadata property reflects the change
+    assert clip.metadata == {'author': 'Alice'}
+
+
+# ---------------------------------------------------------------------------
+# Track.clip_ids_sorted
+# ---------------------------------------------------------------------------
+
+def test_clip_ids_sorted():
+    track = _make_track([
+        {'id': 3, 'start': 300, 'duration': 100},
+        {'id': 1, 'start': 100, 'duration': 100},
+        {'id': 2, 'start': 200, 'duration': 100},
+    ])
+    assert track.clip_ids_sorted == [1, 2, 3]
+    # Original clip_ids preserves insertion order
+    assert track.clip_ids == [3, 1, 2]
+
+
+# ---------------------------------------------------------------------------
+# Project.has_effects
+# ---------------------------------------------------------------------------
+
+def test_project_has_effects(project):
+    assert project.has_effects is False

@@ -261,6 +261,15 @@ class BaseClip:
         """Clip metadata dict."""
         return self._data.get('metadata', {})  # type: ignore[no-any-return]
 
+    def set_metadata(self, metadata_key: str, metadata_value: Any) -> Self:
+        """Set a metadata value on this clip."""
+        self._data.setdefault('metadata', {})[metadata_key] = metadata_value
+        return self
+
+    def get_metadata(self, metadata_key: str, default: Any = None) -> Any:
+        """Get a metadata value from this clip."""
+        return self._data.get('metadata', {}).get(metadata_key, default)  # type: ignore[no-any-return]
+
     @property
     def animation_tracks(self) -> dict[str, Any]:
         """Animation tracks dict."""

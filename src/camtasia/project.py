@@ -324,6 +324,11 @@ class Project:
         )
 
     @property
+    def has_effects(self) -> bool:
+        """Whether any clip in the project has effects."""
+        return self.total_effect_count > 0
+
+    @property
     def total_transition_count(self) -> int:
         """Total number of transitions across all tracks."""
         return sum(

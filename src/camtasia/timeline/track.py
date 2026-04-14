@@ -231,6 +231,15 @@ class Track:
         return [int(m['id']) for m in self._data.get('medias', [])]
 
     @property
+    def clip_ids_sorted(self) -> list[int]:
+        """Clip IDs sorted by start time."""
+        sorted_medias: list[dict[str, Any]] = sorted(
+            self._data.get('medias', []),
+            key=lambda media_dict: media_dict.get('start', 0),
+        )
+        return [int(media_dict['id']) for media_dict in sorted_medias]
+
+    @property
     def medias(self) -> _ClipAccessor:
         """Alias for ``clips`` (backward compatibility)."""
         return self.clips
