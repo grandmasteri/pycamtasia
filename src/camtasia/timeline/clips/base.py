@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from fractions import Fraction
+from collections.abc import Callable
 from typing import Any
 import sys
 if sys.version_info >= (3, 11):  # pragma: no cover
@@ -131,6 +132,14 @@ class BaseClip:
         from camtasia.timing import seconds_to_ticks
         t = seconds_to_ticks(time_seconds)
         return self.start <= t < self.start + self.duration
+
+    def is_between(self, range_start_seconds: float, range_end_seconds: float) -> bool:
+        """Whether this clip falls entirely within the given time range."""
+        return self.start_seconds >= range_start_seconds and self.end_seconds <= range_end_seconds
+
+    def intersects(self, range_start_seconds: float, range_end_seconds: float) -> bool:
+        """Whether this clip overlaps with the given time range at all."""
+        return self.start_seconds < range_end_seconds and self.end_seconds > range_start_seconds
 
     @property
     def is_muted(self) -> bool:
@@ -1469,3 +1478,9 @@ class BaseClip:
     def is_longer_than(self, threshold_seconds: float) -> bool:
         """Whether this clip's duration exceeds the given threshold."""
         return self.duration_seconds > threshold_seconds
+
+    def apply_if(self, predicate: Callable[[BaseClip], bool], operation: Callable[[BaseClip], Any]) -> Self:
+        """Apply an operation only if the predicate is true for this clip."""
+        if predicate(self):
+            operation(self)
+        return self

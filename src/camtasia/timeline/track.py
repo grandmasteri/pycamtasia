@@ -1096,6 +1096,10 @@ class Track:
         """Return clips matching a predicate function."""
         return [c for c in self.clips if predicate(c)]
 
+    def clips_between(self, range_start_seconds: float, range_end_seconds: float) -> list[BaseClip]:
+        """Return all clips that fall entirely within the given time range."""
+        return self.filter_clips(lambda clip: clip.is_between(range_start_seconds, range_end_seconds))
+
     @property
     def muted_clips(self) -> list[BaseClip]:
         """Return clips whose audio is muted (gain == 0)."""
@@ -1694,6 +1698,14 @@ class Track:
             running_position += media_dict.get('duration', 0) + gap_ticks
         self._data['medias'] = sorted_medias
         self._data['transitions'] = []
+
+    def partition_by_type(self) -> dict[str, list[BaseClip]]:
+        """Group clips by their type, returning a dict of type -> clip list."""
+        from collections import defaultdict
+        partitioned_clips: dict[str, list[BaseClip]] = defaultdict(list)
+        for clip in self.clips:
+            partitioned_clips[clip.clip_type].append(clip)
+        return dict(partitioned_clips)
 
 
 class _ClipAccessor:

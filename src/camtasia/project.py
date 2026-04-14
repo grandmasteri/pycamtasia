@@ -422,6 +422,10 @@ class Project:
         """All clips across all tracks as (track, clip) tuples."""
         return [(t, c) for t in self.timeline.tracks for c in t.clips]
 
+    def clips_between(self, range_start_seconds: float, range_end_seconds: float) -> list[tuple[Track, BaseClip]]:
+        """Return all clips across all tracks that fall within the time range."""
+        return [(track, clip) for track, clip in self.all_clips if clip.is_between(range_start_seconds, range_end_seconds)]
+
     @property
     def has_audio(self) -> bool:
         """Whether the project has any audio clips."""
@@ -1455,6 +1459,17 @@ class Project:
         """Return a deep copy of the project data dict."""
         import copy
         return copy.deepcopy(self._data)
+
+    @property
+    def media_summary(self) -> dict[str, int]:
+        """Count of media entries by file extension."""
+        from collections import Counter
+        extension_counter: Counter[str] = Counter()
+        for media_entry in self.media_bin:
+            source_path: str = str(media_entry.source)
+            extension: str = source_path.rsplit('.', 1)[-1].lower() if '.' in source_path else 'unknown'
+            extension_counter[extension] += 1
+        return dict(extension_counter)
 
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:

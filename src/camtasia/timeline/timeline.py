@@ -683,6 +683,17 @@ class Timeline:
         for track in self.tracks:
             track.normalize_timing()
 
+    @property
+    def clip_density(self) -> float:
+        """Ratio of total clip duration to timeline duration (0.0-1.0+)."""
+        timeline_duration: float = self.total_duration_seconds()
+        if timeline_duration == 0:
+            return 0.0
+        total_clip_duration: float = sum(
+            track.total_duration_seconds for track in self.tracks
+        )
+        return total_clip_duration / timeline_duration
+
 
 class _TrackAccessor:
     """Iterable/indexable accessor over timeline tracks."""
