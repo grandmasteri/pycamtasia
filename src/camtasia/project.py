@@ -8,7 +8,10 @@ import warnings
 from contextlib import contextmanager
 from importlib import resources as importlib_resources
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterator, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from camtasia.history import ChangeHistory
 
 from camtasia.authoring_client import AuthoringClient
 from camtasia.media_bin import Media, MediaBin, MediaType
@@ -97,6 +100,33 @@ def _probe_media_ffprobe(path: Path) -> dict:
     return result
 
 
+
+class _ChangeTracker:
+    """Context manager that snapshots project data before/after a block."""
+
+    def __init__(self, project: Project, description: str) -> None:
+        self._project = project
+        self._description = description
+        self._snapshot_before: dict[str, Any] | None = None
+
+    def __enter__(self) -> _ChangeTracker:
+        import copy
+        self._snapshot_before = copy.deepcopy(self._project._data)
+        return self
+
+    def __exit__(
+        self,
+        exception_type: type[BaseException] | None,
+        exception_value: BaseException | None,
+        traceback: object,
+    ) -> None:
+        if exception_type is None and self._snapshot_before is not None:
+            self._project.history.record(
+                self._description,
+                self._snapshot_before,
+                self._project._data,
+            )
+
 class Project:
     """Main entry-point for interacting with Camtasia projects.
 
@@ -112,6 +142,37 @@ class Project:
         self._file_path = file_path
         self._encoding = encoding
         self._data: dict = json.loads(self._project_file.read_text(encoding=encoding))
+        self._history: ChangeHistory | None = None
+
+    @property
+    def history(self) -> ChangeHistory:
+        """Undo/redo history for this project."""
+        from camtasia.history import ChangeHistory
+        if self._history is None:
+            self._history = ChangeHistory()
+        return self._history
+
+    def track_changes(self, description: str = "edit") -> _ChangeTracker:
+        """Context manager that records a reversible change.
+
+        Usage::
+
+            with project.track_changes("add intro"):
+                track.add_clip(...)
+
+            project.undo()  # reverts the block
+        """
+        return _ChangeTracker(self, description)
+
+    def undo(self) -> str:
+        """Undo the most recent tracked change. Returns its description."""
+        returned_description: str = self.history.undo(self._data)
+        return returned_description
+
+    def redo(self) -> str:
+        """Redo the most recently undone change. Returns its description."""
+        returned_description: str = self.history.redo(self._data)
+        return returned_description
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Project):
