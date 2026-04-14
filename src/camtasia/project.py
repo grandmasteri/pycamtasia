@@ -19,7 +19,7 @@ from camtasia.timeline import Timeline
 from camtasia.timeline.track import Track
 from camtasia.timeline.clips import BaseClip
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
-from camtasia.types import CompactResult, HealthCheckResult
+from camtasia.types import ClipType, CompactResult, HealthCheckResult
 from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_indices, _check_transition_references
 
 
@@ -430,6 +430,37 @@ class Project:
             for clip in track.clips:
                 counts[clip.clip_type] += 1
         return dict(counts)
+
+    def search_clips(
+        self,
+        *,
+        clip_type: str | ClipType | None = None,
+        min_duration_seconds: float | None = None,
+        max_duration_seconds: float | None = None,
+        has_effects: bool | None = None,
+        has_keyframes: bool | None = None,
+        on_track: str | None = None,
+    ) -> list[tuple[Track, BaseClip]]:
+        """Search for clips matching the given criteria.
+
+        All criteria are AND-combined. None means 'any value'.
+        """
+        matching_results: list[tuple[Track, BaseClip]] = []
+        for track, clip in self.all_clips:
+            if clip_type is not None and clip.clip_type != clip_type:
+                continue
+            if min_duration_seconds is not None and clip.duration_seconds < min_duration_seconds:
+                continue
+            if max_duration_seconds is not None and clip.duration_seconds > max_duration_seconds:
+                continue
+            if has_effects is not None and clip.has_effects != has_effects:
+                continue
+            if has_keyframes is not None and clip.has_keyframes != has_keyframes:
+                continue
+            if on_track is not None and track.name != on_track:
+                continue
+            matching_results.append((track, clip))
+        return matching_results
 
     @classmethod
     def from_template(
