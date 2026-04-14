@@ -377,6 +377,21 @@ class Project:
         return f'{minutes}:{remaining_seconds:02d}'
 
     @property
+    def total_duration_formatted(self) -> str:
+        """Total duration as HH:MM:SS string.
+
+        Returns ``H:MM:SS`` when the duration is one hour or more,
+        otherwise ``M:SS``.
+        """
+        total_seconds: float = self.duration_seconds
+        hours: int = int(total_seconds // 3600)
+        minutes: int = int((total_seconds % 3600) // 60)
+        remaining_seconds: int = int(total_seconds % 60)
+        if hours > 0:
+            return f'{hours}:{minutes:02d}:{remaining_seconds:02d}'
+        return f'{minutes}:{remaining_seconds:02d}'
+
+    @property
     def next_available_id(self) -> int:
         """Next available clip ID (max existing + 1)."""
         existing = self.timeline.all_clip_ids

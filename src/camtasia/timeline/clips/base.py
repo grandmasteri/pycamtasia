@@ -428,6 +428,21 @@ class BaseClip:
         self._data.setdefault('effects', []).extend(copy.deepcopy(source_effects))
         return self
 
+    def duplicate_effects_to(self, target_clip: BaseClip) -> Self:
+        """Copy all effects from this clip to another clip.
+
+        Convenience wrapper around :meth:`copy_effects_from` that reads
+        from *self* and writes to *target_clip*.
+
+        Args:
+            target_clip: Clip that will receive this clip's effects.
+
+        Returns:
+            self for chaining.
+        """
+        target_clip.copy_effects_from(self)
+        return self
+
     def add_glow_timed(
         self,
         start_seconds: float,

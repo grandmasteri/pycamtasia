@@ -950,6 +950,25 @@ class Track:
         """Sort clips by start time."""
         self._data.get('medias', []).sort(key=lambda m: m.get('start', 0))
 
+    def reverse_clip_order(self) -> None:
+        """Reverse the order of clips while keeping them packed end-to-end.
+
+        Clips are sorted by their current start time, then placed back
+        in reverse order so the last clip becomes first.  All transitions
+        are cleared because the adjacency relationships change.
+        """
+        sorted_medias: list[dict[str, Any]] = sorted(
+            self._data.get('medias', []),
+            key=lambda media_dict: media_dict.get('start', 0),
+        )
+        sorted_medias.reverse()
+        running_position: int = 0
+        for media_dict in sorted_medias:
+            media_dict['start'] = running_position
+            running_position += media_dict.get('duration', 0)
+        self._data['medias'] = sorted_medias
+        self._data['transitions'] = []
+
     @property
     def first_clip(self) -> BaseClip | None:
         """First clip by start time, or None if track is empty."""

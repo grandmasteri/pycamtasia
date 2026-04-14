@@ -3125,3 +3125,89 @@ def test_muted_clips():
     assert len(muted) == 2
     muted_ids: list[int] = [clip.id for clip in muted]
     assert muted_ids == [1, 3]
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.duplicate_effects_to
+# ---------------------------------------------------------------------------
+
+def test_duplicate_effects_to():
+    """duplicate_effects_to copies effects from self to target clip."""
+    source_media: dict[str, Any] = {
+        'id': 1,
+        'start': 0,
+        'duration': 100,
+        'effects': [{'effectName': 'Glow', 'params': {'radius': 10}}],
+    }
+    target_media: dict[str, Any] = {
+        'id': 2,
+        'start': 200,
+        'duration': 100,
+    }
+    track = _make_track(medias=[source_media, target_media])
+    clips = list(track.clips)
+    source_clip = clips[0]
+    target_clip = clips[1]
+
+    result = source_clip.duplicate_effects_to(target_clip)
+
+    # Returns self for chaining
+    assert result is source_clip
+    # Target now has the effect
+    assert len(target_clip._data.get('effects', [])) == 1
+    assert target_clip._data['effects'][0]['effectName'] == 'Glow'
+    # Deep copy — mutating target doesn't affect source
+    target_clip._data['effects'][0]['params']['radius'] = 999
+    assert source_clip._data['effects'][0]['params']['radius'] == 10
+
+
+# ---------------------------------------------------------------------------
+# Track.reverse_clip_order
+# ---------------------------------------------------------------------------
+
+def test_reverse_clip_order():
+    """reverse_clip_order reverses clips and packs them end-to-end."""
+    medias: list[dict[str, Any]] = [
+        {'id': 1, 'start': 0, 'duration': 100},
+        {'id': 2, 'start': 100, 'duration': 200},
+        {'id': 3, 'start': 300, 'duration': 50},
+    ]
+    track = _make_track(medias=medias)
+    track._data['transitions'] = [{'some': 'transition'}]
+
+    track.reverse_clip_order()
+
+    reversed_medias: list[dict[str, Any]] = track._data['medias']
+    # Clip 3 (was last) is now first
+    assert reversed_medias[0]['id'] == 3
+    assert reversed_medias[0]['start'] == 0
+    # Clip 2 follows clip 3
+    assert reversed_medias[1]['id'] == 2
+    assert reversed_medias[1]['start'] == 50
+    # Clip 1 (was first) is now last
+    assert reversed_medias[2]['id'] == 1
+    assert reversed_medias[2]['start'] == 250
+    # Transitions cleared
+    assert track._data['transitions'] == []
+
+
+# ---------------------------------------------------------------------------
+# Project.total_duration_formatted
+# ---------------------------------------------------------------------------
+
+def test_total_duration_formatted(project):
+    """total_duration_formatted returns M:SS for short projects."""
+    formatted: str = project.total_duration_formatted
+    # The empty/new project has 0 duration → "0:00"
+    assert formatted == '0:00'
+
+
+def test_total_duration_formatted_with_hours(project):
+    """total_duration_formatted shows hours when duration exceeds 60 minutes."""
+    # Add a very long clip to get hours
+    track = project.timeline.add_track('Long')
+    track.add_clip('VMFile', None, 0, 705600000 * 3700)  # ~3700 seconds = 1:01:40
+    actual_formatted: str = project.total_duration_formatted
+    assert ':' in actual_formatted
+    parts = actual_formatted.split(':')
+    assert len(parts) == 3  # H:MM:SS
