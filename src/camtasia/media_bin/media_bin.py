@@ -378,7 +378,7 @@ def _parse_with_pymediainfo(file_path: Path) -> dict[str, Any] | None:
 
     if len(media_info.tracks) < 2:
         return None
-    return media_info.tracks[1].to_data()
+    return media_info.tracks[1].to_data()  # type: ignore[no-any-return]
 
 
 def _get_media_type(track: dict[str, Any]) -> MediaType:
