@@ -490,3 +490,44 @@ def test_undo_fully_reverts_operations(operations):
     if history.can_undo:
         history.undo(project_data)
         assert project_data == original_data
+
+
+# ---------------------------------------------------------------------------
+# 22. overlaps_with is symmetric
+# ---------------------------------------------------------------------------
+
+@given(
+    st.integers(min_value=0, max_value=10),
+    st.integers(min_value=1, max_value=5),
+    st.integers(min_value=0, max_value=10),
+    st.integers(min_value=1, max_value=5),
+)
+@settings(max_examples=30, deadline=None)
+def test_overlaps_with_is_symmetric(start_a, duration_a, start_b, duration_b):
+    """If A overlaps B, then B overlaps A."""
+    from camtasia.timeline.clips.base import BaseClip
+    clip_a = BaseClip({'_type': 'VMFile', 'id': 1, 'start': start_a * TICK, 'duration': duration_a * TICK})
+    clip_b = BaseClip({'_type': 'VMFile', 'id': 2, 'start': start_b * TICK, 'duration': duration_b * TICK})
+    assert clip_a.overlaps_with(clip_b) == clip_b.overlaps_with(clip_a)
+
+
+# ---------------------------------------------------------------------------
+# 23. distance_to sign matches gap direction
+# ---------------------------------------------------------------------------
+
+@given(
+    st.integers(min_value=0, max_value=5),
+    st.integers(min_value=1, max_value=3),
+    st.integers(min_value=6, max_value=12),
+    st.integers(min_value=1, max_value=3),
+)
+@settings(max_examples=30, deadline=None)
+def test_distance_to_positive_when_gap_exists(start_a, duration_a, start_b, duration_b):
+    """distance_to is positive when there's a gap (B starts after A ends)."""
+    from camtasia.timeline.clips.base import BaseClip
+    clip_a = BaseClip({'_type': 'VMFile', 'id': 1, 'start': start_a * TICK, 'duration': duration_a * TICK})
+    clip_b = BaseClip({'_type': 'VMFile', 'id': 2, 'start': start_b * TICK, 'duration': duration_b * TICK})
+    # B starts at 6+ ticks, A ends at most 5+3=8 ticks, so gap depends on values
+    end_a = (start_a + duration_a) * TICK
+    if start_b * TICK > end_a:
+        assert clip_a.distance_to(clip_b) > 0
