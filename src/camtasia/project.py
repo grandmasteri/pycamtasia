@@ -389,6 +389,28 @@ class Project:
         return longest_pair
 
     @property
+    def shortest_clip(self) -> tuple[Track, BaseClip] | None:
+        """The shortest clip across all tracks, or None if empty."""
+        shortest_pair: tuple[Track, BaseClip] | None = None
+        shortest_duration: int | None = None
+        for track, clip in self.all_clips:
+            if shortest_duration is None or clip.duration < shortest_duration:
+                shortest_duration = clip.duration
+                shortest_pair = (track, clip)
+        return shortest_pair
+
+    @property
+    def average_clip_duration_seconds(self) -> float:
+        """Average clip duration across all tracks, or 0.0 if empty."""
+        total_clips: int = self.clip_count
+        if total_clips == 0:
+            return 0.0
+        total_duration: float = sum(
+            clip.duration_seconds for _, clip in self.all_clips
+        )
+        return total_duration / total_clips
+
+    @property
     def effect_summary(self) -> dict[str, int]:
         """Count of each effect type across all clips."""
         from collections import Counter

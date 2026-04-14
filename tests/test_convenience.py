@@ -2896,3 +2896,54 @@ def test_longest_clip(project):
 
 def test_longest_clip_empty(project):
     assert project.longest_clip is None
+
+
+# ---------------------------------------------------------------------------
+# Project.shortest_clip
+# ---------------------------------------------------------------------------
+
+def test_shortest_clip(project):
+    track = project.timeline.add_track('Test')
+    track.add_clip('VMFile', None, 0, 705600000 * 5)  # 5s
+    track.add_clip('VMFile', None, 705600000 * 6, 705600000 * 2)  # 2s
+    result = project.shortest_clip
+    assert result is not None
+    _, shortest_clip = result
+    assert shortest_clip.duration == 705600000 * 2
+
+
+def test_shortest_clip_empty(project):
+    assert project.shortest_clip is None
+
+
+# ---------------------------------------------------------------------------
+# Track.average_clip_duration_seconds
+# ---------------------------------------------------------------------------
+
+def test_track_average_clip_duration():
+    medias = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3.0)},
+        {'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(4.0), 'duration': seconds_to_ticks(5.0)},
+    ]
+    track = _make_track(medias)
+    assert track.average_clip_duration_seconds == pytest.approx(4.0)
+
+
+def test_track_average_clip_duration_empty():
+    track = _make_track()
+    assert track.average_clip_duration_seconds == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Project.average_clip_duration_seconds
+# ---------------------------------------------------------------------------
+
+def test_project_average_clip_duration(project):
+    track = project.timeline.add_track('Test')
+    track.add_clip('VMFile', None, 0, 705600000 * 3)  # 3s
+    track.add_clip('VMFile', None, 705600000 * 4, 705600000 * 5)  # 5s
+    assert project.average_clip_duration_seconds == pytest.approx(4.0)
+
+
+def test_project_average_clip_duration_empty(project):
+    assert project.average_clip_duration_seconds == 0.0

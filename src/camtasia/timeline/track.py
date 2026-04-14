@@ -989,6 +989,14 @@ class Track:
         return ticks_to_seconds(total)
 
     @property
+    def average_clip_duration_seconds(self) -> float:
+        """Average clip duration in seconds, or 0.0 if empty."""
+        clip_count: int = len(self)
+        if clip_count == 0:
+            return 0.0
+        return self.total_duration_seconds / clip_count
+
+    @property
     def duration_seconds(self) -> float:
         """Total duration of all clips (alias for total_duration_seconds)."""
         return self.total_duration_seconds
