@@ -107,6 +107,33 @@ class Timeline:
         from camtasia.timeline.track import _max_clip_id
         return _max_clip_id(self._track_list) + 1
 
+    def duplicate_track(self, source_track_index: int) -> Track:
+        """Duplicate a track and all its clips. Returns the new track."""
+        import copy
+        source_track_data: dict[str, Any] = self._track_list[source_track_index]
+        source_attrs: dict[str, Any] = self._data['trackAttributes'][source_track_index]
+
+        duplicated_track_data: dict[str, Any] = copy.deepcopy(source_track_data)
+        duplicated_attrs: dict[str, Any] = copy.deepcopy(source_attrs)
+        duplicated_attrs['ident'] = f"{duplicated_attrs.get('ident', '')} (copy)"
+
+        # Remap clip IDs to avoid collisions
+        next_id: int = self.next_clip_id()
+        for media_dict in duplicated_track_data.get('medias', []):
+            media_dict['id'] = next_id
+            next_id += 1
+
+        # Insert after source
+        insert_index: int = source_track_index + 1
+        self._track_list.insert(insert_index, duplicated_track_data)
+        self._data['trackAttributes'].insert(insert_index, duplicated_attrs)
+
+        # Fix track indices
+        for track_index, track_data in enumerate(self._track_list):
+            track_data['trackIndex'] = track_index
+
+        return Track(duplicated_attrs, duplicated_track_data)
+
     def move_track(self, from_index: int, to_index: int) -> None:
         """Move a track from one array position to another.
 

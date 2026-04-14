@@ -276,6 +276,11 @@ class BaseClip:
         """Source bin ID (``src`` field), or ``None`` if absent."""
         return self._data.get('src')
 
+    def set_source(self, source_id: int) -> Self:
+        """Change the media source reference for this clip."""
+        self._data['src'] = source_id
+        return self
+
     @property
     def source_effect(self) -> dict[str, Any] | None:
         """Source effect applied to this clip, or ``None``."""

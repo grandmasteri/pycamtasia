@@ -2995,3 +2995,43 @@ def test_replace_media_path_no_match(project):
     replaced_count: int = project.replace_media_path('/nonexistent', '/replacement')
     assert replaced_count == 0
     assert project._data['sourceBin'][-1]['src'] == '/some/other/file.mp4'
+
+
+# ---------------------------------------------------------------------------
+# Timeline.duplicate_track
+# ---------------------------------------------------------------------------
+
+def test_duplicate_track():
+    tl = _make_timeline([
+        ('Audio', [{'id': 1, 'start': 0, 'duration': 100}]),
+        ('Video', [{'id': 2, 'start': 0, 'duration': 200}]),
+    ])
+    new_track: Track = tl.duplicate_track(0)
+    assert new_track.name == 'Audio (copy)'
+    assert len(list(tl.tracks)) == 3
+    # Inserted after source at index 1
+    assert list(tl.tracks)[1].name == 'Audio (copy)'
+
+
+def test_duplicate_track_remaps_ids():
+    tl = _make_timeline([
+        ('Track1', [{'id': 5, 'start': 0, 'duration': 100},
+                     {'id': 8, 'start': 100, 'duration': 200}]),
+    ])
+    new_track: Track = tl.duplicate_track(0)
+    original_ids: set[int] = {m['id'] for m in tl._data['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias']}
+    duplicated_ids: set[int] = {m['id'] for m in tl._data['sceneTrack']['scenes'][0]['csml']['tracks'][1]['medias']}
+    assert original_ids.isdisjoint(duplicated_ids), 'Duplicated clip IDs must not collide with originals'
+    assert len(duplicated_ids) == 2
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.set_source
+# ---------------------------------------------------------------------------
+
+def test_set_source():
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip({'id': 1, 'src': 10, '_type': 'AMFile', 'start': 0, 'duration': 100})
+    result = clip.set_source(42)
+    assert clip.source_id == 42
+    assert result is clip  # fluent return
