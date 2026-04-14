@@ -1651,6 +1651,81 @@ class Project:
             source_track.move_clip_to_track(clip_id, target_track)
         return len(clip_ids_to_move)
 
+    def add_title_card(
+        self,
+        title_text: str,
+        start_seconds: float = 0.0,
+        duration_seconds: float = 5.0,
+        track_name: str = 'Titles',
+        font_name: str = 'Helvetica Neue',
+        font_weight: str = 'Bold',
+        font_size: float = 72.0,
+        font_color: tuple[float, float, float] = (1.0, 1.0, 1.0),
+        fade_seconds: float = 0.5,
+    ) -> BaseClip:
+        """Add a text title card to the timeline.
+
+        Creates a callout clip on the named track with the given text and
+        styling. Optionally applies fade-in and fade-out transitions.
+
+        Args:
+            title_text: The text to display on the title card.
+            start_seconds: Timeline position where the title card begins.
+            duration_seconds: How long the title card is visible.
+            track_name: Name of the track to place the title card on.
+            font_name: Font family name.
+            font_weight: Font weight (e.g. 'Bold', 'Regular').
+            font_size: Font size in points.
+            font_color: RGB color as a tuple of floats in [0.0, 1.0].
+            fade_seconds: Duration of fade-in and fade-out. Pass 0 to skip.
+
+        Returns:
+            The created callout clip.
+        """
+        track = self.timeline.get_or_create_track(track_name)
+        callout = track.add_callout(
+            title_text, start_seconds, duration_seconds,
+            font_name=font_name, font_weight=font_weight, font_size=font_size,
+        )
+        callout.set_colors(font_color=font_color)
+        if fade_seconds > 0:
+            callout.fade_in(fade_seconds)
+            callout.fade_out(fade_seconds)
+        return callout
+
+    def add_subtitle_track(
+        self,
+        subtitle_entries: list[tuple[float, float, str]],
+        track_name: str = 'Subtitles',
+        font_size: float = 36.0,
+        font_color: tuple[float, float, float] = (1.0, 1.0, 1.0),
+    ) -> list[BaseClip]:
+        """Add subtitle text entries to a dedicated track.
+
+        Each entry is placed as a callout clip at the specified time and
+        duration. All subtitles share the same font size and color.
+
+        Args:
+            subtitle_entries: List of (start_seconds, duration_seconds, text)
+                tuples, one per subtitle line.
+            track_name: Name of the track to place subtitles on.
+            font_size: Font size in points for all subtitle clips.
+            font_color: RGB color as a tuple of floats in [0.0, 1.0].
+
+        Returns:
+            List of created callout clips in the same order as the input.
+        """
+        track = self.timeline.get_or_create_track(track_name)
+        placed_subtitles: list[BaseClip] = []
+        for entry_start, entry_duration, entry_text in subtitle_entries:
+            callout = track.add_callout(
+                entry_text, entry_start, entry_duration,
+                font_size=font_size,
+            )
+            callout.set_colors(font_color=font_color)
+            placed_subtitles.append(callout)
+        return placed_subtitles
+
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
     """Load a Camtasia project from disk.
