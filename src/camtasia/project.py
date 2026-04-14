@@ -314,6 +314,12 @@ class Project:
         return self.total_duration_seconds()
 
     @property
+    def next_available_id(self) -> int:
+        """Next available clip ID (max existing + 1)."""
+        existing = self.timeline.all_clip_ids
+        return max(existing, default=0) + 1
+
+    @property
     def all_clips(self) -> list[tuple[Track, BaseClip]]:
         """All clips across all tracks as (track, clip) tuples."""
         return [(t, c) for t in self.timeline.tracks for c in t.clips]

@@ -252,6 +252,14 @@ class Timeline:
         }
 
     @property
+    def all_clip_ids(self) -> set[int]:
+        """Set of all clip IDs across all tracks."""
+        ids: set[int] = set()
+        for track in self.tracks:
+            ids.update(track.clip_ids)
+        return ids
+
+    @property
     def all_effects(self) -> list[tuple[Track, BaseClip, dict]]:
         """All effects across all tracks as (track, clip, effect_dict) tuples."""
         results = []

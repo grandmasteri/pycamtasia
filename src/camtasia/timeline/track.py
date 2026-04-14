@@ -226,6 +226,11 @@ class Track:
         return _ClipAccessor(self._data)
 
     @property
+    def clip_ids(self) -> list[int]:
+        """List of all clip IDs on this track."""
+        return [int(m['id']) for m in self._data.get('medias', [])]
+
+    @property
     def medias(self) -> _ClipAccessor:
         """Alias for ``clips`` (backward compatibility)."""
         return self.clips
