@@ -14,7 +14,7 @@ project = load_project("demo.cmproj")
 track = project.timeline.tracks[0]
 
 with project.track_changes("add intro clip"):
-    track.add_media("intro.mp4", start=0, duration=150)
+    track.add_video(media.id, start_seconds=0, duration_seconds=5.0)
 
 with project.track_changes("apply drop shadow"):
     clip = track.clips[0]

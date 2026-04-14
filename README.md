@@ -44,11 +44,9 @@ proj = camtasia.load_project("my_video.cmproj")
 for track in proj.timeline.tracks:
     for clip in track.clips:
         print(f"{clip.clip_type}: {clip.duration_seconds:.1f}s")
-
-# Apply effects
-clip.fade_in(0.5)
-clip.add_drop_shadow(blur=25.0)
-clip.set_speed(2.0)
+        clip.fade_in(0.5)
+        clip.add_drop_shadow(blur=25.0)
+        clip.set_speed(2.0)
 
 # Save
 proj.save()
@@ -66,8 +64,9 @@ proj.save()
 - **Audiate integration** — Word-level transcript parsing from Audiate and WhisperX
 - **Batch operations** — `apply_to_clips()`, `fade_all()`, `scale_all()`, `move_all()`
 - **Layout operations** — `pack_track()`, `ripple_insert()`, `ripple_delete()`, `snap_to_grid()`
-- **Builders** — `TimelineBuilder`, `CalloutBuilder`, `ScreenplayBuilder` for fluent assembly
-- **Export** — SRT subtitles, EDL, project reports (JSON/Markdown), timeline JSON
+- **Builders** — `TimelineBuilder`, `CalloutBuilder`, `build_from_screenplay()` for fluent assembly
+- **Undo & redo** — JSON Patch-based change history with `track_changes`, persist across sessions
+- **Export** — SRT subtitles, EDL, CSV, project reports (JSON/Markdown), timeline JSON
 - **Project tools** — Diff, merge, cleanup, validation, statistics
 - **Camtasia v10 compatible** — NSJSONSerialization-style formatting preserved on save
 

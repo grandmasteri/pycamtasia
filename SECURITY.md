@@ -9,9 +9,12 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please report it by opening a
-[GitHub issue](https://github.com/grandmasteri/pycamtasia/issues) with the
-label `security`.
+If you discover a security vulnerability, please report it through
+[GitHub's private vulnerability reporting](https://github.com/grandmasteri/pycamtasia/security/advisories/new).
+
+**Do not open a public issue for security vulnerabilities.**
+
+Reports will be acknowledged within 72 hours.
 
 pycamtasia processes Camtasia project files (`.cmproj` / `.tscproj`) which
 are JSON-based. The library does **not**:

@@ -6,8 +6,8 @@ pycamtasia is a Python library for reading, writing, and manipulating TechSmith 
 
 Primary use case: assembling demo videos from voiceover audio, diagram images, screen recordings, and title cards via scripts.
 
-- 105+ commits, 1545+ tests, 100% line coverage (`fail_under = 100`)
-- Python 3.10+, no required runtime dependencies (optional: `pymediainfo`, `docopt-subcommands`)
+- 390+ commits, 1825+ tests, 100% line coverage (`fail_under = 100`)
+- Python 3.10+, no required runtime dependencies (optional: `pymediainfo`, `docopt-subcommands`, `jsonpatch>=1.33`)
 - Package: `src/camtasia/`, installed as `camtasia`, CLI entry point: `pytsc`
 
 ## Architecture
@@ -197,14 +197,13 @@ Key pytest config from `pyproject.toml`:
 ./scripts/camtasia_validate.sh
 ```
 
-Requirements: macOS, `/Applications/Camtasia.app`, backup project at `/tmp/before-multispeed.json`.
+Requirements: macOS, `/Applications/Camtasia.app`.
 
 The script:
-1. Rebuilds the project from backup JSON
-2. Runs the assembly script (if found)
-3. Launches Camtasia with the project
-4. Checks stderr for EXCEPTION lines
-5. Reports PASS (0 exceptions) or FAIL
+1. Runs the assembly script (if found)
+2. Launches Camtasia with the project
+3. Checks stderr for EXCEPTION lines
+4. Reports PASS (0 exceptions) or FAIL
 
 ## Common Pitfalls
 
@@ -237,7 +236,7 @@ Every clip ID must be unique across the entire project. The validation module ch
 ```
 pycamtasia/
 ├── src/camtasia/           # Library source (the package)
-├── tests/                  # 100+ test files, 1545+ tests
+├── tests/                  # 100+ test files, 1825+ tests
 │   ├── conftest.py         # Fixtures: project, simple_video, test_project_a_data
 │   └── fixtures/           # .tscproj files and .wav files for testing
 ├── scripts/

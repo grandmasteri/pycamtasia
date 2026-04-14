@@ -25,3 +25,8 @@ Effects
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. automodule:: camtasia.effects.behaviors
+   :members:
+   :undoc-members:
+   :show-inheritance:

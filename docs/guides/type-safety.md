@@ -8,20 +8,20 @@ editor and mypy can catch mistakes before runtime.
 Instead of passing raw strings, use the typed enums from `camtasia.types`:
 
 ```python
-from camtasia.types import ClipType, EffectName, TransitionType
+from camtasia.types import ClipType
 
 # Filter clips by type
 videos = [c for c in track.clips if c.clip_type == ClipType.VIDEO]
 
-# Add an effect by name
-clip.add_effect(EffectName.DROP_SHADOW)
+# Add a drop shadow effect
+clip.add_drop_shadow()
 
-# Set a transition
-clip.set_transition(TransitionType.DISSOLVE, duration=30)
+# Add a dissolve transition between two clips
+track.transitions.add_dissolve(clip_a, clip_b, duration_seconds=0.5)
 ```
 
-Your editor will autocomplete the valid values and mypy will flag typos like
-`EffectName.DROPSHADOW` at check time.
+Your editor will autocomplete the valid values and mypy will flag typos at
+check time.
 
 ## Available enums
 

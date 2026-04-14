@@ -45,3 +45,13 @@ Clips
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. automodule:: camtasia.timeline.clips.placeholder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: camtasia.timeline.clips.unified
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -33,9 +33,9 @@ dev = ["bumpversion", "ruff"]
 test = ["pytest", "pytest-cov", "hypothesis", "pytest-xdist", "pytest-timeout", "mypy"]
 
 [project.urls]
-Homepage = "https://github.com/sixty-north/python-camtasia"
-Repository = "https://github.com/sixty-north/python-camtasia"
-Issues = "https://github.com/sixty-north/python-camtasia/issues"
+Homepage = "https://github.com/grandmasteri/pycamtasia"
+Repository = "https://github.com/grandmasteri/pycamtasia"
+Issues = "https://github.com/grandmasteri/pycamtasia/issues"
 
 [project.scripts]
 pytsc = "camtasia.cli:main"
