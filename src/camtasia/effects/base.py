@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
+from camtasia.types import _EffectData
+
 
 class Effect:
     """Thin wrapper around a Camtasia effect dict.
@@ -19,16 +21,16 @@ class Effect:
     """
 
     def __init__(self, data: dict[str, Any]) -> None:
-        self._data = data
+        self._data: _EffectData = data  # type: ignore[assignment]
 
     @property
-    def data(self) -> dict[str, Any]:
+    def data(self) -> _EffectData:
         """The underlying raw dict."""
         return self._data
 
     @property
     def name(self) -> str:
-        return self._data["effectName"]  # type: ignore[no-any-return]
+        return self._data["effectName"]
 
     @property
     def bypassed(self) -> bool:
@@ -40,16 +42,16 @@ class Effect:
 
     @property
     def category(self) -> str:
-        return self._data.get("category", "")  # type: ignore[no-any-return]
+        return self._data.get("category", "")
 
     @property
     def metadata(self) -> dict:
         """Top-level metadata dict for this effect."""
-        return self._data.get('metadata', {})  # type: ignore[no-any-return]
+        return self._data.get('metadata', {})
 
     @property
     def parameters(self) -> dict[str, Any]:
-        return self._data.get("parameters", {})  # type: ignore[no-any-return]
+        return self._data.get("parameters", {})
 
     def get_parameter(self, name: str) -> Any:
         """Get a parameter's default value by name.
@@ -104,12 +106,12 @@ class Effect:
     @property
     def left_edge_mods(self) -> list[dict[str, Any]]:
         """Left edge modifications (fade-in, etc.)."""
-        return self._data.get('leftEdgeMods', [])  # type: ignore[no-any-return]
+        return self._data.get('leftEdgeMods', [])
 
     @property
     def right_edge_mods(self) -> list[dict[str, Any]]:
         """Right edge modifications (fade-out, etc.)."""
-        return self._data.get('rightEdgeMods', [])  # type: ignore[no-any-return]
+        return self._data.get('rightEdgeMods', [])
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Effect):

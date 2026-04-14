@@ -7,7 +7,7 @@ from typing import Any, Self
 from camtasia.effects.base import Effect, effect_from_dict
 from camtasia.effects.visual import Glow
 from camtasia.timing import seconds_to_ticks
-from camtasia.types import BlendMode, ClipSummary, ClipType, EffectName
+from camtasia.types import BlendMode, ClipSummary, ClipType, EffectName, _ClipData
 
 EDIT_RATE = 705_600_000
 """Ticks per second. Divisible by 30fps, 60fps, 44100Hz, 48000Hz."""
@@ -24,7 +24,7 @@ class BaseClip:
     """
 
     def __init__(self, data: dict[str, Any]) -> None:
-        self._data = data
+        self._data: _ClipData = data  # type: ignore[assignment]
 
     # ------------------------------------------------------------------
     # Core properties (read/write unless noted)
@@ -38,7 +38,7 @@ class BaseClip:
     @property
     def clip_type(self) -> str:
         """The ``_type`` string (e.g. ``'AMFile'``, ``'VMFile'``)."""
-        return self._data['_type']  # type: ignore[no-any-return]
+        return self._data['_type']
 
     @property
     def is_audio(self) -> bool:
@@ -140,7 +140,7 @@ class BaseClip:
         raw = self._data['mediaStart']
         if isinstance(raw, str):
             return Fraction(raw)
-        return raw  # type: ignore[no-any-return]
+        return raw
 
     @media_start.setter
     def media_start(self, value: int | Fraction) -> None:
@@ -152,7 +152,7 @@ class BaseClip:
         raw = self._data['mediaDuration']
         if isinstance(raw, str):
             return Fraction(raw)
-        return raw  # type: ignore[no-any-return]
+        return raw
 
     @media_duration.setter
     def media_duration(self, value: int | Fraction) -> None:
@@ -221,7 +221,7 @@ class BaseClip:
     @property
     def effects(self) -> list[dict[str, Any]]:
         """Raw effect dicts (will be wrapped by the effects module later)."""
-        return self._data.get('effects', [])  # type: ignore[no-any-return]
+        return self._data.get('effects', [])
 
     def remove_effect_by_name(self, effect_name: str | EffectName) -> int:
         """Remove all effects with the given name. Returns count removed."""
@@ -233,7 +233,7 @@ class BaseClip:
     @property
     def parameters(self) -> dict[str, Any]:
         """Clip parameters dict."""
-        return self._data.get('parameters', {})  # type: ignore[no-any-return]
+        return self._data.get('parameters', {})
 
     @property
     def opacity(self) -> float:
@@ -264,7 +264,7 @@ class BaseClip:
     @property
     def metadata(self) -> dict[str, Any]:
         """Clip metadata dict."""
-        return self._data.get('metadata', {})  # type: ignore[no-any-return]
+        return self._data.get('metadata', {})
 
     def set_metadata(self, metadata_key: str, metadata_value: Any) -> Self:
         """Set a metadata value on this clip."""
@@ -273,12 +273,12 @@ class BaseClip:
 
     def get_metadata(self, metadata_key: str, default: Any = None) -> Any:
         """Get a metadata value from this clip."""
-        return self._data.get('metadata', {}).get(metadata_key, default)  # type: ignore[no-any-return]
+        return self._data.get('metadata', {}).get(metadata_key, default)
 
     @property
     def animation_tracks(self) -> dict[str, Any]:
         """Animation tracks dict."""
-        return self._data.get('animationTracks', {})  # type: ignore[no-any-return]
+        return self._data.get('animationTracks', {})
 
     @property
     def visual_animations(self) -> list[dict[str, Any]]:
@@ -1128,7 +1128,7 @@ class BaseClip:
             lines.append(f'  Effects: {", ".join(names)}')
         return '\n'.join(lines)
 
-    def clone(self) -> dict:
+    def clone(self) -> _ClipData:
         """Return a deep copy of this clip's data dict.
 
         The copy has no ID assigned — the caller must set one before
@@ -1321,7 +1321,7 @@ class BaseClip:
     @property
     def source_path(self) -> str:
         """Source file path (from the 'src' field)."""
-        return self._data.get('src', '')  # type: ignore[no-any-return]
+        return self._data.get('src', '')
 
     @property
     def media_start_seconds(self) -> float:

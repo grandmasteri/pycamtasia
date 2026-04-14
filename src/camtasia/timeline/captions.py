@@ -2,6 +2,8 @@
 from __future__ import annotations
 from typing import Any
 
+from camtasia.types import _CaptionData
+
 
 class CaptionAttributes:
     """Timeline-level caption styling configuration.
@@ -10,7 +12,7 @@ class CaptionAttributes:
     """
     
     def __init__(self, data: dict[str, Any]) -> None:
-        self._data = data
+        self._data: _CaptionData = data  # type: ignore[assignment]
     
     @property
     def enabled(self) -> bool:
@@ -22,7 +24,7 @@ class CaptionAttributes:
     
     @property
     def font_name(self) -> str:
-        return self._data.get('fontName', 'Arial')  # type: ignore[no-any-return]
+        return self._data.get('fontName', 'Arial')
     
     @font_name.setter
     def font_name(self, value: str) -> None:
@@ -40,7 +42,7 @@ class CaptionAttributes:
     
     @property
     def background_color(self) -> list[int]:
-        return self._data.get('backgroundColor', [0, 0, 0, 204])  # type: ignore[no-any-return]
+        return self._data.get('backgroundColor', [0, 0, 0, 204])
     
     @background_color.setter
     def background_color(self, value: list[int]) -> None:
@@ -48,7 +50,7 @@ class CaptionAttributes:
     
     @property
     def foreground_color(self) -> list[int]:
-        return self._data.get('foregroundColor', [255, 255, 255, 255])  # type: ignore[no-any-return]
+        return self._data.get('foregroundColor', [255, 255, 255, 255])
     
     @foreground_color.setter
     def foreground_color(self, value: list[int]) -> None:
@@ -56,7 +58,7 @@ class CaptionAttributes:
     
     @property
     def lang(self) -> str:
-        return self._data.get('lang', 'en')  # type: ignore[no-any-return]
+        return self._data.get('lang', 'en')
     
     @lang.setter
     def lang(self, value: str) -> None:

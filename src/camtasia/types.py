@@ -171,9 +171,96 @@ class MediaType(IntEnum):
 
 
 # ---------------------------------------------------------------------------
+# Internal TypedDicts – raw JSON data shapes (total=False: all keys optional)
+# ---------------------------------------------------------------------------
+from typing import Any, TypedDict, NotRequired
+from fractions import Fraction
+
+
+class _ClipData(TypedDict, total=False):
+    """Internal structure of a clip's raw JSON data."""
+    _type: str
+    id: int
+    start: int
+    duration: int
+    mediaStart: int | Fraction
+    mediaDuration: int | Fraction
+    src: Any
+    scalar: float | str
+    parameters: dict[str, Any]
+    effects: list[dict[str, Any]]
+    metadata: dict[str, Any]
+    attributes: dict[str, Any]
+    animationTracks: dict[str, Any]
+    tracks: list[dict[str, Any]]
+    channelNumber: str
+    video: dict[str, Any]
+    audio: dict[str, Any]
+    medias: list[dict[str, Any]]
+    minMediaStart: int
+    sourceEffect: dict[str, Any]
+    # 'def' key exists at runtime but can't be declared (Python keyword);
+    # accesses use type: ignore[typeddict-item].
+
+
+class _EffectData(TypedDict, total=False):
+    """Internal structure of an effect's raw JSON data."""
+    effectName: str
+    _type: str
+    bypassed: bool
+    category: str
+    parameters: dict[str, Any]
+    metadata: dict[str, Any]
+    start: int
+    duration: int
+    leftEdgeMods: list[dict[str, Any]]
+    rightEdgeMods: list[dict[str, Any]]
+
+
+class _TransitionData(TypedDict, total=False):
+    """Internal structure of a transition's raw JSON data."""
+    name: str
+    duration: int
+    leftMedia: int
+    rightMedia: int
+    attributes: dict[str, Any]
+
+
+class _BehaviorPhaseData(TypedDict, total=False):
+    """Internal structure of a behavior phase dict."""
+    attributes: dict[str, Any]
+    parameters: dict[str, Any]
+
+
+class _BehaviorEffectData(TypedDict, total=False):
+    """Internal structure of a GenericBehaviorEffect dict."""
+    effectName: str
+    bypassed: bool
+    start: int
+    duration: int
+    metadata: dict[str, Any]
+    # 'in', 'center', 'out' keys exist at runtime but can't be declared
+    # (Python keywords); accesses use type: ignore[typeddict-item].
+
+
+class _CaptionData(TypedDict, total=False):
+    """Internal structure of caption attributes."""
+    enabled: bool
+    fontName: str
+    fontSize: int
+    backgroundColor: list[int]
+    foregroundColor: list[int]
+    lang: str
+    alignment: int
+    opacity: float
+    backgroundEnabled: bool
+
+
+
+
+# ---------------------------------------------------------------------------
 # TypedDicts – structured data returned / consumed by the library
 # ---------------------------------------------------------------------------
-from typing import TypedDict, NotRequired
 
 
 class RGBA(TypedDict):

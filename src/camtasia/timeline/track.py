@@ -411,7 +411,7 @@ class Track:
             trimStartSum=1,
             **kwargs,
         )
-        return clip  # type: ignore[no-any-return, return-value]
+        return clip  # type: ignore[return-value]
 
     def add_audio(
         self,
@@ -440,7 +440,7 @@ class Track:
             channelNumber='0',
             **kwargs,
         )
-        return clip  # type: ignore[no-any-return, return-value]
+        return clip  # type: ignore[return-value]
 
     def add_video(
         self,
@@ -466,7 +466,7 @@ class Track:
             seconds_to_ticks(duration_seconds),
             **kwargs,
         )
-        return clip  # type: ignore[no-any-return, return-value]
+        return clip  # type: ignore[return-value]
 
     def add_callout(
         self,
@@ -499,7 +499,7 @@ class Track:
             seconds_to_ticks(duration_seconds),
             **{'def': callout_def, **kwargs},
         )
-        return clip  # type: ignore[no-any-return, return-value]
+        return clip  # type: ignore[return-value]
 
     def add_callout_from_builder(
         self,
@@ -684,7 +684,7 @@ class Track:
 
         # --- Insert into track ---
         self._data.setdefault('medias', []).append(tpl)
-        return clip_from_dict(tpl)  # type: ignore[no-any-return, return-value]
+        return clip_from_dict(tpl)  # type: ignore[return-value]
 
     def add_group(
         self,
@@ -715,7 +715,7 @@ class Track:
             }),
             **kwargs,
         )
-        return clip  # type: ignore[no-any-return, return-value]
+        return clip  # type: ignore[return-value]
 
     def add_screen_recording(
         self,

@@ -93,7 +93,7 @@ class Media:
     @property
     def rect(self) -> tuple[int, int, int, int]:
         """Native bounding rect as ``(x, y, width, height)``."""
-        return tuple(self._data["rect"])  # type: ignore[no-any-return]
+        return tuple(self._data["rect"])
 
     @property
     def dimensions(self) -> tuple[int, int]:
@@ -378,7 +378,7 @@ def _parse_with_pymediainfo(file_path: Path) -> dict[str, Any] | None:
 
     if len(media_info.tracks) < 2:
         return None
-    return media_info.tracks[1].to_data()  # type: ignore[no-any-return]
+    return media_info.tracks[1].to_data()
 
 
 def _get_media_type(track: dict[str, Any]) -> MediaType:

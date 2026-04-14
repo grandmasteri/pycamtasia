@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
-from camtasia.types import TransitionType
+from camtasia.types import TransitionType, _TransitionData
 
 EDIT_RATE = 705_600_000
 
@@ -17,12 +17,12 @@ class Transition:
     """
 
     def __init__(self, data: dict[str, Any]) -> None:
-        self._data = data
+        self._data: _TransitionData = data  # type: ignore[assignment]
 
     @property
     def name(self) -> str:
         """Transition type name (e.g. 'FadeThroughBlack')."""
-        return self._data['name']  # type: ignore[no-any-return]
+        return self._data['name']
 
     @property
     def duration(self) -> int:
@@ -47,7 +47,7 @@ class Transition:
     @property
     def attributes(self) -> dict[str, Any]:
         """Raw attributes dict."""
-        return self._data.get('attributes', {})  # type: ignore[no-any-return]
+        return self._data.get('attributes', {})
 
     @property
     def bypassed(self) -> bool:

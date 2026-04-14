@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Union
 
+from camtasia.types import _BehaviorEffectData, _BehaviorPhaseData
+
 
 class BehaviorPhase:
     """Wraps a single behavior phase dict (``in``, ``center``, or ``out``).
@@ -15,16 +17,16 @@ class BehaviorPhase:
     """
 
     def __init__(self, data: dict[str, Any]) -> None:
-        self._data = data
+        self._data: _BehaviorPhaseData = data  # type: ignore[assignment]
 
     @property
-    def data(self) -> dict[str, Any]:
+    def data(self) -> _BehaviorPhaseData:
         """The underlying raw dict."""
         return self._data
 
     @property
     def _attrs(self) -> dict[str, Any]:
-        return self._data["attributes"]  # type: ignore[no-any-return]
+        return self._data["attributes"]
 
     @property
     def name(self) -> str:
@@ -115,7 +117,7 @@ class BehaviorPhase:
     @property
     def parameters(self) -> dict[str, Any]:
         """Raw parameters dict (direction keyframes, etc.)."""
-        return self._data.get("parameters", {})  # type: ignore[no-any-return]
+        return self._data.get("parameters", {})
 
     def __repr__(self) -> str:
         return f"BehaviorPhase(name={self.name!r}, type={self.phase_type})"
@@ -133,17 +135,17 @@ class GenericBehaviorEffect:
     """
 
     def __init__(self, data: dict[str, Any]) -> None:
-        self._data = data
+        self._data: _BehaviorEffectData = data  # type: ignore[assignment]
 
     @property
-    def data(self) -> dict[str, Any]:
+    def data(self) -> _BehaviorEffectData:
         """The underlying raw dict."""
         return self._data
 
     @property
     def effect_name(self) -> str:
         """Effect name identifier."""
-        return self._data["effectName"]  # type: ignore[no-any-return]
+        return self._data["effectName"]
 
     @property
     def bypassed(self) -> bool:
@@ -175,17 +177,17 @@ class GenericBehaviorEffect:
     @property
     def entrance(self) -> BehaviorPhase:
         """The ``in`` (entrance) phase."""
-        return BehaviorPhase(self._data["in"])
+        return BehaviorPhase(self._data["in"])  # type: ignore[typeddict-item]
 
     @property
     def center(self) -> BehaviorPhase:
         """The ``center`` (sustain/loop) phase."""
-        return BehaviorPhase(self._data["center"])
+        return BehaviorPhase(self._data["center"])  # type: ignore[typeddict-item]
 
     @property
     def exit(self) -> BehaviorPhase:
         """The ``out`` (exit) phase."""
-        return BehaviorPhase(self._data["out"])
+        return BehaviorPhase(self._data["out"])  # type: ignore[typeddict-item]
 
     @property
     def preset_name(self) -> str:

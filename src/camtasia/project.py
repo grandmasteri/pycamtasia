@@ -141,7 +141,7 @@ class Project:
     def __init__(self, file_path: Path, encoding: str | None = None) -> None:
         self._file_path = file_path
         self._encoding = encoding
-        self._data: dict = json.loads(self._project_file.read_text(encoding=encoding))
+        self._data: dict[str, Any] = json.loads(self._project_file.read_text(encoding=encoding))
         self._history: ChangeHistory | None = None
 
     @property

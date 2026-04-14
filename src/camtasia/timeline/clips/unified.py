@@ -45,7 +45,7 @@ class UnifiedMedia(BaseClip):
     @property
     def source_id(self) -> int | None:
         """Source bin ID from the video child."""
-        return self._data.get('video', {}).get('src')  # type: ignore[no-any-return]
+        return self._data.get('video', {}).get('src')
 
     def mute_audio(self) -> Self:
         """Set audio gain to zero."""

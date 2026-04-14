@@ -32,7 +32,7 @@ class StitchedMedia(BaseClip):
     @property
     def attributes(self) -> dict[str, Any]:
         """Clip attributes dict."""
-        return self._data.get('attributes', {})  # type: ignore[no-any-return]
+        return self._data.get('attributes', {})
 
     @property
     def volume(self) -> float:

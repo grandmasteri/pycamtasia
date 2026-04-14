@@ -19,7 +19,7 @@ class AMFile(BaseClip):
     @property
     def channel_number(self) -> str:
         """Channel number string (e.g. ``'0'``, ``'0,1'``)."""
-        return self._data.get('channelNumber', '0')  # type: ignore[no-any-return]
+        return self._data.get('channelNumber', '0')
 
     @channel_number.setter
     def channel_number(self, value: str) -> None:
@@ -28,7 +28,7 @@ class AMFile(BaseClip):
     @property
     def attributes(self) -> dict[str, Any]:
         """Audio attributes dict (ident, gain, mixToMono, etc.)."""
-        return self._data.get('attributes', {})  # type: ignore[no-any-return]
+        return self._data.get('attributes', {})
 
     @property
     def gain(self) -> float:

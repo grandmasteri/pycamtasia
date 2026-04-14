@@ -67,7 +67,7 @@ class Group(BaseClip):
     @property
     def attributes(self) -> dict[str, Any]:
         """Group attributes dict (ident, widthAttr, heightAttr)."""
-        return self._data.get('attributes', {})  # type: ignore[no-any-return]
+        return self._data.get('attributes', {})
 
     @property
     def ident(self) -> str:

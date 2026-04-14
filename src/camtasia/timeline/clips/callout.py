@@ -84,7 +84,7 @@ class Callout(BaseClip):
     @property
     def definition(self) -> dict[str, Any]:
         """The full callout ``def`` dict."""
-        return self._data.get('def', {})  # type: ignore[no-any-return]
+        return self._data.get('def', {})  # type: ignore[return-value]
 
     @property
     def text(self) -> str:
@@ -93,7 +93,7 @@ class Callout(BaseClip):
 
     @text.setter
     def text(self, value: str) -> None:
-        self._data.setdefault('def', {})['text'] = value
+        self._data.setdefault('def', {})['text'] = value  # type: ignore[typeddict-item]
 
     @property
     def font(self) -> dict[str, Any]:
@@ -112,7 +112,7 @@ class Callout(BaseClip):
 
     @shape.setter
     def shape(self, value: str | CalloutShape) -> None:
-        self._data.setdefault('def', {})['shape'] = str(value.value if isinstance(value, CalloutShape) else value)
+        self._data.setdefault('def', {})['shape'] = str(value.value if isinstance(value, CalloutShape) else value)  # type: ignore[typeddict-item]
 
     @property
     def style(self) -> str:
@@ -121,7 +121,7 @@ class Callout(BaseClip):
 
     @style.setter
     def style(self, value: str) -> None:
-        self._data.setdefault('def', {})['style'] = value
+        self._data.setdefault('def', {})['style'] = value  # type: ignore[typeddict-item]
 
     @property
     def width(self) -> float:
@@ -130,7 +130,7 @@ class Callout(BaseClip):
 
     @width.setter
     def width(self, value: float) -> None:
-        self._data.setdefault('def', {})['width'] = value
+        self._data.setdefault('def', {})['width'] = value  # type: ignore[typeddict-item]
 
     @property
     def height(self) -> float:
@@ -139,7 +139,7 @@ class Callout(BaseClip):
 
     @height.setter
     def height(self, value: float) -> None:
-        self._data.setdefault('def', {})['height'] = value
+        self._data.setdefault('def', {})['height'] = value  # type: ignore[typeddict-item]
 
     @property
     def horizontal_alignment(self) -> str:
@@ -148,7 +148,7 @@ class Callout(BaseClip):
 
     @horizontal_alignment.setter
     def horizontal_alignment(self, value: str) -> None:
-        self._data.setdefault('def', {})['horizontal-alignment'] = value
+        self._data.setdefault('def', {})['horizontal-alignment'] = value  # type: ignore[typeddict-item]
 
     @property
     def fill_color(self) -> tuple[float, float, float, float]:
@@ -163,7 +163,7 @@ class Callout(BaseClip):
 
     @fill_color.setter
     def fill_color(self, rgba: tuple[float, float, float, float]) -> None:
-        d = self._data.setdefault('def', {})
+        d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
         d['fill-color-red'] = rgba[0]
         d['fill-color-green'] = rgba[1]
         d['fill-color-blue'] = rgba[2]
@@ -182,7 +182,7 @@ class Callout(BaseClip):
 
     @stroke_color.setter
     def stroke_color(self, rgba: tuple[float, float, float, float]) -> None:
-        d = self._data.setdefault('def', {})
+        d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
         d['stroke-color-red'] = rgba[0]
         d['stroke-color-green'] = rgba[1]
         d['stroke-color-blue'] = rgba[2]
@@ -195,7 +195,7 @@ class Callout(BaseClip):
 
     @corner_radius.setter
     def corner_radius(self, value: float) -> None:
-        self._data.setdefault('def', {})['corner-radius'] = value
+        self._data.setdefault('def', {})['corner-radius'] = value  # type: ignore[typeddict-item]
 
     @property
     def tail_position(self) -> tuple[float, float]:
@@ -205,7 +205,7 @@ class Callout(BaseClip):
 
     @tail_position.setter
     def tail_position(self, xy: tuple[float, float]) -> None:
-        d = self._data.setdefault('def', {})
+        d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
         d['tail-x'] = xy[0]
         d['tail-y'] = xy[1]
 
@@ -229,7 +229,7 @@ class Callout(BaseClip):
         Returns:
             Self for chaining.
         """
-        font = self._data.setdefault('def', {}).setdefault('font', {})
+        font = self._data.setdefault('def', {}).setdefault('font', {})  # type: ignore[typeddict-item]
         font['name'] = name
         font['weight'] = weight
         font['size'] = size
@@ -256,7 +256,7 @@ class Callout(BaseClip):
         if stroke is not None:
             self.stroke_color = stroke
         if font_color is not None:
-            font = self._data.setdefault('def', {}).setdefault('font', {})
+            font = self._data.setdefault('def', {}).setdefault('font', {})  # type: ignore[typeddict-item]
             font['color-red'] = font_color[0]
             font['color-green'] = font_color[1]
             font['color-blue'] = font_color[2]
@@ -294,7 +294,7 @@ class Callout(BaseClip):
         Returns:
             Self for chaining.
         """
-        d = self._data.setdefault('def', {})
+        d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
         d['horizontal-alignment'] = horizontal
         d['vertical-alignment'] = vertical
         return self
@@ -309,7 +309,7 @@ class Callout(BaseClip):
         Returns:
             Self for chaining.
         """
-        d = self._data.setdefault('def', {})
+        d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
         d['width'] = width
         d['height'] = height
         d['resize-behavior'] = 'resizeText'
