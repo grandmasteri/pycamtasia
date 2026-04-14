@@ -2103,3 +2103,49 @@ def test_add_spherical_spin_transition():
     t.transitions.add_spherical_spin(1, 2, 0.5)
     assert len(data['transitions']) == 1
     assert data['transitions'][0]['name'] == 'SphericalSpin'
+
+
+# ---------------------------------------------------------------------------
+# Timeline gain / background_color / new CalloutShape values
+# ---------------------------------------------------------------------------
+
+def test_timeline_gain():
+    from camtasia.timeline.timeline import Timeline
+    data = {
+        'sceneTrack': {'scenes': [{'csml': {'tracks': []}}]},
+        'trackAttributes': [],
+    }
+    tl = Timeline(data)
+    assert tl.gain == 1.0  # default
+    tl.gain = 0.5
+    assert tl.gain == 0.5
+    assert data['gain'] == 0.5
+
+
+def test_timeline_background_color():
+    from camtasia.timeline.timeline import Timeline
+    data = {
+        'sceneTrack': {'scenes': [{'csml': {'tracks': []}}]},
+        'trackAttributes': [],
+    }
+    tl = Timeline(data)
+    assert tl.background_color == [0, 0, 0, 255]  # default
+    tl.background_color = [255, 0, 0, 255]
+    assert tl.background_color == [255, 0, 0, 255]
+    assert data['backgroundColor'] == [255, 0, 0, 255]
+
+
+def test_new_callout_shapes():
+    from camtasia.types import CalloutShape
+    assert CalloutShape.SHAPE_ELLIPSE.value == 'shape-ellipse'
+    assert CalloutShape.SHAPE_TRIANGLE.value == 'shape-triangle'
+    assert CalloutShape.TEXT.value == 'text'
+    assert CalloutShape.TEXT_RECTANGLE.value == 'text-rectangle'
+    assert CalloutShape.SHAPE_RECTANGLE.value == 'shape-rectangle'
+
+
+def test_timeline_legacy_attenuate():
+    tl = _make_timeline([('T', [])])
+    assert tl.legacy_attenuate_audio_mix is True
+    tl._data['legacyAttenuateAudioMix'] = False
+    assert tl.legacy_attenuate_audio_mix is False

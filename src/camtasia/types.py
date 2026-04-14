@@ -119,6 +119,11 @@ class CalloutShape(str, Enum):
     ARROW = 'arrow'
     DIAMOND = 'diamond'
     STAR = 'star'
+    SHAPE_ELLIPSE = 'shape-ellipse'
+    SHAPE_TRIANGLE = 'shape-triangle'
+    TEXT = 'text'
+    TEXT_RECTANGLE = 'text-rectangle'
+    SHAPE_RECTANGLE = 'shape-rectangle'
 
 
 class InterpolationType(str, Enum):

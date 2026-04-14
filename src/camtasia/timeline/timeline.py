@@ -403,6 +403,30 @@ class Timeline:
         self._data['zoomNPan'] = []
 
     # ------------------------------------------------------------------
+    # Audio / visual top-level properties
+    # ------------------------------------------------------------------
+
+    @property
+    def gain(self) -> float:
+        return self._data.get('gain', 1.0)
+
+    @gain.setter
+    def gain(self, value: float) -> None:
+        self._data['gain'] = value
+
+    @property
+    def legacy_attenuate_audio_mix(self) -> bool:
+        return self._data.get('legacyAttenuateAudioMix', True)
+
+    @property
+    def background_color(self) -> list[int]:
+        return self._data.get('backgroundColor', [0, 0, 0, 255])
+
+    @background_color.setter
+    def background_color(self, value: list[int]) -> None:
+        self._data['backgroundColor'] = value
+
+    # ------------------------------------------------------------------
     # Caption attributes
     # ------------------------------------------------------------------
 
