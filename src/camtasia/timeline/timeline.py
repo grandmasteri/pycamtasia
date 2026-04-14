@@ -6,6 +6,7 @@ from typing import Any, Iterator, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from camtasia.timeline.captions import CaptionAttributes
+    from camtasia.timeline.clips.group import Group
 
 from camtasia.timeline.clips import BaseClip
 from camtasia.timeline.markers import Marker, MarkerList
@@ -264,6 +265,12 @@ class Timeline:
             A flat list of every clip on the timeline.
         """
         return [clip for track in self.tracks for clip in track.clips]
+
+    @property
+    def groups(self) -> list[Group]:
+        """All Group clips across all tracks."""
+        from camtasia.timeline.clips.group import Group
+        return [clip for track in self.tracks for clip in track.clips if isinstance(clip, Group)]
 
     def find_track(self, name: str) -> Track | None:
         """Find a track by name, or return None."""

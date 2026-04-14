@@ -12,6 +12,7 @@ from typing import Any, Callable, Iterator, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from camtasia.history import ChangeHistory
+    from camtasia.timeline.clips.group import Group
 
 from camtasia.authoring_client import AuthoringClient
 from camtasia.media_bin import Media, MediaBin, MediaType
@@ -426,6 +427,22 @@ class Project:
     def all_clips(self) -> list[tuple[Track, BaseClip]]:
         """All clips across all tracks as (track, clip) tuples."""
         return [(t, c) for t in self.timeline.tracks for c in t.clips]
+
+    @property
+    def all_groups(self) -> list[tuple[Track, Group]]:
+        """All Group clips across all tracks as (track, group) tuples."""
+        from camtasia.timeline.clips.group import Group
+        return [(track, clip) for track, clip in self.all_clips if isinstance(clip, Group)]
+
+    @property
+    def group_count(self) -> int:
+        """Number of Group clips across all tracks."""
+        return len(self.all_groups)
+
+    @property
+    def screen_recording_groups(self) -> list[tuple[Track, Group]]:
+        """All screen recording Group clips."""
+        return [(track, group) for track, group in self.all_groups if group.is_screen_recording]
 
     def clips_between(self, range_start_seconds: float, range_end_seconds: float) -> list[tuple[Track, BaseClip]]:
         """Return all clips across all tracks that fall within the time range."""

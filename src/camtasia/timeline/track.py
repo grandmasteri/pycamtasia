@@ -401,6 +401,39 @@ class Track:
         self._data['transitions'] = []
         return count
 
+    def ungroup_clip(self, clip_id: int) -> list[BaseClip]:
+        """Ungroup a Group clip, placing its internal clips on this track.
+
+        The Group clip is removed and each of its internal clips is
+        assigned a fresh ID and appended to this track.
+
+        Args:
+            clip_id: The ``id`` of the Group clip to ungroup.
+
+        Returns:
+            List of newly placed clips on this track.
+
+        Raises:
+            KeyError: If no Group clip with the given ID exists.
+        """
+        medias: list[dict[str, Any]] = self._data.get('medias', [])
+        group_data: dict[str, Any] | None = None
+        for media_dict in medias:
+            if media_dict.get('id') == clip_id and media_dict.get('_type') == 'Group':
+                group_data = media_dict
+                break
+        if group_data is None:
+            raise KeyError(f'No Group clip with id={clip_id}')
+        group: Group = Group(group_data)
+        extracted_clips: list[BaseClip] = group.ungroup()
+        self.remove_clip(clip_id)
+        placed_clips: list[BaseClip] = []
+        for clip in extracted_clips:
+            clip._data['id'] = self._next_clip_id()
+            self._data.setdefault('medias', []).append(clip._data)
+            placed_clips.append(clip)
+        return placed_clips
+
     def move_clip_to_track(self, clip_id: int, target_track: Track) -> BaseClip:
         """Move a clip from this track to another track.
 

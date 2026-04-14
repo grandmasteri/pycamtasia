@@ -329,6 +329,40 @@ class Group(BaseClip):
         self._data.setdefault('attributes', {})['ident'] = new_name
         return self
 
+    def merge_internal_tracks(self) -> GroupTrack:
+        """Merge all internal tracks into a single track.
+
+        Moves every clip from tracks[1:] into tracks[0], then removes
+        the extra tracks.  If the group has no tracks, a new empty one
+        is created.
+
+        Returns:
+            The surviving (first) GroupTrack containing all clips.
+        """
+        if not self.tracks:
+            return self.add_internal_track()
+        target_track: GroupTrack = self.tracks[0]
+        for source_track in self.tracks[1:]:
+            for media_dict in source_track._data.get('medias', []):
+                target_track._data.setdefault('medias', []).append(media_dict)
+        # Remove all tracks except the first
+        self._data['tracks'] = [self._data['tracks'][0]]
+        self._data['tracks'][0]['trackIndex'] = 0
+        return target_track
+
+    def describe(self) -> str:
+        """Human-readable Group description."""
+        lines: list[str] = [
+            f'Group(id={self.id}, ident={self.ident!r})',
+            f'  Tracks: {len(self.tracks)}',
+            f'  Total clips: {self.clip_count}',
+            f'  Types: {", ".join(sorted(str(t) for t in self.internal_clip_types)) or "none"}',
+            f'  Duration: {self.duration_seconds:.2f}s',
+        ]
+        if self.is_screen_recording:
+            lines.append('  Screen recording: yes')
+        return '\n'.join(lines)
+
     # ------------------------------------------------------------------
     # Per-segment speed via StitchedMedia (v2 reverse-engineered format)
     # ------------------------------------------------------------------
