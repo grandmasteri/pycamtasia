@@ -2727,3 +2727,99 @@ def test_total_media_duration_seconds():
     ]
     track = _make_track(medias=medias)
     assert track.total_media_duration_seconds == pytest.approx(3.0)
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.snap_to_seconds
+# ---------------------------------------------------------------------------
+
+def test_snap_to_seconds():
+    from camtasia.timeline.clips.base import BaseClip
+    from camtasia.timing import seconds_to_ticks
+    clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2.0)})
+    result = clip.snap_to_seconds(5.0)
+    assert clip.start == seconds_to_ticks(5.0)
+    assert result is clip  # returns self for chaining
+
+
+# ---------------------------------------------------------------------------
+# Track.distribute_evenly
+# ---------------------------------------------------------------------------
+
+def test_distribute_evenly():
+    one_sec: int = seconds_to_ticks(1.0)
+    two_sec: int = seconds_to_ticks(2.0)
+    medias: list[dict[str, Any]] = [
+        {'id': 2, '_type': 'VMFile', 'start': two_sec, 'duration': one_sec},
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': two_sec},
+    ]
+    track = _make_track(medias=medias)
+    track.distribute_evenly()
+    # Clips should be sorted by original start and packed with no gap
+    assert track._data['medias'][0]['id'] == 1
+    assert track._data['medias'][0]['start'] == 0
+    assert track._data['medias'][1]['id'] == 2
+    assert track._data['medias'][1]['start'] == two_sec  # right after first clip
+
+
+def test_distribute_evenly_with_gap():
+    one_sec: int = seconds_to_ticks(1.0)
+    half_sec: int = seconds_to_ticks(0.5)
+    medias: list[dict[str, Any]] = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': one_sec},
+        {'id': 2, '_type': 'VMFile', 'start': one_sec * 5, 'duration': one_sec},
+    ]
+    track = _make_track(medias=medias)
+    track.distribute_evenly(gap_seconds=0.5)
+    assert track._data['medias'][0]['start'] == 0
+    assert track._data['medias'][1]['start'] == one_sec + half_sec
+
+
+# ---------------------------------------------------------------------------
+# Project.total_keyframe_count
+# ---------------------------------------------------------------------------
+
+def test_total_keyframe_count():
+    from camtasia.project import Project
+    medias: list[dict[str, Any]] = [
+        {
+            'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+            'parameters': {
+                'scale': {'defaultValue': 1, 'keyframes': [{'time': 0, 'value': 1}, {'time': 50, 'value': 2}]},
+            },
+        },
+        {
+            'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 100,
+            'parameters': {
+                'opacity': {'defaultValue': 1, 'keyframes': [{'time': 0, 'value': 1}]},
+            },
+        },
+    ]
+    data: dict[str, Any] = {
+        'timeline': {
+            'id': 'test',
+            'sceneTrack': {'scenes': [{'csml': {'tracks': [{'trackIndex': 0, 'medias': medias}]}}]},
+            'trackAttributes': [{'ident': 'T'}],
+            'parameters': {},
+            'authoringClientName': 'test',
+        },
+    }
+    timeline = Timeline(data['timeline'])
+    project = Project.__new__(Project)
+    object.__setattr__(project, '_timeline', timeline)
+    object.__setattr__(project, '_data', data)
+    object.__setattr__(project, '_path', None)
+    assert project.total_keyframe_count == 3
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.is_longer_than
+# ---------------------------------------------------------------------------
+
+def test_is_longer_than():
+    from camtasia.timeline.clips.base import BaseClip
+    from camtasia.timing import seconds_to_ticks
+    clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3.0)})
+    assert clip.is_longer_than(2.0) is True
+    assert clip.is_longer_than(3.0) is False
+    assert clip.is_longer_than(4.0) is False

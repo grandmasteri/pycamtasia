@@ -332,6 +332,15 @@ class Project:
         )
 
     @property
+    def total_keyframe_count(self) -> int:
+        """Total keyframes across all clips on all tracks."""
+        return sum(
+            clip.keyframe_count
+            for track in self.timeline.tracks
+            for clip in track.clips
+        )
+
+    @property
     def duration_seconds(self) -> float:
         return self.total_duration_seconds()
 

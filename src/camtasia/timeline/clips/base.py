@@ -1346,3 +1346,13 @@ class BaseClip:
     def matches_type(self, clip_type: str | ClipType) -> bool:
         """Check if this clip matches the given type."""
         return self.clip_type == clip_type
+
+    def snap_to_seconds(self, target_start_seconds: float) -> Self:
+        """Move this clip to start at the given time in seconds."""
+        from camtasia.timing import seconds_to_ticks
+        self._data['start'] = seconds_to_ticks(target_start_seconds)
+        return self
+
+    def is_longer_than(self, threshold_seconds: float) -> bool:
+        """Whether this clip's duration exceeds the given threshold."""
+        return self.duration_seconds > threshold_seconds

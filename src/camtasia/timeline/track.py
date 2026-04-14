@@ -1593,6 +1593,22 @@ class Track:
         return float(ticks_to_seconds(total_ticks))
 
 
+    def distribute_evenly(self, gap_seconds: float = 0.0) -> None:
+        """Distribute clips evenly with equal gaps between them."""
+        from camtasia.timing import seconds_to_ticks
+        gap_ticks: int = seconds_to_ticks(gap_seconds)
+        sorted_medias: list[dict[str, Any]] = sorted(
+            self._data.get('medias', []),
+            key=lambda media_dict: media_dict.get('start', 0),
+        )
+        running_position: int = 0
+        for media_dict in sorted_medias:
+            media_dict['start'] = running_position
+            running_position += media_dict.get('duration', 0) + gap_ticks
+        self._data['medias'] = sorted_medias
+        self._data['transitions'] = []
+
+
 class _ClipAccessor:
     """Lightweight iterable/indexable accessor over a track's clips."""
 
