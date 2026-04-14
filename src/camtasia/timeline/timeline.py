@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterator
+from typing import Any, Iterator, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from camtasia.timeline.captions import CaptionAttributes
 
 from camtasia.timeline.clips import BaseClip
 from camtasia.timeline.markers import Marker, MarkerList

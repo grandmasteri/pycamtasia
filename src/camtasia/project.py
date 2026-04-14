@@ -16,7 +16,7 @@ from camtasia.timeline import Timeline
 from camtasia.timeline.track import Track
 from camtasia.timeline.clips import BaseClip
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
-from camtasia.types import HealthCheckResult
+from camtasia.types import CompactResult, HealthCheckResult
 from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_indices, _check_transition_references
 
 
@@ -714,7 +714,7 @@ class Project:
             'statistics': stats,
         }
 
-    def compact(self) -> dict[str, int]:
+    def compact(self) -> CompactResult:
         """Run all cleanup operations and validate.
 
         Removes orphaned media, empty tracks, and validates the result.

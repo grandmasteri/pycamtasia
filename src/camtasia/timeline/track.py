@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import copy
 import json
-from typing import Any, Iterator
+from typing import Any, Iterator, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from camtasia.timeline.clips.callout import CalloutBuilder
 
 from camtasia.annotations import callouts
 from camtasia.timeline.clips import AMFile, BaseClip, Callout, Group, IMFile, VMFile, clip_from_dict
@@ -481,7 +484,7 @@ class Track:
         clip = self.add_callout(
             builder.text, start_seconds, duration_seconds,
             font_name=builder._font_name,
-            font_weight=builder._font_weight,
+            font_weight=builder._font_weight,  # type: ignore[arg-type]
             font_size=builder._font_size,
         )
         clip.move_to(builder._x, builder._y)
@@ -490,7 +493,7 @@ class Track:
         if builder._fill_color:
             clip.fill_color = builder._fill_color
         if builder._font_color:
-            clip.set_colors(font_color=builder._font_color)
+            clip.set_colors(font_color=builder._font_color)  # type: ignore[arg-type]
         if builder._stroke_color:
             clip.stroke_color = builder._stroke_color
         clip.set_alignment(builder._alignment, 'center')
@@ -1289,6 +1292,7 @@ class Track:
                 break
         if left_data is None:
             raise KeyError(f'No clip with id={clip_id} on track {self.index}')
+        assert left_idx is not None
 
         split_point = seconds_to_ticks(split_at_seconds)
         orig_start = left_data['start']
@@ -1476,7 +1480,7 @@ class Track:
         for clip in self.clips:
             clip.volume = value
 
-    def to_list(self) -> list[dict]:
+    def to_list(self) -> list[dict[str, Any]]:
         """Return a list of clip summary dicts."""
         return [c.to_dict() for c in self.clips]
 
@@ -1505,7 +1509,7 @@ class _ClipAccessor:
     def __iter__(self) -> Iterator[BaseClip]:
         for m in self._medias:
             clip = clip_from_dict(m)
-            clip.markers = _PerMediaMarkers(m)
+            clip.markers = _PerMediaMarkers(m)  # type: ignore[attr-defined]
             yield clip
 
     def __getitem__(self, clip_id: int) -> BaseClip:
@@ -1520,7 +1524,7 @@ class _ClipAccessor:
         for m in self._medias:
             if m['id'] == clip_id:
                 clip = clip_from_dict(m)
-                clip.markers = _PerMediaMarkers(m)
+                clip.markers = _PerMediaMarkers(m)  # type: ignore[attr-defined]
                 return clip
         raise KeyError(f'No clip with id={clip_id}')
 
