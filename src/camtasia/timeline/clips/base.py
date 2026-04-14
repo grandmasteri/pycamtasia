@@ -1280,3 +1280,14 @@ class BaseClip:
         if self.has_effects:
             result['effects'] = [e.get('effectName', '?') for e in self._data.get('effects', [])]
         return result
+
+    @property
+    def source_path(self) -> str:
+        """Source file path (from the 'src' field)."""
+        return self._data.get('src', '')  # type: ignore[no-any-return]
+
+    @property
+    def media_start_seconds(self) -> float:
+        """Media start offset in seconds."""
+        from camtasia.timing import ticks_to_seconds
+        return float(ticks_to_seconds(self.media_start))

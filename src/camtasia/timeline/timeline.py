@@ -572,6 +572,14 @@ class Timeline:
         """The raw tracks array: ``sceneTrack.scenes[0].csml.tracks``."""
         return self._data['sceneTrack']['scenes'][0]['csml']['tracks']  # type: ignore[no-any-return]
 
+    @property
+    def longest_track(self) -> Track | None:
+        """The track with the greatest end time, or None if empty."""
+        all_tracks = list(self.tracks)
+        if not all_tracks:
+            return None
+        return max(all_tracks, key=lambda track: track.end_time_ticks())
+
 
 class _TrackAccessor:
     """Iterable/indexable accessor over timeline tracks."""

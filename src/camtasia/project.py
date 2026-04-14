@@ -282,6 +282,11 @@ class Project:
         return len(self.media_bin)
 
     @property
+    def source_bin_paths(self) -> list[str]:
+        """List of all source file paths in the media bin."""
+        return [str(media_entry.source) for media_entry in self.media_bin]
+
+    @property
     def timeline(self) -> Timeline:
         """The project's timeline."""
         return Timeline(self._data['timeline'])

@@ -2149,3 +2149,116 @@ def test_timeline_legacy_attenuate():
     assert tl.legacy_attenuate_audio_mix is True
     tl._data['legacyAttenuateAudioMix'] = False
     assert tl.legacy_attenuate_audio_mix is False
+
+
+# ---------------------------------------------------------------------------
+# Track.clip_at_index
+# ---------------------------------------------------------------------------
+
+def test_clip_at_index():
+    medias = [
+        {'id': 2, '_type': 'AMFile', 'start': 200, 'duration': 100},
+        {'id': 1, '_type': 'VMFile', 'start': 50, 'duration': 100},
+        {'id': 3, '_type': 'IMFile', 'start': 500, 'duration': 100},
+    ]
+    track = _make_track(medias=medias)
+    first_clip = track.clip_at_index(0)
+    assert first_clip.id == 1  # start=50 is earliest
+    second_clip = track.clip_at_index(1)
+    assert second_clip.id == 2  # start=200
+    third_clip = track.clip_at_index(2)
+    assert third_clip.id == 3  # start=500
+
+
+def test_clip_at_index_out_of_range():
+    track = _make_track(medias=[
+        {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100},
+    ])
+    with pytest.raises(IndexError, match='clip index 5 out of range'):
+        track.clip_at_index(5)
+    with pytest.raises(IndexError, match='clip index -1 out of range'):
+        track.clip_at_index(-1)
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.source_path
+# ---------------------------------------------------------------------------
+
+def test_source_path():
+    from camtasia.timeline.clips import clip_from_dict
+    clip_with_src = clip_from_dict({
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'src': '/media/video.mp4',
+    })
+    assert clip_with_src.source_path == '/media/video.mp4'
+
+    clip_without_src = clip_from_dict({
+        'id': 2, '_type': 'AMFile', 'start': 0, 'duration': 100,
+    })
+    assert clip_without_src.source_path == ''
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.media_start_seconds
+# ---------------------------------------------------------------------------
+
+def test_media_start_seconds():
+    from camtasia.timeline.clips import clip_from_dict
+    from camtasia.timing import EDIT_RATE
+    media_start_ticks: int = EDIT_RATE * 5  # exactly 5 seconds
+    clip = clip_from_dict({
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'mediaStart': media_start_ticks,
+    })
+    assert clip.media_start_seconds == pytest.approx(5.0)
+
+
+# ---------------------------------------------------------------------------
+# Project.source_bin_paths
+# ---------------------------------------------------------------------------
+
+def test_source_bin_paths(tmp_path):
+    from camtasia.project import Project
+    import json
+
+    project_dir = tmp_path / 'test.tscproj'
+    project_dir.mkdir()
+    project_file = project_dir / 'project.tscproj'
+    project_data = {
+        'title': 'test',
+        'sourceBin': [
+            {'id': 1, 'src': 'clip_a.mp4', 'rect': [0, 0, 100, 100], 'lastMod': '0', 'sourceTracks': []},
+            {'id': 2, 'src': 'clip_b.wav', 'rect': [0, 0, 0, 0], 'lastMod': '0', 'sourceTracks': []},
+        ],
+        'timeline': {
+            'sceneTrack': {'scenes': [{'csml': {'tracks': []}}]},
+            'trackAttributes': [],
+        },
+        'authoringClientName': {'name': 'test', 'platform': 'test', 'version': '1'},
+    }
+    project_file.write_text(json.dumps(project_data))
+
+    project = Project(project_dir)
+    source_paths: list[str] = project.source_bin_paths
+    assert len(source_paths) == 2
+    assert any('clip_a.mp4' in path for path in source_paths)
+    assert any('clip_b.wav' in path for path in source_paths)
+
+
+# ---------------------------------------------------------------------------
+# Timeline.longest_track
+# ---------------------------------------------------------------------------
+
+def test_longest_track():
+    short_medias = [{'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100}]
+    long_medias = [{'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 99999}]
+    timeline = _make_timeline([
+        ('Short', short_medias),
+        ('Long', long_medias),
+    ])
+    longest = timeline.longest_track
+    assert longest is not None
+    assert longest.name == 'Long'
+
+    empty_timeline = _make_timeline([])
+    assert empty_timeline.longest_track is None

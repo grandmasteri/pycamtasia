@@ -1497,6 +1497,20 @@ class Track:
             clip._data['effects'] = []
         return count
 
+    def clip_at_index(self, clip_index: int) -> BaseClip:
+        """Return the clip at the given positional index (sorted by start time)."""
+        sorted_medias: list[dict[str, Any]] = sorted(
+            self._data.get('medias', []),
+            key=lambda media_dict: media_dict.get('start', 0),
+        )
+        if clip_index < 0 or clip_index >= len(sorted_medias):
+            raise IndexError(
+                f'clip index {clip_index} out of range '
+                f'(track has {len(sorted_medias)} clips)'
+            )
+        from camtasia.timeline.clips import clip_from_dict
+        return clip_from_dict(sorted_medias[clip_index])  # type: ignore[return-value]
+
 
 class _ClipAccessor:
     """Lightweight iterable/indexable accessor over a track's clips."""
