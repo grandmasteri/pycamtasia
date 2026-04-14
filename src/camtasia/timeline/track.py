@@ -322,7 +322,6 @@ class Track:
         record: dict[str, Any] = {
             'id': self._next_clip_id(),
             '_type': clip_type,
-            'trackNumber': 0,
             'start': start,
             'duration': duration,
             'mediaStart': kwargs.pop('media_start', 0),
@@ -473,6 +472,7 @@ class Track:
             seconds_to_ticks(duration_seconds),
             media_duration=1,
             trimStartSum=1,
+            trackNumber=0,
             **kwargs,
         )
         return clip  # type: ignore[return-value]
@@ -501,6 +501,7 @@ class Track:
             seconds_to_ticks(duration_seconds),
             attributes={'ident': '', 'gain': 1.0, 'mixToMono': False,
                         'loudnessNormalization': True, 'sourceFileOffset': 0},
+            trackNumber=0,
             channelNumber='0',
             **kwargs,
         )
@@ -528,6 +529,7 @@ class Track:
             'VMFile', source_id,
             seconds_to_ticks(start_seconds),
             seconds_to_ticks(duration_seconds),
+            trackNumber=0,
             **kwargs,
         )
         return clip  # type: ignore[return-value]
