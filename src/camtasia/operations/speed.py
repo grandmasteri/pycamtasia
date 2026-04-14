@@ -7,7 +7,10 @@ rescaled a project from 1.07x audio to 1.0x on 2026-04-08.
 from __future__ import annotations
 
 from fractions import Fraction
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from camtasia.project import Project
 
 from camtasia.timing import EDIT_RATE, parse_scalar, scalar_to_string
 

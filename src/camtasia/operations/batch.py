@@ -1,7 +1,7 @@
 """Batch operations — apply the same transformation to multiple clips at once."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Callable, Iterable
 
 if TYPE_CHECKING:
     from camtasia.timeline.clips.base import BaseClip
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 def apply_to_clips(
     clips: Iterable[BaseClip],
-    fn: Callable[[BaseClip], None],
+    fn: Callable[[BaseClip], Any],
 ) -> int:
     """Apply a function to each clip. Returns count of clips processed."""
     count = 0
@@ -23,7 +23,7 @@ def apply_to_clips(
 
 def apply_to_track(
     track: Track,
-    fn: Callable[[BaseClip], None],
+    fn: Callable[[BaseClip], Any],
 ) -> int:
     """Apply a function to every clip on a track."""
     return apply_to_clips(track.clips, fn)
@@ -31,7 +31,7 @@ def apply_to_track(
 
 def apply_to_all_tracks(
     timeline: Timeline,
-    fn: Callable[[BaseClip], None],
+    fn: Callable[[BaseClip], Any],
 ) -> int:
     """Apply a function to every clip on every track."""
     count = 0

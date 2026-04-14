@@ -22,8 +22,8 @@ def media_markers(project: Project) -> Iterator[tuple[Marker, Media, Track]]:
         Tuples of ``(Marker, Media, Track)`` for each media marker.
     """
     return (
-        (marker, media, track)
+        (marker, media, track)  # type: ignore[misc]
         for track in project.timeline.tracks
         for media in track.medias
-        for marker in media.markers
+        for marker in media.markers  # type: ignore[attr-defined]
     )

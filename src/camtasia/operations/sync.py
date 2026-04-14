@@ -11,9 +11,13 @@ import re
 
 from dataclasses import dataclass
 from fractions import Fraction
+from typing import TYPE_CHECKING
 
 from camtasia.timing import EDIT_RATE
 from camtasia.audiate.transcript import Word
+
+if TYPE_CHECKING:
+    from camtasia.timeline.clips.group import Group
 
 
 @dataclass

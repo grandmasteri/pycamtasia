@@ -3,8 +3,8 @@
 from pathlib import Path
 import sys
 
-import docopt_subcommands as dsc
-from exit_codes import ExitCode, ExitCodeError
+import docopt_subcommands as dsc  # type: ignore[import-not-found]
+from exit_codes import ExitCode, ExitCodeError  # type: ignore[import-not-found]
 
 from camtasia import new_project, use_project
 from camtasia import operations

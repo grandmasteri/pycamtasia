@@ -16,11 +16,11 @@ def export_project_report(
     """Export a detailed project report."""
     path = Path(output_path)
     if format == 'json':
-        report = _build_json_report(project)
-        path.write_text(json.dumps(report, indent=2))
+        json_report = _build_json_report(project)
+        path.write_text(json.dumps(json_report, indent=2))
     else:
-        report = _build_markdown_report(project)
-        path.write_text(report)
+        md_report = _build_markdown_report(project)
+        path.write_text(md_report)
     return path
 
 

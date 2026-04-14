@@ -151,6 +151,7 @@ class Group(BaseClip):
                 break
         if media_track is None:
             raise ValueError('No internal track with UnifiedMedia found')
+        assert template_media is not None  # guaranteed by media_track check
 
         # Extract template info from UnifiedMedia or first StitchedMedia
         if template_media['_type'] == 'UnifiedMedia':
@@ -169,7 +170,7 @@ class Group(BaseClip):
         # Following v2 Track 1 pattern: use bare ScreenVMFile clips with
         # scalar and clipSpeedAttribute for speed-changed segments.
         new_medias = []
-        timeline_cursor = 0
+        timeline_cursor: float = 0
 
         if next_id is None:
             max_id = 0
@@ -226,7 +227,7 @@ class Group(BaseClip):
         # Update Group duration and mediaDuration to match total timeline
         total_tl = seconds_to_ticks(timeline_cursor)
         self._data['duration'] = total_tl
-        self._data['mediaDuration'] = float(total_tl)
+        self._data['mediaDuration'] = total_tl
         self._data['scalar'] = 1
 
         # Keep VMFile on other tracks but extend to cover full source

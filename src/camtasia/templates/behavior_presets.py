@@ -190,7 +190,7 @@ def get_behavior_preset(preset_name: str, duration_ticks: int) -> dict:
         'effectName': template['effectName'],
         'bypassed': False,
         'start': template['start'],
-        'duration': duration_ticks - template['start'],
+        'duration': duration_ticks - template['start'],  # type: ignore[operator]
         'in': template['in'],
         'center': template['center'],
         'out': template['out'],

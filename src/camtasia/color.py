@@ -55,10 +55,10 @@ class RGBA:
     def from_floats(cls, red: float, green: float, blue: float, alpha: float) -> RGBA:
         """Create an RGBA instance from 0.0–1.0 float channel values."""
         return cls(
-            red * cls.MAXIMUM_CHANNEL,
-            green * cls.MAXIMUM_CHANNEL,
-            blue * cls.MAXIMUM_CHANNEL,
-            alpha * cls.MAXIMUM_CHANNEL,
+            red * cls.MAXIMUM_CHANNEL,  # type: ignore[arg-type]
+            green * cls.MAXIMUM_CHANNEL,  # type: ignore[arg-type]
+            blue * cls.MAXIMUM_CHANNEL,  # type: ignore[arg-type]
+            alpha * cls.MAXIMUM_CHANNEL,  # type: ignore[arg-type]
         )
 
     def __init__(self, red: int, green: int, blue: int, alpha: int) -> None:

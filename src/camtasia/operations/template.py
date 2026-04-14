@@ -5,7 +5,10 @@ from __future__ import annotations
 import copy
 import shutil
 from pathlib import Path
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
+
+if TYPE_CHECKING:
+    from camtasia.project import Project
 
 
 def clone_project_structure(source_data: dict[str, Any]) -> dict[str, Any]:
