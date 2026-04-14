@@ -1040,6 +1040,20 @@ class Track:
         return {c.clip_type for c in self.clips}
 
     @property
+    def clip_count_by_type(self) -> dict[str, int]:
+        """Count of clips grouped by type."""
+        from collections import Counter
+        type_counter: Counter[str] = Counter(
+            clip.clip_type for clip in self.clips
+        )
+        return dict(type_counter)
+
+    @property
+    def keyframed_clips(self) -> list[BaseClip]:
+        """All clips that have keyframe animations."""
+        return self.filter_clips(lambda clip: clip.has_keyframes)
+
+    @property
     def effect_names(self) -> set[str]:
         """Set of unique effect names across all clips on this track."""
         names = set()

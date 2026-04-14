@@ -2396,3 +2396,95 @@ def test_duration_formatted():
     with patch.object(Project, 'duration_seconds', new_callable=PropertyMock, return_value=125.7):
         proj = object.__new__(Project)
         assert proj.duration_formatted == '2:05'
+
+
+# ---------------------------------------------------------------------------
+# Track.clip_count_by_type
+# ---------------------------------------------------------------------------
+
+def test_clip_count_by_type():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': 100, '_type': 'VMFile'},
+        {'id': 2, 'start': 100, 'duration': 100, '_type': 'VMFile'},
+        {'id': 3, 'start': 200, 'duration': 100, '_type': 'Callout'},
+    ]
+    track = _make_track(medias=medias)
+    counts: dict[str, int] = track.clip_count_by_type
+    assert counts['VMFile'] == 2
+    assert counts['Callout'] == 1
+    assert len(counts) == 2
+
+
+# ---------------------------------------------------------------------------
+# Timeline.track_summary
+# ---------------------------------------------------------------------------
+
+def test_track_summary():
+    medias_a = [
+        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(5)},
+    ]
+    tl = _make_timeline([('Video', medias_a), ('Audio', [])])
+    summary: list[dict] = tl.track_summary
+    assert len(summary) == 2
+    assert summary[0]['name'] == 'Video'
+    assert summary[0]['clip_count'] == 1
+    assert summary[0]['is_empty'] is False
+    assert summary[1]['name'] == 'Audio'
+    assert summary[1]['clip_count'] == 0
+    assert summary[1]['is_empty'] is True
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.has_keyframes
+# ---------------------------------------------------------------------------
+
+def test_has_keyframes_true():
+    media = {
+        'id': 1, 'start': 0, 'duration': 100,
+        'parameters': {
+            'opacity': {
+                'type': 'double',
+                'defaultValue': 1.0,
+                'keyframes': [{'time': 0, 'value': 1.0}],
+            },
+        },
+    }
+    track = _make_track(medias=[media])
+    clip = list(track.clips)[0]
+    assert clip.has_keyframes is True
+
+
+def test_has_keyframes_false():
+    media = {
+        'id': 1, 'start': 0, 'duration': 100,
+        'parameters': {
+            'opacity': 0.5,
+        },
+    }
+    track = _make_track(medias=[media])
+    clip = list(track.clips)[0]
+    assert clip.has_keyframes is False
+
+
+# ---------------------------------------------------------------------------
+# Track.keyframed_clips
+# ---------------------------------------------------------------------------
+
+def test_keyframed_clips():
+    medias = [
+        {
+            'id': 1, 'start': 0, 'duration': 100,
+            'parameters': {
+                'scale0': {
+                    'type': 'double',
+                    'defaultValue': 1.0,
+                    'keyframes': [{'time': 0, 'value': 1.0}],
+                },
+            },
+        },
+        {'id': 2, 'start': 100, 'duration': 100, 'parameters': {'opacity': 0.8}},
+    ]
+    track = _make_track(medias=medias)
+    keyframed = track.keyframed_clips
+    assert len(keyframed) == 1
+    assert keyframed[0].id == 1

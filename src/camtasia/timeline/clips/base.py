@@ -1305,3 +1305,11 @@ class BaseClip:
         other_start: int = other_clip.start
         gap_ticks: int = other_start - self_end
         return float(ticks_to_seconds(gap_ticks))
+
+    @property
+    def has_keyframes(self) -> bool:
+        """Whether any parameter has keyframe animation."""
+        for parameter_value in self._data.get('parameters', {}).values():
+            if isinstance(parameter_value, dict) and 'keyframes' in parameter_value:
+                return True
+        return False

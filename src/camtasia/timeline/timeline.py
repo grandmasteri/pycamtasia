@@ -186,6 +186,20 @@ class Timeline:
         """End time of the timeline in seconds."""
         return ticks_to_seconds(self.total_duration_ticks)
 
+    @property
+    def track_summary(self) -> list[dict[str, Any]]:
+        """Summary of each track as a list of dicts."""
+        return [
+            {
+                'name': track.name,
+                'index': track.index,
+                'clip_count': len(track),
+                'duration_seconds': track.total_duration_seconds,
+                'is_empty': track.is_empty,
+            }
+            for track in self.tracks
+        ]
+
     def describe(self) -> str:
         """Human-readable timeline description."""
         lines = [
