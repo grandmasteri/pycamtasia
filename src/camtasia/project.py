@@ -308,6 +308,11 @@ class Project:
         return self.timeline.empty_tracks
 
     @property
+    def track_names(self) -> list[str]:
+        """Names of all tracks in the project."""
+        return self.timeline.track_names
+
+    @property
     def has_screen_recording(self) -> bool:
         """Whether the project contains any screen recording clips."""
         from camtasia.timeline.clips.group import Group
@@ -647,6 +652,16 @@ class Project:
         issues.extend(_check_transition_references(self._data))
 
         return issues
+
+    def validate_and_report(self) -> str:
+        """Run validation and return a human-readable report."""
+        validation_issues: list[ValidationIssue] = self.validate()
+        if not validation_issues:
+            return 'No issues found.'
+        report_lines: list[str] = [f'{len(validation_issues)} issue(s) found:']
+        for issue in validation_issues:
+            report_lines.append(f'  [{issue.level}] {issue.message}')
+        return '\n'.join(report_lines)
 
     def save(self) -> None:
         """Write the current project state to disk.

@@ -1066,6 +1066,11 @@ class Track:
         return ticks_to_seconds(total)
 
     @property
+    def total_clip_duration_ticks(self) -> int:
+        """Sum of all clip durations in ticks."""
+        return sum(int(media_dict.get('duration', 0)) for media_dict in self._data.get('medias', []))
+
+    @property
     def average_clip_duration_seconds(self) -> float:
         """Average clip duration in seconds, or 0.0 if empty."""
         clip_count: int = len(self)
@@ -1096,6 +1101,20 @@ class Track:
     def total_gap_seconds(self) -> float:
         """Total gap time between clips in seconds."""
         return sum(end - start for start, end in self.gaps())
+
+    @property
+    def first_gap(self) -> tuple[float, float] | None:
+        """The first gap between clips, or None if no gaps exist."""
+        all_gaps: list[tuple[float, float]] = self.gaps()
+        return all_gaps[0] if all_gaps else None
+
+    @property
+    def largest_gap(self) -> tuple[float, float] | None:
+        """The largest gap between clips, or None if no gaps exist."""
+        all_gaps: list[tuple[float, float]] = self.gaps()
+        if not all_gaps:
+            return None
+        return max(all_gaps, key=lambda gap: gap[1] - gap[0])
 
     def find_gaps_longer_than(self, threshold_seconds: float) -> list[tuple[float, float]]:
         """Find gaps between clips that exceed the given duration threshold.

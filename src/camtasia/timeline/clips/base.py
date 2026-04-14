@@ -122,6 +122,15 @@ class BaseClip:
         return (self.start_seconds, self.end_seconds)
 
     @property
+    def time_range_formatted(self) -> str:
+        """Time range as 'MM:SS - MM:SS' string."""
+        def _fmt(seconds: float) -> str:
+            minutes: int = int(seconds // 60)
+            remaining: int = int(seconds % 60)
+            return f'{minutes}:{remaining:02d}'
+        return f'{_fmt(self.start_seconds)} - {_fmt(self.end_seconds)}'
+
+    @property
     def gain(self) -> float:
         """Audio gain (0.0 = muted, 1.0 = full volume)."""
         return float(self._data.get('attributes', {}).get('gain', 1.0))
@@ -307,6 +316,11 @@ class BaseClip:
         if value < 0.0:
             raise ValueError(f'volume must be >= 0.0, got {value}')
         self._data.setdefault('parameters', {})['volume'] = value
+
+    @property
+    def is_silent(self) -> bool:
+        """Whether this clip has zero volume (gain == 0 or volume == 0)."""
+        return self.gain == 0.0 or self.volume == 0.0
 
     @property
     def metadata(self) -> dict[str, Any]:
