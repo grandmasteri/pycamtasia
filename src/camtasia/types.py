@@ -173,7 +173,12 @@ class MediaType(IntEnum):
 # ---------------------------------------------------------------------------
 # Internal TypedDicts – raw JSON data shapes (total=False: all keys optional)
 # ---------------------------------------------------------------------------
-from typing import Any, TypedDict, NotRequired
+from typing import Any, TypedDict
+import sys
+if sys.version_info >= (3, 11):
+    from typing import NotRequired
+else:
+    from typing_extensions import NotRequired
 from fractions import Fraction
 
 

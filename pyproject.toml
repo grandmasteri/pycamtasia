@@ -9,7 +9,7 @@ description = "Python API for reading, writing, and manipulating Camtasia projec
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-dependencies = ["jsonpatch>=1.33"]
+dependencies = ["jsonpatch>=1.33", 'typing_extensions>=4.0; python_version < "3.11"']
 authors = [
     { name = "Sixty North AS", email = "austin@sixty-north.com" },
 ]

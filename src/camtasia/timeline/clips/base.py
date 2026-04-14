@@ -2,7 +2,12 @@
 from __future__ import annotations
 
 from fractions import Fraction
-from typing import Any, Self
+from typing import Any
+import sys
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 from camtasia.effects.base import Effect, effect_from_dict
 from camtasia.effects.visual import Glow
