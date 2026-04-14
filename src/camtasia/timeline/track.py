@@ -1570,6 +1570,28 @@ class Track:
             current_start: int = int(media_dict.get('start', 0))
             media_dict['start'] = current_start - earliest_start
 
+    def align_clips_to_start(self) -> None:
+        """Move all clips so they start sequentially from time 0 with no gaps."""
+        sorted_medias: list[dict[str, Any]] = sorted(
+            self._data.get('medias', []),
+            key=lambda media_dict: media_dict.get('start', 0),
+        )
+        running_position: int = 0
+        for media_dict in sorted_medias:
+            media_dict['start'] = running_position
+            running_position += media_dict.get('duration', 0)
+        self._data['medias'] = sorted_medias
+        self._data['transitions'] = []  # transitions invalidated
+
+    @property
+    def total_media_duration_seconds(self) -> float:
+        """Sum of all clip durations (may differ from end_time if there are gaps)."""
+        total_ticks: int = sum(
+            int(media_dict.get('duration', 0))
+            for media_dict in self._data.get('medias', [])
+        )
+        return float(ticks_to_seconds(total_ticks))
+
 
 class _ClipAccessor:
     """Lightweight iterable/indexable accessor over a track's clips."""

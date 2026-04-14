@@ -2660,3 +2660,70 @@ def test_total_transition_count():
     object.__setattr__(project, '_data', data)
     object.__setattr__(project, '_path', None)
     assert project.total_transition_count == 1
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.copy_timing_from
+# ---------------------------------------------------------------------------
+
+def test_copy_timing_from():
+    from camtasia.timeline.clips.base import BaseClip
+    source = BaseClip({'id': 1, '_type': 'VMFile', 'start': 1000, 'duration': 5000})
+    target = BaseClip({'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 100})
+    result = target.copy_timing_from(source)
+    assert target.start == 1000
+    assert target.duration == 5000
+    assert result is target  # returns self for chaining
+
+
+# ---------------------------------------------------------------------------
+# Track.align_clips_to_start
+# ---------------------------------------------------------------------------
+
+def test_align_clips_to_start():
+    medias: list[dict[str, Any]] = [
+        {'id': 1, '_type': 'VMFile', 'start': 500, 'duration': 100},
+        {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200},
+        {'id': 3, '_type': 'VMFile', 'start': 900, 'duration': 300},
+    ]
+    track = _make_track(medias=medias)
+    track._data['transitions'] = [{'some': 'transition'}]
+    track.align_clips_to_start()
+    # Clips should be sorted by original start and packed sequentially
+    assert track._data['medias'][0]['start'] == 0
+    assert track._data['medias'][0]['duration'] == 200   # was id=2
+    assert track._data['medias'][1]['start'] == 200
+    assert track._data['medias'][1]['duration'] == 100   # was id=1
+    assert track._data['medias'][2]['start'] == 300
+    assert track._data['medias'][2]['duration'] == 300   # was id=3
+    assert track._data['transitions'] == []  # transitions cleared
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.matches_type
+# ---------------------------------------------------------------------------
+
+def test_matches_type():
+    from camtasia.timeline.clips.base import BaseClip
+    from camtasia.types import ClipType
+    clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100})
+    assert clip.matches_type('VMFile') is True
+    assert clip.matches_type(ClipType.VIDEO) is True
+    assert clip.matches_type('AMFile') is False
+    assert clip.matches_type(ClipType.AUDIO) is False
+
+
+# ---------------------------------------------------------------------------
+# Track.total_media_duration_seconds
+# ---------------------------------------------------------------------------
+
+def test_total_media_duration_seconds():
+    from camtasia.timing import seconds_to_ticks
+    one_sec: int = seconds_to_ticks(1.0)
+    two_sec: int = seconds_to_ticks(2.0)
+    medias: list[dict[str, Any]] = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': one_sec},
+        {'id': 2, '_type': 'VMFile', 'start': one_sec + 999, 'duration': two_sec},
+    ]
+    track = _make_track(medias=medias)
+    assert track.total_media_duration_seconds == pytest.approx(3.0)

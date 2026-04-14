@@ -1336,3 +1336,13 @@ class BaseClip:
                 parameters[parameter_name] = parameter_value.get('defaultValue', 0)
         return self
         return False
+
+    def copy_timing_from(self, source_clip: BaseClip) -> Self:
+        """Copy start time and duration from another clip."""
+        self._data['start'] = source_clip.start
+        self._data['duration'] = source_clip.duration
+        return self
+
+    def matches_type(self, clip_type: str | ClipType) -> bool:
+        """Check if this clip matches the given type."""
+        return self.clip_type == clip_type
