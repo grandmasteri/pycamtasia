@@ -274,7 +274,6 @@ class BaseClip:
             effect_dict.get('effectName') == effect_name
             for effect_dict in self._data.get('effects', [])
         )
-        return original - len(self._data['effects'])
 
     @property
     def parameters(self) -> dict[str, Any]:
@@ -1502,7 +1501,7 @@ class BaseClip:
             The newly created clip on the target track.
         """
         import copy
-        cloned_data: dict[str, Any] = copy.deepcopy(self._data)
+        cloned_data: dict[str, Any] = copy.deepcopy(dict(self._data))
         cloned_data['id'] = target_track._next_clip_id()
         target_track._data.setdefault('medias', []).append(cloned_data)
         from camtasia.timeline.clips import clip_from_dict
