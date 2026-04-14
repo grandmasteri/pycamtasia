@@ -134,6 +134,13 @@ class Group(BaseClip):
             'trackIndex': track_index,
             'medias': [],
             'transitions': [],
+            'parameters': {},
+            'ident': '',
+            'audioMuted': False,
+            'videoHidden': False,
+            'magnetic': False,
+            'matte': 0,
+            'solo': False,
         }
         self._data.setdefault('tracks', []).append(new_track_data)
         return GroupTrack(new_track_data)

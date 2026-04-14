@@ -776,6 +776,8 @@ class Track:
             tracks=internal_tracks or [],
             attributes=kwargs.pop('attributes', {
                 'ident': '', 'gain': 1.0, 'mixToMono': False,
+                'widthAttr': 0.0, 'heightAttr': 0.0,
+                'maxDurationAttr': 0, 'assetProperties': [],
             }),
             **kwargs,
         )
@@ -831,6 +833,13 @@ class Track:
                 'trackIndex': 0,
                 'medias': internal_medias,
                 'transitions': [],
+                'parameters': {},
+                'ident': '',
+                'audioMuted': False,
+                'videoHidden': False,
+                'magnetic': False,
+                'matte': 0,
+                'solo': False,
             }],
         )
         return group
