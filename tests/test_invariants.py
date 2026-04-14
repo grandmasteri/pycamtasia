@@ -592,3 +592,38 @@ def test_remove_short_clips_preserves_long_clips(threshold_seconds):
     
     remaining_count = len(data['medias'])
     assert remaining_count >= original_long_clip_count
+
+
+# ---------------------------------------------------------------------------
+# 27. reverse_clip_order preserves all clip IDs
+# ---------------------------------------------------------------------------
+
+@given(st.integers(min_value=2, max_value=6))
+@settings(max_examples=20, deadline=None)
+def test_reverse_preserves_all_ids(num_clips):
+    """Reversing clip order should not lose or duplicate any clip IDs."""
+    track, data = _make_track()
+    original_ids: set[int] = set()
+    for clip_index in range(num_clips):
+        clip = track.add_clip('AMFile', 1, clip_index * TICK, TICK)
+        original_ids.add(clip.id)
+    track.reverse_clip_order()
+    reversed_ids: set[int] = {int(media_dict['id']) for media_dict in data['medias']}
+    assert reversed_ids == original_ids
+
+
+# ---------------------------------------------------------------------------
+# 28. set_start_seconds and set_duration_seconds round-trip
+# ---------------------------------------------------------------------------
+
+@given(st.floats(min_value=0.0, max_value=100.0), st.floats(min_value=0.1, max_value=50.0))
+@settings(max_examples=20, deadline=None)
+def test_set_start_duration_roundtrip(start_seconds, duration_seconds):
+    """Setting start/duration in seconds should round-trip correctly."""
+    from camtasia.timeline.clips.base import BaseClip
+    data = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': TICK}
+    clip = BaseClip(data)
+    clip.set_start_seconds(start_seconds)
+    clip.set_duration_seconds(duration_seconds)
+    assert abs(clip.start_seconds - start_seconds) < 0.001
+    assert abs(clip.duration_seconds - duration_seconds) < 0.001
