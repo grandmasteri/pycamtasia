@@ -1,118 +1,97 @@
 # Quick Start
 
-## Installation
+## Install
 
 ```bash
 pip install pycamtasia
 ```
 
-## Loading a Project
+## Load a Project
 
 ```python
 import camtasia
 
 proj = camtasia.load_project("path/to/project.cmproj")
+```
 
-# Browse media in the bin
-for media in proj.media_bin:
-    print(media.source)
+## Inspect Tracks, Clips, and Media
 
-# Iterate tracks and clips
+Iterate the timeline to see what's in the project.
+
+```python
 for track in proj.timeline.tracks:
-    print(track.name)
+    print(f"Track {track.index}: {track.name} ({len(track)} clips)")
     for clip in track.clips:
-        print(f"  {clip.clip_type}: {clip.start_seconds:.2f}s, {clip.duration_seconds:.2f}s")
+        print(f"  {clip.clip_type}: {clip.start_seconds:.1f}–{clip.end_seconds:.1f}s")
 
-# Read timeline markers
-for marker in proj.timeline.markers:
-    print(f"{marker.name} at {marker.time_seconds:.1f}s")
+for media in proj.media_bin:
+    print(f"  {media.id}: {media.source}")
+```
 
-# Save changes
+## Add a Clip with an Effect
+
+Import media, place it on a track, then add a drop shadow.
+
+```python
+media = proj.import_media("assets/intro.png")
+track = proj.timeline.get_or_create_track("Slides")
+clip = track.add_image(media.id, start_seconds=0, duration_seconds=5.0)
+
+clip.add_drop_shadow(offset=5, blur=10, opacity=0.5)
+clip.add_round_corners(radius=12.0)
+```
+
+## Add a Transition
+
+Transitions go between two adjacent clips on the same track.
+
+```python
+clips = list(track.clips)
+track.transitions.add_dissolve(clips[0], clips[1], duration_seconds=0.5)
+```
+
+## Undo a Change
+
+Wrap edits in `track_changes` to make them undoable.
+
+```python
+with proj.track_changes("add shadow"):
+    clip.add_drop_shadow()
+
+proj.undo()   # reverts "add shadow"
+proj.redo()   # re-applies it
+```
+
+## Save
+
+```python
 proj.save()
 ```
 
-## Context Manager (Auto-Save)
+Or auto-save with a context manager:
 
 ```python
 with camtasia.use_project("path/to/project.cmproj") as proj:
-    proj.timeline.markers.add("Chapter 2", camtasia.seconds_to_ticks(30.0))
+    proj.timeline.get_or_create_track("Audio")
 ```
 
-## Creating a New Project
+## Export
+
+Export markers as SRT subtitles, the timeline as EDL or CSV, or everything at once.
 
 ```python
-camtasia.new_project("path/to/new.cmproj")
+from camtasia.export import export_markers_as_srt, export_edl, export_csv
+
+export_markers_as_srt(proj, "markers.srt")
+export_edl(proj, "timeline.edl", title="My Project")
+export_csv(proj, "timeline.csv")
+
+# Or export all formats in one call:
+proj.export_all("output/")
 ```
 
-## Working with Clips
+## Next Steps
 
-Clips are type-dispatched — each clip type has its own class:
-
-| Class | Description |
-|-------|-------------|
-| `AMFile` | Audio clip |
-| `VMFile` | Video clip |
-| `IMFile` | Image/still clip |
-| `ScreenVMFile` | Screen recording (video) |
-| `ScreenIMFile` | Screen recording (image) |
-| `StitchedMedia` | Compound media with sub-clips |
-| `Group` | Grouped clips across internal tracks |
-| `Callout` | Text overlay / annotation |
-
-```python
-from camtasia import AMFile, VMFile
-
-for track in proj.timeline.tracks:
-    for clip in track.clips:
-        if isinstance(clip, VMFile):
-            print(f"Video: {clip.duration_seconds:.1f}s, scalar={clip.scalar}")
-        elif isinstance(clip, AMFile):
-            print(f"Audio: source_id={clip.source_id}")
-```
-
-## Speed Changes
-
-Speed is stored as a rational scalar (`Fraction`). A scalar of `1/2` means 2× playback speed.
-
-```python
-clip.set_speed(2.0)       # 2× speed — scalar becomes 1/2
-clip.set_speed(0.5)       # half speed — scalar becomes 2/1
-print(clip.scalar)        # Fraction(1, 2)
-```
-
-## Transitions
-
-```python
-from camtasia import seconds_to_ticks
-
-track = list(proj.timeline.tracks)[0]
-clips = list(track.clips)
-
-track.transitions.add_fade_through_black(
-    left_clip_id=clips[0].id,
-    right_clip_id=clips[1].id,
-    duration_ticks=seconds_to_ticks(0.5),
-)
-```
-
-## Effects
-
-```python
-from camtasia.effects import RoundCorners, DropShadow, CursorPhysics
-
-clip.effects.append(RoundCorners(radius=16.0).data)
-clip.effects.append(DropShadow(offset=15.0, blur=25.0, opacity=0.2).data)
-clip.effects.append(CursorPhysics(smoothing=0.8).data)
-```
-
-## Timing System
-
-Camtasia uses an `editRate` of **705,600,000 ticks per second**.
-
-```python
-from camtasia.timing import EDIT_RATE, seconds_to_ticks, ticks_to_seconds, format_duration
-
-seconds_to_ticks(2.5)            # 1_764_000_000
-ticks_to_seconds(1_764_000_000)  # 2.5
-format_duration(seconds_to_ticks(125.3))  # '2:05.29'
-```
+- [Getting Started Tutorial](guides/getting-started.md) — build a complete project from scratch
+- [Undo & Redo](guides/undo-redo.md) — change history and persistence
+- [Convenience API](guides/convenience-api.md) — batch operations and helpers
