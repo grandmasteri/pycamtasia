@@ -1,5 +1,5 @@
 """Tests for camtasia.types enums."""
-from camtasia.types import ClipType, EffectName, BlendMode, MaskShape, CalloutShape, TransitionType, CalloutKind
+from camtasia.types import ClipType, EffectName, BlendMode, MaskShape, CalloutShape, TransitionType, CalloutKind, BehaviorInnerName
 
 
 class TestClipTypeValues:
@@ -130,3 +130,28 @@ class TestCalloutKindValues:
         # str enum comparison
         assert CalloutKind.REMIX == 'remix'
         assert CalloutKind.WIN_BLUR == 'TypeWinBlur'
+
+
+class TestBehaviorInnerNameValues:
+    """Verify BehaviorInnerName enum values match inner name strings from TechSmith samples."""
+
+    def test_behavior_inner_name_values(self):
+        expected = {
+            'FADE_IN': 'fadeIn',
+            'REVEAL': 'reveal',
+            'SLIDING': 'sliding',
+            'FLY_IN': 'flyIn',
+            'GROW': 'grow',
+            'HINGE': 'hinge',
+            'FADE_OUT': 'fadeOut',
+            'FLY_OUT': 'flyOut',
+            'SHRINK': 'shrink',
+            'SHIFTING': 'shifting',
+            'NONE': 'none',
+            'TREMBLE': 'tremble',
+        }
+        for name, value in expected.items():
+            assert BehaviorInnerName[name].value == value
+        # str enum comparison
+        assert BehaviorInnerName.FADE_IN == 'fadeIn'
+        assert BehaviorInnerName.NONE == 'none'

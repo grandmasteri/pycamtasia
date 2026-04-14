@@ -77,6 +77,25 @@ class BehaviorPreset(str, Enum):
     POP_UP = 'PopUp'
 
 
+class BehaviorInnerName(str, Enum):
+    """Inner animation names used in GenericBehaviorEffect in/center/out phases."""
+    # In-phase animations
+    FADE_IN = 'fadeIn'
+    REVEAL = 'reveal'
+    SLIDING = 'sliding'
+    FLY_IN = 'flyIn'
+    GROW = 'grow'
+    HINGE = 'hinge'
+    # Out-phase animations
+    FADE_OUT = 'fadeOut'
+    FLY_OUT = 'flyOut'
+    SHRINK = 'shrink'
+    SHIFTING = 'shifting'
+    # Center-phase animations
+    NONE = 'none'
+    TREMBLE = 'tremble'
+
+
 class BlendMode(IntEnum):
     """Blend mode values for BlendModeEffect."""
     NORMAL = 16
