@@ -175,9 +175,9 @@ class MediaType(IntEnum):
 # ---------------------------------------------------------------------------
 from typing import Any, TypedDict
 import sys
-if sys.version_info >= (3, 11):
+if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import NotRequired
-else:
+else:  # pragma: no cover
     from typing_extensions import NotRequired
 from fractions import Fraction
 

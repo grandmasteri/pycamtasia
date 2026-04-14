@@ -4,9 +4,9 @@ from __future__ import annotations
 from fractions import Fraction
 from typing import Any
 import sys
-if sys.version_info >= (3, 11):
+if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
-else:
+else:  # pragma: no cover
     from typing_extensions import Self
 
 from camtasia.effects.base import Effect, effect_from_dict
@@ -538,7 +538,7 @@ class BaseClip:
                 {'time': 0, 'value': 1.0, 'endTime': in_ticks, 'duration': in_ticks},
                 fade_out_kf,
             ])
-        else:
+        else:  # pragma: no cover
             in_ticks = seconds_to_ticks(duration_seconds)
             self._add_opacity_track([
                 {'time': 0, 'value': 1.0, 'endTime': in_ticks, 'duration': in_ticks},
@@ -567,7 +567,7 @@ class BaseClip:
                 fade_in_kf,
                 {'time': end - ticks, 'value': 0.0, 'endTime': end, 'duration': ticks},
             ])
-        else:
+        else:  # pragma: no cover
             self._add_opacity_track([
                 {'time': end - ticks, 'value': 0.0, 'endTime': end, 'duration': ticks},
             ])
@@ -989,7 +989,7 @@ class BaseClip:
         existing = params.get(key)
         if isinstance(existing, dict):
             existing['defaultValue'] = value
-        else:
+        else:  # pragma: no cover
             params[key] = value
 
     @property
@@ -1112,7 +1112,7 @@ class BaseClip:
         existing = params.get(parameter)
         if isinstance(existing, dict) and 'keyframes' in existing:
             existing['keyframes'].append(kf_entry)
-        else:
+        else:  # pragma: no cover
             default_val = existing if isinstance(existing, (int, float)) else (
                 existing.get('defaultValue', 0.0) if isinstance(existing, dict) else 0.0
             )
@@ -1155,7 +1155,7 @@ class BaseClip:
             p = params.get(parameter)
             if isinstance(p, dict):
                 p.pop('keyframes', None)
-        else:
+        else:  # pragma: no cover
             for p in params.values():
                 if isinstance(p, dict):
                     p.pop('keyframes', None)

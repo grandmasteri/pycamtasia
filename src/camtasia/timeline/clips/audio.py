@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 import sys
-if sys.version_info >= (3, 11):
+if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
-else:
+else:  # pragma: no cover
     from typing_extensions import Self
 
 from .base import BaseClip
