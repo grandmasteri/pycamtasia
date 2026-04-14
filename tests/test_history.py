@@ -204,6 +204,44 @@ class TestTotalPatchSizeBytes:
         assert history.redo_count == 1
 
 
+class TestSerialization:
+    def test_serialize_roundtrip(self) -> None:
+        history = ChangeHistory()
+        project_data: dict[str, Any] = {"value": 1}
+        snapshot_before: dict[str, Any] = copy.deepcopy(project_data)
+        project_data["value"] = 2
+        history.record("change value", snapshot_before, project_data)
+
+        json_string: str = history.to_json()
+        restored: ChangeHistory = ChangeHistory.from_json(json_string)
+
+        assert restored.undo_count == 1
+        assert restored.descriptions == ["change value"]
+        assert restored.max_history_depth == history.max_history_depth
+
+    def test_serialize_empty_history(self) -> None:
+        history = ChangeHistory(max_history_depth=50)
+        json_string: str = history.to_json()
+        restored: ChangeHistory = ChangeHistory.from_json(json_string)
+
+        assert restored.undo_count == 0
+        assert restored.descriptions == []
+        assert restored.max_history_depth == 50
+
+    def test_deserialized_history_can_undo(self) -> None:
+        history = ChangeHistory()
+        project_data: dict[str, Any] = {"value": 1}
+        snapshot_before: dict[str, Any] = copy.deepcopy(project_data)
+        project_data["value"] = 2
+        history.record("set to 2", snapshot_before, project_data)
+
+        restored: ChangeHistory = ChangeHistory.from_json(history.to_json())
+        desc: str = restored.undo(project_data)
+
+        assert project_data["value"] == 1
+        assert desc == "set to 2"
+
+
 class TestWithUndoDecorator:
     def test_with_undo_decorator_records_change(self, project) -> None:
         @with_undo("decorated title change")

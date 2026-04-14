@@ -130,6 +130,35 @@ class ChangeHistory:
         return total_size
 
 
+    def to_json(self) -> str:
+        """Serialize history to JSON string for persistence."""
+        serialized_records: list[dict[str, Any]] = [
+            {
+                'description': record.description,
+                'forward_patch': record.forward_patch.patch,
+                'inverse_patch': record.inverse_patch.patch,
+            }
+            for record in self._undo_stack
+        ]
+        return json.dumps({
+            'undo_stack': serialized_records,
+            'max_history_depth': self._max_history_depth,
+        }, indent=2)
+
+    @classmethod
+    def from_json(cls, json_string: str) -> ChangeHistory:
+        """Deserialize history from JSON string."""
+        raw_data: dict[str, Any] = json.loads(json_string)
+        restored_history: ChangeHistory = cls(max_history_depth=raw_data.get('max_history_depth', 100))
+        for serialized_record in raw_data.get('undo_stack', []):
+            restored_history._undo_stack.append(ChangeRecord(
+                description=serialized_record['description'],
+                forward_patch=jsonpatch.JsonPatch(serialized_record['forward_patch']),
+                inverse_patch=jsonpatch.JsonPatch(serialized_record['inverse_patch']),
+            ))
+        return restored_history
+
+
 def with_undo(description: str) -> Callable:
     """Decorator that wraps a function call in track_changes."""
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
