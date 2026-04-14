@@ -2,11 +2,16 @@
 from __future__ import annotations
 
 import copy
+import sys
 from fractions import Fraction
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from camtasia.timeline.transitions import TransitionList
+if sys.version_info >= (3, 11):  # pragma: no cover
+    from typing import Self
+else:  # pragma: no cover
+    from typing_extensions import Self
 from typing import Any, Iterator
 
 from camtasia.timing import EDIT_RATE, seconds_to_ticks, ticks_to_seconds
@@ -257,6 +262,72 @@ class Group(BaseClip):
             List of matching clips across all internal tracks.
         """
         return [clip for clip in self.all_internal_clips if clip.clip_type == clip_type]
+
+    def remove_internal_clip(self, clip_id: int) -> None:
+        """Remove a clip from any internal track by ID.
+
+        Cascade-deletes any transitions referencing the removed clip.
+
+        Args:
+            clip_id: The ``id`` of the internal clip to remove.
+
+        Raises:
+            KeyError: If no internal clip with the given ID exists.
+        """
+        for group_track in self.tracks:
+            medias: list[dict[str, Any]] = group_track._data.get('medias', [])
+            for i, media_dict in enumerate(medias):
+                if media_dict.get('id') == clip_id:
+                    medias.pop(i)
+                    transitions: list[dict[str, Any]] = group_track._data.get('transitions', [])
+                    group_track._data['transitions'] = [
+                        t for t in transitions
+                        if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
+                    ]
+                    return
+        raise KeyError(f'No internal clip with id={clip_id}')
+
+    def clear_all_internal_clips(self) -> int:
+        """Remove all clips from all internal tracks.
+
+        Cascade-deletes all transitions on every internal track.
+
+        Returns:
+            The total number of clips removed.
+        """
+        total_removed: int = 0
+        for group_track in self.tracks:
+            medias: list[dict[str, Any]] = group_track._data.get('medias', [])
+            total_removed += len(medias)
+            medias.clear()
+            group_track._data['transitions'] = []
+        return total_removed
+
+    def set_dimensions(self, width_pixels: float, height_pixels: float) -> Self:
+        """Set the Group's width and height attributes.
+
+        Args:
+            width_pixels: New width value.
+            height_pixels: New height value.
+
+        Returns:
+            ``self`` for fluent chaining.
+        """
+        self._data.setdefault('attributes', {})['widthAttr'] = width_pixels
+        self._data['attributes']['heightAttr'] = height_pixels
+        return self
+
+    def rename(self, new_name: str) -> Self:
+        """Rename this Group.
+
+        Args:
+            new_name: The new identifier for this Group.
+
+        Returns:
+            ``self`` for fluent chaining.
+        """
+        self._data.setdefault('attributes', {})['ident'] = new_name
+        return self
 
     # ------------------------------------------------------------------
     # Per-segment speed via StitchedMedia (v2 reverse-engineered format)
