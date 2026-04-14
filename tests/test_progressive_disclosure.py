@@ -1,54 +1,139 @@
 """Tests for Project.add_progressive_disclosure()."""
 from __future__ import annotations
 
-from camtasia.timing import seconds_to_ticks
+import struct
+import zlib
+from pathlib import Path
+
+import pytest
+
+from camtasia.project import load_project
+
+RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 
 
-class TestProgressiveDisclosure:
+def _make_project():
+    return load_project(RESOURCES / 'new.cmproj')
 
-    def test_creates_tracks_and_clips(self, project):
-        clips = project.add_progressive_disclosure(
-            [(10, 3.0), (20, 5.0)],
-            start_seconds=1.0,
-        )
 
-        assert [(c.start, c.duration) for c in clips] == [
-            (seconds_to_ticks(1.0), seconds_to_ticks(3.0)),
-            (seconds_to_ticks(1.0), seconds_to_ticks(5.0)),
-        ]
-        track_names = [t.name for t in project.timeline.tracks]
-        assert 'Prog-0' in track_names
-        assert 'Prog-1' in track_names
+def _make_minimal_png(path: Path) -> None:
+    """Write a valid 1x1 white PNG file."""
+    signature = b'\x89PNG\r\n\x1a\n'
+    ihdr_data = struct.pack('>IIBBBBB', 1, 1, 8, 2, 0, 0, 0)
+    ihdr = _png_chunk(b'IHDR', ihdr_data)
+    raw_row = b'\x00\xff\xff\xff'
+    idat = _png_chunk(b'IDAT', zlib.compress(raw_row))
+    iend = _png_chunk(b'IEND', b'')
+    path.write_bytes(signature + ihdr + idat + iend)
 
-    def test_fade_in_applied(self, project):
-        clips = project.add_progressive_disclosure(
-            [(10, 2.0)],
-            start_seconds=0.0,
-            fade_in=0.3,
-        )
 
-        opacity = clips[0]._data['parameters']['opacity']
-        assert opacity['keyframes'][0]['value'] == 1.0
-        assert opacity['keyframes'][0]['duration'] == seconds_to_ticks(0.3)
+def _png_chunk(chunk_type: bytes, data: bytes) -> bytes:
+    length = struct.pack('>I', len(data))
+    crc = struct.pack('>I', zlib.crc32(chunk_type + data) & 0xFFFFFFFF)
+    return length + chunk_type + data + crc
 
-    def test_custom_prefix(self, project):
-        project.add_progressive_disclosure(
-            [(10, 1.0)],
-            start_seconds=0.0,
-            track_prefix='Layer',
-        )
 
-        track_names = [t.name for t in project.timeline.tracks]
-        assert 'Layer-0' in track_names
+@pytest.fixture()
+def images(tmp_path: Path) -> list[Path]:
+    paths = [tmp_path / f'step_{i}.png' for i in range(3)]
+    for p in paths:
+        _make_minimal_png(p)
+    return paths
 
-    def test_empty_list(self, project):
-        assert project.add_progressive_disclosure([], start_seconds=0.0) == []
 
-    def test_correct_source_ids(self, project):
-        clips = project.add_progressive_disclosure(
-            [(10, 1.0), (20, 1.0)],
-            start_seconds=0.0,
-        )
+def test_progressive_disclosure_creates_separate_tracks(images: list[Path]):
+    proj = _make_project()
+    clips = proj.add_progressive_disclosure(images)
 
-        assert clips[0].source_id == 10
-        assert clips[1].source_id == 20
+    track_names = [t.name for t in proj.timeline.tracks]
+    assert 'Prog-0' in track_names
+    assert 'Prog-1' in track_names
+    assert 'Prog-2' in track_names
+    assert len(clips) == 3
+
+    # Each clip lives on a different track
+    clip_track_names = set()
+    for t in proj.timeline.tracks:
+        for c in t:
+            clip_track_names.add(t.name)
+    assert len(clip_track_names & {'Prog-0', 'Prog-1', 'Prog-2'}) == 3
+
+
+def test_progressive_disclosure_images_accumulate(images: list[Path]):
+    """All previous images remain visible when a new one appears."""
+    proj = _make_project()
+    clips = proj.add_progressive_disclosure(
+        images, start_seconds=0.0, per_step_seconds=5.0,
+    )
+
+    total = 5.0 * 3  # 15 seconds total
+
+    # First image: starts at 0, lasts the full 15s
+    assert abs(clips[0].start_seconds - 0.0) < 0.01
+    assert abs(clips[0].duration_seconds - total) < 0.01
+
+    # Second image: starts at 5, lasts 10s (visible from 5s to 15s)
+    assert abs(clips[1].start_seconds - 5.0) < 0.01
+    assert abs(clips[1].duration_seconds - 10.0) < 0.01
+
+    # Third image: starts at 10, lasts 5s (visible from 10s to 15s)
+    assert abs(clips[2].start_seconds - 10.0) < 0.01
+    assert abs(clips[2].duration_seconds - 5.0) < 0.01
+
+    # At t=12s, all three clips are on screen (accumulation)
+    t = 12.0
+    visible = [
+        c for c in clips
+        if c.start_seconds <= t < c.start_seconds + c.duration_seconds
+    ]
+    assert len(visible) == 3
+
+
+def test_progressive_disclosure_timing(images: list[Path]):
+    proj = _make_project()
+    clips = proj.add_progressive_disclosure(
+        images, start_seconds=2.0, per_step_seconds=4.0,
+    )
+
+    total = 4.0 * 3  # 12 seconds
+
+    # Clip 0: start=2.0, duration=12.0
+    assert abs(clips[0].start_seconds - 2.0) < 0.01
+    assert abs(clips[0].duration_seconds - total) < 0.01
+
+    # Clip 1: start=6.0, duration=8.0
+    assert abs(clips[1].start_seconds - 6.0) < 0.01
+    assert abs(clips[1].duration_seconds - 8.0) < 0.01
+
+    # Clip 2: start=10.0, duration=4.0
+    assert abs(clips[2].start_seconds - 10.0) < 0.01
+    assert abs(clips[2].duration_seconds - 4.0) < 0.01
+
+    # All clips end at the same time
+    end_times = [c.start_seconds + c.duration_seconds for c in clips]
+    assert all(abs(e - end_times[0]) < 0.01 for e in end_times)
+
+
+def test_progressive_disclosure_fade_in(images: list[Path]):
+    proj = _make_project()
+
+    # With fade
+    clips = proj.add_progressive_disclosure(
+        images[:1], fade_in_seconds=0.8,
+    )
+    clip_data = clips[0]._data
+    params = clip_data.get('parameters', {})
+    opacity_param = params.get('opacity', {})
+    opacity_kfs = opacity_param.get('keyframes', []) if isinstance(opacity_param, dict) else []
+    assert len(opacity_kfs) > 0, 'Expected opacity keyframes for fade-in'
+
+    # Without fade
+    proj2 = _make_project()
+    clips2 = proj2.add_progressive_disclosure(
+        images[:1], fade_in_seconds=0,
+    )
+    clip_data2 = clips2[0]._data
+    params2 = clip_data2.get('parameters', {})
+    opacity_param2 = params2.get('opacity', {})
+    opacity_kfs2 = opacity_param2.get('keyframes', []) if isinstance(opacity_param2, dict) else []
+    assert len(opacity_kfs2) == 0, 'Expected no opacity keyframes when fade_in_seconds=0'

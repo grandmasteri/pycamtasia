@@ -1283,33 +1283,49 @@ class Project:
 
     def add_progressive_disclosure(
         self,
-        images: list[tuple[int, float]],
-        start_seconds: float,
-        fade_in: float = 0.5,
-        track_prefix: str = 'Prog',
-    ) -> list:
-        """Place images on separate tracks so they accumulate visually.
+        image_file_paths: list[Path | str],
+        start_seconds: float = 0.0,
+        per_step_seconds: float = 5.0,
+        fade_in_seconds: float = 0.5,
+        track_name_prefix: str = 'Prog',
+    ) -> list[BaseClip]:
+        """Place images on separate tracks for progressive visual accumulation.
 
-        Each image gets its own track (named ``{track_prefix}-{i}``) and
-        a fade-in animation.  All clips start at *start_seconds*; each
-        clip's duration comes from the corresponding tuple.
+        Each image gets its own track so all previous images remain visible
+        when a new one appears. Each image fades in and stays visible until
+        the end of the sequence.
 
         Args:
-            images: ``[(source_id, duration_seconds), ...]``
-            start_seconds: Timeline position for every clip.
-            fade_in: Fade-in duration in seconds (applied to each clip).
-            track_prefix: Name prefix for the created tracks.
+            image_file_paths: Ordered list of image file paths.
+            start_seconds: When the first image appears.
+            per_step_seconds: Time between each image appearing.
+            fade_in_seconds: Fade-in duration for each image.
+            track_name_prefix: Prefix for auto-generated track names.
 
         Returns:
-            List of created clips.
+            List of placed image clips.
         """
-        clips = []
-        for i, (source_id, duration_seconds) in enumerate(images):
-            track = self.timeline.get_or_create_track(f'{track_prefix}-{i}')
-            clip = track.add_image(source_id, start_seconds, duration_seconds)
-            clip.fade_in(fade_in)
-            clips.append(clip)
-        return clips
+        total_duration_seconds: float = per_step_seconds * len(image_file_paths)
+        placed_clips: list[BaseClip] = []
+
+        for step_index, image_path in enumerate(image_file_paths):
+            media = self.import_media(image_path)
+            track_name: str = f'{track_name_prefix}-{step_index}'
+            track = self.timeline.get_or_create_track(track_name)
+
+            clip_start: float = start_seconds + (step_index * per_step_seconds)
+            clip_duration: float = total_duration_seconds - (step_index * per_step_seconds)
+
+            clip = track.add_image(
+                media.id,
+                start_seconds=clip_start,
+                duration_seconds=clip_duration,
+            )
+            if fade_in_seconds > 0:
+                clip.fade_in(fade_in_seconds)
+            placed_clips.append(clip)
+
+        return placed_clips
 
     def add_four_corner_gradient(
         self,
