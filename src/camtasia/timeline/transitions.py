@@ -319,3 +319,7 @@ class TransitionList:
             IndexError: If the index is out of range.
         """
         del self._transitions[index]
+
+    def clear(self) -> None:
+        """Remove all transitions."""
+        self._data['transitions'] = []

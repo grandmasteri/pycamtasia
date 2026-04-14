@@ -40,6 +40,12 @@ class GroupTrack:
         """Track parameters dict."""
         return self._data.get('parameters', {})  # type: ignore[no-any-return]
 
+    @property
+    def transitions(self) -> 'TransitionList':
+        """Transitions on this internal track."""
+        from camtasia.timeline.transitions import TransitionList
+        return TransitionList(self._data)
+
     def __len__(self) -> int:
         """Number of clips in this group track."""
         return len(self._data.get('medias', []))
@@ -222,7 +228,11 @@ class Group(BaseClip):
 
         # Replace the internal track's medias
         media_track['medias'] = new_medias
-        media_track['transitions'] = []
+
+        # Clear transitions on ALL internal tracks to prevent dangling
+        # clip-ID references (new ScreenVMFile clips have new IDs).
+        for track in self._data.get('tracks', []):
+            track.pop('transitions', None)
 
         # Update Group duration and mediaDuration to match total timeline
         total_tl = seconds_to_ticks(timeline_cursor)

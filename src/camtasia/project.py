@@ -663,6 +663,21 @@ class Project:
             report_lines.append(f'  [{issue.level}] {issue.message}')
         return '\n'.join(report_lines)
 
+    def repair(self) -> dict[str, int]:
+        """Auto-fix common issues found by validate(). Returns counts of fixes applied."""
+        fixes_applied: dict[str, int] = {'stale_transitions_removed': 0, 'orphaned_media_removed': 0}
+        # Fix stale transitions
+        for track in self.timeline.tracks:
+            clip_ids = {c.id for c in track.clips}
+            original_count = len(track._data.get('transitions', []))
+            track._data['transitions'] = [
+                t for t in track._data.get('transitions', [])
+                if (t.get('leftMedia') is None or t.get('leftMedia') in clip_ids)
+                and (t.get('rightMedia') is None or t.get('rightMedia') in clip_ids)
+            ]
+            fixes_applied['stale_transitions_removed'] += original_count - len(track._data.get('transitions', []))
+        return fixes_applied
+
     def save(self) -> None:
         """Write the current project state to disk.
 

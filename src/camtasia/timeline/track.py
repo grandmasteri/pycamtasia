@@ -220,7 +220,14 @@ class Track:
     # ------------------------------------------------------------------
 
     def clear(self) -> None:
-        """Remove all clips and transitions from this track."""
+        """Remove all clips and transitions from this track.
+
+        Also clears transitions inside Group clips' internal tracks
+        to prevent dangling clip-ID references in the saved JSON.
+        """
+        for media in self._data.get('medias', []):
+            for inner_track in media.get('tracks', []):
+                inner_track.pop('transitions', None)
         self._data['medias'] = []
         self._data['transitions'] = []
 
@@ -386,6 +393,14 @@ class Track:
         for cid in to_remove:
             self.remove_clip(cid)
         return len(to_remove)
+
+    def remove_all_clips(self) -> int:
+        """Remove all clips but preserve the track. Returns count removed."""
+        medias = self._data.get('medias', [])
+        count = len(medias)
+        medias.clear()
+        self._data['transitions'] = []
+        return count
 
     def move_clip_to_track(self, clip_id: int, target_track: Track) -> BaseClip:
         """Move a clip from this track to another track.
