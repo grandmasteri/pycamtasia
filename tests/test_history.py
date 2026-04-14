@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from camtasia.history import ChangeHistory, ChangeRecord
+from camtasia.history import ChangeHistory, ChangeRecord, with_undo
 
 
 def _minimal_project_data() -> dict[str, Any]:
@@ -161,3 +161,77 @@ class TestProjectUndoRedo:
         with project.track_changes("no-op"):
             pass  # no mutations
         assert not project.history.can_undo
+
+
+class TestMaxHistoryDepth:
+    def test_max_history_depth_trims_oldest_entries(self) -> None:
+        history = ChangeHistory(max_history_depth=3)
+        for step_number in range(5):
+            before: dict[str, Any] = {"v": step_number}
+            after: dict[str, Any] = {"v": step_number + 1}
+            history.record(f"step {step_number}", before, after)
+        assert history.undo_count == 3
+        assert history.descriptions == ["step 2", "step 3", "step 4"]
+
+    def test_default_max_history_depth_is_100(self) -> None:
+        history = ChangeHistory()
+        assert history.max_history_depth == 100
+
+
+class TestTotalPatchSizeBytes:
+    def test_total_patch_size_bytes_empty(self) -> None:
+        history = ChangeHistory()
+        assert history.total_patch_size_bytes == 0
+
+    def test_total_patch_size_bytes_includes_both_stacks(self) -> None:
+        history = ChangeHistory()
+        project_data: dict[str, Any] = {"value": 0}
+
+        snapshot_before: dict[str, Any] = copy.deepcopy(project_data)
+        project_data["value"] = 1
+        history.record("first", snapshot_before, project_data)
+
+        snapshot_before_second: dict[str, Any] = copy.deepcopy(project_data)
+        project_data["value"] = 2
+        history.record("second", snapshot_before_second, project_data)
+
+        history.undo(project_data)  # moves "second" to redo stack
+
+        total_size: int = history.total_patch_size_bytes
+        assert total_size > 0
+        # Both undo (1 entry) and redo (1 entry) contribute
+        assert history.undo_count == 1
+        assert history.redo_count == 1
+
+
+class TestWithUndoDecorator:
+    def test_with_undo_decorator_records_change(self, project) -> None:
+        @with_undo("decorated title change")
+        def change_title(proj: Any, new_title: str) -> None:
+            proj.title = new_title
+
+        change_title(project, "Decorated")
+        assert project.title == "Decorated"
+        assert project.history.can_undo
+        assert project.history.descriptions[-1] == "decorated title change"
+
+    def test_with_undo_decorator_supports_undo(self, project) -> None:
+        original_title: str = project.title
+
+        @with_undo("set title")
+        def change_title(proj: Any, new_title: str) -> None:
+            proj.title = new_title
+
+        change_title(project, "Changed")
+        project.undo()
+        assert project.title == original_title
+
+    def test_with_undo_decorator_returns_value(self, project) -> None:
+        @with_undo("get title")
+        def get_and_set_title(proj: Any, new_title: str) -> str:
+            old_title: str = proj.title
+            proj.title = new_title
+            return old_title
+
+        returned_title: str = get_and_set_title(project, "New")
+        assert isinstance(returned_title, str)

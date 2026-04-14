@@ -18,10 +18,14 @@ Usage::
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass, field
-from typing import Any
+import functools
+import json
+from dataclasses import dataclass
+from typing import Any, Callable, TypeVar
 
 import jsonpatch
+
+T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -40,9 +44,15 @@ class ChangeHistory:
     not a full copy of the project data.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, max_history_depth: int = 100) -> None:
         self._undo_stack: list[ChangeRecord] = []
         self._redo_stack: list[ChangeRecord] = []
+        self._max_history_depth: int = max_history_depth
+
+    @property
+    def max_history_depth(self) -> int:
+        """Maximum number of undo entries retained."""
+        return self._max_history_depth
 
     @property
     def can_undo(self) -> bool:
@@ -83,6 +93,8 @@ class ChangeHistory:
             forward_patch=forward_patch,
             inverse_patch=inverse_patch,
         ))
+        if len(self._undo_stack) > self._max_history_depth:
+            self._undo_stack = self._undo_stack[-self._max_history_depth:]
         self._redo_stack.clear()
 
     def undo(self, project_data: dict[str, Any]) -> str:
@@ -107,3 +119,23 @@ class ChangeHistory:
         """Discard all history."""
         self._undo_stack.clear()
         self._redo_stack.clear()
+
+    @property
+    def total_patch_size_bytes(self) -> int:
+        """Approximate memory usage of stored patches in bytes."""
+        total_size: int = 0
+        for record in self._undo_stack + self._redo_stack:
+            total_size += len(json.dumps(record.forward_patch.patch))
+            total_size += len(json.dumps(record.inverse_patch.patch))
+        return total_size
+
+
+def with_undo(description: str) -> Callable:
+    """Decorator that wraps a function call in track_changes."""
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        @functools.wraps(func)
+        def wrapper(project: Any, *args: Any, **kwargs: Any) -> T:
+            with project.track_changes(description):
+                return func(project, *args, **kwargs)
+        return wrapper
+    return decorator

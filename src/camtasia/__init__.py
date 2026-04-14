@@ -59,7 +59,7 @@ from camtasia.timing import (
 )
 
 # Types
-from camtasia.history import ChangeHistory, ChangeRecord
+from camtasia.history import ChangeHistory, ChangeRecord, with_undo
 from camtasia.types import (
     ClipType,
     EffectName,
@@ -89,6 +89,7 @@ __all__ = [
     # History
     "ChangeHistory",
     "ChangeRecord",
+    "with_undo",
     # Project
     "Project",
     "ValidationIssue",
