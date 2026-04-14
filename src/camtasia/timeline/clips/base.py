@@ -338,6 +338,10 @@ class BaseClip:
     def duration_seconds(self, value: float) -> None:
         self.duration = seconds_to_ticks(value)
 
+    def is_shorter_than(self, threshold_seconds: float) -> bool:
+        """Whether this clip's duration is less than the given threshold."""
+        return self.duration_seconds < threshold_seconds
+
     def set_time_range(self, start_seconds: float, duration_seconds: float) -> Self:
         """Set both start position and duration in seconds.
 

@@ -2823,3 +2823,76 @@ def test_is_longer_than():
     assert clip.is_longer_than(2.0) is True
     assert clip.is_longer_than(3.0) is False
     assert clip.is_longer_than(4.0) is False
+
+
+# ---------------------------------------------------------------------------
+# Track.remove_short_clips
+# ---------------------------------------------------------------------------
+
+def test_remove_short_clips():
+    one_sec: int = seconds_to_ticks(1.0)
+    three_sec: int = seconds_to_ticks(3.0)
+    five_sec: int = seconds_to_ticks(5.0)
+    medias: list[dict[str, Any]] = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': one_sec},
+        {'id': 2, '_type': 'VMFile', 'start': one_sec, 'duration': three_sec},
+        {'id': 3, '_type': 'VMFile', 'start': one_sec + three_sec, 'duration': five_sec},
+    ]
+    track = _make_track(medias=medias)
+    removed_count: int = track.remove_short_clips(2.0)
+    assert removed_count == 1
+    remaining_ids: list[int] = [c.id for c in track.clips]
+    assert 1 not in remaining_ids
+    assert 2 in remaining_ids
+    assert 3 in remaining_ids
+
+
+# ---------------------------------------------------------------------------
+# Timeline.remove_short_clips_all_tracks
+# ---------------------------------------------------------------------------
+
+def test_remove_short_clips_all_tracks():
+    one_sec: int = seconds_to_ticks(1.0)
+    five_sec: int = seconds_to_ticks(5.0)
+    track_a_medias: list[dict[str, Any]] = [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': one_sec},
+        {'id': 2, '_type': 'VMFile', 'start': one_sec, 'duration': five_sec},
+    ]
+    track_b_medias: list[dict[str, Any]] = [
+        {'id': 3, '_type': 'AMFile', 'start': 0, 'duration': one_sec},
+    ]
+    timeline = _make_timeline([('A', track_a_medias), ('B', track_b_medias)])
+    total_removed: int = timeline.remove_short_clips_all_tracks(2.0)
+    assert total_removed == 2
+    remaining_clip_count: int = sum(len(list(t.clips)) for t in timeline.tracks)
+    assert remaining_clip_count == 1
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.is_shorter_than
+# ---------------------------------------------------------------------------
+
+def test_is_shorter_than():
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2.0)})
+    assert clip.is_shorter_than(3.0) is True
+    assert clip.is_shorter_than(2.0) is False
+    assert clip.is_shorter_than(1.0) is False
+
+
+# ---------------------------------------------------------------------------
+# Project.longest_clip
+# ---------------------------------------------------------------------------
+
+def test_longest_clip(project):
+    track = project.timeline.add_track('Test')
+    track.add_clip('VMFile', None, 0, 705600000 * 2)  # 2s
+    track.add_clip('VMFile', None, 705600000 * 3, 705600000 * 5)  # 5s
+    result = project.longest_clip
+    assert result is not None
+    _, longest_clip = result
+    assert longest_clip.duration == 705600000 * 5
+
+
+def test_longest_clip_empty(project):
+    assert project.longest_clip is None

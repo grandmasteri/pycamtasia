@@ -299,6 +299,13 @@ class Timeline:
             self.remove_track(idx)
         return len(empty_indices)
 
+    def remove_short_clips_all_tracks(self, minimum_duration_seconds: float) -> int:
+        """Remove short clips from all tracks. Returns total count removed."""
+        total_removed: int = 0
+        for track in self.tracks:
+            total_removed += track.remove_short_clips(minimum_duration_seconds)
+        return total_removed
+
     def clear_all(self) -> None:
         """Clear all clips and transitions from all tracks."""
         for track in self.tracks:

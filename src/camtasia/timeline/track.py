@@ -359,6 +359,19 @@ class Track:
             self.remove_clip(cid)
         return len(to_remove)
 
+    def remove_short_clips(self, minimum_duration_seconds: float) -> int:
+        """Remove all clips shorter than the given duration. Returns count removed."""
+        from camtasia.timing import seconds_to_ticks
+        minimum_duration_ticks: int = seconds_to_ticks(minimum_duration_seconds)
+        clips_to_remove: list[int] = [
+            int(media_dict['id'])
+            for media_dict in self._data.get('medias', [])
+            if media_dict.get('duration', 0) < minimum_duration_ticks
+        ]
+        for clip_id in clips_to_remove:
+            self.remove_clip(clip_id)
+        return len(clips_to_remove)
+
     # ------------------------------------------------------------------
     # L2 convenience methods — typed, seconds-based clip creation
     # ------------------------------------------------------------------

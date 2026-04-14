@@ -378,6 +378,17 @@ class Project:
         return [(t, c) for t, c in self.all_clips if c.clip_type == clip_type]
 
     @property
+    def longest_clip(self) -> tuple[Track, BaseClip] | None:
+        """The longest clip across all tracks, or None if empty."""
+        longest_pair: tuple[Track, BaseClip] | None = None
+        longest_duration: int = 0
+        for track, clip in self.all_clips:
+            if clip.duration > longest_duration:
+                longest_duration = clip.duration
+                longest_pair = (track, clip)
+        return longest_pair
+
+    @property
     def effect_summary(self) -> dict[str, int]:
         """Count of each effect type across all clips."""
         from collections import Counter
