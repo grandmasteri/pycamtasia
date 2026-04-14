@@ -44,10 +44,7 @@ class EffectName(str, Enum):
     GLOW = 'Glow'
     MOTION_BLUR = 'MotionBlur'
     MASK = 'Mask'
-    BLUR_REGION = 'BlurRegion'
     COLOR_ADJUSTMENT = 'ColorAdjustment'
-    BORDER = 'Border'
-    COLORIZE = 'Colorize'
     SPOTLIGHT = 'Spotlight'
     LUT_EFFECT = 'LutEffect'
     EMPHASIZE = 'Emphasize'
@@ -121,19 +118,15 @@ class MaskShape(IntEnum):
 
 
 class CalloutShape(str, Enum):
-    """Callout annotation shapes."""
-    RECTANGLE = 'rectangle'
-    ROUNDED_RECTANGLE = 'roundedRectangle'
-    ELLIPSE = 'ellipse'
-    TRIANGLE = 'triangle'
-    ARROW = 'arrow'
-    DIAMOND = 'diamond'
-    STAR = 'star'
-    SHAPE_ELLIPSE = 'shape-ellipse'
-    SHAPE_TRIANGLE = 'shape-triangle'
+    """Callout annotation shapes (verified against 93 TechSmith samples)."""
+    EMPTY = ''
     TEXT = 'text'
     TEXT_RECTANGLE = 'text-rectangle'
+    TEXT_ARROW2 = 'text-arrow2'
+    ARROW = 'arrow'
     SHAPE_RECTANGLE = 'shape-rectangle'
+    SHAPE_ELLIPSE = 'shape-ellipse'
+    SHAPE_TRIANGLE = 'shape-triangle'
 
 
 class InterpolationType(str, Enum):

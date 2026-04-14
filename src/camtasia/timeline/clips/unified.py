@@ -54,5 +54,5 @@ class UnifiedMedia(BaseClip):
     def mute_audio(self) -> Self:
         """Set audio gain to zero."""
         if self.has_audio:
-            self._data['audio']['gain'] = 0.0
+            self._data['audio'].setdefault('attributes', {})['gain'] = 0.0
         return self

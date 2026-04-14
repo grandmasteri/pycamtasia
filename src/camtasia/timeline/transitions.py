@@ -127,11 +127,19 @@ class TransitionList:
         Returns:
             The newly created Transition.
         """
+        default_attributes = {
+            'bypass': False,
+            'reverse': False,
+            'trivial': False,
+            'useAudioPreRoll': True,
+            'useVisualPreRoll': True,
+        }
+        merged = {**default_attributes, **attributes}
         record: dict[str, Any] = {
             'name': name,
             'duration': duration_ticks,
             'leftMedia': left_clip_id,
-            'attributes': attributes,
+            'attributes': merged,
         }
         if right_clip_id is not None:
             record['rightMedia'] = right_clip_id
@@ -164,11 +172,6 @@ class TransitionList:
                 'Color-blue': 0.0,
                 'Color-green': 0.0,
                 'Color-red': 0.0,
-                'bypass': False,
-                'reverse': False,
-                'trivial': False,
-                'useAudioPreRoll': True,
-                'useVisualPreRoll': True,
             },
         )
 

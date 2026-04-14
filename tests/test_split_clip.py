@@ -128,6 +128,15 @@ class TestSplitClip:
         expected_offset = seconds_to_ticks(15.0) - seconds_to_ticks(10.0)
         assert right.media_start == expected_offset
 
+    def test_split_right_media_start_preserves_original_offset(self):
+        """When a clip has a non-zero mediaStart, the right half must add it."""
+        clip = _simple_clip(clip_id=1, start_s=10.0, dur_s=10.0)
+        clip['mediaStart'] = seconds_to_ticks(5.0)  # non-zero original offset
+        track, _ = _make_track(clip)
+        left, right = track.split_clip(1, 15.0)
+        split_offset = seconds_to_ticks(15.0) - seconds_to_ticks(10.0)
+        assert right.media_start == seconds_to_ticks(5.0) + split_offset
+
     def test_split_preserves_scalar(self):
         track, _ = _make_track(_group_clip())
         left, right = track.split_clip(1, 15.0)

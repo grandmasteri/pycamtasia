@@ -898,7 +898,7 @@ class BaseClip:
         """
         r, g, b, a = color
         self.add_effect({
-            'effectName': EffectName.BORDER,
+            'effectName': 'Border',
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -926,7 +926,7 @@ class BaseClip:
         """
         r, g, b = color
         self.add_effect({
-            'effectName': EffectName.COLORIZE,
+            'effectName': 'Colorize',
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
@@ -1175,14 +1175,14 @@ class BaseClip:
         right: float = 0,
         bottom: float = 0,
     ) -> Self:
-        """Set geometry crop fractions (0.0–1.0 per edge).
+        """Set geometry crop values (non-negative floats, pixel or fractional).
 
         Returns:
             ``self`` for chaining.
         """
         for name, val in [('left', left), ('top', top), ('right', right), ('bottom', bottom)]:
-            if not 0.0 <= val <= 1.0:
-                raise ValueError(f'Crop {name} must be 0.0-1.0, got {val}')
+            if val < 0:
+                raise ValueError(f'Crop {name} must be non-negative, got {val}')
         self._set_param_value('geometryCrop0', left)
         self._set_param_value('geometryCrop1', top)
         self._set_param_value('geometryCrop2', right)
@@ -1345,7 +1345,7 @@ class BaseClip:
         for t, deg in keyframes:
             ticks = seconds_to_ticks(t)
             kfs.append({'endTime': ticks, 'time': ticks, 'value': math.radians(deg), 'duration': 0})
-        params['rotation'] = {'type': 'double', 'defaultValue': kfs[0]['value'], 'keyframes': kfs}
+        params['rotation1'] = {'type': 'double', 'defaultValue': kfs[0]['value'], 'keyframes': kfs}
         return self
 
     def set_crop_keyframes(self, keyframes: list[tuple[float, float, float, float, float]]) -> Self:
@@ -1474,7 +1474,6 @@ class BaseClip:
             if isinstance(parameter_value, dict) and 'keyframes' in parameter_value:
                 parameters[parameter_name] = parameter_value.get('defaultValue', 0)
         return self
-        return False
 
     def copy_timing_from(self, source_clip: BaseClip) -> Self:
         """Copy start time and duration from another clip."""

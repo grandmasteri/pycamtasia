@@ -681,7 +681,7 @@ class Project:
         return '\n'.join(report_lines)
 
     def repair(self) -> dict[str, int]:
-        """Auto-fix common issues found by validate(). Returns counts of fixes applied."""
+        """Remove stale transitions that reference non-existent clips. Returns counts of fixes applied."""
         fixes_applied: dict[str, int] = {'stale_transitions_removed': 0, 'orphaned_media_removed': 0}
         # Fix stale transitions
         for track in self.timeline.tracks:

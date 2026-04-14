@@ -77,7 +77,8 @@ class TestUnifiedMediaImprovements:
             'video': {'id': 2, '_type': 'ScreenVMFile', 'src': 42,
                       'start': 0, 'duration': 100, 'mediaStart': 0,
                       'mediaDuration': 100, 'scalar': 1},
-            'audio': {'id': 3, '_type': 'AMFile', 'gain': 1.0,
+            'audio': {'id': 3, '_type': 'AMFile',
+                      'attributes': {'gain': 1.0},
                       'start': 0, 'duration': 100, 'mediaStart': 0,
                       'mediaDuration': 100, 'scalar': 1},
         })
@@ -98,7 +99,7 @@ class TestUnifiedMediaImprovements:
         actual_clip = self._make_unified()
         actual_result = actual_clip.mute_audio()
         expected_gain = 0.0
-        assert actual_clip._data['audio']['gain'] == expected_gain
+        assert actual_clip._data['audio']['attributes']['gain'] == expected_gain
         assert actual_result is actual_clip
 
     def test_mute_audio_no_audio(self):

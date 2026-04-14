@@ -32,10 +32,7 @@ class TestEffectNameValues:
             'GLOW': 'Glow',
             'MOTION_BLUR': 'MotionBlur',
             'MASK': 'Mask',
-            'BLUR_REGION': 'BlurRegion',
             'COLOR_ADJUSTMENT': 'ColorAdjustment',
-            'BORDER': 'Border',
-            'COLORIZE': 'Colorize',
             'SPOTLIGHT': 'Spotlight',
             'LUT_EFFECT': 'LutEffect',
             'EMPHASIZE': 'Emphasize',
@@ -77,18 +74,19 @@ class TestCalloutShapeEnumValues:
 
     def test_callout_shape_enum_values(self):
         expected = {
-            'RECTANGLE': 'rectangle',
-            'ROUNDED_RECTANGLE': 'roundedRectangle',
-            'ELLIPSE': 'ellipse',
-            'TRIANGLE': 'triangle',
+            'EMPTY': '',
+            'TEXT': 'text',
+            'TEXT_RECTANGLE': 'text-rectangle',
+            'TEXT_ARROW2': 'text-arrow2',
             'ARROW': 'arrow',
-            'DIAMOND': 'diamond',
-            'STAR': 'star',
+            'SHAPE_RECTANGLE': 'shape-rectangle',
+            'SHAPE_ELLIPSE': 'shape-ellipse',
+            'SHAPE_TRIANGLE': 'shape-triangle',
         }
         for name, value in expected.items():
             assert CalloutShape[name].value == value
         # str enum comparison
-        assert CalloutShape.RECTANGLE == 'rectangle'
+        assert CalloutShape.SHAPE_RECTANGLE == 'shape-rectangle'
 
 
 class TestCalloutShapeSetter:
@@ -97,8 +95,8 @@ class TestCalloutShapeSetter:
         from camtasia.types import CalloutShape
         data = {'_type': 'Callout', 'id': 1, 'start': 0, 'duration': 100, 'def': {'shape': 'rectangle'}}
         c = Callout(data)
-        c.shape = CalloutShape.ELLIPSE
-        assert data['def']['shape'] == 'ellipse'
+        c.shape = CalloutShape.SHAPE_ELLIPSE
+        assert data['def']['shape'] == 'shape-ellipse'
 
     def test_set_shape_with_string(self):
         from camtasia.timeline.clips.callout import Callout

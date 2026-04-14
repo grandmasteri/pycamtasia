@@ -228,4 +228,4 @@ class TestClipMetadataDefaults:
 
     def test_add_image_includes_trimStartSum(self, track: Track):
         clip = track.add_image(1, 0.0, 5.0)
-        assert clip._data['trimStartSum'] == 1
+        assert clip._data['trimStartSum'] == 0

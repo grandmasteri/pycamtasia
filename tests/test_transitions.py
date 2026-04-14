@@ -108,7 +108,13 @@ class TestTransitionListAdd:
             "duration": 352_800_000,
             "leftMedia": 33,
             "rightMedia": 34,
-            "attributes": {"bypass": False},
+            "attributes": {
+                "bypass": False,
+                "reverse": False,
+                "trivial": False,
+                "useAudioPreRoll": True,
+                "useVisualPreRoll": True,
+            },
         }
         assert data["transitions"][0] == expected_result
 

@@ -62,6 +62,8 @@ class GroupTrack:
         source_id: int | None,
         start_ticks: int,
         duration_ticks: int,
+        *,
+        next_id: int | None = None,
         **extra_fields: Any,
     ) -> BaseClip:
         """Add a clip to this internal group track.
@@ -71,15 +73,19 @@ class GroupTrack:
             source_id: Source bin ID, or ``None`` for callouts/groups.
             start_ticks: Timeline position in ticks (group-relative).
             duration_ticks: Playback duration in ticks.
+            next_id: Explicit clip ID to use.  Pass
+                ``project.next_available_id`` for global uniqueness.
+                If ``None``, uses local max+1 (unique within this track only).
             **extra_fields: Additional fields merged into the clip dict.
 
         Returns:
             The newly created typed clip object.
         """
-        next_id: int = max(
-            (int(m.get('id', 0)) for m in self._data.get('medias', [])),
-            default=0,
-        ) + 1
+        if next_id is None:
+            next_id = max(
+                (int(m.get('id', 0)) for m in self._data.get('medias', [])),
+                default=0,
+            ) + 1
         clip_data: dict[str, Any] = {
             '_type': clip_type,
             'id': next_id,

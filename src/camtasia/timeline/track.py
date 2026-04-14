@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+from fractions import Fraction
 from typing import Any, cast, Iterator, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,6 +16,13 @@ from camtasia.timeline.markers import MarkerList
 from camtasia.timeline.marker import Marker
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 from camtasia.types import ClipType, EffectName
+
+
+def _parse_scalar(value: Any) -> float:
+    """Convert a scalar value (int, float, or Fraction string like '6723/5755') to float."""
+    if isinstance(value, (int, float)):
+        return float(value)
+    return float(Fraction(str(value)))
 
 
 _VALID_CLIP_TYPES = frozenset({
@@ -504,7 +512,7 @@ class Track:
             seconds_to_ticks(start_seconds),
             seconds_to_ticks(duration_seconds),
             media_duration=1,
-            trimStartSum=1,
+            trimStartSum=0,
             trackNumber=0,
             **kwargs,
         )
@@ -1122,6 +1130,9 @@ class Track:
                 if new_dur <= 0:
                     raise ValueError(f'Extension would result in non-positive duration for clip {clip_id}')
                 m['duration'] = new_dur
+                scalar = m.get('scalar', 1)
+                scalar_val = float(scalar) if not isinstance(scalar, (int, float)) else scalar
+                m['mediaDuration'] = new_dur * scalar_val
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1537,6 +1548,9 @@ class Track:
                     m['duration'] = m.get('duration', 0) - trim_end
                 if m.get('duration', 0) <= 0:
                     raise ValueError(f'Trim would result in zero or negative duration for clip {clip_id}')
+                scalar = m.get('scalar', 1)
+                scalar_val = float(scalar) if not isinstance(scalar, (int, float)) else scalar
+                m['mediaDuration'] = m['duration'] * scalar_val
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1652,18 +1666,23 @@ class Track:
 
         split_offset = split_point - orig_start
 
+        # Preserve original mediaStart before mutation
+        orig_media_start = left_data.get('mediaStart', 0)
+        orig_scalar = left_data.get('scalar', 1)
+        scalar_val = float(_parse_scalar(orig_scalar))
+
         # Deep copy for right half
         right_data = copy.deepcopy(left_data)
 
         # Mutate left half
         left_data['duration'] = split_offset
-        left_data['mediaDuration'] = split_offset
+        left_data['mediaDuration'] = split_offset * scalar_val
 
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
-        right_data['mediaStart'] = split_offset
-        right_data['mediaDuration'] = orig_duration - split_offset
+        right_data['mediaStart'] = orig_media_start + split_offset
+        right_data['mediaDuration'] = (orig_duration - split_offset) * scalar_val
 
         # Assign new sequential IDs to right half
         next_id = self._next_clip_id()
@@ -1741,6 +1760,9 @@ class Track:
             raise KeyError(f'No clip with id={missing}')
         # Extend a to cover b
         a['duration'] = (b['start'] + b['duration']) - a['start']
+        scalar = a.get('scalar', 1)
+        scalar_val = float(scalar) if not isinstance(scalar, (int, float)) else scalar
+        a['mediaDuration'] = a['duration'] * scalar_val
         # Remove b (cascade-deletes transitions)
         self.remove_clip(clip_id_b)
         return clip_from_dict(a)

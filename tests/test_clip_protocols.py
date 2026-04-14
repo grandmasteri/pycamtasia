@@ -56,10 +56,10 @@ class TestCropValidation:
     @pytest.mark.parametrize(
         'kwargs, expected_fragment',
         [
-            pytest.param({'left': 2.0}, 'Crop left', id='left-too-high'),
             pytest.param({'top': -0.1}, 'Crop top', id='top-negative'),
-            pytest.param({'right': 1.1}, 'Crop right', id='right-too-high'),
             pytest.param({'bottom': -1.0}, 'Crop bottom', id='bottom-negative'),
+            pytest.param({'left': -0.5}, 'Crop left', id='left-negative'),
+            pytest.param({'right': -0.01}, 'Crop right', id='right-negative'),
         ],
     )
     def test_crop_out_of_range_raises(self, kwargs: dict, expected_fragment: str) -> None:
@@ -70,6 +70,11 @@ class TestCropValidation:
     def test_crop_valid_boundary_values(self) -> None:
         clip = _make_clip()
         actual = clip.crop(left=0.0, top=0.0, right=1.0, bottom=1.0)
+        assert actual is clip
+
+    def test_crop_accepts_pixel_values(self) -> None:
+        clip = _make_clip()
+        actual = clip.crop(left=420.0, top=200.0, right=420.0, bottom=200.0)
         assert actual is clip
 
 
