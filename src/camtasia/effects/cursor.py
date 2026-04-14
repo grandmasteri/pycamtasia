@@ -20,6 +20,7 @@ class CursorMotionBlur(Effect):
 
     @intensity.setter
     def intensity(self, value: float) -> None:
+        """Set the blur intensity level."""
         self.set_parameter("intensity", value)
 
 
@@ -38,6 +39,7 @@ class CursorShadow(Effect):
 
     @angle.setter
     def angle(self, value: float) -> None:
+        """Set the shadow angle in degrees."""
         self.set_parameter("angle", value)
 
     @property
@@ -47,6 +49,7 @@ class CursorShadow(Effect):
 
     @offset.setter
     def offset(self, value: float) -> None:
+        """Set the shadow offset distance in pixels."""
         self.set_parameter("offset", value)
 
     @property
@@ -56,6 +59,7 @@ class CursorShadow(Effect):
 
     @blur.setter
     def blur(self, value: float) -> None:
+        """Set the shadow blur radius."""
         self.set_parameter("blur", value)
 
     @property
@@ -65,6 +69,7 @@ class CursorShadow(Effect):
 
     @opacity.setter
     def opacity(self, value: float) -> None:
+        """Set the shadow opacity."""
         self.set_parameter("opacity", value)
 
     @property
@@ -74,6 +79,7 @@ class CursorShadow(Effect):
 
     @color.setter
     def color(self, rgba: tuple[float, float, float, float]) -> None:
+        """Set the RGBA shadow color."""
         _set_color_rgba(self.parameters, "color", rgba)
 
 
@@ -92,6 +98,7 @@ class CursorPhysics(Effect):
 
     @intensity.setter
     def intensity(self, value: float) -> None:
+        """Set the physics effect intensity."""
         self.set_parameter("intensity", value)
 
     @property
@@ -101,6 +108,7 @@ class CursorPhysics(Effect):
 
     @tilt.setter
     def tilt(self, value: float) -> None:
+        """Set the cursor tilt amount."""
         self.set_parameter("tilt", value)
 
 
@@ -119,6 +127,7 @@ class LeftClickScaling(Effect):
 
     @scale.setter
     def scale(self, value: float) -> None:
+        """Set the click scale factor."""
         self.set_parameter("scale", value)
 
     @property
@@ -128,4 +137,5 @@ class LeftClickScaling(Effect):
 
     @speed.setter
     def speed(self, value: float) -> None:
+        """Set the scaling animation speed."""
         self.set_parameter("speed", value)

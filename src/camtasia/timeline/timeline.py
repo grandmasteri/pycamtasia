@@ -467,22 +467,27 @@ class Timeline:
 
     @property
     def gain(self) -> float:
+        """Audio gain level for the timeline."""
         return float(self._data.get('gain', 1.0))
 
     @gain.setter
     def gain(self, value: float) -> None:
+        """Set the audio gain level for the timeline."""
         self._data['gain'] = value
 
     @property
     def legacy_attenuate_audio_mix(self) -> bool:
+        """Whether legacy audio attenuation mixing is enabled."""
         return bool(self._data.get('legacyAttenuateAudioMix', True))
 
     @property
     def background_color(self) -> list[int]:
+        """Background color as an RGBA list."""
         return self._data.get('backgroundColor', [0, 0, 0, 255])  # type: ignore[no-any-return]
 
     @background_color.setter
     def background_color(self, value: list[int]) -> None:
+        """Set the background color as an RGBA list."""
         self._data['backgroundColor'] = value
 
     # ------------------------------------------------------------------

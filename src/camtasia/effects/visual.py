@@ -22,6 +22,7 @@ class RoundCorners(Effect):
 
     @radius.setter
     def radius(self, value: float) -> None:
+        """Set the corner radius in pixels."""
         self.set_parameter("radius", value)
 
     @property
@@ -31,6 +32,7 @@ class RoundCorners(Effect):
 
     @top_left.setter
     def top_left(self, value: bool) -> None:
+        """Set whether the top-left corner is rounded."""
         self.set_parameter("top-left", value)
 
     @property
@@ -40,6 +42,7 @@ class RoundCorners(Effect):
 
     @top_right.setter
     def top_right(self, value: bool) -> None:
+        """Set whether the top-right corner is rounded."""
         self.set_parameter("top-right", value)
 
     @property
@@ -49,6 +52,7 @@ class RoundCorners(Effect):
 
     @bottom_left.setter
     def bottom_left(self, value: bool) -> None:
+        """Set whether the bottom-left corner is rounded."""
         self.set_parameter("bottom-left", value)
 
     @property
@@ -58,6 +62,7 @@ class RoundCorners(Effect):
 
     @bottom_right.setter
     def bottom_right(self, value: bool) -> None:
+        """Set whether the bottom-right corner is rounded."""
         self.set_parameter("bottom-right", value)
 
 
@@ -98,6 +103,7 @@ class DropShadow(Effect):
 
     @angle.setter
     def angle(self, value: float) -> None:
+        """Set the shadow angle in degrees."""
         self.set_parameter("angle", value)
 
     @property
@@ -107,6 +113,7 @@ class DropShadow(Effect):
 
     @offset.setter
     def offset(self, value: float) -> None:
+        """Set the shadow offset distance in pixels."""
         self.set_parameter("offset", value)
 
     @property
@@ -116,6 +123,7 @@ class DropShadow(Effect):
 
     @blur.setter
     def blur(self, value: float) -> None:
+        """Set the shadow blur radius."""
         self.set_parameter("blur", value)
 
     @property
@@ -125,6 +133,7 @@ class DropShadow(Effect):
 
     @opacity.setter
     def opacity(self, value: float) -> None:
+        """Set the shadow opacity."""
         self.set_parameter("opacity", value)
 
     @property
@@ -134,6 +143,7 @@ class DropShadow(Effect):
 
     @color.setter
     def color(self, rgba: tuple[float, float, float, float]) -> None:
+        """Set the RGBA shadow color."""
         _set_color_rgba(self.parameters, "color", rgba)
 
 
@@ -152,6 +162,7 @@ class MotionBlur(Effect):
 
     @intensity.setter
     def intensity(self, value: float) -> None:
+        """Set the blur intensity level."""
         self.set_parameter("intensity", value)
 
 
@@ -174,6 +185,7 @@ class Mask(Effect):
 
     @mask_shape.setter
     def mask_shape(self, value: int | MaskShape) -> None:
+        """Set the mask shape identifier."""
         self.set_parameter("mask-shape", value)
 
     @property
@@ -183,6 +195,7 @@ class Mask(Effect):
 
     @mask_opacity.setter
     def mask_opacity(self, value: float) -> None:
+        """Set the mask opacity."""
         self.set_parameter("mask-opacity", value)
 
     @property
@@ -192,6 +205,7 @@ class Mask(Effect):
 
     @mask_blend.setter
     def mask_blend(self, value: float) -> None:
+        """Set the mask edge blend amount."""
         self.set_parameter("mask-blend", value)
 
     @property
@@ -201,6 +215,7 @@ class Mask(Effect):
 
     @mask_invert.setter
     def mask_invert(self, value: int) -> None:
+        """Set the mask inversion state."""
         self.set_parameter("mask-invert", value)
 
     @property
@@ -210,6 +225,7 @@ class Mask(Effect):
 
     @mask_rotation.setter
     def mask_rotation(self, value: float) -> None:
+        """Set the mask rotation angle in degrees."""
         self.set_parameter("mask-rotation", value)
 
     @property
@@ -219,6 +235,7 @@ class Mask(Effect):
 
     @mask_width.setter
     def mask_width(self, value: float | dict) -> None:
+        """Set the mask width."""
         self.set_parameter("mask-width", value)
 
     @property
@@ -228,6 +245,7 @@ class Mask(Effect):
 
     @mask_height.setter
     def mask_height(self, value: float | dict) -> None:
+        """Set the mask height."""
         self.set_parameter("mask-height", value)
 
     @property
@@ -237,6 +255,7 @@ class Mask(Effect):
 
     @mask_position_x.setter
     def mask_position_x(self, value: float | dict) -> None:
+        """Set the mask horizontal position."""
         self.set_parameter("mask-positionX", value)
 
     @property
@@ -246,6 +265,7 @@ class Mask(Effect):
 
     @mask_position_y.setter
     def mask_position_y(self, value: float | dict) -> None:
+        """Set the mask vertical position."""
         self.set_parameter("mask-positionY", value)
 
     @property
@@ -255,6 +275,7 @@ class Mask(Effect):
 
     @mask_corner_radius.setter
     def mask_corner_radius(self, value: float) -> None:
+        """Set the mask corner radius."""
         self.set_parameter("mask-cornerRadius", value)
 
 
@@ -273,6 +294,7 @@ class Glow(Effect):
 
     @radius.setter
     def radius(self, value: float) -> None:
+        """Set the glow spread radius."""
         self.set_parameter("radius", value)
 
     @property
@@ -282,6 +304,7 @@ class Glow(Effect):
 
     @intensity.setter
     def intensity(self, value: float) -> None:
+        """Set the glow intensity level."""
         self.set_parameter("intensity", value)
 
 
@@ -300,6 +323,7 @@ class BlurRegion(Effect):
 
     @sigma.setter
     def sigma(self, value: float) -> None:
+        """Set the Gaussian blur sigma value."""
         self.set_parameter("sigma", value)
 
     @property
@@ -309,6 +333,7 @@ class BlurRegion(Effect):
 
     @mask_corner_radius.setter
     def mask_corner_radius(self, value: float) -> None:
+        """Set the corner radius of the blur region mask."""
         self.set_parameter("mask-cornerRadius", value)
 
     @property
@@ -318,6 +343,7 @@ class BlurRegion(Effect):
 
     @mask_invert.setter
     def mask_invert(self, value: int) -> None:
+        """Set the blur region mask inversion state."""
         self.set_parameter("mask-invert", value)
 
     @property
@@ -327,4 +353,5 @@ class BlurRegion(Effect):
 
     @color_alpha.setter
     def color_alpha(self, value: float) -> None:
+        """Set the alpha channel of the blur region overlay color."""
         self.set_parameter("color-alpha", value)

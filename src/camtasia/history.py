@@ -56,18 +56,22 @@ class ChangeHistory:
 
     @property
     def can_undo(self) -> bool:
+        """Whether there are changes available to undo."""
         return bool(self._undo_stack)
 
     @property
     def can_redo(self) -> bool:
+        """Whether there are changes available to redo."""
         return bool(self._redo_stack)
 
     @property
     def undo_count(self) -> int:
+        """Number of changes on the undo stack."""
         return len(self._undo_stack)
 
     @property
     def redo_count(self) -> int:
+        """Number of changes on the redo stack."""
         return len(self._redo_stack)
 
     @property

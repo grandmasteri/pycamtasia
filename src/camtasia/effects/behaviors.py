@@ -35,6 +35,7 @@ class BehaviorPhase:
 
     @name.setter
     def name(self, value: str) -> None:
+        """Set the behavior name."""
         self._attrs["name"] = value
 
     @property
@@ -49,6 +50,7 @@ class BehaviorPhase:
 
     @character_order.setter
     def character_order(self, value: int) -> None:
+        """Set the character animation order."""
         self._attrs["characterOrder"] = value
 
     @property
@@ -58,6 +60,7 @@ class BehaviorPhase:
 
     @offset_between_characters.setter
     def offset_between_characters(self, value: int) -> None:
+        """Set the delay between characters in ticks."""
         self._attrs["offsetBetweenCharacters"] = value
 
     @property
@@ -67,6 +70,7 @@ class BehaviorPhase:
 
     @suggested_duration_per_character.setter
     def suggested_duration_per_character(self, value: int) -> None:
+        """Set the suggested duration per character in ticks."""
         self._attrs["suggestedDurationPerCharacter"] = value
 
     @property
@@ -76,6 +80,7 @@ class BehaviorPhase:
 
     @overlap_proportion.setter
     def overlap_proportion(self, value: int | float | str) -> None:
+        """Set the overlap proportion value."""
         self._attrs["overlapProportion"] = value
 
     @property
@@ -85,6 +90,7 @@ class BehaviorPhase:
 
     @movement.setter
     def movement(self, value: int) -> None:
+        """Set the movement enum value."""
         self._attrs["movement"] = value
 
     @property
@@ -94,6 +100,7 @@ class BehaviorPhase:
 
     @spring_damping.setter
     def spring_damping(self, value: float) -> None:
+        """Set the spring damping coefficient."""
         self._attrs["springDamping"] = value
 
     @property
@@ -103,6 +110,7 @@ class BehaviorPhase:
 
     @spring_stiffness.setter
     def spring_stiffness(self, value: float) -> None:
+        """Set the spring stiffness coefficient."""
         self._attrs["springStiffness"] = value
 
     @property
@@ -112,6 +120,7 @@ class BehaviorPhase:
 
     @bounce_bounciness.setter
     def bounce_bounciness(self, value: float) -> None:
+        """Set the bounciness factor."""
         self._attrs["bounceBounciness"] = value
 
     @property
@@ -120,6 +129,7 @@ class BehaviorPhase:
         return self._data.get("parameters", {})
 
     def __repr__(self) -> str:
+        """Return a developer-friendly string representation."""
         return f"BehaviorPhase(name={self.name!r}, type={self.phase_type})"
 
 
@@ -154,6 +164,7 @@ class GenericBehaviorEffect:
 
     @bypassed.setter
     def bypassed(self, value: bool) -> None:
+        """Set whether the effect is bypassed."""
         self._data["bypassed"] = value
 
     @property
@@ -163,6 +174,7 @@ class GenericBehaviorEffect:
 
     @start.setter
     def start(self, value: int) -> None:
+        """Set the start time in ticks."""
         self._data["start"] = value
 
     @property
@@ -172,6 +184,7 @@ class GenericBehaviorEffect:
 
     @duration.setter
     def duration(self, value: int) -> None:
+        """Set the duration in ticks."""
         self._data["duration"] = value
 
     @property
@@ -195,4 +208,5 @@ class GenericBehaviorEffect:
         return self._data.get("metadata", {}).get("presetName", "")  # type: ignore[no-any-return]
 
     def __repr__(self) -> str:
+        """Return a developer-friendly string representation."""
         return f"GenericBehaviorEffect(name={self.effect_name!r}, preset={self.preset_name!r})"

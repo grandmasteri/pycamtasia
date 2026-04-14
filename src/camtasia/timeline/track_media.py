@@ -46,6 +46,7 @@ class TrackMedia:
 
     @property
     def markers(self) -> _Markers:
+        """Markers associated with this media element."""
         return self._markers
 
     @property
@@ -77,6 +78,7 @@ class TrackMedia:
 
     @property
     def effects(self) -> TrackMediaEffects:
+        """Effects applied to this media element."""
         return TrackMediaEffects(self._data)
 
 
@@ -116,6 +118,7 @@ class TrackMediaEffects():
         return len(self._effects)
 
     def add_effect(self, effect: LegacyEffect) -> None:
+        """Append an effect to this media element."""
         effect_schema = EffectSchema()
         effect_data = effect_schema.dump(effect)
         self._effects.append(effect_data)

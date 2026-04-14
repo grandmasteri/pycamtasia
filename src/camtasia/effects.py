@@ -26,6 +26,7 @@ VISUAL_EFFECTS_CATEGORY = "categoryVisualEffects"
 
 
 def rgba(argument: str) -> tuple[int, int, int, int]:
+    """Parse a hex color string into an RGBA tuple, defaulting alpha to 255."""
     channels = hex_rgb(argument)
     if len(channels) == 3:
         return (*channels, 255)
@@ -33,6 +34,7 @@ def rgba(argument: str) -> tuple[int, int, int, int]:
 
 
 def rgb(argument: str) -> tuple[int, int, int]:
+    """Parse a hex color string into an RGB tuple, raising if alpha is not 0xFF."""
     channels = hex_rgb(argument)
     if channels[3] != 255:
         raise ValueError("Alpha argument not 0xFF for RGB color")
@@ -40,28 +42,35 @@ def rgb(argument: str) -> tuple[int, int, int]:
 
 
 class Effect:
+    """Base class for Camtasia effects."""
 
     def __init__(self, *, name: str, category: str) -> None:
+        """Initialize an effect with a name and category."""
         self._name = name
         self._category = category
 
     @property
     def name(self) -> str:
+        """Return the effect name."""
         return self._name
 
     @property
     def category(self) -> str:
+        """Return the effect category."""
         return self._category
 
     def __repr__(self) -> str:
+        """Return a string representation of the effect."""
         return f"{type(self).__name__}(name={self.name!r}, category={self.category!r})"
 
     def __eq__(self, other: object) -> bool:
+        """Check equality based on the effect's key."""
         if not isinstance(other, type(self)):
             return NotImplemented
         return self._key() == other._key()
 
     def __hash__(self) -> int:
+        """Return a hash based on the effect's key."""
         return hash(self._key())
 
     def _key(self) -> tuple[str, str]:
@@ -69,12 +78,15 @@ class Effect:
 
 
 class VisualEffect(Effect):
+    """An effect in the visual effects category."""
 
     def __init__(self, *, name: str) -> None:
+        """Initialize a visual effect with the given name."""
         super().__init__(name=name, category=VISUAL_EFFECTS_CATEGORY)
 
 
 class ChromaKeyEffect(VisualEffect):
+    """A chroma key (green screen) visual effect with configurable color and thresholds."""
 
     DEFAULT_TOLERANCE = 0.1
     MINIMUM_TOLERANCE = 0.0
@@ -105,6 +117,7 @@ class ChromaKeyEffect(VisualEffect):
         inverted: bool | None = None,
         compensation: float | None = None,
     ) -> None:
+        """Initialize a chroma key effect with optional color and threshold parameters."""
         super().__init__(name=CHROMA_KEY_NAME)
 
         if tolerance is None:
@@ -160,50 +173,62 @@ class ChromaKeyEffect(VisualEffect):
 
     @property
     def tolerance(self) -> float:
+        """Return the color tolerance threshold."""
         return self._tolerance
 
     @property
     def softness(self) -> float:
+        """Return the edge softness value."""
         return self._softness
 
     @property
     def defringe(self) -> float:
+        """Return the defringe adjustment value."""
         return self._defringe
 
     @property
     def inverted(self) -> bool:
+        """Return whether the effect is inverted."""
         return self._inverted
 
     @property
     def compensation(self) -> float:
+        """Return the hue compensation value."""
         return self._compensation
 
     @property
     def hue(self) -> RGBA:
+        """Return the key color as an RGBA value."""
         return self._hue
 
     @property
     def alpha(self) -> float:
+        """Return the key color alpha channel as a normalized float."""
         return self._hue.alpha / RGBA.MAXIMUM_CHANNEL
 
     @property
     def red(self) -> float:
+        """Return the key color red channel as a normalized float."""
         return self._hue.red / RGBA.MAXIMUM_CHANNEL
 
     @property
     def green(self) -> float:
+        """Return the key color green channel as a normalized float."""
         return self._hue.green / RGBA.MAXIMUM_CHANNEL
 
     @property
     def blue(self) -> float:
+        """Return the key color blue channel as a normalized float."""
         return self._hue.blue / RGBA.MAXIMUM_CHANNEL
 
     @property
     def parameters(self) -> Parameters:
+        """Return a Parameters proxy for this effect."""
         return Parameters(self)
 
     @property
     def metadata(self) -> dict[str, str]:
+        """Return the default metadata dictionary for serialization."""
         return {
             f"default-{self.name}-{key}": self._metadata_value(value) for key, value in self._metadata().items()
         }
@@ -242,6 +267,7 @@ class ChromaKeyEffect(VisualEffect):
         )
 
     def __repr__(self) -> str:
+        """Return a detailed string representation of the chroma key effect."""
         return (
             f"{type(self).__name__}(tolerance={self.tolerance}, softness={self.softness}, "
             f"hue={self.hue}, defringe={self.defringe}, inverted={self.inverted}, "
@@ -250,15 +276,19 @@ class ChromaKeyEffect(VisualEffect):
 
 
 class Parameters:
+    """Proxy that delegates attribute access to a ChromaKeyEffect."""
 
     def __init__(self, effect: ChromaKeyEffect) -> None:
+        """Initialize with the backing ChromaKeyEffect instance."""
         self._effect = effect
 
     def __getattr__(self, name: str) -> object:
+        """Delegate attribute lookup to the wrapped effect."""
         return getattr(self._effect, name)
 
 
 class ChromaKeyEffectParametersSchema(Schema):
+    """Marshmallow schema for serializing ChromaKeyEffect parameters."""
     compensation = fields.Float(data_key=COMPENSATION_KEY)
     alpha = fields.Float(data_key=COLOR_ALPHA_KEY)
     red = fields.Float(data_key=COLOR_RED_KEY)
@@ -276,12 +306,14 @@ class ChromaKeyEffectParametersSchema(Schema):
 
 
 class ChromaKeyEffectSchema(Schema):
+    """Marshmallow schema for serializing and deserializing a ChromaKeyEffect."""
 
     category = fields.Str(data_key="category")
     parameters = fields.Nested(ChromaKeyEffectParametersSchema)
 
     @post_load
     def make_chroma_key_effect(self, data: dict, **kwargs: object) -> ChromaKeyEffect:
+        """Construct a ChromaKeyEffect from deserialized data."""
         parameters = data["parameters"]
         return ChromaKeyEffect(
             tolerance=parameters["tolerance"],
@@ -299,6 +331,7 @@ class ChromaKeyEffectSchema(Schema):
 
 
 class EffectSchema(OneOfSchema):
+    """Polymorphic schema that dispatches to the correct effect schema by name."""
     type_schemas = {
         CHROMA_KEY_NAME: ChromaKeyEffectSchema,
     }
@@ -306,5 +339,6 @@ class EffectSchema(OneOfSchema):
     type_field = "effectName"
 
     def get_obj_type(self, obj: Effect) -> str:
+        """Return the effect name used to select the schema type."""
         return obj.name
 

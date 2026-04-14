@@ -30,18 +30,22 @@ class Effect:
 
     @property
     def name(self) -> str:
+        """Effect name identifier."""
         return self._data["effectName"]
 
     @property
     def bypassed(self) -> bool:
+        """Whether the effect is bypassed (disabled)."""
         return bool(self._data.get("bypassed", False))
 
     @bypassed.setter
     def bypassed(self, value: bool) -> None:
+        """Set whether the effect is bypassed."""
         self._data["bypassed"] = value
 
     @property
     def category(self) -> str:
+        """Effect category string."""
         return self._data.get("category", "")
 
     @property
@@ -51,6 +55,7 @@ class Effect:
 
     @property
     def parameters(self) -> dict[str, Any]:
+        """Effect parameters dict."""
         return self._data.get("parameters", {})
 
     def get_parameter(self, name: str) -> Any:
@@ -114,14 +119,17 @@ class Effect:
         return self._data.get('rightEdgeMods', [])
 
     def __eq__(self, other: object) -> bool:
+        """Return True if both wrappers reference the same underlying dict."""
         if not isinstance(other, Effect):
             return NotImplemented
         return self._data is other._data
 
     def __hash__(self) -> int:
+        """Return hash based on the underlying dict identity."""
         return id(self._data)
 
     def __repr__(self) -> str:
+        """Return a developer-friendly string representation."""
         return f"{type(self).__name__}(name={self.name!r})"
 
 

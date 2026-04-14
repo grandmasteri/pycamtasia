@@ -38,6 +38,7 @@ class SourceEffect(Effect):
 
     @color0.setter
     def color0(self, rgba: tuple[float, float, float, float]) -> None:
+        """Set the first shader color."""
         self._set_color(0, rgba)
 
     @property
@@ -47,6 +48,7 @@ class SourceEffect(Effect):
 
     @color1.setter
     def color1(self, rgba: tuple[float, float, float, float]) -> None:
+        """Set the second shader color."""
         self._set_color(1, rgba)
 
     def _get_value(self, val: Any) -> float:
@@ -63,6 +65,7 @@ class SourceEffect(Effect):
 
     @color2.setter
     def color2(self, rgba: tuple[float, float, float, float]) -> None:
+        """Set the third shader color."""
         self._set_color(2, rgba)
 
     @property
@@ -75,6 +78,7 @@ class SourceEffect(Effect):
 
     @color3.setter
     def color3(self, rgba: tuple[float, float, float, float]) -> None:
+        """Set the fourth shader color."""
         self._set_color(3, rgba)
 
     @property
@@ -91,6 +95,7 @@ class SourceEffect(Effect):
 
     @mid_point.setter
     def mid_point(self, value: tuple[float, float] | float) -> None:
+        """Set the mid point position."""
         params = self._data.setdefault('parameters', {})
         if isinstance(value, (int, float)):
             params['MidPoint'] = value
@@ -105,6 +110,7 @@ class SourceEffect(Effect):
 
     @speed.setter
     def speed(self, value: float) -> None:
+        """Set the shader animation speed."""
         self.set_parameter("Speed", value)
 
     @property
