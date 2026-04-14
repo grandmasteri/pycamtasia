@@ -5,10 +5,18 @@ from camtasia.project import Project
 
 
 def test_plain_param_dict_flattened_to_scalar():
-    """A param dict without keyframes or name is replaced by its defaultValue."""
-    obj = {"opacity": {"type": "double", "defaultValue": 0.5, "interp": "eioe"}}
+    """A param dict without keyframes, interp, uiHints, or name is replaced by its defaultValue."""
+    obj = {"opacity": {"type": "double", "defaultValue": 0.5}}
     Project._flatten_parameters(obj)
     assert obj["opacity"] == 0.5
+
+
+def test_param_dict_with_interp_preserved():
+    """A param dict with interp is left as-is (preserves interpolation type)."""
+    original = {"type": "double", "defaultValue": 0.5, "interp": "eioe"}
+    obj = {"opacity": dict(original)}
+    Project._flatten_parameters(obj)
+    assert obj["opacity"] == original
 
 
 def test_param_dict_with_keyframes_preserved():
@@ -31,10 +39,10 @@ def test_nested_structures_walked():
     """Flattening recurses into nested dicts and lists."""
     obj = {
         "outer": {
-            "inner": {"type": "int", "defaultValue": 3, "interp": "linear"}
+            "inner": {"type": "int", "defaultValue": 3}
         },
         "items": [
-            {"param": {"type": "double", "defaultValue": 1.0, "interp": "eioe"}}
+            {"param": {"type": "double", "defaultValue": 1.0}}
         ],
     }
     Project._flatten_parameters(obj)

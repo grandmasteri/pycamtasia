@@ -327,7 +327,8 @@ class Project:
                 val = obj[key]
                 if (isinstance(val, dict)
                         and 'type' in val and 'defaultValue' in val
-                        and 'name' not in val and 'keyframes' not in val):
+                        and 'name' not in val and 'keyframes' not in val
+                        and 'interp' not in val and 'uiHints' not in val):
                     obj[key] = val['defaultValue']
                 else:
                     Project._flatten_parameters(val)
