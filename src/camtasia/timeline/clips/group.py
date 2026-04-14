@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import copy
 from fractions import Fraction
-from typing import Any
+from typing import Any, Iterator
 
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 
@@ -44,7 +44,7 @@ class GroupTrack:
         """Number of clips in this group track."""
         return len(self._data.get('medias', []))
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[BaseClip]:
         """Iterate over clips in this group track."""
         return iter(self.clips)
 

@@ -76,7 +76,7 @@ class Track:
         """Number of clips on this track."""
         return len(self._data.get('medias', []))
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[BaseClip]:
         """Iterate over clips on this track."""
         return iter(self.clips)
 
@@ -1218,7 +1218,7 @@ class Track:
         new_id = self._next_clip_id()
         new_data['id'] = new_id
 
-        def _remap_ids(obj, base_id):
+        def _remap_ids(obj: Any, base_id: int) -> int:
             cid = base_id
             if isinstance(obj, dict):
                 if 'id' in obj and obj is not new_data:

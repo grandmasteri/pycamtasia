@@ -1,5 +1,7 @@
 """Frame timestamp utilities."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Tuple
@@ -32,23 +34,23 @@ class FrameStamp:
         seconds = self.frame_number / self.frame_rate
         return timedelta(seconds=seconds)
 
-    def __str__(self):
+    def __str__(self) -> str:
         secs, frame = self.frame_time
         return f'{secs};{frame}'
 
-    def __lt__(self, rhs):
+    def __lt__(self, rhs: FrameStamp) -> bool:
         return self.time < rhs.time
 
-    def __add__(self, rhs):
+    def __add__(self, rhs: FrameStamp) -> FrameStamp:
         return self._add(self.frame_rate, self.frame_number,
                          rhs.frame_rate, rhs.frame_number)
 
-    def __sub__(self, rhs):
+    def __sub__(self, rhs: FrameStamp) -> FrameStamp:
         return self._add(self.frame_rate, self.frame_number,
                          rhs.frame_rate, -1 * rhs.frame_number)
 
     @staticmethod
-    def _add(frame_rate_1, frame_number_1, frame_rate_2, frame_number_2):
+    def _add(frame_rate_1: int, frame_number_1: int, frame_rate_2: int, frame_number_2: int) -> FrameStamp:
         """Add two frame-rate/-number combos together.
 
         The result is reported in the lower-common-multiple frame-rate, with frame numbers adjusted accordingly.
@@ -62,7 +64,7 @@ class FrameStamp:
             frame_rate=common_frame_rate)
 
 
-def _lcm(x, y):
+def _lcm(x: int, y: int) -> int:
     "Quick-and-dirty LCM"
     mul = x * y
 

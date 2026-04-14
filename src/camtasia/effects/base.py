@@ -1,7 +1,7 @@
 """Base effect class wrapping Camtasia effect dicts."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 
 class Effect:
@@ -127,7 +127,7 @@ class Effect:
 _EFFECT_REGISTRY: dict[str, type[Effect]] = {}
 
 
-def register_effect(name: str):
+def register_effect(name: str) -> Callable[[type[Effect]], type[Effect]]:
     """Class decorator to register an Effect subclass for factory dispatch."""
     def decorator(cls: type[Effect]) -> type[Effect]:
         _EFFECT_REGISTRY[name] = cls

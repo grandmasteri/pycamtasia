@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from numbers import Real
 
 from marshmallow import Schema, fields, post_load
@@ -23,14 +25,14 @@ VISUAL_EFFECTS_CATEGORY = "categoryVisualEffects"
 
 
 
-def rgba(argument):
+def rgba(argument: str) -> tuple[int, int, int, int]:
     channels = hex_rgb(argument)
     if len(channels) == 3:
         return (*channels, 255)
     return channels
 
 
-def rgb(argument):
+def rgb(argument: str) -> tuple[int, int, int]:
     channels = hex_rgb(argument)
     if channels[3] != 255:
         raise ValueError("Alpha argument not 0xFF for RGB color")
@@ -39,36 +41,36 @@ def rgb(argument):
 
 class Effect:
 
-    def __init__(self, *, name, category):
+    def __init__(self, *, name: str, category: str) -> None:
         self._name = name
         self._category = category
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def category(self):
+    def category(self) -> str:
         return self._category
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(name={self.name!r}, category={self.category!r})"
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
         return self._key() == other._key()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._key())
 
-    def _key(self):
+    def _key(self) -> tuple[str, str]:
         return (self.name, self.category)
 
 
 class VisualEffect(Effect):
 
-    def __init__(self, *, name):
+    def __init__(self, *, name: str) -> None:
         super().__init__(name=name, category=VISUAL_EFFECTS_CATEGORY)
 
 
@@ -94,7 +96,15 @@ class ChromaKeyEffect(VisualEffect):
     MINIMUM_COMPENSATION = 0.0
     MAXIMUM_COMPENSATION = 1.0
 
-    def __init__(self, tolerance=None, softness=None, hue=None, defringe=None, inverted=None, compensation=None):
+    def __init__(
+        self,
+        tolerance: float | None = None,
+        softness: float | None = None,
+        hue: RGBA | str | None = None,
+        defringe: float | None = None,
+        inverted: bool | None = None,
+        compensation: float | None = None,
+    ) -> None:
         super().__init__(name=CHROMA_KEY_NAME)
 
         if tolerance is None:
@@ -149,57 +159,57 @@ class ChromaKeyEffect(VisualEffect):
         self._compensation = compensation
 
     @property
-    def tolerance(self):
+    def tolerance(self) -> float:
         return self._tolerance
 
     @property
-    def softness(self):
+    def softness(self) -> float:
         return self._softness
 
     @property
-    def defringe(self):
+    def defringe(self) -> float:
         return self._defringe
 
     @property
-    def inverted(self):
+    def inverted(self) -> bool:
         return self._inverted
 
     @property
-    def compensation(self):
+    def compensation(self) -> float:
         return self._compensation
 
     @property
-    def hue(self):
+    def hue(self) -> RGBA:
         return self._hue
 
     @property
-    def alpha(self):
+    def alpha(self) -> float:
         return self._hue.alpha / RGBA.MAXIMUM_CHANNEL
 
     @property
-    def red(self):
+    def red(self) -> float:
         return self._hue.red / RGBA.MAXIMUM_CHANNEL
 
     @property
-    def green(self):
+    def green(self) -> float:
         return self._hue.green / RGBA.MAXIMUM_CHANNEL
 
     @property
-    def blue(self):
+    def blue(self) -> float:
         return self._hue.blue / RGBA.MAXIMUM_CHANNEL
 
     @property
-    def parameters(self):
+    def parameters(self) -> Parameters:
         return Parameters(self)
 
     @property
-    def metadata(self):
+    def metadata(self) -> dict[str, str]:
         return {
             f"default-{self.name}-{key}": self._metadata_value(value) for key, value in self._metadata().items()
         }
 
     @staticmethod
-    def _metadata_value(value):
+    def _metadata_value(value: object) -> str:
         """Render a metadata value in the way Camtasia expects
         """
         if isinstance(value, Real):
@@ -208,7 +218,7 @@ class ChromaKeyEffect(VisualEffect):
         return str(value).replace(" ", "")
 
 
-    def _metadata(self):
+    def _metadata(self) -> dict[str, object]:
         return {
             COLOR_KEY: self.DEFAULT_COLOR.as_tuple(),
             DEFRINGE_KEY: self.DEFAULT_DEFRINGE,
@@ -218,7 +228,7 @@ class ChromaKeyEffect(VisualEffect):
             COMPENSATION_KEY: self.DEFAULT_COMPENSATION,
         }
 
-    def _key(self):
+    def _key(self) -> tuple:
         return super()._key() + (
             self.tolerance,
             self.softness,
@@ -231,7 +241,7 @@ class ChromaKeyEffect(VisualEffect):
             self.alpha,
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"{type(self).__name__}(tolerance={self.tolerance}, softness={self.softness}, "
             f"hue={self.hue}, defringe={self.defringe}, inverted={self.inverted}, "
@@ -241,10 +251,10 @@ class ChromaKeyEffect(VisualEffect):
 
 class Parameters:
 
-    def __init__(self, effect):
+    def __init__(self, effect: ChromaKeyEffect) -> None:
         self._effect = effect
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> object:
         return getattr(self._effect, name)
 
 
@@ -271,7 +281,7 @@ class ChromaKeyEffectSchema(Schema):
     parameters = fields.Nested(ChromaKeyEffectParametersSchema)
 
     @post_load
-    def make_chroma_key_effect(self, data, **kwargs):
+    def make_chroma_key_effect(self, data: dict, **kwargs: object) -> ChromaKeyEffect:
         parameters = data["parameters"]
         return ChromaKeyEffect(
             tolerance=parameters["tolerance"],
@@ -295,6 +305,6 @@ class EffectSchema(OneOfSchema):
 
     type_field = "effectName"
 
-    def get_obj_type(self, obj):
+    def get_obj_type(self, obj: Effect) -> str:
         return obj.name
 

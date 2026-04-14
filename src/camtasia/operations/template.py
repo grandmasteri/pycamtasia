@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 
 def clone_project_structure(source_data: dict[str, Any]) -> dict[str, Any]:
@@ -36,7 +36,7 @@ def clone_project_structure(source_data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-def _walk_clips(tracks: list[dict[str, Any]]):
+def _walk_clips(tracks: list[dict[str, Any]]) -> Iterator[dict[str, Any]]:
     """Yield every clip dict, recursing into Groups and StitchedMedia."""
     for track in tracks:
         for clip in track.get("medias", []):

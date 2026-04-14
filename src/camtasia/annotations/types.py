@@ -12,7 +12,7 @@ class Color:
     blue: float
     opacity: float = 1.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for comp in ('red', 'green', 'blue', 'opacity'):
             if not 0.0 <= getattr(self, comp) <= 1.0:
                 raise ValueError(

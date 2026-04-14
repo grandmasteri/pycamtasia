@@ -5,8 +5,23 @@ a track or removing adding new media to the media bin. Some operations, though, 
 and are thus more complicated. This module provides some of these more complex operations as functions.
 """
 
+from __future__ import annotations
 
-def add_media_to_track(proj, track_index, media_id, start, duration=None, effects=None):
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from camtasia.effects import Effect
+    from camtasia.project import Project
+
+
+def add_media_to_track(
+    proj: Project,
+    track_index: int,
+    media_id: int,
+    start: int,
+    duration: int | None = None,
+    effects: list[Effect] | None = None,
+) -> None:
     """Add a track reference to media-bin media.
 
     Args:
@@ -26,7 +41,7 @@ def add_media_to_track(proj, track_index, media_id, start, duration=None, effect
     track.add_media(media, start, duration, effects)
 
 
-def remove_media(project, media_id, clear_tracks=False):
+def remove_media(project: Project, media_id: int, clear_tracks: bool = False) -> None:
     """Remove a piece of media from the media-bin.
 
     By default, this will also remove references to the removed media from tracks.
