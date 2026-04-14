@@ -166,8 +166,10 @@ class ChangeHistory:
 def with_undo(description: str) -> Callable:
     """Decorator that wraps a function call in track_changes."""
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        """Inner decorator function."""
         @functools.wraps(func)
         def wrapper(project: Any, *args: Any, **kwargs: Any) -> T:
+            """Wrapped function with undo tracking."""
             with project.track_changes(description):
                 return func(project, *args, **kwargs)
         return wrapper

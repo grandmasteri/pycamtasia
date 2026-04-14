@@ -15,6 +15,8 @@ _EXCEPTION_RE = re.compile(r'EXCEPTION|Abort')
 
 @dataclass
 class CamtasiaValidationResult:
+    """Result of a Camtasia project validation run."""
+
     success: bool
     exception_count: int
     log_output: str

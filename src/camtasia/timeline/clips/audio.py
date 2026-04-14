@@ -28,6 +28,7 @@ class AMFile(BaseClip):
 
     @channel_number.setter
     def channel_number(self, value: str) -> None:
+        """Set the channel number string."""
         self._data['channelNumber'] = value
 
     @property
@@ -42,6 +43,7 @@ class AMFile(BaseClip):
 
     @gain.setter
     def gain(self, value: float) -> None:
+        """Set the audio gain multiplier."""
         self._data.setdefault('attributes', {})['gain'] = value
 
     @property
@@ -51,6 +53,7 @@ class AMFile(BaseClip):
 
     @loudness_normalization.setter
     def loudness_normalization(self, value: bool) -> None:
+        """Set whether loudness normalization is enabled."""
         self._data.setdefault('attributes', {})['loudnessNormalization'] = value
 
     @property

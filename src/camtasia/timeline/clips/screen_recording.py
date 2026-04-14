@@ -33,6 +33,7 @@ class ScreenVMFile(BaseClip):
 
     @cursor_scale.setter
     def cursor_scale(self, value: float) -> None:
+        """Set the cursor enlargement factor."""
         self._set_cursor_param('cursorScale', value)
 
     @property
@@ -42,6 +43,7 @@ class ScreenVMFile(BaseClip):
 
     @cursor_opacity.setter
     def cursor_opacity(self, value: float) -> None:
+        """Set the cursor opacity (0.0–1.0)."""
         self._set_cursor_param('cursorOpacity', value)
 
     @property

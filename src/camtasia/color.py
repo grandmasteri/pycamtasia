@@ -39,6 +39,7 @@ def hex_rgb(argument: str) -> tuple[int, ...]:
 
 
 class RGBA:
+    """RGBA color value with channel range 0–255."""
 
     MINIMUM_CHANNEL: int = 0
     MAXIMUM_CHANNEL: int = 255

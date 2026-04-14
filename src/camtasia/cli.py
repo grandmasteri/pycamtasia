@@ -198,6 +198,7 @@ def track_media_ls(_, args):
 
 
 def main(argv=None):
+    """CLI entry point for pycamtasia."""
     try:
         return dsc.main('pytsc', argv=argv)
     except ExitCodeError as exc:

@@ -32,6 +32,7 @@ class TimelineBuilder:
 
     @cursor.setter
     def cursor(self, value: float) -> None:
+        """Set the current cursor position in seconds."""
         if value < 0:
             raise ValueError(f'Cursor must be non-negative, got {value}')
         self._cursor = value

@@ -41,6 +41,7 @@ class StitchedMedia(BaseClip):
 
     @volume.setter
     def volume(self, value: float) -> None:
+        """Set the volume / gain value."""
         self._data.setdefault('attributes', {})['gain'] = value
 
     @property
@@ -50,6 +51,7 @@ class StitchedMedia(BaseClip):
 
     @property
     def min_media_start(self) -> int:
+        """Minimum media start offset in frames."""
         return int(self._data.get('minMediaStart', 0))
 
     def clear_segments(self) -> None:

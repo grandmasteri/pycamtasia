@@ -140,6 +140,7 @@ _EFFECT_REGISTRY: dict[str, type[Effect]] = {}
 def register_effect(name: str) -> Callable[[type[Effect]], type[Effect]]:
     """Class decorator to register an Effect subclass for factory dispatch."""
     def decorator(cls: type[Effect]) -> type[Effect]:
+        """Inner decorator function."""
         _EFFECT_REGISTRY[name] = cls
         return cls
     return decorator
