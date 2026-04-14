@@ -695,6 +695,7 @@ class BaseClip:
         brightness: float = 0.0,
         contrast: float = 0.0,
         saturation: float = 1.0,
+        channel: int = 0,
         shadow_ramp_start: float = 0.0,
         shadow_ramp_end: float = 0.0,
         highlight_ramp_start: float = 1.0,
@@ -706,6 +707,7 @@ class BaseClip:
             brightness: -1.0 to 1.0 (0 = no change).
             contrast: -1.0 to 1.0 (0 = no change).
             saturation: 0.0 to 3.0 (1.0 = no change).
+            channel: Color channel (0 = all).
             shadow_ramp_start: Shadow ramp start (0.0-1.0).
             shadow_ramp_end: Shadow ramp end (0.0-1.0).
             highlight_ramp_start: Highlight ramp start (0.0-1.0).
@@ -719,6 +721,7 @@ class BaseClip:
                 'brightness': brightness,
                 'contrast': contrast,
                 'saturation': saturation,
+                'channel': channel,
                 'shadowRampStart': shadow_ramp_start,
                 'shadowRampEnd': shadow_ramp_end,
                 'highlightRampStart': highlight_ramp_start,
@@ -786,43 +789,28 @@ class BaseClip:
     def add_spotlight(
         self,
         *,
-        dim_opacity: float = 0.7,
-        color: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0),
-        brightness: float = 0.0,
+        brightness: float = 0.5,
         concentration: float = 0.5,
-        opacity: float = 1.0,
-        position: tuple[float, float] = (0.5, 0.5),
-        direction: tuple[float, float] = (0.0, 0.0),
+        opacity: float = 0.35,
+        color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 0.35),
     ) -> Self:
-        """Add a spotlight/dim effect.
-
-        Args:
-            dim_opacity: Background dimming 0.0-1.0.
-            color: RGBA color as 0.0-1.0 floats.
-            brightness: Spotlight brightness.
-            concentration: Spotlight concentration 0.0-1.0.
-            opacity: Spotlight opacity 0.0-1.0.
-            position: (x, y) spotlight center, 0.0-1.0.
-            direction: (x, y) spotlight direction.
-        """
-        r, g, b, a = color
+        """Add a spotlight effect."""
         self.add_effect({
             'effectName': EffectName.SPOTLIGHT,
             'bypassed': False,
             'category': 'categoryVisualEffects',
             'parameters': {
-                'dim-opacity': dim_opacity,
-                'color-red': r,
-                'color-green': g,
-                'color-blue': b,
-                'color-alpha': a,
+                'color-red': color[0],
+                'color-green': color[1],
+                'color-blue': color[2],
+                'color-alpha': color[3],
                 'brightness': brightness,
                 'concentration': concentration,
                 'opacity': opacity,
-                'positionX': position[0],
-                'positionY': position[1],
-                'directionX': direction[0],
-                'directionY': direction[1],
+                'positionX': 0.0,
+                'positionY': 0.0,
+                'directionX': 0.0,
+                'directionY': 0.0,
             },
         })
         return self
@@ -849,7 +837,8 @@ class BaseClip:
         })
         return self
 
-    def add_media_matte(self, *, intensity: float = 1.0, matte_mode: int = 1, track_depth: int = 10002) -> Self:
+    def add_media_matte(self, *, intensity: float = 1.0, matte_mode: int = 1, track_depth: int = 10002,
+                        preset_name: str = 'Media Matte Luminasity') -> Self:
         """Add a media matte compositing effect.
 
         Uses one track as a transparency mask for this clip.
@@ -858,6 +847,7 @@ class BaseClip:
             intensity: Effect intensity 0.0-1.0.
             matte_mode: Matte mode (1 = alpha, 2 = inverted alpha).
             track_depth: Track depth for matte source.
+            preset_name: Preset name for metadata.
         """
         self.add_effect({
             'effectName': EffectName.MEDIA_MATTE,
@@ -868,6 +858,19 @@ class BaseClip:
                 'matteMode': matte_mode,
                 'trackDepth': track_depth,
             },
+            'metadata': {
+                'presetName': preset_name,
+            },
+        })
+        return self
+
+    def add_motion_blur(self, *, intensity: float = 1.0) -> Self:
+        """Add a motion blur effect."""
+        self.add_effect({
+            'effectName': EffectName.MOTION_BLUR,
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {'intensity': intensity},
         })
         return self
 

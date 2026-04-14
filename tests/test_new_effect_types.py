@@ -70,6 +70,7 @@ class TestAddMediaMatte:
         assert effect["parameters"]["intensity"] == 1.0
         assert effect["parameters"]["matteMode"] == 1
         assert effect["parameters"]["trackDepth"] == 10002
+        assert effect["metadata"]["presetName"] == "Media Matte Luminasity"
         assert result is clip
 
     def test_add_media_matte_custom_values(self):

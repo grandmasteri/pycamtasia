@@ -34,6 +34,7 @@ class TestAddColorAdjustment:
         assert effect["parameters"]["brightness"] == 0.0
         assert effect["parameters"]["contrast"] == 0.0
         assert effect["parameters"]["saturation"] == 1.0
+        assert effect["parameters"]["channel"] == 0
 
     def test_add_color_adjustment_custom_values(self):
         data = _base_clip_dict()
@@ -129,13 +130,36 @@ class TestAddSpotlight:
         effect = data["effects"][0]
         assert effect["effectName"] == "Spotlight"
         assert effect["bypassed"] is False
-        assert effect["parameters"]["dim-opacity"] == 0.7
+        assert effect["parameters"]["brightness"] == 0.5
+        assert effect["parameters"]["concentration"] == 0.5
+        assert effect["parameters"]["opacity"] == 0.35
 
-    def test_add_spotlight_custom_opacity(self):
+    def test_add_spotlight_custom_values(self):
         data = _base_clip_dict()
         clip = BaseClip(data)
-        clip.add_spotlight(dim_opacity=0.3)
-        assert data["effects"][0]["parameters"]["dim-opacity"] == 0.3
+        clip.add_spotlight(brightness=0.8, concentration=0.3, opacity=0.5)
+        params = data["effects"][0]["parameters"]
+        assert params["brightness"] == 0.8
+        assert params["concentration"] == 0.3
+        assert params["opacity"] == 0.5
+
+
+class TestAddMotionBlur:
+    def test_add_motion_blur_creates_effect(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        result = clip.add_motion_blur()
+        effect = data["effects"][0]
+        assert effect["effectName"] == "MotionBlur"
+        assert effect["bypassed"] is False
+        assert effect["parameters"]["intensity"] == 1.0
+        assert result is clip
+
+    def test_add_motion_blur_custom_intensity(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        clip.add_motion_blur(intensity=0.6)
+        assert data["effects"][0]["parameters"]["intensity"] == 0.6
 
 
 class TestEffectRepr:

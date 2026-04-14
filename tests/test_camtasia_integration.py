@@ -210,7 +210,7 @@ class TestNewEffects:
         media = proj.import_media(img)
         track = proj.timeline.add_track('Content')
         clip = track.add_clip('IMFile', media.id, 0, seconds_to_ticks(5))
-        clip.add_spotlight(dim_opacity=0.7)
+        clip.add_spotlight(opacity=0.7)
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
 
