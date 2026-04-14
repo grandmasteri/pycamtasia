@@ -1,6 +1,8 @@
 """Tests for Track and Timeline convenience methods."""
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 from camtasia.timeline.track import Track
 from camtasia.timeline.timeline import Timeline
@@ -2488,3 +2490,85 @@ def test_keyframed_clips():
     keyframed = track.keyframed_clips
     assert len(keyframed) == 1
     assert keyframed[0].id == 1
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.clear_all_keyframes
+# ---------------------------------------------------------------------------
+
+def test_clear_all_keyframes():
+    media: dict[str, Any] = {
+        'id': 1, 'start': 0, 'duration': 100,
+        'parameters': {
+            'scale0': {
+                'type': 'double',
+                'defaultValue': 1.0,
+                'keyframes': [{'time': 0, 'value': 1.0}, {'time': 50, 'value': 2.0}],
+            },
+            'rotation': {
+                'type': 'double',
+                'defaultValue': 0,
+                'keyframes': [{'time': 0, 'value': 0}, {'time': 100, 'value': 90}],
+            },
+            'opacity': 0.5,
+        },
+    }
+    track = _make_track(medias=[media])
+    clip = list(track.clips)[0]
+    result = clip.clear_all_keyframes()
+    assert result is clip
+    assert media['parameters']['scale0'] == 1.0
+    assert media['parameters']['rotation'] == 0
+    assert media['parameters']['opacity'] == 0.5
+
+
+# ---------------------------------------------------------------------------
+# Track.normalize_timing
+# ---------------------------------------------------------------------------
+
+def test_normalize_timing():
+    medias: list[dict[str, Any]] = [
+        {'id': 1, 'start': 1000, 'duration': 100},
+        {'id': 2, 'start': 2000, 'duration': 200},
+    ]
+    track = _make_track(medias=medias)
+    track.normalize_timing()
+    assert medias[0]['start'] == 0
+    assert medias[1]['start'] == 1000
+
+
+def test_normalize_timing_already_at_zero():
+    medias: list[dict[str, Any]] = [
+        {'id': 1, 'start': 0, 'duration': 100},
+        {'id': 2, 'start': 500, 'duration': 200},
+    ]
+    track = _make_track(medias=medias)
+    track.normalize_timing()
+    assert medias[0]['start'] == 0
+    assert medias[1]['start'] == 500
+
+
+# ---------------------------------------------------------------------------
+# Timeline.normalize_all_tracks
+# ---------------------------------------------------------------------------
+
+def test_normalize_all_tracks():
+    track_specs: list[tuple[str, list[dict[str, Any]]]] = [
+        ('A', [{'id': 1, 'start': 500, 'duration': 100}]),
+        ('B', [{'id': 2, 'start': 1000, 'duration': 200}, {'id': 3, 'start': 2000, 'duration': 100}]),
+    ]
+    timeline = _make_timeline(track_specs)
+    timeline.normalize_all_tracks()
+    track_a = list(timeline.tracks)[0]
+    track_b = list(timeline.tracks)[1]
+    assert list(track_a.clips)[0].start == 0
+    assert list(track_b.clips)[0].start == 0
+    assert list(track_b.clips)[1].start == 1000
+
+
+def test_normalize_timing_empty_track():
+    from camtasia.timeline.track import Track
+    data: dict[str, Any] = {'trackIndex': 0, 'medias': [], 'transitions': []}
+    track = Track({'ident': 'empty'}, data)
+    track.normalize_timing()  # should not raise
+    assert data['medias'] == []

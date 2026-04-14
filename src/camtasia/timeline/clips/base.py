@@ -1313,3 +1313,12 @@ class BaseClip:
             if isinstance(parameter_value, dict) and 'keyframes' in parameter_value:
                 return True
         return False
+
+    def clear_all_keyframes(self) -> Self:
+        """Remove keyframes from ALL parameters, keeping default values."""
+        parameters: dict[str, Any] = self._data.get('parameters', {})
+        for parameter_name, parameter_value in parameters.items():
+            if isinstance(parameter_value, dict) and 'keyframes' in parameter_value:
+                parameters[parameter_name] = parameter_value.get('defaultValue', 0)
+        return self
+        return False

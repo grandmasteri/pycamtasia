@@ -1556,6 +1556,20 @@ class Track:
         )
         return clip_from_dict(nearest_media)  # type: ignore[return-value]
 
+    def normalize_timing(self) -> None:
+        """Shift all clips so the first clip starts at time 0."""
+        medias: list[dict[str, Any]] = self._data.get('medias', [])
+        if not medias:
+            return
+        earliest_start: int = min(
+            int(media_dict.get('start', 0)) for media_dict in medias
+        )
+        if earliest_start <= 0:
+            return
+        for media_dict in medias:
+            current_start: int = int(media_dict.get('start', 0))
+            media_dict['start'] = current_start - earliest_start
+
 
 class _ClipAccessor:
     """Lightweight iterable/indexable accessor over a track's clips."""

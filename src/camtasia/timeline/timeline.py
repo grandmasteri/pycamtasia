@@ -620,6 +620,11 @@ class Timeline:
             return None
         return max(all_tracks, key=lambda track: track.end_time_ticks())
 
+    def normalize_all_tracks(self) -> None:
+        """Normalize timing on all tracks so each starts at time 0."""
+        for track in self.tracks:
+            track.normalize_timing()
+
 
 class _TrackAccessor:
     """Iterable/indexable accessor over timeline tracks."""
