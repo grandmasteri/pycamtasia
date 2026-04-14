@@ -1217,6 +1217,19 @@ class Project:
         lines.append(f'| **Total** | **{self.clip_count}** | | **{self.duration_seconds:.1f}s** | |')
         return '\n'.join(lines)
 
+    def save_with_history(self) -> None:
+        """Save the project and persist undo history to a sidecar file."""
+        self.save()
+        history_file_path: Path = self.file_path / '.pycamtasia_history.json'
+        history_file_path.write_text(self.history.to_json())
+
+    def load_history(self) -> None:
+        """Load persisted undo history from the sidecar file."""
+        from camtasia.history import ChangeHistory
+        history_file_path: Path = self.file_path / '.pycamtasia_history.json'
+        if history_file_path.exists():
+            self._history = ChangeHistory.from_json(history_file_path.read_text())
+
     def to_dict(self) -> dict:
         """Return a deep copy of the project data dict."""
         import copy
