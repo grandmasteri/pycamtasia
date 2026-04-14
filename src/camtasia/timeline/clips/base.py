@@ -617,6 +617,7 @@ class BaseClip:
         opacity: float = 0.5,
         angle: float = 5.5,
         color: tuple[float, float, float] = (0, 0, 0),
+        enabled: int = 1,
     ) -> Effect:
         """Add a drop-shadow effect.
 
@@ -626,6 +627,7 @@ class BaseClip:
             opacity: Shadow opacity (0.0–1.0).
             angle: Shadow angle in degrees.
             color: RGB colour tuple.
+            enabled: Whether the shadow is enabled (1=on, 0=off).
 
         Returns:
             Wrapped :class:`DropShadow` effect.
@@ -636,7 +638,7 @@ class BaseClip:
             'category': 'categoryVisualEffects',
             'parameters': {
                 'angle': angle,
-                'enabled': 1,
+                'enabled': enabled,
                 'offset': offset,
                 'blur': blur,
                 'opacity': opacity,
@@ -815,11 +817,12 @@ class BaseClip:
         })
         return self
 
-    def add_lut_effect(self, *, intensity: float = 1.0) -> Self:
+    def add_lut_effect(self, *, intensity: float = 1.0, preset_name: str = '') -> Self:
         """Add a color LUT (Look-Up Table) effect.
 
         Args:
             intensity: Effect intensity 0.0-1.0.
+            preset_name: Optional preset name for metadata.
         """
         self.add_effect({
             'effectName': EffectName.LUT_EFFECT,
@@ -834,6 +837,7 @@ class BaseClip:
                 'highlightRampStart': 1.0,
                 'highlightRampEnd': 1.0,
             },
+            'metadata': {'presetName': preset_name} if preset_name else {},
         })
         return self
 

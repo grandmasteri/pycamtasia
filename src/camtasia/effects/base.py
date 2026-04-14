@@ -43,6 +43,11 @@ class Effect:
         return self._data.get("category", "")
 
     @property
+    def metadata(self) -> dict:
+        """Top-level metadata dict for this effect."""
+        return self._data.get('metadata', {})
+
+    @property
     def parameters(self) -> dict[str, Any]:
         return self._data.get("parameters", {})
 

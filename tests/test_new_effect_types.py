@@ -149,3 +149,43 @@ class TestNewTransitionTypes:
         tl = self._make_list()
         t = tl.add_stretch(1, 2, duration_seconds=0.5)
         assert t.name == "Stretch"
+
+
+class TestDropShadowEnabledParam:
+    def test_drop_shadow_enabled_param(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        clip.add_drop_shadow(enabled=0)
+        assert data["effects"][0]["parameters"]["enabled"] == 0
+
+        data2 = _base_clip_dict()
+        clip2 = BaseClip(data2)
+        clip2.add_drop_shadow()
+        assert data2["effects"][0]["parameters"]["enabled"] == 1
+
+
+class TestEffectMetadataProperty:
+    def test_effect_metadata_property(self):
+        from camtasia.effects.base import Effect
+
+        # Effect with metadata
+        e = Effect({"effectName": "X", "parameters": {}, "metadata": {"presetName": "foo"}})
+        assert e.metadata == {"presetName": "foo"}
+
+        # Effect without metadata
+        e2 = Effect({"effectName": "Y", "parameters": {}})
+        assert e2.metadata == {}
+
+
+class TestAddLutEffectMetadata:
+    def test_add_lut_effect_with_preset_name(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        clip.add_lut_effect(preset_name="Warm")
+        assert data["effects"][0]["metadata"] == {"presetName": "Warm"}
+
+    def test_add_lut_effect_without_preset_name(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        clip.add_lut_effect()
+        assert data["effects"][0]["metadata"] == {}
