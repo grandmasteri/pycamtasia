@@ -8,7 +8,7 @@ import warnings
 from contextlib import contextmanager
 from importlib import resources as importlib_resources
 from pathlib import Path
-from typing import Any, Iterator, TYPE_CHECKING
+from typing import Any, Callable, Iterator, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from camtasia.history import ChangeHistory
@@ -481,6 +481,32 @@ class Project:
             proj.title = title
         proj.frame_rate = frame_rate
         return proj
+
+    def batch_apply(
+        self,
+        operation: Callable[[BaseClip], Any],
+        *,
+        clip_type: str | ClipType | None = None,
+        on_track: str | None = None,
+    ) -> int:
+        """Apply an operation to matching clips. Returns count of clips modified."""
+        matching_clips: list[tuple[Track, BaseClip]] = self.search_clips(
+            clip_type=clip_type,
+            on_track=on_track,
+        )
+        for _, clip in matching_clips:
+            operation(clip)
+        return len(matching_clips)
+
+    def replace_media_path(self, old_path_fragment: str, new_path_fragment: str) -> int:
+        """Replace a path fragment in all source bin entries. Returns count changed."""
+        replacement_count: int = 0
+        for source_entry in self._data.get('sourceBin', []):
+            current_source: str = source_entry.get('src', '')
+            if old_path_fragment in current_source:
+                source_entry['src'] = current_source.replace(old_path_fragment, new_path_fragment)
+                replacement_count += 1
+        return replacement_count
 
     @staticmethod
     def _flatten_parameters(obj: Any) -> None:

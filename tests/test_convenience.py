@@ -2947,3 +2947,51 @@ def test_project_average_clip_duration(project):
 
 def test_project_average_clip_duration_empty(project):
     assert project.average_clip_duration_seconds == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Project.batch_apply
+# ---------------------------------------------------------------------------
+
+def test_batch_apply(project):
+    track = project.timeline.add_track('BA')
+    track.add_clip('VMFile', None, 0, 705600000)
+    track.add_clip('VMFile', None, 705600000, 705600000)
+    titles: list[str] = []
+    modified_count: int = project.batch_apply(lambda clip: titles.append(clip.clip_type))
+    assert modified_count == 2
+    assert len(titles) == 2
+
+
+def test_batch_apply_with_filter(project):
+    track = project.timeline.add_track('BAF')
+    track.add_clip('VMFile', None, 0, 705600000)
+    track.add_clip('AMFile', None, 0, 705600000)
+    modified_count: int = project.batch_apply(
+        lambda clip: None,
+        clip_type='VMFile',
+        on_track='BAF',
+    )
+    assert modified_count == 1
+
+
+# ---------------------------------------------------------------------------
+# Project.replace_media_path
+# ---------------------------------------------------------------------------
+
+def test_replace_media_path(project):
+    project._data.setdefault('sourceBin', []).extend([
+        {'src': '/old/path/video.mp4'},
+        {'src': '/old/path/audio.wav'},
+    ])
+    replaced_count: int = project.replace_media_path('/old/path', '/new/path')
+    assert replaced_count == 2
+    assert project._data['sourceBin'][-2]['src'] == '/new/path/video.mp4'
+    assert project._data['sourceBin'][-1]['src'] == '/new/path/audio.wav'
+
+
+def test_replace_media_path_no_match(project):
+    project._data.setdefault('sourceBin', []).append({'src': '/some/other/file.mp4'})
+    replaced_count: int = project.replace_media_path('/nonexistent', '/replacement')
+    assert replaced_count == 0
+    assert project._data['sourceBin'][-1]['src'] == '/some/other/file.mp4'
