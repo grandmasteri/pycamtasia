@@ -695,6 +695,10 @@ class BaseClip:
         brightness: float = 0.0,
         contrast: float = 0.0,
         saturation: float = 1.0,
+        shadow_ramp_start: float = 0.0,
+        shadow_ramp_end: float = 0.0,
+        highlight_ramp_start: float = 1.0,
+        highlight_ramp_end: float = 1.0,
     ) -> Self:
         """Add a color adjustment effect.
 
@@ -702,6 +706,10 @@ class BaseClip:
             brightness: -1.0 to 1.0 (0 = no change).
             contrast: -1.0 to 1.0 (0 = no change).
             saturation: 0.0 to 3.0 (1.0 = no change).
+            shadow_ramp_start: Shadow ramp start (0.0-1.0).
+            shadow_ramp_end: Shadow ramp end (0.0-1.0).
+            highlight_ramp_start: Highlight ramp start (0.0-1.0).
+            highlight_ramp_end: Highlight ramp end (0.0-1.0).
         """
         self.add_effect({
             'effectName': EffectName.COLOR_ADJUSTMENT,
@@ -711,6 +719,10 @@ class BaseClip:
                 'brightness': brightness,
                 'contrast': contrast,
                 'saturation': saturation,
+                'shadowRampStart': shadow_ramp_start,
+                'shadowRampEnd': shadow_ramp_end,
+                'highlightRampStart': highlight_ramp_start,
+                'highlightRampEnd': highlight_ramp_end,
             },
         })
         return self

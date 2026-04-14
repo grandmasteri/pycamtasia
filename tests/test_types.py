@@ -1,5 +1,5 @@
 """Tests for camtasia.types enums."""
-from camtasia.types import ClipType, EffectName, BlendMode, MaskShape, CalloutShape
+from camtasia.types import ClipType, EffectName, BlendMode, MaskShape, CalloutShape, TransitionType, CalloutKind
 
 
 class TestClipTypeValues:
@@ -106,3 +106,27 @@ class TestCalloutShapeSetter:
         c = Callout(data)
         c.shape = 'triangle'
         assert data['def']['shape'] == 'triangle'
+
+
+class TestNewTransitionTypes:
+    """Verify the three new transition type enum values."""
+
+    def test_new_transition_types(self):
+        assert TransitionType.GLITCH3.value == 'Glitch3'
+        assert TransitionType.PAINT_ARCS.value == 'PaintArcs'
+        assert TransitionType.SPHERICAL_SPIN.value == 'SphericalSpin'
+        # str enum comparison
+        assert TransitionType.GLITCH3 == 'Glitch3'
+        assert TransitionType.PAINT_ARCS == 'PaintArcs'
+        assert TransitionType.SPHERICAL_SPIN == 'SphericalSpin'
+
+
+class TestCalloutKindValues:
+    """Verify CalloutKind enum values."""
+
+    def test_callout_kind_values(self):
+        assert CalloutKind.REMIX.value == 'remix'
+        assert CalloutKind.WIN_BLUR.value == 'TypeWinBlur'
+        # str enum comparison
+        assert CalloutKind.REMIX == 'remix'
+        assert CalloutKind.WIN_BLUR == 'TypeWinBlur'

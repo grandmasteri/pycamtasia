@@ -289,6 +289,26 @@ class TransitionList:
         ticks = int(duration_seconds * EDIT_RATE)
         return self.add(TransitionType.STRETCH, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
+    def add_paint_arcs(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 0.5,
+    ) -> Transition:
+        """Add a paint-arcs transition."""
+        ticks = int(duration_seconds * EDIT_RATE)
+        return self.add(TransitionType.PAINT_ARCS, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
+    def add_spherical_spin(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 0.5,
+    ) -> Transition:
+        """Add a spherical-spin transition."""
+        ticks = int(duration_seconds * EDIT_RATE)
+        return self.add(TransitionType.SPHERICAL_SPIN, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
     def remove(self, index: int) -> None:
         """Remove a transition by index.
 

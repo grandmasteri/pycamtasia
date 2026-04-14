@@ -63,6 +63,9 @@ class TransitionType(str, Enum):
     LINEAR_BLUR = 'LinearBlur'
     STRETCH = 'Stretch'
     FADE = 'Fade'
+    GLITCH3 = 'Glitch3'
+    PAINT_ARCS = 'PaintArcs'
+    SPHERICAL_SPIN = 'SphericalSpin'
 
 
 class BehaviorPreset(str, Enum):
@@ -104,6 +107,12 @@ class InterpolationType(str, Enum):
     LINEAR = 'linr'
     EASE_IN_OUT_ELASTIC = 'eioe'
     HOLD = 'hold'
+
+
+class CalloutKind(str, Enum):
+    """Callout kind identifiers."""
+    REMIX = 'remix'
+    WIN_BLUR = 'TypeWinBlur'
 
 
 class TrackType(str, Enum):
@@ -159,6 +168,11 @@ class ColorAdjustmentParams(TypedDict, total=False):
     brightness: float
     contrast: float
     saturation: float
+    channel: int
+    shadowRampStart: float
+    shadowRampEnd: float
+    highlightRampStart: float
+    highlightRampEnd: float
 
 
 class EffectDict(TypedDict):

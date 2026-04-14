@@ -65,6 +65,7 @@ from camtasia.types import (
     TransitionType,
     BehaviorPreset,
     BlendMode,
+    CalloutKind,
     ValidationLevel,
     MediaType,
 )
@@ -151,6 +152,7 @@ __all__ = [
     "TransitionType",
     "BehaviorPreset",
     "BlendMode",
+    "CalloutKind",
     "ValidationLevel",
     "MediaType",
 ]

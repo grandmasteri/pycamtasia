@@ -160,6 +160,44 @@ class Track:
         """Show this track's video."""
         self.video_hidden = False
 
+    # Convenience aliases (is_* style)
+
+    @property
+    def is_muted(self) -> bool:
+        """Alias for :attr:`audio_muted`."""
+        return self.audio_muted
+
+    @is_muted.setter
+    def is_muted(self, value: bool) -> None:
+        self.audio_muted = value
+
+    @property
+    def is_hidden(self) -> bool:
+        """Alias for :attr:`video_hidden`."""
+        return self.video_hidden
+
+    @is_hidden.setter
+    def is_hidden(self, value: bool) -> None:
+        self.video_hidden = value
+
+    @property
+    def is_solo(self) -> bool:
+        """Alias for :attr:`solo`."""
+        return self.solo
+
+    @is_solo.setter
+    def is_solo(self, value: bool) -> None:
+        self.solo = value
+
+    @property
+    def is_magnetic(self) -> bool:
+        """Alias for :attr:`magnetic`."""
+        return self.magnetic
+
+    @is_magnetic.setter
+    def is_magnetic(self, value: bool) -> None:
+        self.magnetic = value
+
     @property
     def is_locked(self) -> bool:
         """Whether the track is locked against editing."""

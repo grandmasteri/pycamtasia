@@ -2018,3 +2018,88 @@ def test_has_audio(project):
 
 def test_has_video(project):
     assert project.has_video is False  # empty project has no video
+
+
+# ---------------------------------------------------------------------------
+# Track is_muted / is_hidden / is_solo / is_magnetic
+# ---------------------------------------------------------------------------
+
+def test_track_is_muted():
+    track = _make_track()
+    assert track.is_muted is False
+    track.is_muted = True
+    assert track.is_muted is True
+    assert track.audio_muted is True
+
+
+def test_track_is_hidden():
+    track = _make_track()
+    assert track.is_hidden is False
+    track.is_hidden = True
+    assert track.is_hidden is True
+    assert track.video_hidden is True
+
+
+def test_track_is_solo():
+    track = _make_track()
+    assert track.is_solo is False
+    track.is_solo = True
+    assert track.is_solo is True
+    assert track.solo is True
+
+
+def test_track_is_magnetic():
+    track = _make_track()
+    assert track.is_magnetic is False
+    track.is_magnetic = True
+    assert track.is_magnetic is True
+    assert track.magnetic is True
+
+
+# ---------------------------------------------------------------------------
+# ColorAdjustment ramp parameters
+# ---------------------------------------------------------------------------
+
+def test_color_adjustment_ramp_params():
+    media = {'id': 1, '_type': 'IMFile', 'start': 0, 'duration': 100, 'effects': []}
+    from camtasia.timeline.clips import clip_from_dict
+    clip = clip_from_dict(media)
+    clip.add_color_adjustment(
+        brightness=0.1,
+        shadow_ramp_start=0.05,
+        shadow_ramp_end=0.2,
+        highlight_ramp_start=0.8,
+        highlight_ramp_end=0.95,
+    )
+    effects = media['effects']
+    assert len(effects) == 1
+    params = effects[0]['parameters']
+    assert params['brightness'] == 0.1
+    assert params['shadowRampStart'] == 0.05
+    assert params['shadowRampEnd'] == 0.2
+    assert params['highlightRampStart'] == 0.8
+    assert params['highlightRampEnd'] == 0.95
+
+
+def test_add_paint_arcs_transition():
+    from camtasia.timeline.track import Track
+    data = {'trackIndex': 0, 'medias': [
+        {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 705600000},
+        {'id': 2, '_type': 'AMFile', 'start': 705600000, 'duration': 705600000},
+    ], 'transitions': []}
+    t = Track({'ident': 'test'}, data)
+    t.transitions.add_paint_arcs(1, 2, 0.5)
+    assert len(data['transitions']) == 1
+    assert data['transitions'][0]['name'] == 'PaintArcs'
+
+
+def test_add_spherical_spin_transition():
+    from camtasia.timeline.track import Track
+    data = {'trackIndex': 0, 'medias': [
+        {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 705600000},
+        {'id': 2, '_type': 'AMFile', 'start': 705600000, 'duration': 705600000},
+    ], 'transitions': []}
+    t = Track({'ident': 'test'}, data)
+    t.transitions.add_spherical_spin(1, 2, 0.5)
+    assert len(data['transitions']) == 1
+    assert data['transitions'][0]['name'] == 'SphericalSpin'
