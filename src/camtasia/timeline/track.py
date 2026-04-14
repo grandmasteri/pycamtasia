@@ -781,6 +781,60 @@ class Track:
         )
         return clip  # type: ignore[return-value]
 
+    def group_clips(self, clip_ids: list[int]) -> Group:
+        """Group the specified clips into a new Group clip.
+
+        The clips are removed from this track and placed inside a new
+        Group clip at the earliest clip's start position.
+
+        Args:
+            clip_ids: List of clip IDs to group together.
+
+        Returns:
+            The newly created Group containing the specified clips.
+
+        Raises:
+            KeyError: No clips found with the given IDs.
+        """
+        medias: list[dict[str, Any]] = self._data.get('medias', [])
+        clips_to_group: list[dict[str, Any]] = [
+            m for m in medias if m.get('id') in clip_ids
+        ]
+        if not clips_to_group:
+            raise KeyError(f'No clips found with ids {clip_ids}')
+
+        earliest_start: int = min(
+            int(c.get('start', 0)) for c in clips_to_group
+        )
+        latest_end: int = max(
+            int(c.get('start', 0)) + int(c.get('duration', 0))
+            for c in clips_to_group
+        )
+        group_duration: int = latest_end - earliest_start
+
+        # Build internal track with clips adjusted to group-relative timing
+        internal_medias: list[dict[str, Any]] = []
+        for clip_data in clips_to_group:
+            cloned: dict[str, Any] = copy.deepcopy(clip_data)
+            cloned['start'] = int(cloned.get('start', 0)) - earliest_start
+            internal_medias.append(cloned)
+
+        # Remove original clips from this track
+        for clip_id in clip_ids:
+            self.remove_clip(clip_id)
+
+        # Create the Group
+        group = self.add_group(
+            start_seconds=ticks_to_seconds(earliest_start),
+            duration_seconds=ticks_to_seconds(group_duration),
+            internal_tracks=[{
+                'trackIndex': 0,
+                'medias': internal_medias,
+                'transitions': [],
+            }],
+        )
+        return group
+
     def add_screen_recording(
         self,
         source_id: int,

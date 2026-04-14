@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import copy
 from fractions import Fraction
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from camtasia.timeline.transitions import TransitionList
 from typing import Any, Iterator
 
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
@@ -46,6 +50,50 @@ class GroupTrack:
         from camtasia.timeline.transitions import TransitionList
         return TransitionList(self._data)
 
+    def add_clip(
+        self,
+        clip_type: str,
+        source_id: int | None,
+        start_ticks: int,
+        duration_ticks: int,
+        **extra_fields: Any,
+    ) -> BaseClip:
+        """Add a clip to this internal group track.
+
+        Args:
+            clip_type: The ``_type`` value (e.g. ``'AMFile'``, ``'VMFile'``).
+            source_id: Source bin ID, or ``None`` for callouts/groups.
+            start_ticks: Timeline position in ticks (group-relative).
+            duration_ticks: Playback duration in ticks.
+            **extra_fields: Additional fields merged into the clip dict.
+
+        Returns:
+            The newly created typed clip object.
+        """
+        next_id: int = max(
+            (int(m.get('id', 0)) for m in self._data.get('medias', [])),
+            default=0,
+        ) + 1
+        clip_data: dict[str, Any] = {
+            '_type': clip_type,
+            'id': next_id,
+            'start': start_ticks,
+            'duration': duration_ticks,
+            'mediaStart': 0,
+            'mediaDuration': duration_ticks,
+            'scalar': 1,
+            'parameters': {},
+            'effects': [],
+            'metadata': {},
+            'animationTracks': {},
+            **extra_fields,
+        }
+        if source_id is not None:
+            clip_data['src'] = source_id
+        self._data.setdefault('medias', []).append(clip_data)
+        from camtasia.timeline.clips import clip_from_dict
+        return clip_from_dict(clip_data)
+
     def __len__(self) -> int:
         """Number of clips in this group track."""
         return len(self._data.get('medias', []))
@@ -69,6 +117,43 @@ class Group(BaseClip):
     def tracks(self) -> list[GroupTrack]:
         """Internal tracks, each with their own clips."""
         return [GroupTrack(t) for t in self._data.get('tracks', [])]
+
+    @property
+    def clip_count(self) -> int:
+        """Total number of clips across all internal tracks."""
+        return sum(len(group_track) for group_track in self.tracks)
+
+    def add_internal_track(self) -> GroupTrack:
+        """Add a new empty internal track to this Group.
+
+        Returns:
+            The newly created GroupTrack.
+        """
+        track_index: int = len(self._data.get('tracks', []))
+        new_track_data: dict[str, Any] = {
+            'trackIndex': track_index,
+            'medias': [],
+            'transitions': [],
+        }
+        self._data.setdefault('tracks', []).append(new_track_data)
+        return GroupTrack(new_track_data)
+
+    def ungroup(self) -> list[BaseClip]:
+        """Extract all internal clips as a flat list.
+
+        Returns the clips with their start times adjusted to be relative
+        to the Group's position on the timeline.
+
+        Returns:
+            List of clips with timeline-absolute start positions.
+        """
+        group_start: int = self.start
+        extracted_clips: list[BaseClip] = []
+        for group_track in self.tracks:
+            for clip in group_track.clips:
+                clip._data['start'] = clip.start + group_start
+                extracted_clips.append(clip)
+        return extracted_clips
 
     @property
     def attributes(self) -> dict[str, Any]:
