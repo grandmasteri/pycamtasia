@@ -12,7 +12,7 @@
 
 ---
 
-**pycamtasia** is a Python library for programmatic access to TechSmith Camtasia project files (`.cmproj` / `.tscproj`). Load projects, manipulate timelines, apply effects, manage media, and save — all from Python. Validated against 86 TechSmith sample assets with 1,752 tests at 100% coverage.
+**pycamtasia** is a Python library for programmatic access to TechSmith Camtasia project files (`.cmproj` / `.tscproj`). Load projects, manipulate timelines, apply effects, manage media, and save — all from Python. Validated against 86 TechSmith sample assets with 1,774 tests at 100% coverage.
 
 📖 **[Documentation](https://grandmasteri.github.io/pycamtasia/)** · 📦 **[PyPI](https://pypi.org/project/pycamtasia/)** · 🐛 **[Issues](https://github.com/grandmasteri/pycamtasia/issues)**
 
@@ -76,7 +76,7 @@ proj.save()
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ```bash
-pytest                                    # 1,752 tests, ~13s
+pytest                                    # 1,774 tests, ~13s
 pytest --cov=camtasia --cov-report=term   # with coverage
 mypy src/camtasia                         # 0 errors
 ```
