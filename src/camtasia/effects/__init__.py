@@ -30,7 +30,7 @@ try:
 except Exception:
     pass
 
-if _EffectSchema is not None:
+if _EffectSchema is not None:  # pragma: no cover
     EffectSchema = _EffectSchema
     ChromaKeyEffect = _ChromaKeyEffect
 else:
