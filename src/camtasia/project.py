@@ -1471,6 +1471,30 @@ class Project:
             extension_counter[extension] += 1
         return dict(extension_counter)
 
+    def move_all_clips_to_track(self, source_track_name: str, target_track_name: str) -> int:
+        """Move all clips from one track to another by name.
+
+        Args:
+            source_track_name: Name of the track to move clips from.
+            target_track_name: Name of the track to move clips to.
+
+        Returns:
+            The number of clips moved.
+
+        Raises:
+            KeyError: If either track name is not found.
+        """
+        source_track: Track | None = self.timeline.find_track_by_name(source_track_name)
+        target_track: Track | None = self.timeline.find_track_by_name(target_track_name)
+        if source_track is None:
+            raise KeyError(f'Source track not found: {source_track_name}')
+        if target_track is None:
+            raise KeyError(f'Target track not found: {target_track_name}')
+        clip_ids_to_move: list[int] = list(source_track.clip_ids)
+        for clip_id in clip_ids_to_move:
+            source_track.move_clip_to_track(clip_id, target_track)
+        return len(clip_ids_to_move)
+
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
     """Load a Camtasia project from disk.

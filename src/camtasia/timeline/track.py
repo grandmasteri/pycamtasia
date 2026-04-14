@@ -387,6 +387,36 @@ class Track:
             self.remove_clip(cid)
         return len(to_remove)
 
+    def move_clip_to_track(self, clip_id: int, target_track: Track) -> BaseClip:
+        """Move a clip from this track to another track.
+
+        The clip is removed from this track and a deep copy (with a new
+        ID) is appended to the target track's media list.
+
+        Args:
+            clip_id: The unique clip ID to move.
+            target_track: The destination track.
+
+        Returns:
+            The newly created clip on the target track.
+
+        Raises:
+            KeyError: No clip with the given ID exists on this track.
+        """
+        source_medias: list[dict[str, Any]] = self._data.get('medias', [])
+        clip_data: dict[str, Any] | None = None
+        for media_dict in source_medias:
+            if media_dict.get('id') == clip_id:
+                clip_data = media_dict
+                break
+        if clip_data is None:
+            raise KeyError(f'No clip with id={clip_id} on this track')
+        self.remove_clip(clip_id)
+        moved_data: dict[str, Any] = copy.deepcopy(clip_data)
+        moved_data['id'] = target_track._next_clip_id()
+        target_track._data.setdefault('medias', []).append(moved_data)
+        return clip_from_dict(moved_data)
+
     def remove_short_clips(self, minimum_duration_seconds: float) -> int:
         """Remove all clips shorter than the given duration. Returns count removed."""
         from camtasia.timing import seconds_to_ticks

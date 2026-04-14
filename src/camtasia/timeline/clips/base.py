@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fractions import Fraction
 from collections.abc import Callable
-from typing import Any
+from typing import Any, TYPE_CHECKING
 import sys
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -11,6 +11,10 @@ else:  # pragma: no cover
     from typing_extensions import Self
 
 from camtasia.effects.base import Effect, effect_from_dict
+
+if TYPE_CHECKING:
+    from camtasia.timeline.track import Track
+
 from camtasia.effects.visual import Glow
 from camtasia.timing import seconds_to_ticks
 from camtasia.types import BlendMode, ClipSummary, ClipType, EffectName, _ClipData
@@ -1484,3 +1488,22 @@ class BaseClip:
         if predicate(self):
             operation(self)
         return self
+
+    def copy_to_track(self, target_track: Track) -> BaseClip:
+        """Copy this clip to another track, preserving timing and effects.
+
+        Creates a deep copy of the clip data, assigns a new ID from the
+        target track, and appends it to the target track's media list.
+
+        Args:
+            target_track: The track to copy this clip into.
+
+        Returns:
+            The newly created clip on the target track.
+        """
+        import copy
+        cloned_data: dict[str, Any] = copy.deepcopy(self._data)
+        cloned_data['id'] = target_track._next_clip_id()
+        target_track._data.setdefault('medias', []).append(cloned_data)
+        from camtasia.timeline.clips import clip_from_dict
+        return clip_from_dict(cloned_data)
