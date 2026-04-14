@@ -61,7 +61,7 @@ Planned improvements and feature ideas. Open a GitHub Issue to discuss or contri
 ## Future
 
 - [x] **Fix `add_behavior`** — ~~GenericBehaviorEffect requires preset-specific attributes.~~ Fixed: replaced with preset-based implementation using validated Camtasia templates.
-- [ ] **Lottie animation support** — Import Lottie JSON animations as timeline elements for motion graphics overlays.
+- [ ] **Lottie animation support** (deferred — low demand, high effort) — Import Lottie JSON animations as timeline elements for motion graphics overlays.
 - [x] **Caption/subtitle API** — `CaptionAttributes` class for caption styling (font, color, alignment, opacity, background).
 - [x] **EDL export** — `export_edl()` for Edit Decision List export to video editors.
 - [x] **Project merge** — `merge_tracks()` for combining timelines from multiple projects.
