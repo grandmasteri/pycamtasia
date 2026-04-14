@@ -1055,6 +1055,38 @@ class Track:
 
         return clips
 
+    def add_freeze_frame(
+        self,
+        source_clip: BaseClip,
+        at_seconds: float,
+        freeze_duration_seconds: float,
+    ) -> BaseClip:
+        """Add a freeze frame from a source clip at a specific time.
+
+        Creates an image clip that shows a single frame from the source,
+        placed immediately after the specified time point.
+
+        Args:
+            source_clip: The clip to capture a frame from.
+            at_seconds: Timeline time (in seconds) of the frame to freeze.
+            freeze_duration_seconds: How long the freeze frame should last.
+
+        Returns:
+            The newly created freeze-frame clip.
+        """
+        freeze_start_ticks: int = seconds_to_ticks(at_seconds)
+        freeze_duration_ticks: int = seconds_to_ticks(freeze_duration_seconds)
+        media_offset_ticks: int = seconds_to_ticks(at_seconds - source_clip.start_seconds)
+        freeze_clip: BaseClip = self.add_clip(
+            'IMFile',
+            source_clip.source_id,
+            freeze_start_ticks,
+            freeze_duration_ticks,
+            mediaStart=media_offset_ticks,
+            trackNumber=0,
+        )
+        return freeze_clip
+
     def extend_clip(self, clip_id: int, *, extend_seconds: float) -> None:
         """Extend or shorten a clip's duration.
 

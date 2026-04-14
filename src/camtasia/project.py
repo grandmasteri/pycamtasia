@@ -1372,6 +1372,99 @@ class Project:
 
         return result
 
+    def add_voiceover_sequence_v2(
+        self,
+        audio_file_paths: list[Path | str],
+        track_name: str = 'Voiceover',
+        start_seconds: float = 0.0,
+        gap_seconds: float = 0.0,
+    ) -> list[BaseClip]:
+        """Import and place multiple audio files sequentially on a track.
+
+        Each audio file is imported into the source bin, its duration is
+        read from the source bin metadata, and the resulting clip is placed
+        end-to-end (with an optional gap) on the named track.
+
+        Args:
+            audio_file_paths: Paths to audio files to import.
+            track_name: Name of the track to place clips on.
+            start_seconds: Timeline position for the first clip.
+            gap_seconds: Silence gap between consecutive clips.
+
+        Returns:
+            The list of placed audio clips.
+        """
+        from camtasia.timing import seconds_to_ticks, ticks_to_seconds, EDIT_RATE
+
+        track = self.timeline.get_or_create_track(track_name)
+        cursor_seconds: float = start_seconds
+        placed_clips: list[BaseClip] = []
+
+        for audio_path in audio_file_paths:
+            path = Path(audio_path)
+            media = self.import_media(path)
+
+            # Resolve duration from source bin metadata
+            duration_ticks: int = 0
+            for source_entry in self._data.get('sourceBin', []):
+                if source_entry.get('id') == media.id:
+                    source_tracks = source_entry.get('sourceTracks', [])
+                    if source_tracks:
+                        range_val = source_tracks[0].get('range', [0, 0])
+                        edit_rate: int = source_tracks[0].get('editRate', 44100)
+                        duration_samples: int = range_val[1] - range_val[0]
+                        duration_ticks = int(duration_samples / edit_rate * EDIT_RATE)
+                    break
+
+            if duration_ticks == 0:
+                duration_ticks = seconds_to_ticks(5.0)  # fallback  # pragma: no cover
+
+            duration_seconds: float = ticks_to_seconds(duration_ticks)
+            clip = track.add_audio(media.id, start_seconds=cursor_seconds, duration_seconds=duration_seconds)
+            placed_clips.append(clip)
+            cursor_seconds += duration_seconds + gap_seconds
+
+        return placed_clips
+
+    def add_image_sequence(
+        self,
+        image_file_paths: list[Path | str],
+        track_name: str = 'Images',
+        start_seconds: float = 0.0,
+        per_image_seconds: float = 5.0,
+        fade_seconds: float = 0.5,
+    ) -> list[BaseClip]:
+        """Import and place multiple images sequentially with fade animations.
+
+        Each image is imported into the source bin and placed on the named
+        track for the specified duration.  Optional fade-in and fade-out
+        animations are applied to each clip.
+
+        Args:
+            image_file_paths: Paths to image files to import.
+            track_name: Name of the track to place clips on.
+            start_seconds: Timeline position for the first image.
+            per_image_seconds: Display duration per image.
+            fade_seconds: Fade-in and fade-out duration (0 to disable).
+
+        Returns:
+            The list of placed image clips.
+        """
+        track = self.timeline.get_or_create_track(track_name)
+        cursor_seconds: float = start_seconds
+        placed_clips: list[BaseClip] = []
+
+        for image_path in image_file_paths:
+            media = self.import_media(Path(image_path))
+            clip = track.add_image(media.id, start_seconds=cursor_seconds, duration_seconds=per_image_seconds)
+            if fade_seconds > 0:
+                clip.fade_in(fade_seconds)
+                clip.fade_out(fade_seconds)
+            placed_clips.append(clip)
+            cursor_seconds += per_image_seconds
+
+        return placed_clips
+
     def copy_to(self, dest_path: str | Path) -> 'Project':
         """Copy this project to a new location.
 
