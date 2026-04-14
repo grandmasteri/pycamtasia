@@ -303,6 +303,11 @@ class Project:
         return not self.timeline.has_clips
 
     @property
+    def empty_tracks(self) -> list[Track]:
+        """All tracks with no clips."""
+        return self.timeline.empty_tracks
+
+    @property
     def has_screen_recording(self) -> bool:
         """Whether the project contains any screen recording clips."""
         from camtasia.timeline.clips.group import Group
@@ -316,6 +321,21 @@ class Project:
     def track_count(self) -> int:
         """Number of tracks in the timeline."""
         return self.timeline.track_count
+
+    def remove_track_by_name(self, track_name: str) -> bool:
+        """Remove the first track with the given name.
+
+        Args:
+            track_name: Display name of the track to remove.
+
+        Returns:
+            True if a matching track was found and removed, False otherwise.
+        """
+        for track in self.timeline.tracks:
+            if track.name == track_name:
+                self.timeline.remove_track(track.index)
+                return True
+        return False
 
     @property
     def clip_count(self) -> int:

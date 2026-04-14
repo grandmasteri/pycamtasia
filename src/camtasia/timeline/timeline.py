@@ -67,6 +67,11 @@ class Timeline:
         """Whether any track has clips."""
         return self.total_clip_count > 0
 
+    @property
+    def total_transition_count(self) -> int:
+        """Total number of transitions across all tracks."""
+        return sum(track.transition_count for track in self.tracks)
+
     def add_track(self, name: str = '') -> Track:
         """Append a new empty track.
 
@@ -271,6 +276,20 @@ class Timeline:
     def empty_tracks(self) -> list[Track]:
         """Return all tracks with no clips."""
         return [t for t in self.tracks if t.is_empty]
+
+    def find_track_by_name(self, track_name: str) -> Track | None:
+        """Find the first track with the given name, or None.
+
+        Args:
+            track_name: Exact track name to search for.
+
+        Returns:
+            The first matching Track, or None if no track has that name.
+        """
+        for track in self.tracks:
+            if track.name == track_name:
+                return track
+        return None
 
     @property
     def tracks_with_clips(self) -> list[Track]:

@@ -268,6 +268,19 @@ class Track:
         return len(self._data.get('transitions', []))
 
     @property
+    def total_transition_duration_seconds(self) -> float:
+        """Total duration of all transitions on this track in seconds.
+
+        Sums the ``duration`` field (in ticks) of every transition dict
+        and converts to seconds using the Camtasia edit rate.
+        """
+        total_ticks: int = sum(
+            int(transition_dict.get('duration', 0))
+            for transition_dict in self._data.get('transitions', [])
+        )
+        return float(ticks_to_seconds(total_ticks))
+
+    @property
     def markers(self) -> MarkerList:
         """Per-media markers (TOC keyframes in track parameters)."""
         return MarkerList(self._data)
@@ -1053,6 +1066,17 @@ class Track:
     def total_gap_seconds(self) -> float:
         """Total gap time between clips in seconds."""
         return sum(end - start for start, end in self.gaps())
+
+    def find_gaps_longer_than(self, threshold_seconds: float) -> list[tuple[float, float]]:
+        """Find gaps between clips that exceed the given duration threshold.
+
+        Args:
+            threshold_seconds: Minimum gap duration in seconds to include.
+
+        Returns:
+            List of (gap_start, gap_end) tuples in seconds for gaps exceeding the threshold.
+        """
+        return [(gap_start, gap_end) for gap_start, gap_end in self.gaps() if gap_end - gap_start > threshold_seconds]
 
     def overlaps(self) -> list[tuple[int, int]]:
         """Find overlapping clips on this track.

@@ -3211,3 +3211,294 @@ def test_total_duration_formatted_with_hours(project):
     assert ':' in actual_formatted
     parts = actual_formatted.split(':')
     assert len(parts) == 3  # H:MM:SS
+
+
+# ---------------------------------------------------------------------------
+# Track.find_gaps_longer_than
+# ---------------------------------------------------------------------------
+
+def test_find_gaps_longer_than_returns_only_gaps_exceeding_threshold():
+    """find_gaps_longer_than filters out gaps shorter than the threshold."""
+    medias = [
+        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(1.0)},
+        # 0.5s gap
+        {'id': 2, 'start': seconds_to_ticks(1.5), 'duration': seconds_to_ticks(1.0)},
+        # 3.0s gap
+        {'id': 3, 'start': seconds_to_ticks(5.5), 'duration': seconds_to_ticks(1.0)},
+    ]
+    track = _make_track(medias=medias)
+    long_gaps: list[tuple[float, float]] = track.find_gaps_longer_than(1.0)
+    assert len(long_gaps) == 1
+    gap_start, gap_end = long_gaps[0]
+    assert gap_end - gap_start == pytest.approx(3.0, abs=0.01)
+
+
+def test_find_gaps_longer_than_returns_empty_when_no_gaps_exceed():
+    """find_gaps_longer_than returns [] when all gaps are below threshold."""
+    medias = [
+        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(1.0)},
+        {'id': 2, 'start': seconds_to_ticks(1.5), 'duration': seconds_to_ticks(1.0)},
+    ]
+    track = _make_track(medias=medias)
+    long_gaps: list[tuple[float, float]] = track.find_gaps_longer_than(1.0)
+    assert long_gaps == []
+
+
+def test_find_gaps_longer_than_returns_empty_for_no_clips():
+    """find_gaps_longer_than returns [] on an empty track."""
+    track = _make_track(medias=[])
+    assert track.find_gaps_longer_than(0.0) == []
+
+
+# ---------------------------------------------------------------------------
+# Project.empty_tracks
+# ---------------------------------------------------------------------------
+
+def test_project_empty_tracks_returns_tracks_with_no_clips():
+    """Project.empty_tracks delegates to timeline.empty_tracks."""
+    timeline = _make_timeline([
+        ('Audio', [{'id': 1, 'start': 0, 'duration': 100}]),
+        ('Empty', []),
+        ('Also Empty', []),
+    ])
+    empty_track_names: list[str] = [t.name for t in timeline.empty_tracks]
+    assert 'Empty' in empty_track_names
+    assert 'Also Empty' in empty_track_names
+    assert 'Audio' not in empty_track_names
+
+
+def test_project_empty_tracks_returns_empty_list_when_all_have_clips():
+    """Project.empty_tracks returns [] when every track has clips."""
+    timeline = _make_timeline([
+        ('A', [{'id': 1, 'start': 0, 'duration': 100}]),
+    ])
+    empty_tracks: list = timeline.empty_tracks
+    assert empty_tracks == []
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.set_start_seconds
+# ---------------------------------------------------------------------------
+
+def test_set_start_seconds_updates_data():
+    """set_start_seconds writes the correct tick value to _data['start']."""
+    from camtasia.timeline.clips.base import BaseClip
+    clip_data: dict[str, Any] = {'id': 1, 'start': 0, 'duration': 100, 'type': 'VMFile', 'parameters': {}, 'effects': [], 'attributes': {'ident': ''}}
+    clip: BaseClip = BaseClip(clip_data)
+    result = clip.set_start_seconds(2.0)
+    assert clip._data['start'] == seconds_to_ticks(2.0)
+    assert result is clip  # returns self for chaining
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.set_duration_seconds
+# ---------------------------------------------------------------------------
+
+def test_set_duration_seconds_updates_data():
+    """set_duration_seconds writes the correct tick value to _data['duration']."""
+    from camtasia.timeline.clips.base import BaseClip
+    clip_data: dict[str, Any] = {'id': 1, 'start': 0, 'duration': 100, 'type': 'VMFile', 'parameters': {}, 'effects': [], 'attributes': {'ident': ''}}
+    clip: BaseClip = BaseClip(clip_data)
+    result = clip.set_duration_seconds(5.0)
+    assert clip._data['duration'] == seconds_to_ticks(5.0)
+    assert result is clip  # returns self for chaining
+
+
+# ---------------------------------------------------------------------------
+# Timeline.find_track_by_name
+# ---------------------------------------------------------------------------
+
+def test_find_track_by_name_returns_matching_track():
+    """find_track_by_name returns the first track with the given name."""
+    timeline = _make_timeline([
+        ('Audio', []),
+        ('Video', [{'id': 1, 'start': 0, 'duration': 100}]),
+    ])
+    found_track: Track | None = timeline.find_track_by_name('Video')
+    assert found_track is not None
+    assert found_track.name == 'Video'
+
+
+def test_find_track_by_name_returns_none_when_not_found():
+    """find_track_by_name returns None when no track matches."""
+    timeline = _make_timeline([
+        ('Audio', []),
+    ])
+    result: Track | None = timeline.find_track_by_name('Nonexistent')
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Project.remove_track_by_name
+# ---------------------------------------------------------------------------
+
+def test_remove_track_by_name_found(project):
+    """remove_track_by_name removes the first matching track and returns True."""
+    project.timeline.add_track('Disposable')
+    initial_track_count: int = project.track_count
+    removed: bool = project.remove_track_by_name('Disposable')
+    assert removed is True
+    assert project.track_count == initial_track_count - 1
+
+
+def test_remove_track_by_name_not_found(project):
+    """remove_track_by_name returns False when no track matches."""
+    removed: bool = project.remove_track_by_name('NonExistent')
+    assert removed is False
+
+
+def test_remove_track_by_name_only_first(project):
+    """remove_track_by_name removes only the first track with a duplicate name."""
+    project.timeline.add_track('Dup')
+    project.timeline.add_track('Dup')
+    count_before: int = project.track_count
+    project.remove_track_by_name('Dup')
+    assert project.track_count == count_before - 1
+    remaining_names: list[str] = [t.name for t in project.timeline.tracks]
+    assert 'Dup' in remaining_names
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.is_effect_applied
+# ---------------------------------------------------------------------------
+
+def test_is_effect_applied_true():
+    """is_effect_applied returns True when the effect is present."""
+    clip_data: dict = {
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'effects': [{'effectName': 'DropShadow'}],
+    }
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip(clip_data)
+    assert clip.is_effect_applied('DropShadow') is True
+
+
+def test_is_effect_applied_false():
+    """is_effect_applied returns False when the effect is absent."""
+    clip_data: dict = {
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'effects': [{'effectName': 'Glow'}],
+    }
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip(clip_data)
+    assert clip.is_effect_applied('DropShadow') is False
+
+
+def test_is_effect_applied_no_effects():
+    """is_effect_applied returns False when clip has no effects list."""
+    clip_data: dict = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip(clip_data)
+    assert clip.is_effect_applied('DropShadow') is False
+
+
+def test_is_effect_applied_with_enum():
+    """is_effect_applied works with EffectName enum values."""
+    from camtasia.types import EffectName
+    clip_data: dict = {
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'effects': [{'effectName': 'DropShadow'}],
+    }
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip(clip_data)
+    assert clip.is_effect_applied(EffectName.DROP_SHADOW) is True
+
+
+# ---------------------------------------------------------------------------
+# Track.total_transition_duration_seconds
+# ---------------------------------------------------------------------------
+
+def test_total_transition_duration_seconds_empty():
+    """total_transition_duration_seconds is 0.0 when no transitions exist."""
+    track = _make_track()
+    assert track.total_transition_duration_seconds == 0.0
+
+
+def test_total_transition_duration_seconds_single():
+    """total_transition_duration_seconds converts a single transition correctly."""
+    from camtasia.timing import EDIT_RATE
+    duration_ticks: int = EDIT_RATE * 2  # 2 seconds
+    data: dict = {'trackIndex': 0, 'medias': [], 'transitions': [{'duration': duration_ticks}]}
+    attrs: dict = {'ident': 'T'}
+    track = Track(attrs, data)
+    assert track.total_transition_duration_seconds == pytest.approx(2.0)
+
+
+def test_total_transition_duration_seconds_multiple():
+    """total_transition_duration_seconds sums multiple transitions."""
+    from camtasia.timing import EDIT_RATE
+    transitions: list[dict] = [
+        {'duration': EDIT_RATE},      # 1 second
+        {'duration': EDIT_RATE * 3},   # 3 seconds
+    ]
+    data: dict = {'trackIndex': 0, 'medias': [], 'transitions': transitions}
+    attrs: dict = {'ident': 'T'}
+    track = Track(attrs, data)
+    assert track.total_transition_duration_seconds == pytest.approx(4.0)
+
+
+# ---------------------------------------------------------------------------
+# Timeline.total_transition_count
+# ---------------------------------------------------------------------------
+
+def test_timeline_total_transition_count_empty():
+    """total_transition_count is 0 for a timeline with no transitions."""
+    timeline = _make_timeline([('A', []), ('B', [])])
+    assert timeline.total_transition_count == 0
+
+
+def test_timeline_total_transition_count_with_transitions():
+    """total_transition_count sums transitions across all tracks."""
+    data: dict = {
+        'sceneTrack': {'scenes': [{'csml': {'tracks': [
+            {'trackIndex': 0, 'medias': [], 'transitions': [{'duration': 100}]},
+            {'trackIndex': 1, 'medias': [], 'transitions': [{'duration': 200}, {'duration': 300}]},
+        ]}}]},
+        'trackAttributes': [{'ident': 'A'}, {'ident': 'B'}],
+    }
+    timeline = Timeline(data)
+    assert timeline.total_transition_count == 3
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.clear_metadata
+# ---------------------------------------------------------------------------
+
+def test_clear_metadata_removes_all():
+    """clear_metadata empties the metadata dict."""
+    clip_data: dict = {
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'metadata': {'presetName': 'Intro', 'author': 'Test'},
+    }
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip(clip_data)
+    result = clip.clear_metadata()
+    assert clip.metadata == {}
+    assert clip_data['metadata'] == {}
+
+
+def test_clear_metadata_returns_self():
+    """clear_metadata returns self for chaining."""
+    clip_data: dict = {
+        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+        'metadata': {'key': 'value'},
+    }
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip(clip_data)
+    returned: BaseClip = clip.clear_metadata()
+    assert returned is clip
+
+
+def test_clear_metadata_on_empty():
+    """clear_metadata works when metadata is already empty or absent."""
+    clip_data: dict = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip(clip_data)
+    clip.clear_metadata()
+    assert clip_data['metadata'] == {}
+
+
+def test_project_empty_tracks_property(project):
+    """Project.empty_tracks delegates to timeline.empty_tracks."""
+    actual_empty: list = project.empty_tracks
+    assert isinstance(actual_empty, list)

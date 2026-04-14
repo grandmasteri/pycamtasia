@@ -248,6 +248,21 @@ class BaseClip:
         self._data['effects'] = [e for e in effects if e.get('effectName') != effect_name]
         return original - len(self._data['effects'])
 
+    def is_effect_applied(self, effect_name: str | EffectName) -> bool:
+        """Check if a specific effect is applied to this clip.
+
+        Args:
+            effect_name: The effect name string or :class:`EffectName` enum member.
+
+        Returns:
+            True if at least one effect with the given name exists on this clip.
+        """
+        return any(
+            effect_dict.get('effectName') == effect_name
+            for effect_dict in self._data.get('effects', [])
+        )
+        return original - len(self._data['effects'])
+
     @property
     def parameters(self) -> dict[str, Any]:
         """Clip parameters dict."""
@@ -294,6 +309,15 @@ class BaseClip:
     def get_metadata(self, metadata_key: str, default: Any = None) -> Any:
         """Get a metadata value from this clip."""
         return self._data.get('metadata', {}).get(metadata_key, default)
+
+    def clear_metadata(self) -> Self:
+        """Remove all metadata from this clip.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self._data['metadata'] = {}
+        return self
 
     @property
     def animation_tracks(self) -> dict[str, Any]:
@@ -382,6 +406,32 @@ class BaseClip:
     def is_shorter_than(self, threshold_seconds: float) -> bool:
         """Whether this clip's duration is less than the given threshold."""
         return self.duration_seconds < threshold_seconds
+
+    def set_start_seconds(self, start_seconds: float) -> Self:
+        """Set the clip start position in seconds.
+
+        Args:
+            start_seconds: New start position in seconds.
+
+        Returns:
+            Self for method chaining.
+        """
+        from camtasia.timing import seconds_to_ticks
+        self._data['start'] = seconds_to_ticks(start_seconds)
+        return self
+
+    def set_duration_seconds(self, duration_seconds: float) -> Self:
+        """Set the clip duration in seconds.
+
+        Args:
+            duration_seconds: New duration in seconds.
+
+        Returns:
+            Self for method chaining.
+        """
+        from camtasia.timing import seconds_to_ticks
+        self._data['duration'] = seconds_to_ticks(duration_seconds)
+        return self
 
     def set_time_range(self, start_seconds: float, duration_seconds: float) -> Self:
         """Set both start position and duration in seconds.
