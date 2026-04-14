@@ -627,3 +627,54 @@ def test_set_start_duration_roundtrip(start_seconds, duration_seconds):
     clip.set_duration_seconds(duration_seconds)
     assert abs(clip.start_seconds - start_seconds) < 0.001
     assert abs(clip.duration_seconds - duration_seconds) < 0.001
+
+
+# ---------------------------------------------------------------------------
+# 29. group_clips preserves total clip content
+# ---------------------------------------------------------------------------
+
+@given(st.integers(min_value=2, max_value=5))
+@settings(max_examples=20, deadline=None)
+def test_group_clips_preserves_content(num_clips):
+    """Grouping clips should preserve all clip data inside the Group."""
+    track, data = _make_track()
+    clip_ids: list[int] = []
+    for clip_index in range(num_clips):
+        clip = track.add_clip('AMFile', 1, clip_index * TICK, TICK)
+        clip_ids.append(clip.id)
+    
+    # Group all clips
+    from camtasia.timeline.clips.group import Group
+    group = track.group_clips(clip_ids)
+    
+    # The Group should contain all the clips
+    assert group.clip_count == num_clips
+    # The track should now have exactly 1 clip (the Group)
+    assert len(data['medias']) == 1
+
+
+# ---------------------------------------------------------------------------
+# 30. remove_internal_clip reduces clip_count by 1
+# ---------------------------------------------------------------------------
+
+@given(st.integers(min_value=2, max_value=5))
+@settings(max_examples=20, deadline=None)
+def test_remove_internal_clip_reduces_count(num_clips):
+    """Removing an internal clip should reduce clip_count by exactly 1."""
+    from camtasia.timeline.clips.group import Group
+    group_data = {
+        '_type': 'Group', 'id': 1, 'start': 0, 'duration': TICK * num_clips,
+        'mediaDuration': TICK * num_clips, 'mediaStart': 0, 'scalar': 1,
+        'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        'attributes': {'ident': '', 'gain': 1.0, 'mixToMono': False,
+                       'widthAttr': 0.0, 'heightAttr': 0.0, 'maxDurationAttr': 0, 'assetProperties': []},
+        'tracks': [{'trackIndex': 0, 'medias': [
+            {'id': i + 10, '_type': 'AMFile', 'start': i * TICK, 'duration': TICK}
+            for i in range(num_clips)
+        ], 'transitions': [], 'parameters': {}, 'ident': '',
+           'audioMuted': False, 'videoHidden': False, 'magnetic': False, 'matte': 0, 'solo': False}],
+    }
+    group = Group(group_data)
+    original_count: int = group.clip_count
+    group.remove_internal_clip(10)  # remove first clip
+    assert group.clip_count == original_count - 1
