@@ -161,6 +161,16 @@ Always reverse-engineer from real Camtasia output:
 
 No raw `_data` access in consumer/assembly scripts. If pycamtasia doesn't support an operation, implement it in the library first, then use the API.
 
+### Documentation Consistency
+Every commit that changes source code MUST include corresponding documentation updates. This includes:
+- Docstrings on new/changed public methods
+- Updates to relevant docs/guides/ if behavior changes
+- Updates to docs/api/*.rst if new modules are added
+- README feature list updates for user-facing additions
+- CHANGELOG.md entries for all changes
+
+Documentation must never go stale. If a PR changes the API, the docs changes are part of the same commit, not a follow-up.
+
 ## Running Tests
 
 ```bash
