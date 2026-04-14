@@ -1230,6 +1230,33 @@ class Project:
         if history_file_path.exists():
             self._history = ChangeHistory.from_json(history_file_path.read_text())
 
+    def diff_from(self, other: Project) -> list[dict[str, Any]]:
+        """Return JSON Patch operations showing differences from another project.
+
+        Useful for comparing two versions of the same project.
+
+        Args:
+            other: The project to compare against.
+
+        Returns:
+            List of RFC 6902 JSON Patch operations.
+        """
+        import jsonpatch
+        patch = jsonpatch.make_patch(other._data, self._data)
+        return patch.patch  # type: ignore[no-any-return]
+
+    def diff_summary(self, other: Project) -> str:
+        """Human-readable summary of differences from another project."""
+        patch_operations = self.diff_from(other)
+        if not patch_operations:
+            return 'No differences'
+        operation_counts: dict[str, int] = {}
+        for operation in patch_operations:
+            operation_type = operation.get('op', '?')
+            operation_counts[operation_type] = operation_counts.get(operation_type, 0) + 1
+        summary_parts = [f'{count} {op_type}' for op_type, count in sorted(operation_counts.items())]
+        return f'{len(patch_operations)} changes: {", ".join(summary_parts)}'
+
     def to_dict(self) -> dict:
         """Return a deep copy of the project data dict."""
         import copy
