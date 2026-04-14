@@ -15,4 +15,5 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -e '.[test]'
+      - run: mypy src/camtasia/
       - run: pytest tests/ --cov=camtasia --cov-report=xml --cov-report=term-missing
