@@ -98,6 +98,7 @@ class Callout(BaseClip):
 
     @text.setter
     def text(self, value: str) -> None:
+        """Set the callout text content."""
         self._data.setdefault('def', {})['text'] = value  # type: ignore[typeddict-item]
 
     @property
@@ -117,6 +118,7 @@ class Callout(BaseClip):
 
     @shape.setter
     def shape(self, value: str | CalloutShape) -> None:
+        """Set the callout shape."""
         self._data.setdefault('def', {})['shape'] = str(value.value if isinstance(value, CalloutShape) else value)  # type: ignore[typeddict-item]
 
     @property
@@ -126,6 +128,7 @@ class Callout(BaseClip):
 
     @style.setter
     def style(self, value: str) -> None:
+        """Set the callout style."""
         self._data.setdefault('def', {})['style'] = value  # type: ignore[typeddict-item]
 
     @property
@@ -135,6 +138,7 @@ class Callout(BaseClip):
 
     @width.setter
     def width(self, value: float) -> None:
+        """Set the callout width."""
         self._data.setdefault('def', {})['width'] = value  # type: ignore[typeddict-item]
 
     @property
@@ -144,6 +148,7 @@ class Callout(BaseClip):
 
     @height.setter
     def height(self, value: float) -> None:
+        """Set the callout height."""
         self._data.setdefault('def', {})['height'] = value  # type: ignore[typeddict-item]
 
     @property
@@ -153,6 +158,7 @@ class Callout(BaseClip):
 
     @horizontal_alignment.setter
     def horizontal_alignment(self, value: str) -> None:
+        """Set the horizontal text alignment."""
         self._data.setdefault('def', {})['horizontal-alignment'] = value  # type: ignore[typeddict-item]
 
     @property
@@ -168,6 +174,7 @@ class Callout(BaseClip):
 
     @fill_color.setter
     def fill_color(self, rgba: tuple[float, float, float, float]) -> None:
+        """Set the fill color as an (r, g, b, opacity) tuple."""
         d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
         d['fill-color-red'] = rgba[0]
         d['fill-color-green'] = rgba[1]
@@ -187,6 +194,7 @@ class Callout(BaseClip):
 
     @stroke_color.setter
     def stroke_color(self, rgba: tuple[float, float, float, float]) -> None:
+        """Set the stroke color as an (r, g, b, opacity) tuple."""
         d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
         d['stroke-color-red'] = rgba[0]
         d['stroke-color-green'] = rgba[1]
@@ -200,6 +208,7 @@ class Callout(BaseClip):
 
     @corner_radius.setter
     def corner_radius(self, value: float) -> None:
+        """Set the corner radius for rounded shapes."""
         self._data.setdefault('def', {})['corner-radius'] = value  # type: ignore[typeddict-item]
 
     @property
@@ -210,6 +219,7 @@ class Callout(BaseClip):
 
     @tail_position.setter
     def tail_position(self, xy: tuple[float, float]) -> None:
+        """Set the tail position as an (x, y) tuple."""
         d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
         d['tail-x'] = xy[0]
         d['tail-y'] = xy[1]

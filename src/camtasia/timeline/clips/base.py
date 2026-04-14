@@ -47,10 +47,12 @@ class BaseClip:
 
     @property
     def is_audio(self) -> bool:
+        """Whether this clip is an audio clip."""
         return self.clip_type == ClipType.AUDIO
 
     @property
     def is_video(self) -> bool:
+        """Whether this clip is a video clip."""
         return self.clip_type in (ClipType.VIDEO, ClipType.SCREEN_VIDEO)
 
     @property
@@ -60,22 +62,27 @@ class BaseClip:
 
     @property
     def is_image(self) -> bool:
+        """Whether this clip is an image clip."""
         return self.clip_type == ClipType.IMAGE
 
     @property
     def is_group(self) -> bool:
+        """Whether this clip is a group clip."""
         return self.clip_type == ClipType.GROUP
 
     @property
     def is_callout(self) -> bool:
+        """Whether this clip is a callout clip."""
         return self.clip_type == ClipType.CALLOUT
 
     @property
     def is_stitched(self) -> bool:
+        """Whether this clip is a stitched media clip."""
         return self.clip_type == ClipType.STITCHED_MEDIA
 
     @property
     def is_placeholder(self) -> bool:
+        """Whether this clip is a placeholder clip."""
         return self.clip_type == ClipType.PLACEHOLDER
 
     @property
@@ -85,6 +92,7 @@ class BaseClip:
 
     @start.setter
     def start(self, value: int) -> None:
+        """Set the start."""
         self._data['start'] = value
 
     @property
@@ -94,6 +102,7 @@ class BaseClip:
 
     @duration.setter
     def duration(self, value: int) -> None:
+        """Set the duration."""
         self._data['duration'] = value
 
     @property
@@ -114,6 +123,7 @@ class BaseClip:
 
     @gain.setter
     def gain(self, value: float) -> None:
+        """Set the gain."""
         self._data.setdefault('attributes', {})['gain'] = value
 
     def is_at(self, time_seconds: float) -> bool:
@@ -149,6 +159,7 @@ class BaseClip:
 
     @media_start.setter
     def media_start(self, value: int | Fraction) -> None:
+        """Set the media start."""
         self._data['mediaStart'] = value
 
     @property
@@ -161,6 +172,7 @@ class BaseClip:
 
     @media_duration.setter
     def media_duration(self, value: int | Fraction) -> None:
+        """Set the media duration."""
         self._data['mediaDuration'] = value
 
     @property
@@ -176,6 +188,7 @@ class BaseClip:
 
     @scalar.setter
     def scalar(self, value: Fraction | int | float | str) -> None:
+        """Set the scalar."""
         self._data['scalar'] = str(Fraction(value))
 
     def set_speed(self, speed: float) -> Self:
@@ -249,6 +262,7 @@ class BaseClip:
 
     @opacity.setter
     def opacity(self, value: float) -> None:
+        """Set the opacity."""
         if not 0.0 <= value <= 1.0:
             raise ValueError(f'opacity must be 0.0-1.0, got {value}')
         self._data.setdefault('parameters', {})['opacity'] = value
@@ -262,6 +276,7 @@ class BaseClip:
 
     @volume.setter
     def volume(self, value: float) -> None:
+        """Set the volume."""
         if value < 0.0:
             raise ValueError(f'volume must be >= 0.0, got {value}')
         self._data.setdefault('parameters', {})['volume'] = value
@@ -351,6 +366,7 @@ class BaseClip:
 
     @start_seconds.setter
     def start_seconds(self, value: float) -> None:
+        """Set the start_seconds."""
         self.start = seconds_to_ticks(value)
 
     @property
@@ -360,6 +376,7 @@ class BaseClip:
 
     @duration_seconds.setter
     def duration_seconds(self, value: float) -> None:
+        """Set the duration_seconds."""
         self.duration = seconds_to_ticks(value)
 
     def is_shorter_than(self, threshold_seconds: float) -> bool:
@@ -1002,6 +1019,7 @@ class BaseClip:
 
     @translation.setter
     def translation(self, value: tuple[float, float]) -> None:
+        """Set the translation."""
         self._set_param_value('translation0', value[0])
         self._set_param_value('translation1', value[1])
 
@@ -1015,6 +1033,7 @@ class BaseClip:
 
     @scale.setter
     def scale(self, value: tuple[float, float]) -> None:
+        """Set the scale."""
         self._set_param_value('scale0', value[0])
         self._set_param_value('scale1', value[1])
 
@@ -1025,6 +1044,7 @@ class BaseClip:
 
     @rotation.setter
     def rotation(self, value: float) -> None:
+        """Set the rotation."""
         self._set_param_value('rotation1', value)
 
     def move_to(self, x: float, y: float) -> Self:

@@ -211,6 +211,7 @@ class Project:
 
     @title.setter
     def title(self, value: str) -> None:
+        """Set the project title."""
         self._data['title'] = value
 
     @property
@@ -220,6 +221,7 @@ class Project:
 
     @description.setter
     def description(self, value: str) -> None:
+        """Set the project description."""
         self._data['description'] = value
 
     @property
@@ -229,6 +231,7 @@ class Project:
 
     @author.setter
     def author(self, value: str) -> None:
+        """Set the project author."""
         self._data['author'] = value
 
     @property
@@ -238,6 +241,7 @@ class Project:
 
     @target_loudness.setter
     def target_loudness(self, value: float) -> None:
+        """Set the target loudness in LUFS."""
         self._data['targetLoudness'] = value
 
     @property
@@ -247,6 +251,7 @@ class Project:
 
     @frame_rate.setter
     def frame_rate(self, value: int) -> None:
+        """Set the video frame rate."""
         self._data['videoFormatFrameRate'] = value
 
     @property
@@ -256,6 +261,7 @@ class Project:
 
     @sample_rate.setter
     def sample_rate(self, value: int) -> None:
+        """Set the audio sample rate."""
         self._data['audioFormatSampleRate'] = value
 
     @property
@@ -308,10 +314,12 @@ class Project:
 
     @property
     def track_count(self) -> int:
+        """Number of tracks in the timeline."""
         return self.timeline.track_count
 
     @property
     def clip_count(self) -> int:
+        """Total number of clips across all tracks."""
         return self.timeline.total_clip_count
 
     @property
@@ -357,6 +365,7 @@ class Project:
 
     @property
     def duration_seconds(self) -> float:
+        """Total project duration in seconds."""
         return self.total_duration_seconds()
 
     @property

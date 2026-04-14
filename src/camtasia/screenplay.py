@@ -5,6 +5,7 @@ from pathlib import Path
 
 @dataclass
 class VOBlock:
+    """A voice-over text block within a screenplay section."""
     id: str
     text: str
     section: str
@@ -12,23 +13,27 @@ class VOBlock:
 
 @dataclass
 class PauseMarker:
+    """A timed pause marker in the screenplay."""
     duration_seconds: float
     description: str
 
 
 @dataclass
 class TransitionMarker:
+    """A named transition marker between screenplay segments."""
     name: str
 
 
 @dataclass
 class ImageRef:
+    """A reference to an image used in the screenplay."""
     alt: str
     path: str
 
 
 @dataclass
 class ScreenplaySection:
+    """A titled section of a screenplay containing VO blocks, pauses, transitions, and images."""
     title: str
     level: int
     vo_blocks: list[VOBlock] = field(default_factory=list)
@@ -39,18 +44,22 @@ class ScreenplaySection:
 
 @dataclass
 class Screenplay:
+    """A parsed screenplay composed of sections."""
     sections: list[ScreenplaySection]
 
     @property
     def vo_blocks(self) -> list[VOBlock]:
+        """Get all voice-over blocks across all sections."""
         return [b for s in self.sections for b in s.vo_blocks]
 
     @property
     def total_pauses(self) -> float:
+        """Get the total pause duration in seconds across all sections."""
         return sum(p.duration_seconds for s in self.sections for p in s.pauses)
 
     @property
     def all_images(self) -> list[ImageRef]:
+        """Get all image references across all sections."""
         return [i for s in self.sections for i in s.images]
 
 
@@ -62,6 +71,7 @@ _SECTION_RE = re.compile(r'^(#{2,3})\s+(.+)', re.MULTILINE)
 
 
 def parse_screenplay(path: str | Path) -> Screenplay:
+    """Parse a markdown screenplay file into a Screenplay object."""
     text = Path(path).read_text()
     splits = list(_SECTION_RE.finditer(text))
     sections: list[ScreenplaySection] = []

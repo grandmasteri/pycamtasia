@@ -172,6 +172,7 @@ class Track:
 
     @is_muted.setter
     def is_muted(self, value: bool) -> None:
+        """Set the audio muted state via the is_muted alias."""
         self.audio_muted = value
 
     @property
@@ -181,6 +182,7 @@ class Track:
 
     @is_hidden.setter
     def is_hidden(self, value: bool) -> None:
+        """Set the video hidden state via the is_hidden alias."""
         self.video_hidden = value
 
     @property
@@ -190,6 +192,7 @@ class Track:
 
     @is_solo.setter
     def is_solo(self, value: bool) -> None:
+        """Set the solo state via the is_solo alias."""
         self.solo = value
 
     @property
@@ -199,6 +202,7 @@ class Track:
 
     @is_magnetic.setter
     def is_magnetic(self, value: bool) -> None:
+        """Set the magnetic state via the is_magnetic alias."""
         self.magnetic = value
 
     @property
@@ -255,10 +259,12 @@ class Track:
 
     @property
     def has_transitions(self) -> bool:
+        """Whether this track has any transitions between clips."""
         return bool(self._data.get('transitions'))
 
     @property
     def transition_count(self) -> int:
+        """Number of transitions on this track."""
         return len(self._data.get('transitions', []))
 
     @property
@@ -1054,10 +1060,12 @@ class Track:
 
     @property
     def audio_clips(self) -> list[BaseClip]:
+        """Return all audio clips on this track."""
         return self.filter_clips(lambda c: c.is_audio)
 
     @property
     def video_clips(self) -> list[BaseClip]:
+        """Return all video clips on this track."""
         return self.filter_clips(lambda c: c.is_video)
 
     @property
@@ -1067,6 +1075,7 @@ class Track:
 
     @property
     def image_clips(self) -> list[BaseClip]:
+        """Return all image clips on this track."""
         return self.filter_clips(lambda c: c.is_image)
 
     @property
