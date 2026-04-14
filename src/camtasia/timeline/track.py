@@ -1048,6 +1048,11 @@ class Track:
         return [c for c in self.clips if predicate(c)]
 
     @property
+    def muted_clips(self) -> list[BaseClip]:
+        """Return clips whose audio is muted (gain == 0)."""
+        return self.filter_clips(lambda clip: clip.is_muted)
+
+    @property
     def audio_clips(self) -> list[BaseClip]:
         return self.filter_clips(lambda c: c.is_audio)
 

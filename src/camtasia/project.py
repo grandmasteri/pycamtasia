@@ -329,6 +329,16 @@ class Project:
         return self.total_effect_count > 0
 
     @property
+    def has_transitions(self) -> bool:
+        """Whether any track in the project has transitions."""
+        return self.total_transition_count > 0
+
+    @property
+    def has_keyframes(self) -> bool:
+        """Whether any clip in the project has keyframes."""
+        return self.total_keyframe_count > 0
+
+    @property
     def total_transition_count(self) -> int:
         """Total number of transitions across all tracks."""
         return sum(

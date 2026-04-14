@@ -3076,3 +3076,52 @@ def test_clip_ids_sorted():
 
 def test_project_has_effects(project):
     assert project.has_effects is False
+
+
+# ---------------------------------------------------------------------------
+# Project.has_transitions
+# ---------------------------------------------------------------------------
+
+def test_project_has_transitions(project):
+    assert project.has_transitions is False
+
+
+# ---------------------------------------------------------------------------
+# Project.has_keyframes
+# ---------------------------------------------------------------------------
+
+def test_project_has_keyframes(project):
+    assert project.has_keyframes is False
+
+
+# ---------------------------------------------------------------------------
+# BaseClip.is_muted
+# ---------------------------------------------------------------------------
+
+def test_clip_is_muted():
+    media = {'id': 1, 'start': 0, 'duration': 100, 'attributes': {'gain': 0.0}}
+    track = _make_track(medias=[media])
+    muted_clip = list(track.clips)[0]
+    assert muted_clip.is_muted is True
+
+    audible_media = {'id': 2, 'start': 200, 'duration': 100, 'attributes': {'gain': 0.75}}
+    audible_track = _make_track(medias=[audible_media])
+    audible_clip = list(audible_track.clips)[0]
+    assert audible_clip.is_muted is False
+
+
+# ---------------------------------------------------------------------------
+# Track.muted_clips
+# ---------------------------------------------------------------------------
+
+def test_muted_clips():
+    medias = [
+        {'id': 1, 'start': 0, 'duration': 100, 'attributes': {'gain': 0.0}},
+        {'id': 2, 'start': 200, 'duration': 100, 'attributes': {'gain': 1.0}},
+        {'id': 3, 'start': 400, 'duration': 100, 'attributes': {'gain': 0.0}},
+    ]
+    track = _make_track(medias=medias)
+    muted = track.muted_clips
+    assert len(muted) == 2
+    muted_ids: list[int] = [clip.id for clip in muted]
+    assert muted_ids == [1, 3]

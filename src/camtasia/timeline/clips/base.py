@@ -117,6 +117,11 @@ class BaseClip:
         t = seconds_to_ticks(time_seconds)
         return self.start <= t < self.start + self.duration
 
+    @property
+    def is_muted(self) -> bool:
+        """Whether this clip's audio is muted (gain == 0)."""
+        return self.gain == 0.0
+
     def mute(self) -> Self:
         """Mute this clip's audio by setting gain to 0.
 
