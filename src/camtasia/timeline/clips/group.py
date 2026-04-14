@@ -9,7 +9,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from camtasia.timeline.transitions import TransitionList
 from typing import Any, Iterator
 
-from camtasia.timing import EDIT_RATE, seconds_to_ticks
+from camtasia.timing import EDIT_RATE, seconds_to_ticks, ticks_to_seconds
+from camtasia.types import ClipType
 
 from .base import BaseClip
 
@@ -209,6 +210,53 @@ class Group(BaseClip):
                 if clip.clip_type == clip_type:
                     return clip
         return None
+
+    @property
+    def all_internal_clips(self) -> list[BaseClip]:
+        """All clips across all internal tracks (flat list)."""
+        all_clips: list[BaseClip] = []
+        for group_track in self.tracks:
+            all_clips.extend(group_track.clips)
+        return all_clips
+
+    @property
+    def internal_clip_types(self) -> set[str]:
+        """Set of unique clip types across all internal tracks."""
+        return {clip.clip_type for clip in self.all_internal_clips}
+
+    @property
+    def has_audio(self) -> bool:
+        """Whether any internal clip is an audio clip."""
+        return any(clip.is_audio for clip in self.all_internal_clips)
+
+    @property
+    def has_video(self) -> bool:
+        """Whether any internal clip is a video clip."""
+        return any(clip.is_video for clip in self.all_internal_clips)
+
+    @property
+    def internal_duration_seconds(self) -> float:
+        """Duration of the longest internal track in seconds."""
+        if not self.tracks:
+            return 0.0
+        max_end: int = 0
+        for group_track in self.tracks:
+            for clip in group_track.clips:
+                clip_end: int = clip.start + clip.duration
+                if clip_end > max_end:
+                    max_end = clip_end
+        return float(ticks_to_seconds(max_end))
+
+    def find_internal_clips_by_type(self, clip_type: str | ClipType) -> list[BaseClip]:
+        """Find all internal clips of a specific type.
+
+        Args:
+            clip_type: Clip type string or ClipType enum value.
+
+        Returns:
+            List of matching clips across all internal tracks.
+        """
+        return [clip for clip in self.all_internal_clips if clip.clip_type == clip_type]
 
     # ------------------------------------------------------------------
     # Per-segment speed via StitchedMedia (v2 reverse-engineered format)
