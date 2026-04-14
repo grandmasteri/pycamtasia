@@ -418,7 +418,13 @@ class Project:
 
         # Step 2: Add space before colon (NSJSONSerialization style)
         # "key": value  ->  "key" : value
-        text = re.sub(r'"(\s*):', r'" :', text)
+        # Only on lines that don't contain escaped quotes (to avoid
+        # corrupting JSON-inside-string values like textAttributes).
+        lines = text.split('\n')
+        for i, line in enumerate(lines):
+            if '\\"' not in line:
+                lines[i] = re.sub(r'"\s*:', '" :', line)
+        text = '\n'.join(lines)
 
         # Step 3: Collapse scalar arrays to single lines
         def _collapse(m: re.Match) -> str:
