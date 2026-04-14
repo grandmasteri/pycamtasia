@@ -1,15 +1,24 @@
 # pycamtasia
 
-A Python library for reading, writing, and manipulating TechSmith Camtasia project files (`.cmproj` / `.tscproj`) and Audiate transcripts.
+A Python library for programmatically creating, reading, and manipulating TechSmith Camtasia video projects.
 
-Load projects, iterate tracks and clips, apply effects and speed changes, parse word-level transcripts, and perform high-level operations like project rescaling and audio-video sync — all from Python.
+**Key features:**
 
-## Documentation
+- Load, modify, and save `.cmproj` / `.tscproj` project files
+- Add clips, effects, transitions, and annotations
+- Undo/redo with JSON Patch diffs
+- Strong typing with enums and TypedDicts
+- Export to EDL, CSV, SRT, and JSON
+- 1700+ tests, 100% coverage, mypy-clean
+- Validated against 86 official TechSmith sample projects
+
+## Getting Started
 
 ```{toctree}
 :maxdepth: 2
 
 quickstart
+guides/getting-started
 ```
 
 ## Guides
@@ -23,6 +32,8 @@ guides/audio-video-sync
 guides/template-projects
 guides/transcripts
 guides/camtasia-rev
+guides/undo-redo
+guides/type-safety
 ```
 
 ## API Reference
@@ -32,12 +43,27 @@ guides/camtasia-rev
 
 api/project
 api/timing
+api/types
 api/media_bin
 api/timeline
 api/clips
 api/effects
 api/transitions
 api/markers
+api/captions
 api/audiate
 api/operations
+api/history
+api/screenplay
+api/builders
+api/export
+api/validation
+```
+
+## Project
+
+```{toctree}
+:maxdepth: 1
+
+changelog
 ```
