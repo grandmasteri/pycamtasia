@@ -885,6 +885,9 @@ class Track:
             self.remove_clip(clip_id)
 
         # Create the Group
+        # NOTE: ticks→seconds→ticks round-trip may introduce a ±1 tick
+        # rounding error in the Group's start/duration because
+        # ticks_to_seconds and seconds_to_ticks use floating-point division.
         group = self.add_group(
             start_seconds=ticks_to_seconds(earliest_start),
             duration_seconds=ticks_to_seconds(group_duration),

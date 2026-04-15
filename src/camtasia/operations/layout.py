@@ -65,7 +65,14 @@ def ripple_delete(track: Track, clip_id: int) -> None:
 
 
 def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:
-    """Snap all clip start times to the nearest grid point."""
+    """Snap all clip start times to the nearest grid point.
+
+    .. warning::
+        Snapping can move two or more clips to the same grid point,
+        creating overlapping clips on the track.  Callers should check
+        ``track.overlaps()`` afterward and resolve any collisions
+        (e.g. by calling :func:`pack_track`).
+    """
     grid_ticks = seconds_to_ticks(grid_seconds)
     if grid_ticks <= 0:
         raise ValueError(f'Grid must be positive, got {grid_seconds}')

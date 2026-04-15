@@ -181,10 +181,13 @@ class Callout(BaseClip):
     def fill_color(self, rgba: tuple[float, float, float, float]) -> None:
         """Set the fill color as an (r, g, b, opacity) tuple."""
         d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
-        d['fill-color-red'] = rgba[0]
-        d['fill-color-green'] = rgba[1]
-        d['fill-color-blue'] = rgba[2]
-        d['fill-color-opacity'] = rgba[3]
+        color_keys = ('fill-color-red', 'fill-color-green', 'fill-color-blue', 'fill-color-opacity')
+        for key, val in zip(color_keys, rgba):
+            existing = d.get(key)
+            if isinstance(existing, dict):
+                existing['defaultValue'] = val
+            else:
+                d[key] = val
 
     @property
     def stroke_color(self) -> tuple[float, float, float, float]:

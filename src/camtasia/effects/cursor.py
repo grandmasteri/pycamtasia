@@ -34,12 +34,12 @@ class CursorShadow(Effect):
 
     @property
     def angle(self) -> float:
-        """Shadow angle in degrees."""
+        """Shadow angle in radians."""
         return float(self.get_parameter("angle"))
 
     @angle.setter
     def angle(self, value: float) -> None:
-        """Set the shadow angle in degrees."""
+        """Set the shadow angle in radians."""
         self.set_parameter("angle", value)
 
     @property

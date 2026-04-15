@@ -40,7 +40,7 @@ class BehaviorPhase:
 
     @property
     def phase_type(self) -> int:
-        """Phase type: 0 for in/out, 1 for center."""
+        """Animation granularity: 0 = whole-object, 1 = per-character."""
         return int(self._attrs["type"])
 
     @property

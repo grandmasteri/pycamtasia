@@ -1456,8 +1456,8 @@ class BaseClip:
         return result
 
     @property
-    def source_path(self) -> str:
-        """Source bin ID or empty string (from the 'src' field)."""
+    def source_path(self) -> int | str:
+        """Source bin ID (int) or empty string if absent (from the 'src' field)."""
         return self._data.get('src', '')
 
     @property

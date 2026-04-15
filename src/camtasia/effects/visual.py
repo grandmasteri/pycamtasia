@@ -106,6 +106,7 @@ class DropShadow(Effect):
         """Set the shadow angle in radians."""
         self.set_parameter("angle", value)
 
+
     @property
     def offset(self) -> float:
         """Shadow offset distance in pixels."""
