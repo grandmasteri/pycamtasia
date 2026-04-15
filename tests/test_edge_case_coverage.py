@@ -4,6 +4,8 @@ from __future__ import annotations
 from fractions import Fraction
 from pathlib import Path
 
+import pytest
+
 from camtasia.operations.cleanup import remove_orphaned_media
 from camtasia.operations.speed import rescale_project
 from camtasia.timing import seconds_to_ticks
@@ -291,3 +293,60 @@ class TestCalloutFillColorAnimatedSetter:
         assert data['def']['fill-color-red']['keyframes'] == [{'time': 0, 'value': 0.5}]  # preserved
         # Plain scalar should be replaced
         assert data['def']['fill-color-blue'] == 0.7
+
+
+class TestCreateFromTemplateClearMedia:
+    """Cover template.py:110-112 - create_from_template with clear_media=True."""
+
+    def test_clear_media_empties_tracks_and_source_bin(self, tmp_path):
+        from camtasia.operations.template import duplicate_project
+        from camtasia import load_project
+        from pathlib import Path
+        RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
+        proj = duplicate_project(str(RESOURCES / 'new.cmproj'), str(tmp_path / 'test.cmproj'), clear_media=True)
+        assert proj._data['sourceBin'] == []
+
+
+class TestMergeProjectsWithClips:
+    """Cover project.py:698-701 - merge_projects clip copying."""
+
+    
+    @pytest.mark.timeout(30)
+    def test_merge_copies_clips_and_media(self, tmp_path):
+        from camtasia.project import Project
+        a = Project.new(tmp_path / 'a.cmproj', title='A')
+        # Add a media entry so the media bin copy loop is exercised
+        a._data.setdefault('sourceBin', []).append({
+            'id': 1, 'src': 'test.wav', 'sourceTracks': [],
+        })
+        track_a = a.timeline.add_track('T')
+        track_a.add_clip('VMFile', 1, 0, 705600000)
+        a.save()
+
+        merged = Project.merge_projects([a], tmp_path / 'merged.cmproj')
+        assert merged.clip_count >= 1
+        assert len(merged._data.get('sourceBin', [])) >= 1
+
+
+class TestCopyTo:
+    """Cover project.py:1642 - copy_to method."""
+
+    def test_copy_to_creates_copy(self, project, tmp_path):
+        dst = tmp_path / 'copy.cmproj'
+        copy = project.copy_to(str(dst))
+        assert dst.exists()
+        assert copy.title == project.title
+
+
+class TestHealthReportWithGaps:
+    """Cover project.py:2459 - health_report gaps line."""
+
+    def test_health_report_shows_gaps_and_transitions(self, project):
+        track = project.timeline.add_track('Test')
+        c1 = track.add_clip('VMFile', 1, 0, 705600000)
+        c2 = track.add_clip('VMFile', 1, 705600000, 705600000)
+        c3 = track.add_clip('VMFile', 1, 705600000 * 4, 705600000)  # gap
+        track.transitions.add_fade_through_black(c1, c2, 0.5)
+        report = project.health_report()
+        assert 'Gaps' in report
+        assert 'Transitions' in report
