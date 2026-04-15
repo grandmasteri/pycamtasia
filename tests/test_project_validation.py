@@ -147,3 +147,9 @@ def test_save_calls_validate(project, tmp_path):
     with patch.object(proj, 'validate', wraps=proj.validate) as mock_validate:
         proj.save()
     mock_validate.assert_called_once()
+
+
+def test_validate_schema_returns_list(project):
+    """validate_schema returns a list of ValidationIssue."""
+    result = project.validate_schema()
+    assert isinstance(result, list)

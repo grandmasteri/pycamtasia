@@ -548,3 +548,8 @@ class TestSetTimeRange:
         clip = BaseClip(data)
         result = clip.set_time_range(1.0, 3.0)
         assert result is clip
+
+
+def test_stitched_attributes():
+    clip = StitchedMedia(_stitched_dict())
+    assert isinstance(clip.attributes, dict)

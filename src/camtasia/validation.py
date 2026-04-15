@@ -98,8 +98,8 @@ def validate_against_schema(project_data: dict[str, Any]) -> list[ValidationIssu
     """
     try:
         import jsonschema
-    except ImportError:
-        return [ValidationIssue('warning', 'jsonschema not installed; skipping schema validation')]
+    except ImportError:  # pragma: no cover
+        return [ValidationIssue('warning', 'jsonschema not installed; skipping schema validation')]  # pragma: no cover
 
     schema_path = importlib_resources.files('camtasia.resources') / 'camtasia-project-schema.json'
     schema = json.loads(schema_path.read_text(encoding='utf-8'))

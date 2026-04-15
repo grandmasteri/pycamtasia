@@ -283,3 +283,173 @@ class TestSyncFirstCharFallback:
         words = [SimpleNamespace(text="cat", start=1.0), SimpleNamespace(text="delta", start=2.0)]
         actual_result = match_marker_to_transcript("delta bravo", words)
         assert actual_result == 2.0
+
+
+# ------------------------------------------------------------------
+# 8. project.py:737 — _replace_special 'Infinity' branch
+# ------------------------------------------------------------------
+
+class TestReplaceSpecialInfinity:
+    def test_save_replaces_positive_infinity(self, tmp_path):
+        """Positive Infinity in a parameter should be replaced on save."""
+        from camtasia.project import Project
+        import json
+
+        data = {
+            "editRate": 30,
+            "authoringClientName": {"name": "Camtasia", "platform": "Mac", "version": "2020.0.8"},
+            "sourceBin": [],
+            "timeline": {
+                "id": 1,
+                "sceneTrack": {"scenes": [{"csml": {"tracks": [{"trackIndex": 0, "medias": []}]}}]},
+                "trackAttributes": [{"ident": "", "audioMuted": False, "videoHidden": False,
+                                      "magnetic": False, "metadata": {"IsLocked": "False"}}],
+            },
+            "positiveInf": float("inf"),
+        }
+        proj_dir = tmp_path / "test.cmproj"
+        proj_dir.mkdir()
+        (proj_dir / "project.tscproj").write_text(json.dumps(data))
+        project = Project(proj_dir)
+        project.save()
+        text = (proj_dir / "project.tscproj").read_text()
+        assert "Infinity" not in text
+        assert "1.79769313486232e+308" in text
+
+
+# ------------------------------------------------------------------
+# 9. timeline.py:38,40-41 — _remap_clip_ids_recursive video/audio + tracks
+# ------------------------------------------------------------------
+
+class TestRemapClipIdsRecursive:
+    def test_remap_video_audio_and_tracks_branches(self):
+        """duplicate_track on a track with UnifiedMedia (video/audio) and Group (tracks)."""
+        from camtasia.timeline.timeline import Timeline
+
+        timeline_data = {
+            "id": 1,
+            "sceneTrack": {
+                "scenes": [{
+                    "csml": {
+                        "tracks": [{
+                            "trackIndex": 0,
+                            "medias": [
+                                {
+                                    "id": 1,
+                                    "_type": "UnifiedMedia",
+                                    "start": 0,
+                                    "duration": 100,
+                                    "video": {"id": 2, "_type": "IMFile"},
+                                    "audio": {"id": 3, "_type": "AMFile"},
+                                },
+                                {
+                                    "id": 4,
+                                    "_type": "Group",
+                                    "start": 100,
+                                    "duration": 100,
+                                    "tracks": [{
+                                        "trackIndex": 0,
+                                        "medias": [{"id": 5, "_type": "IMFile", "start": 0, "duration": 50}],
+                                    }],
+                                },
+                            ],
+                        }],
+                    },
+                }],
+            },
+            "trackAttributes": [
+                {"ident": "Track 1", "audioMuted": False, "videoHidden": False,
+                 "magnetic": False, "metadata": {"IsLocked": "False"}},
+            ],
+        }
+        tl = Timeline(timeline_data)
+        new_track = tl.duplicate_track(0)
+        # The duplicated track should have remapped IDs that don't collide
+        dup_data = timeline_data["sceneTrack"]["scenes"][0]["csml"]["tracks"][1]
+        dup_ids = set()
+        for m in dup_data["medias"]:
+            dup_ids.add(m["id"])
+            if "video" in m:
+                dup_ids.add(m["video"]["id"])
+            if "audio" in m:
+                dup_ids.add(m["audio"]["id"])
+            for t in m.get("tracks", []):
+                for inner in t.get("medias", []):
+                    dup_ids.add(inner["id"])
+        orig_ids = {1, 2, 3, 4, 5}
+        assert dup_ids.isdisjoint(orig_ids), f"IDs collide: {dup_ids & orig_ids}"
+
+
+# ------------------------------------------------------------------
+# 10. track.py:1095,1098 — add_freeze_frame validation
+# ------------------------------------------------------------------
+
+class TestAddFreezeFrameValidation:
+    def _make_track(self):
+        from camtasia.timeline.track import Track
+        track_data = {"trackIndex": 0, "medias": []}
+        attrs = {"ident": "", "audioMuted": False, "videoHidden": False,
+                 "magnetic": False, "metadata": {"IsLocked": "False"}}
+        return Track(attrs, track_data)
+
+    def test_none_source_id_raises(self):
+        track = self._make_track()
+        # Create a mock clip with source_id = None
+        from unittest.mock import MagicMock
+        clip = MagicMock()
+        clip.source_id = None
+        with pytest.raises(ValueError, match="source_id is None"):
+            track.add_freeze_frame(clip, at_seconds=1.0, freeze_duration_seconds=2.0)
+
+    def test_negative_offset_raises(self):
+        track = self._make_track()
+        from unittest.mock import MagicMock
+        clip = MagicMock()
+        clip.source_id = 42
+        clip.start_seconds = 5.0  # at_seconds < start_seconds → negative offset
+        with pytest.raises(ValueError, match="negative offset"):
+            track.add_freeze_frame(clip, at_seconds=2.0, freeze_duration_seconds=1.0)
+
+
+# ------------------------------------------------------------------
+# 11. track.py:2051 — _max_clip_id StitchedMedia sub-clip scan
+# ------------------------------------------------------------------
+
+class TestMaxClipIdStitchedMedia:
+    def test_stitched_media_sub_clips_considered(self):
+        """Adding a clip to a track with StitchedMedia sub-clips gets an ID above them."""
+        from camtasia.timeline.track import Track
+        track_data = {
+            "trackIndex": 0,
+            "medias": [
+                {
+                    "id": 1,
+                    "_type": "StitchedMedia",
+                    "start": 0,
+                    "duration": 100,
+                    "medias": [
+                        {"id": 50, "_type": "IMFile", "start": 0, "duration": 50},
+                        {"id": 60, "_type": "IMFile", "start": 50, "duration": 50},
+                    ],
+                },
+            ],
+        }
+        attrs = {"ident": "", "audioMuted": False, "videoHidden": False,
+                 "magnetic": False, "metadata": {"IsLocked": "False"}}
+        track = Track(attrs, track_data)
+        new_clip = track.add_clip("IMFile", 99, 200, 100)
+        assert new_clip.id > 60
+
+
+# ------------------------------------------------------------------
+# 12. validation.py:110-111 — validate_against_schema error iteration
+# ------------------------------------------------------------------
+
+class TestValidateAgainstSchema:
+    def test_invalid_data_returns_issues(self):
+        from camtasia.validation import validate_against_schema, ValidationIssue
+        # Pass completely invalid data — missing required fields
+        issues = validate_against_schema({"not_a_valid_field": True})
+        assert len(issues) > 0
+        assert all(isinstance(i, ValidationIssue) for i in issues)
+        assert all(i.level == "error" for i in issues)

@@ -203,3 +203,14 @@ def test_csv_export_rows(project, tmp_path):
     assert row[0] == 'Test'  # track_name
     assert row[4] == '0.000'  # start_seconds
     assert row[5] == '5.000'  # duration_seconds
+
+
+def test_srt_clamps_overlapping_markers(project, tmp_path):
+    """SRT export clamps end times to prevent overlapping subtitles."""
+    from camtasia.export.srt import export_markers_as_srt
+    project.timeline.markers.add('First', 705600000)
+    project.timeline.markers.add('Second', 705600000 * 2)
+    out = tmp_path / 'test.srt'
+    export_markers_as_srt(project, str(out), duration_seconds=3.0)
+    content = out.read_text()
+    assert '00:00:01,000 --> 00:00:02,000' in content

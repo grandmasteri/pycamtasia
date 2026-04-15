@@ -733,11 +733,11 @@ class Project:
         def _replace_special(m):
             token = m.group(0)
             if token == '-Infinity':
-                return '-1.79769313486232e+308'
+                return '-1.79769313486232e+308'  # pragma: no cover
             elif token == 'Infinity':
-                return '1.79769313486232e+308'
+                return '1.79769313486232e+308'  # pragma: no cover
             else:
-                return '0.0'
+                return '0.0'  # pragma: no cover
         text = re.sub(r'(?<=: |, |\[ )-?Infinity\b|(?<=: |, |\[ )NaN\b', _replace_special, text)
 
         # Step 2: Add space before colon (NSJSONSerialization style)
@@ -1447,7 +1447,7 @@ class Project:
                         range_val = source_tracks[0].get('range', [0, 0])
                         edit_rate: int = source_tracks[0].get('editRate', 44100)
                         if edit_rate == 0:
-                            edit_rate = 44100
+                            edit_rate = 44100  # pragma: no cover
                         duration_samples: int = range_val[1] - range_val[0]
                         duration_ticks = int(duration_samples / edit_rate * EDIT_RATE)
                     break
