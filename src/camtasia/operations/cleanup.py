@@ -21,6 +21,14 @@ def _collect_source_ids(clip_data: dict) -> set[int]:
                 ids.update(_collect_source_ids(media['video']))
             if 'audio' in media:
                 ids.update(_collect_source_ids(media['audio']))
+    # StitchedMedia stores sub-clips in 'medias' directly
+    for nested in clip_data.get('medias', []):
+        ids.update(_collect_source_ids(nested))
+    # UnifiedMedia stores sub-clips in 'video'/'audio'
+    if 'video' in clip_data:
+        ids.update(_collect_source_ids(clip_data['video']))
+    if 'audio' in clip_data:
+        ids.update(_collect_source_ids(clip_data['audio']))
     return ids
 
 

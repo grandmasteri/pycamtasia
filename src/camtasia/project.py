@@ -2338,6 +2338,37 @@ class Project:
             track.audio_muted = track.name != track_name
         return True
 
+    def remove_orphaned_media(self) -> int:
+        """Remove media bin entries not referenced by any clip.
+
+        Returns:
+            Number of media entries removed.
+        """
+        from camtasia.operations.cleanup import remove_orphaned_media as _remove
+        return len(_remove(self))
+
+    def clean_inherited_state(self, preserve_groups: bool = True) -> None:
+        """Reset project to a clean state.
+
+        Clears all clips (optionally preserving Group clips such as screen
+        recordings), clears timeline markers, and removes orphaned media.
+
+        Args:
+            preserve_groups: If True, keep Group clips (screen recordings).
+        """
+        from camtasia.timeline.clips.group import Group
+
+        for track in self.timeline.tracks:
+            if preserve_groups:
+                to_remove = [c.id for c in track.clips if not isinstance(c, Group)]
+                for cid in to_remove:
+                    track.remove_clip(cid)
+            else:
+                track.remove_all_clips()
+
+        self.timeline.markers.clear()
+        self.remove_orphaned_media()
+
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
     """Load a Camtasia project from disk.

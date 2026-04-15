@@ -101,3 +101,7 @@ class MarkerList:
         keyframes[:] = [kf for kf in keyframes if kf['time'] != time]
         if len(keyframes) == before:
             raise KeyError(f'No marker at time={time}')
+
+    def clear(self) -> None:
+        """Remove all markers."""
+        self._ensure_keyframes().clear()

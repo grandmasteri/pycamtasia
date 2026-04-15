@@ -942,3 +942,7 @@ class _TimelineMarkers:
     def remove_at(self, time: int) -> None:
         """Remove all markers at the given time."""
         self._inner.remove_at(time)
+
+    def clear(self) -> None:
+        """Remove all markers."""
+        self._inner.clear()
