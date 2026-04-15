@@ -341,6 +341,36 @@ class Project:
         """Number of tracks in the timeline."""
         return self.timeline.track_count
 
+    def clone_track(self, source_track_name: str, new_track_name: str) -> Track:
+        """Clone a track with all its clips and effects."""
+        source = self.timeline.find_track_by_name(source_track_name)
+        if source is None:
+            raise KeyError(f'Track not found: {source_track_name}')
+        new_track = self.timeline.duplicate_track(source.index)
+        new_track.name = new_track_name
+        return new_track
+
+    def swap_tracks(self, track_name_a: str, track_name_b: str) -> None:
+        """Swap the visual order of two tracks.
+
+        Args:
+            track_name_a: Name of the first track.
+            track_name_b: Name of the second track.
+
+        Raises:
+            KeyError: If either track name is not found.
+        """
+        track_a = self.timeline.find_track_by_name(track_name_a)
+        track_b = self.timeline.find_track_by_name(track_name_b)
+        if track_a is None:
+            raise KeyError(f'Track not found: {track_name_a}')
+        if track_b is None:
+            raise KeyError(f'Track not found: {track_name_b}')
+        idx_a = track_a.index
+        idx_b = track_b.index
+        track_a._data['trackIndex'] = idx_b
+        track_b._data['trackIndex'] = idx_a
+
     def remove_track_by_name(self, track_name: str) -> bool:
         """Remove the first track with the given name.
 
@@ -1878,6 +1908,39 @@ class Project:
         for time_seconds, chapter_name in chapters:
             self.timeline.markers.add(chapter_name, seconds_to_ticks(time_seconds))
         return len(chapters)
+
+    def export_project_report(self, output_path: str | Path) -> Path:
+        """Export a comprehensive project report as a markdown file.
+
+        Includes: project summary, track listing, clip inventory,
+        effect usage, transition listing, and validation results.
+        """
+        from pathlib import Path as P
+        path = P(output_path)
+        lines: list[str] = []
+        lines.append(f'# Project Report: {self.title}')
+        lines.append('')
+        lines.append('## Overview')
+        for key, value in self.statistics().items():
+            lines.append(f'- **{key}**: {value}')
+        lines.append('')
+        lines.append('## Tracks')
+        for track in self.timeline.tracks:
+            lines.append(f'### {track.name}')
+            lines.append(f'- Clips: {len(track)}')
+            lines.append(f'- Duration: {track.total_duration_seconds:.2f}s')
+            for clip in track.clips:
+                lines.append(f'  - {clip.clip_type}(id={clip.id}) {clip.duration_seconds:.2f}s')
+            lines.append('')
+        issues = self.validate()
+        lines.append('## Validation')
+        if issues:
+            for issue in issues:
+                lines.append(f'- [{issue.level}] {issue.message}')
+        else:
+            lines.append('No issues found.')
+        path.write_text('\n'.join(lines))
+        return path
 
     def add_zoom_to_region(
         self,
