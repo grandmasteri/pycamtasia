@@ -33,7 +33,7 @@ def test_fade_preset_structure():
     assert effect['_type'] == 'GenericBehaviorEffect'
     assert effect['effectName'] == 'fade'
     assert effect['in']['attributes']['name'] == 'fadeIn'
-    assert effect['metadata']['presetName'] == 'fade'
+    assert effect['metadata']['presetName'] == 'Fade'
 
 
 def test_flyin_preset_structure():
@@ -42,7 +42,7 @@ def test_flyin_preset_structure():
     assert effect['_type'] == 'GenericBehaviorEffect'
     assert effect['effectName'] == 'flyIn'
     assert effect['in']['attributes']['name'] == 'flyIn'
-    assert effect['metadata']['presetName'] == 'flyIn'
+    assert effect['metadata']['presetName'] == 'FlyIn'
 
 
 def test_popup_preset_structure():
@@ -51,7 +51,7 @@ def test_popup_preset_structure():
     assert effect['_type'] == 'GenericBehaviorEffect'
     assert effect['effectName'] == 'popUp'
     assert effect['in']['attributes']['name'] == 'grow'
-    assert effect['metadata']['presetName'] == 'popUp'
+    assert effect['metadata']['presetName'] == 'PopUp'
 
 
 def test_unknown_preset_raises():

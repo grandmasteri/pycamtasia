@@ -28,6 +28,14 @@ class IntEncodedTime:
     sourceTracks range fields and is **not** interchangeable with tick-based
     timeline timing.
 
+    .. warning::
+        This class exists for **legacy compatibility** only.  The ``range``
+        values in ``sourceTracks`` are frame or sample counts expressed in
+        the track's native ``editRate``, not millisecond-encoded wall-clock
+        times.  Interpreting them via the seconds/milliseconds split will
+        produce incorrect results for tracks whose ``editRate`` differs from
+        1000.
+
     Args:
         encoded_time: The raw integer from the ``range`` array.
     """

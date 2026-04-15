@@ -64,7 +64,7 @@ PRESETS = {
             'default-behavior-in-type': {'type': 'double', 'value': 1.0},
             'default-behavior-out-direction': {'type': 'int', 'value': 2},
             'default-behavior-out-type': {'type': 'double', 'value': 1.0},
-            'presetName': 'reveal',
+            'presetName': 'Reveal',
         },
     },
     'fade': {
@@ -81,7 +81,7 @@ PRESETS = {
         },
         'center': _NONE_CENTER,
         'out': _NONE_OUT,
-        'metadata': {'presetName': 'fade'},
+        'metadata': {'presetName': 'Fade'},
     },
     'flyIn': {
         'effectName': 'flyIn',
@@ -98,7 +98,7 @@ PRESETS = {
         },
         'center': _NONE_CENTER,
         'out': _NONE_OUT,
-        'metadata': {'presetName': 'flyIn'},
+        'metadata': {'presetName': 'FlyIn'},
     },
     'popUp': {
         'effectName': 'popUp',
@@ -114,7 +114,7 @@ PRESETS = {
         },
         'center': _NONE_CENTER,
         'out': _NONE_OUT,
-        'metadata': {'presetName': 'popUp'},
+        'metadata': {'presetName': 'PopUp'},
     },
     'sliding': {
         'effectName': 'sliding',
@@ -160,8 +160,46 @@ PRESETS = {
         'metadata': {
             'default-behavior-center-style': 'fading',
             'default-behavior-out-direction': {'type': 'int', 'value': 2},
-            'presetName': 'sliding',
+            'presetName': 'Sliding',
         },
+    },
+    'pulsating': {
+        'effectName': 'pulsating',
+        'start': 0,
+        'in': {
+            'attributes': {
+                'name': 'shifting', 'type': 0, 'characterOrder': 6,
+                'offsetBetweenCharacters': 0,
+                'suggestedDurationPerCharacter': 705600000,
+                'overlapProportion': 0, 'movement': 0,
+                'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
+            },
+        },
+        'center': {
+            'attributes': {
+                'name': 'pulsate', 'type': 1, 'characterOrder': 6,
+                'offsetBetweenCharacters': 0, 'secondsPerLoop': 1,
+                'numberOfLoops': -1, 'delayBetweenLoops': 0,
+            },
+        },
+        'out': _NONE_OUT,
+        'metadata': {'presetName': 'Pulsating'},
+    },
+    'shifting': {
+        'effectName': 'shifting',
+        'start': 0,
+        'in': {
+            'attributes': {
+                'name': 'shifting', 'type': 0, 'characterOrder': 6,
+                'offsetBetweenCharacters': 0,
+                'suggestedDurationPerCharacter': 705600000,
+                'overlapProportion': 0, 'movement': 0,
+                'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
+            },
+        },
+        'center': _NONE_CENTER,
+        'out': _NONE_OUT,
+        'metadata': {'presetName': 'Shifting'},
     },
 }
 

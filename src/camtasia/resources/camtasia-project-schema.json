@@ -1304,7 +1304,7 @@
           "$ref": "#/definitions/parametersMap"
         },
         "minMediaStart": {
-          "type": "integer"
+          "type": "number"
         },
         "medias": {
           "type": "array",

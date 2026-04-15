@@ -327,14 +327,16 @@ class Track:
         if clip_type not in _VALID_CLIP_TYPES:
             raise ValueError(f'Unknown clip type {clip_type!r}. Valid: {sorted(_VALID_CLIP_TYPES)}')
 
+        scalar = kwargs.pop('scalar', 1)
+        scalar_val = _parse_scalar(scalar)
         record: dict[str, Any] = {
             'id': self._next_clip_id(),
             '_type': clip_type,
             'start': start,
             'duration': duration,
             'mediaStart': kwargs.pop('media_start', 0),
-            'mediaDuration': kwargs.pop('media_duration', duration),
-            'scalar': kwargs.pop('scalar', 1),
+            'mediaDuration': kwargs.pop('media_duration', duration / scalar_val if scalar_val != 0 else duration),
+            'scalar': scalar,
             'metadata': {
                 'audiateLinkedSession': '',
                 'clipSpeedAttribute': {'type': 'bool', 'value': False},
@@ -1543,7 +1545,8 @@ class Track:
                     m['start'] = m.get('start', 0) + trim_start
                     m['duration'] = m.get('duration', 0) - trim_start
                     scalar_val = _parse_scalar(m.get('scalar', 1))
-                    m['mediaStart'] = m.get('mediaStart', 0) + (trim_start / scalar_val if scalar_val != 0 else trim_start)
+                    orig_media_start = Fraction(str(m.get('mediaStart', 0)))
+                    m['mediaStart'] = float(orig_media_start + (Fraction(trim_start) / Fraction(m.get('scalar', 1)) if scalar_val != 0 else trim_start))
                 if trim_end > 0:
                     m['duration'] = m.get('duration', 0) - trim_end
                 if m.get('duration', 0) <= 0:

@@ -94,6 +94,7 @@ class GroupTrack:
             'mediaStart': 0,
             'mediaDuration': duration_ticks,
             'scalar': 1,
+            'attributes': {},
             'parameters': {},
             'effects': [],
             'metadata': {},

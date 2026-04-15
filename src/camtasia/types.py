@@ -233,6 +233,7 @@ class _BehaviorPhaseData(TypedDict, total=False):
 
 class _BehaviorEffectData(TypedDict, total=False):
     """Internal structure of a GenericBehaviorEffect dict."""
+    _type: str
     effectName: str
     bypassed: bool
     start: int

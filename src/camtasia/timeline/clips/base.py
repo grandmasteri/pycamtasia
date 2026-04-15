@@ -377,7 +377,7 @@ class BaseClip:
         color1: tuple[int, int, int] | None = None,
         color2: tuple[int, int, int] | None = None,
         color3: tuple[int, int, int] | None = None,
-        mid_point: tuple[float, float] = (0.5, 0.5),
+        mid_point: float | tuple[float, float] = 0.5,
         speed: float = 5.0,
         source_file_type: str = 'tscshadervid',
     ) -> None:
@@ -393,8 +393,11 @@ class BaseClip:
                 params[f'Color{i}-green'] = g / 255
                 params[f'Color{i}-blue'] = b / 255
                 params[f'Color{i}-alpha'] = 1.0
-        params['MidPointX'] = mid_point[0]
-        params['MidPointY'] = mid_point[1]
+        if isinstance(mid_point, tuple):
+            params['MidPointX'] = mid_point[0]
+            params['MidPointY'] = mid_point[1]
+        else:
+            params['MidPoint'] = mid_point
         params['Speed'] = speed
         params['sourceFileType'] = source_file_type
 
@@ -1436,14 +1439,14 @@ class BaseClip:
 
     @property
     def source_path(self) -> str:
-        """Source file path (from the 'src' field)."""
+        """Source bin ID or empty string (from the 'src' field)."""
         return self._data.get('src', '')
 
     @property
     def media_start_seconds(self) -> float:
         """Media start offset in seconds."""
         from camtasia.timing import ticks_to_seconds
-        return float(ticks_to_seconds(int(self.media_start)))
+        return float(ticks_to_seconds(float(Fraction(str(self.media_start)))))
 
     def overlaps_with(self, other_clip: BaseClip) -> bool:
         """Check if this clip's time range overlaps with another clip."""

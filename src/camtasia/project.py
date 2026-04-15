@@ -609,7 +609,8 @@ class Project:
                 if (isinstance(val, dict)
                         and 'type' in val and 'defaultValue' in val
                         and 'name' not in val and 'keyframes' not in val
-                        and 'interp' not in val and 'uiHints' not in val):
+                        and 'interp' not in val and 'uiHints' not in val
+                        and 'valueBounds' not in val):
                     obj[key] = val['defaultValue']
                 else:
                     Project._flatten_parameters(val)
@@ -729,9 +730,15 @@ class Project:
         # Only replace when they appear as bare JSON values (after : or , or [)
         # not inside quoted strings
         import re
-        text = re.sub(r'(?<=: )-Infinity\b', '-1.79769313486232e+308', text)
-        text = re.sub(r'(?<=: )Infinity\b', '1.79769313486232e+308', text)
-        text = re.sub(r'(?<=: )NaN\b', '0.0', text)
+        def _replace_special(m):
+            token = m.group(0)
+            if token == '-Infinity':
+                return '-1.79769313486232e+308'
+            elif token == 'Infinity':
+                return '1.79769313486232e+308'
+            else:
+                return '0.0'
+        text = re.sub(r'(?<=: |, |\[ )-?Infinity\b|(?<=: |, |\[ )NaN\b', _replace_special, text)
 
         # Step 2: Add space before colon (NSJSONSerialization style)
         # "key": value  ->  "key" : value

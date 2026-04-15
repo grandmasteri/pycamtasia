@@ -442,7 +442,7 @@ def test_stitched_nested_clips_returns_typed_clips() -> None:
 
 def test_stitched_volume() -> None:
     clip = StitchedMedia(_stitched_dict())
-    assert clip.volume == 0.9
+    assert clip.gain == 0.9  # gain is in attributes, volume is in parameters
 
 
 def test_stitched_nested_clips_empty_when_no_medias() -> None:

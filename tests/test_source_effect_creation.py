@@ -37,8 +37,7 @@ class TestSetSourceEffect:
         clip = _make_clip()
         clip.set_source_effect()
         p = clip.source_effect['parameters']
-        assert p['MidPointX'] == 0.5
-        assert p['MidPointY'] == 0.5
+        assert p['MidPoint'] == 0.5
         assert p['Speed'] == 5.0
         assert p['sourceFileType'] == 'tscshadervid'
 

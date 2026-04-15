@@ -98,12 +98,12 @@ class DropShadow(Effect):
 
     @property
     def angle(self) -> float:
-        """Shadow angle in degrees."""
+        """Shadow angle in radians."""
         return float(self.get_parameter("angle"))
 
     @angle.setter
     def angle(self, value: float) -> None:
-        """Set the shadow angle in degrees."""
+        """Set the shadow angle in radians."""
         self.set_parameter("angle", value)
 
     @property
@@ -220,12 +220,12 @@ class Mask(Effect):
 
     @property
     def mask_rotation(self) -> float:
-        """Mask rotation angle in degrees."""
+        """Mask rotation angle in radians."""
         return float(self.get_parameter("mask-rotation"))
 
     @mask_rotation.setter
     def mask_rotation(self, value: float) -> None:
-        """Set the mask rotation angle in degrees."""
+        """Set the mask rotation angle in radians."""
         self.set_parameter("mask-rotation", value)
 
     @property
@@ -311,6 +311,11 @@ class Glow(Effect):
 @register_effect("BlurRegion")
 class BlurRegion(Effect):
     """Blur region effect.
+
+    .. warning::
+        This effect is registered but has **not** been verified against any
+        TechSmith sample project.  Parameter names and semantics may differ
+        from what Camtasia actually produces.
 
     Parameters:
         sigma, mask-cornerRadius, mask-invert, color-alpha

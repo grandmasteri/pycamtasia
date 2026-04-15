@@ -165,7 +165,7 @@ class TestCalloutConvenience:
         assert actual_result is clip  # chaining
         assert data["effects"][0]["_type"] == "GenericBehaviorEffect"
         assert data["effects"][0]["effectName"] == "reveal"
-        assert data["effects"][0]["metadata"]["presetName"] == "reveal"
+        assert data["effects"][0]["metadata"]["presetName"] == "Reveal"
 
     def test_font_default(self):
         clip = Callout(_base(_type="Callout"))

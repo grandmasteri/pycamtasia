@@ -165,11 +165,16 @@ class Callout(BaseClip):
     def fill_color(self) -> tuple[float, float, float, float]:
         """Fill color as ``(r, g, b, opacity)``."""
         d = self.definition
+
+        def _val(key: str, default: float) -> float:
+            v = d.get(key, default)
+            return float(v['defaultValue']) if isinstance(v, dict) else float(v)
+
         return (
-            d.get('fill-color-red', 0.0),
-            d.get('fill-color-green', 0.0),
-            d.get('fill-color-blue', 0.0),
-            d.get('fill-color-opacity', 1.0),
+            _val('fill-color-red', 0.0),
+            _val('fill-color-green', 0.0),
+            _val('fill-color-blue', 0.0),
+            _val('fill-color-opacity', 1.0),
         )
 
     @fill_color.setter
@@ -185,11 +190,16 @@ class Callout(BaseClip):
     def stroke_color(self) -> tuple[float, float, float, float]:
         """Stroke color as ``(r, g, b, opacity)``."""
         d = self.definition
+
+        def _val(key: str, default: float) -> float:
+            v = d.get(key, default)
+            return float(v['defaultValue']) if isinstance(v, dict) else float(v)
+
         return (
-            d.get('stroke-color-red', 0.0),
-            d.get('stroke-color-green', 0.0),
-            d.get('stroke-color-blue', 0.0),
-            d.get('stroke-color-opacity', 1.0),
+            _val('stroke-color-red', 0.0),
+            _val('stroke-color-green', 0.0),
+            _val('stroke-color-blue', 0.0),
+            _val('stroke-color-opacity', 1.0),
         )
 
     @stroke_color.setter

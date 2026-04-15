@@ -160,11 +160,12 @@ class TestStitchedMediaVolumeSetter:
             "duration": 100,
             "mediaStart": 0,
             "mediaDuration": 100,
+            "parameters": {},
         }
         clip = StitchedMedia(data)
         clip.volume = 0.5
         assert clip.volume == 0.5
-        assert data["attributes"]["gain"] == 0.5
+        assert data["parameters"]["volume"] == 0.5
 
 
 # ------------------------------------------------------------------

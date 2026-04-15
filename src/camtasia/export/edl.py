@@ -61,7 +61,7 @@ def export_edl(
                     pass
 
             # Determine edit type
-            edit_type = 'V' if clip.clip_type in ('VMFile', 'IMFile', 'ScreenVMFile', 'Group', 'UnifiedMedia', 'StitchedMedia', 'Callout') else 'A'
+            edit_type = 'V' if clip.clip_type in ('VMFile', 'IMFile', 'ScreenVMFile', 'ScreenIMFile', 'PlaceholderMedia', 'Group', 'UnifiedMedia', 'StitchedMedia', 'Callout') else 'A'
 
             src_in_offset = ticks_to_seconds(clip.media_start)
             src_in = _format_timecode(src_in_offset, fps)
