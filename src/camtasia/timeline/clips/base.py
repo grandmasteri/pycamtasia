@@ -222,6 +222,7 @@ class BaseClip:
         if speed <= 0:
             raise ValueError(f'speed must be > 0, got {speed}')
         self._data['scalar'] = speed
+        self._data['mediaDuration'] = self.duration / speed
         return self
 
     @property

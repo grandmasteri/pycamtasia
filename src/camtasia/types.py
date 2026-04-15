@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 # Effect categories
-EffectCategory = Literal['categoryVisualEffects', 'categoryAudioEffects', 'categoryCursorEffects']
+EffectCategory = Literal['', 'categoryVisualEffects', 'categoryAudioEffects', 'categoryCursorEffects', 'categoryClickEffects']
 
 # Alignment values for CaptionAttributes
 Alignment = Literal[0, 1, 2]  # left, center, right

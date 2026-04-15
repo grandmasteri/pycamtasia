@@ -1870,10 +1870,7 @@
       "type": "object",
       "required": [
         "id",
-        "sceneTrack",
-        "trackAttributes",
-        "captionAttributes",
-        "backgroundColor"
+        "sceneTrack"
       ],
       "properties": {
         "id": {

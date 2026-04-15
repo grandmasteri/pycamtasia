@@ -1216,15 +1216,11 @@ class Track:
         return result
 
     def split_at_time(self, time_seconds: float) -> int:
-        """Split all clips that span the given time point. Returns count split."""
-        count = 0
-        for clip in list(self.clips_at(time_seconds)):
-            try:
-                self.split_clip(clip.id, time_seconds)
-                count += 1
-            except ValueError:
-                pass  # Can't split at exact start/end
-        return count
+        """Split all clips that span the given time point. Returns count split.
+
+        Delegates to :meth:`split_all_clips_at`.
+        """
+        return self.split_all_clips_at(time_seconds)
 
     def split_all_clips_at(self, time_seconds: float) -> int:
         """Split every clip that spans the given time point.
@@ -2050,4 +2046,7 @@ def _max_clip_id(tracks: list[dict[str, Any]]) -> int:
             inner_tracks = m.get('tracks', [])
             if inner_tracks:
                 best = max(best, _max_clip_id(inner_tracks))
+            # Recurse into StitchedMedia sub-clips
+            for sub in m.get('medias', []):
+                best = max(best, sub.get('id', 0))
     return best
