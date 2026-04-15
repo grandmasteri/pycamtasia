@@ -15,21 +15,33 @@ class SourceEffect(Effect):
         Speed, sourceFileType.
     """
 
+    def _color_key_prefix(self, index: int) -> str:
+        """Get the correct color key prefix (Color0 or Color000 for Lottie)."""
+        short_key = f"Color{index}"
+        padded_key = f"Color{index:03d}"
+        # Check which format exists in the parameters
+        params = self._data.get('parameters', {})
+        if f"{padded_key}-red" in params:
+            return padded_key
+        return short_key
+
     def _get_color(self, index: int) -> tuple[float, float, float, float]:
         """Get RGBA for Color{index}."""
+        prefix = self._color_key_prefix(index)
         return (
-            self.get_parameter(f"Color{index}-red"),
-            self.get_parameter(f"Color{index}-green"),
-            self.get_parameter(f"Color{index}-blue"),
-            self.get_parameter(f"Color{index}-alpha"),
+            self.get_parameter(f"{prefix}-red"),
+            self.get_parameter(f"{prefix}-green"),
+            self.get_parameter(f"{prefix}-blue"),
+            self.get_parameter(f"{prefix}-alpha"),
         )
 
     def _set_color(self, index: int, rgba: tuple[float, float, float, float]) -> None:
         """Set RGBA for Color{index}."""
-        self.set_parameter(f"Color{index}-red", rgba[0])
-        self.set_parameter(f"Color{index}-green", rgba[1])
-        self.set_parameter(f"Color{index}-blue", rgba[2])
-        self.set_parameter(f"Color{index}-alpha", rgba[3])
+        prefix = self._color_key_prefix(index)
+        self.set_parameter(f"{prefix}-red", rgba[0])
+        self.set_parameter(f"{prefix}-green", rgba[1])
+        self.set_parameter(f"{prefix}-blue", rgba[2])
+        self.set_parameter(f"{prefix}-alpha", rgba[3])
 
     @property
     def color0(self) -> tuple[float, float, float, float]:

@@ -2044,7 +2044,7 @@ class Track:
             raise ValueError(f'factor must be > 0, got {factor}')
         for media_dict in self._data.get('medias', []):
             media_dict['duration'] = int(media_dict.get('duration', 0) * factor)
-            media_dict['mediaDuration'] = int(media_dict.get('mediaDuration', 0) * factor)
+            media_dict['mediaDuration'] = int(float(Fraction(str(media_dict.get('mediaDuration', 0)))) * factor)
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""
@@ -2110,7 +2110,7 @@ class _PerMediaMarkers:
             .get('keyframes', [])
         )
         start = self._data.get('start', 0)
-        media_start = self._data.get('mediaStart', 0)
+        media_start = int(Fraction(str(self._data.get('mediaStart', 0))))
         for kf in keyframes:
             yield Marker(
                 name=kf['value'],
