@@ -2043,6 +2043,75 @@ class Project:
         track.audio_muted = True
         return True
 
+    @staticmethod
+    def convert_audio_to_wav(
+        input_path: str | Path,
+        output_path: str | Path | None = None,
+        sample_rate: int = 48000,
+    ) -> Path:
+        """Convert an audio file to PCM WAV format using ffmpeg.
+
+        This is recommended before importing audio into Camtasia projects,
+        especially for compressed formats (MP3, AAC) that may have
+        unreliable duration metadata.
+
+        Args:
+            input_path: Path to the input audio file.
+            output_path: Path for the output WAV. If None, replaces the
+                input file extension with .wav.
+            sample_rate: Target sample rate (default 48000 Hz).
+
+        Returns:
+            Path to the converted WAV file.
+
+        Raises:
+            FileNotFoundError: If ffmpeg is not installed.
+            subprocess.CalledProcessError: If conversion fails.
+        """
+        import subprocess
+        input_p = Path(input_path)
+        if output_path is None:
+            output_p = input_p.with_suffix('.wav')
+        else:
+            output_p = Path(output_path)
+
+        subprocess.run(
+            ['ffmpeg', '-y', '-i', str(input_p), '-acodec', 'pcm_s16le',
+             '-ar', str(sample_rate), str(output_p)],
+            capture_output=True, check=True,
+        )
+        return output_p
+
+    def import_and_convert_audio(
+        self,
+        audio_path: str | Path,
+        sample_rate: int = 48000,
+    ) -> Any:
+        """Convert audio to WAV (if needed) and import into the project.
+
+        Automatically converts compressed audio formats to PCM WAV
+        before importing to avoid duration metadata issues.
+        """
+        import subprocess
+        input_p = Path(audio_path)
+        # Check if already PCM WAV
+        try:
+            result = subprocess.run(
+                ['ffprobe', '-v', 'error', '-select_streams', 'a:0',
+                 '-show_entries', 'stream=codec_name', '-of', 'csv=p=0',
+                 str(input_p)],
+                capture_output=True, text=True, check=True,
+            )
+            codec = result.stdout.strip()
+            if codec == 'pcm_s16le':
+                return self.import_media(input_p)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass  # ffprobe not available, convert anyway
+
+        # Convert to WAV
+        wav_path = self.convert_audio_to_wav(input_p, sample_rate=sample_rate)
+        return self.import_media(wav_path)
+
     def solo_track(self, track_name: str) -> bool:
         """Solo a track by name (mute all others). Returns True if found."""
         target = self.timeline.find_track_by_name(track_name)
