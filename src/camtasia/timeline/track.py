@@ -2023,6 +2023,29 @@ class Track:
             if trans.get('start', 0) >= gap_end:
                 trans['start'] = trans.get('start', 0) - gap_ticks
 
+    def shift_all_clips(self, offset_seconds: float) -> None:
+        """Shift all clips on this track by the given offset.
+
+        Positive values move clips forward, negative moves backward.
+        Clips are clamped to not go before time 0.
+        """
+        from camtasia.timing import seconds_to_ticks
+        offset_ticks: int = seconds_to_ticks(offset_seconds)
+        for media_dict in self._data.get('medias', []):
+            new_start: int = max(0, media_dict.get('start', 0) + offset_ticks)
+            media_dict['start'] = new_start
+        for trans in self._data.get('transitions', []):
+            if 'start' in trans:
+                trans['start'] = max(0, trans['start'] + offset_ticks)
+
+    def scale_all_durations(self, factor: float) -> None:
+        """Scale all clip durations by a factor (e.g., 2.0 = double length)."""
+        if factor <= 0:
+            raise ValueError(f'factor must be > 0, got {factor}')
+        for media_dict in self._data.get('medias', []):
+            media_dict['duration'] = int(media_dict.get('duration', 0) * factor)
+            media_dict['mediaDuration'] = int(media_dict.get('mediaDuration', 0) * factor)
+
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""
         from collections import defaultdict

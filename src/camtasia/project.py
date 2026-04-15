@@ -1959,6 +1959,38 @@ class Project:
         path.write_text('\n'.join(lines))
         return path
 
+    def apply_template_effects(
+        self,
+        effect_config: dict[str, list[str]],
+    ) -> int:
+        """Apply effects to clips based on their type.
+
+        Args:
+            effect_config: Dict mapping clip types to effect method names.
+                Example: {'VMFile': ['add_drop_shadow', 'add_round_corners'],
+                          'IMFile': ['add_drop_shadow']}
+        Returns:
+            Number of effects applied.
+        """
+        count: int = 0
+        for _, clip in self.all_clips:
+            clip_type: str = clip.clip_type
+            if clip_type in effect_config:
+                for method_name in effect_config[clip_type]:
+                    if hasattr(clip, method_name):
+                        getattr(clip, method_name)()
+                        count += 1
+        return count
+
+    def strip_all_effects(self) -> int:
+        """Remove all effects from all clips. Returns count removed."""
+        count: int = 0
+        for _, clip in self.all_clips:
+            effects = clip._data.get('effects', [])
+            count += len(effects)
+            clip._data['effects'] = []
+        return count
+
     def add_zoom_to_region(
         self,
         clip: BaseClip,
