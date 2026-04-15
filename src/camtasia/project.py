@@ -1968,11 +1968,11 @@ class Project:
             (start_seconds + duration_seconds, 1.0),
         ])
         clip.set_position_keyframes([
-            (0.0, (0.0, 0.0)),
-            (start_seconds, (0.0, 0.0)),
-            (start_seconds + 0.3, (translate_x, translate_y)),
-            (start_seconds + duration_seconds - 0.3, (translate_x, translate_y)),
-            (start_seconds + duration_seconds, (0.0, 0.0)),
+            (0.0, 0.0, 0.0),
+            (start_seconds, 0.0, 0.0),
+            (start_seconds + 0.3, translate_x, translate_y),
+            (start_seconds + duration_seconds - 0.3, translate_x, translate_y),
+            (start_seconds + duration_seconds, 0.0, 0.0),
         ])
         return clip
 
