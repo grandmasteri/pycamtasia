@@ -180,10 +180,10 @@ class TestProjectRepr:
         proj_dir = _create_cmproj(tmp_path)
         project = Project(proj_dir)
         r = repr(project)
-        assert r.startswith("Project(path='test.cmproj'")
+        assert r.startswith("<Project ")
         assert "tracks=" in r
-        assert "duration=" in r
-        assert r.endswith("s)")
+        assert "clips=" in r
+        assert r.endswith(">")
 
 
 class TestFromTemplate:

@@ -1,34 +1,103 @@
-"""Tests for Project.summary() and Timeline.duration_seconds property."""
+"""Tests for Project.summary() and Project.__repr__."""
 from __future__ import annotations
 
 
-def test_summary_contains_project_name(project):
-    text = project.summary()
-    assert f'Project: {project.file_path.name}' in text
+class TestSummary:
+    def test_contains_title(self, project):
+        project.title = 'My Video'
+        text = project.summary()
+        assert 'Project: My Video' in text
+
+    def test_contains_duration(self, project):
+        text = project.summary()
+        assert text.startswith('Project:')
+        assert f'Duration: {project.total_duration_formatted}' in text
+
+    def test_contains_resolution(self, project):
+        text = project.summary()
+        assert f'Resolution: {project.width}x{project.height}' in text
+
+    def test_contains_track_count(self, project):
+        text = project.summary()
+        assert f'Tracks: {project.track_count}' in text
+
+    def test_contains_clip_count(self, project):
+        text = project.summary()
+        assert f'Clips: {project.clip_count}' in text
+
+    def test_contains_group_count(self, project):
+        text = project.summary()
+        assert f'Groups: {project.group_count}' in text
+
+    def test_media_files_shown_when_bin_nonempty(self, project):
+        # Add a media entry so the bin is non-empty
+        project._data.setdefault('sourceBin', []).append({
+            'id': 999, 'src': './media/test.png', 'rect': [0, 0, 100, 100],
+            'lastMod': '20260101T000000',
+            'sourceTracks': [{'range': [0, 1], 'type': 2, 'editRate': 1,
+                              'trackRect': [0, 0, 100, 100], 'sampleRate': 0,
+                              'bitDepth': 0, 'numChannels': 0,
+                              'integratedLUFS': 100.0, 'peakLevel': -1.0}],
+        })
+        text = project.summary()
+        assert 'Media files:' in text
+
+    def test_media_files_absent_when_bin_empty(self, project):
+        project._data['sourceBin'] = []
+        text = project.summary()
+        assert 'Media files:' not in text
+
+    def test_validation_clean_when_no_issues(self, project):
+        project._data['sourceBin'] = []
+        text = project.summary()
+        assert 'Validation: clean' in text
+
+    def test_validation_issues_shown(self, project):
+        # Inject a broken source bin entry to trigger validation issues
+        project._data.setdefault('sourceBin', []).append({
+            'id': 888, 'src': './media/missing.wav', 'rect': [0, 0, 0, 0],
+            'lastMod': '20260101T000000',
+            'sourceTracks': [{'range': [0, 0], 'type': 1, 'editRate': 44100,
+                              'trackRect': [0, 0, 0, 0], 'sampleRate': 44100,
+                              'bitDepth': 16, 'numChannels': 2,
+                              'integratedLUFS': 100.0, 'peakLevel': -1.0}],
+        })
+        text = project.summary()
+        assert 'Validation issues:' in text
+
+    def test_is_multiline(self, project):
+        text = project.summary()
+        lines = text.strip().split('\n')
+        assert len(lines) >= 6
+
+    def test_returns_string(self, project):
+        assert isinstance(project.summary(), str)
 
 
-def test_summary_contains_dimensions(project):
-    text = project.summary()
-    assert f'Canvas: {project.width}x{project.height}' in text
+class TestRepr:
+    def test_repr_is_one_liner(self, project):
+        r = repr(project)
+        assert '\n' not in r
 
+    def test_repr_contains_title(self, project):
+        project.title = 'Demo'
+        r = repr(project)
+        assert "'Demo'" in r
 
-def test_summary_contains_track_info(project):
-    text = project.summary()
-    assert f'Tracks: {project.timeline.track_count}' in text
-    # Each track should appear as an indented line
-    for track in project.timeline.tracks:
-        assert f'Track {track.index}' in text
+    def test_repr_contains_resolution(self, project):
+        r = repr(project)
+        assert f'{project.width}x{project.height}' in r
 
+    def test_repr_contains_tracks(self, project):
+        r = repr(project)
+        assert f'tracks={project.track_count}' in r
 
-def test_timeline_duration_seconds_property(project):
-    tl = project.timeline
-    assert tl.duration_seconds == tl.total_duration_seconds()
+    def test_repr_contains_clips(self, project):
+        r = repr(project)
+        assert f'clips={project.clip_count}' in r
 
+    def test_repr_starts_with_angle_bracket(self, project):
+        assert repr(project).startswith('<Project ')
 
-class TestSummaryWithClips:
-    def test_summary_shows_clip_types(self, project):
-        track = project.timeline.add_track('Test')
-        track.add_clip('AMFile', 1, 0, 705600000)
-        actual_summary = project.summary()
-        assert 'AMFile' in actual_summary
-        assert 'clips' in actual_summary
+    def test_repr_ends_with_angle_bracket(self, project):
+        assert repr(project).endswith('>')

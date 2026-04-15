@@ -217,7 +217,9 @@ class TestSaveFormatting:
 
     def test_repr(self, tmp_path: Path):
         project = _create_project(tmp_path)
-        assert "test.cmproj" in repr(project)
+        r = repr(project)
+        assert r.startswith("<Project ")
+        assert "tracks=" in r
 
 
 # ===================================================================

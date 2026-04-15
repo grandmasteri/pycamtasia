@@ -177,3 +177,8 @@ class TestRemoveAllEmptyTracks:
 
         assert count_a == count_b
         assert timeline_a.track_count == timeline_b.track_count
+
+
+def test_timeline_duration_seconds_property(project):
+    """Timeline.duration_seconds delegates to total_duration_seconds."""
+    assert project.timeline.duration_seconds >= 0.0

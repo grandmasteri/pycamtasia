@@ -1812,6 +1812,23 @@ class Track:
         sources = self._all_tracks if self._all_tracks is not None else [self._data]
         return _max_clip_id(sources) + 1
 
+    def summary(self) -> str:
+        """Human-readable track summary."""
+        lines: list[str] = [
+            f'Track: {self.name}',
+            f'Clips: {len(self)}',
+            f'Duration: {self.total_duration_seconds:.2f}s',
+        ]
+        if self.has_transitions:
+            lines.append(f'Transitions: {self.transition_count}')
+        clip_types = self.clip_types
+        if clip_types:
+            lines.append(f'Types: {", ".join(sorted(str(t) for t in clip_types))}')
+        gaps = self.gaps()
+        if gaps:
+            lines.append(f'Gaps: {len(gaps)} ({self.total_gap_seconds:.2f}s total)')
+        return '\n'.join(lines)
+
     def describe(self) -> str:
         """Human-readable track description."""
         lines = [f'Track {self.index}: {self.name or "(unnamed)"}']

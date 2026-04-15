@@ -1063,23 +1063,22 @@ class Project:
         return result
 
     def summary(self) -> str:
-        """Return a human-readable summary of the project."""
-        lines = [
-            f'Project: {self.file_path.name}',
-            f'Canvas: {self.width}x{self.height}',
-            f'Duration: {self.total_duration_seconds():.1f}s',
-            f'Tracks: {self.timeline.track_count}',
-            f'Media: {len(self.media_bin)} items',
+        """Human-readable project summary."""
+        lines: list[str] = [
+            f'Project: {self.title}',
+            f'Duration: {self.total_duration_formatted}',
+            f'Resolution: {self.width}x{self.height}',
+            f'Tracks: {self.track_count}',
+            f'Clips: {self.clip_count}',
+            f'Groups: {self.group_count}',
         ]
-        for track in self.timeline.tracks:
-            clip_count = len(track)
-            if clip_count > 0:
-                types = set()
-                for clip in track.clips:
-                    types.add(clip.clip_type)
-                lines.append(f'  Track {track.index} "{track.name}": {clip_count} clips ({", ".join(sorted(types))})')
-            else:
-                lines.append(f'  Track {track.index} "{track.name}": empty')
+        if self.media_bin:
+            lines.append(f'Media files: {len(list(self.media_bin))}')
+        issues = self.validate()
+        if issues:
+            lines.append(f'Validation issues: {len(issues)}')
+        else:
+            lines.append('Validation: clean')
         return '\n'.join(lines)
 
     def describe(self) -> str:
@@ -1560,10 +1559,7 @@ class Project:
         self.height = height
 
     def __repr__(self) -> str:
-        return (f'Project(path={self.file_path.name!r}, '
-                f'{self.width}x{self.height}, '
-                f'tracks={self.timeline.track_count}, '
-                f'duration={self.total_duration_seconds():.1f}s)')
+        return f'<Project {self.title!r} {self.width}x{self.height} tracks={self.track_count} clips={self.clip_count}>'
 
     def strip_audio(self) -> int:
         """Remove all audio clips from all tracks. Returns count removed."""
