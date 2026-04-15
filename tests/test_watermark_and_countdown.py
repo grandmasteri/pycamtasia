@@ -9,9 +9,8 @@ from camtasia.project import load_project
 from camtasia.timeline.clips import BaseClip
 
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-# Grab the first PNG found inside the template project media
-_MEDIA_DIR = RESOURCES / 'new.cmproj' / 'media'
-TEST_PNG = next(_MEDIA_DIR.rglob('*.png'))
+FIXTURES = Path(__file__).parent / 'fixtures'
+TEST_WAV = FIXTURES / 'empty.wav'
 
 
 def _make_project():
@@ -23,31 +22,31 @@ def _make_project():
 
 class TestAddWatermarkReturn:
     def test_returns_base_clip(self):
-        clip = _make_project().add_watermark(TEST_PNG)
+        clip = _make_project().add_watermark(TEST_WAV)
         assert isinstance(clip, BaseClip)
 
 
 class TestAddWatermarkOpacity:
     def test_default_opacity(self):
-        clip = _make_project().add_watermark(TEST_PNG)
+        clip = _make_project().add_watermark(TEST_WAV)
         assert clip.opacity == 0.3
 
     def test_custom_opacity(self):
-        clip = _make_project().add_watermark(TEST_PNG, opacity=0.5)
+        clip = _make_project().add_watermark(TEST_WAV, opacity=0.5)
         assert clip.opacity == 0.5
 
 
 class TestAddWatermarkTrack:
     def test_default_track_name(self):
         proj = _make_project()
-        proj.add_watermark(TEST_PNG)
+        proj.add_watermark(TEST_WAV)
         track = proj.timeline.find_track_by_name('Watermark')
         assert track is not None
         assert len(track) == 1
 
     def test_custom_track_name(self):
         proj = _make_project()
-        proj.add_watermark(TEST_PNG, track_name='Logo')
+        proj.add_watermark(TEST_WAV, track_name='Logo')
         track = proj.timeline.find_track_by_name('Logo')
         assert track is not None
         assert len(track) == 1
@@ -57,11 +56,11 @@ class TestAddWatermarkDuration:
     def test_empty_project_uses_fallback(self):
         proj = _make_project()
         assert proj.duration_seconds == 0
-        clip = proj.add_watermark(TEST_PNG)
+        clip = proj.add_watermark(TEST_WAV)
         assert clip.duration_seconds > 0
 
     def test_clip_starts_at_zero(self):
-        clip = _make_project().add_watermark(TEST_PNG)
+        clip = _make_project().add_watermark(TEST_WAV)
         assert clip.start == 0
 
 
@@ -69,13 +68,13 @@ class TestAddWatermarkMedia:
     def test_media_imported(self):
         proj = _make_project()
         before = proj.media_count
-        proj.add_watermark(TEST_PNG)
+        proj.add_watermark(TEST_WAV)
         assert proj.media_count == before + 1
 
 
 class TestAddWatermarkStringPath:
     def test_string_path_accepted(self):
-        clip = _make_project().add_watermark(str(TEST_PNG))
+        clip = _make_project().add_watermark(str(TEST_WAV))
         assert isinstance(clip, BaseClip)
 
 
