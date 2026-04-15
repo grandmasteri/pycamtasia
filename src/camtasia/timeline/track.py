@@ -1581,7 +1581,7 @@ class Track:
                     m['duration'] = m.get('duration', 0) - trim_start
                     scalar_val = _parse_scalar(m.get('scalar', 1))
                     orig_media_start = Fraction(str(m.get('mediaStart', 0)))
-                    m['mediaStart'] = float(orig_media_start + (Fraction(trim_start) / Fraction(m.get('scalar', 1)) if scalar_val != 0 else trim_start))
+                    m['mediaStart'] = int(Fraction(orig_media_start) + (Fraction(trim_start) / Fraction(m.get('scalar', 1)) if scalar_val != 0 else Fraction(trim_start)))
                 if trim_end > 0:
                     m['duration'] = m.get('duration', 0) - trim_end
                 if m.get('duration', 0) <= 0:
@@ -1718,7 +1718,7 @@ class Track:
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
-        right_data['mediaStart'] = float(orig_media_start + Fraction(split_offset) / Fraction(orig_scalar) if orig_scalar != 0 else orig_media_start + split_offset)
+        right_data['mediaStart'] = int(Fraction(orig_media_start) + Fraction(split_offset) / Fraction(orig_scalar) if orig_scalar != 0 else orig_media_start + split_offset)
         right_data['mediaDuration'] = int((orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
 
         # Assign new sequential IDs to right half
