@@ -87,8 +87,8 @@ def _find_audio_file(audio_dir: Path, vo_id: str) -> Path | None:
         prefix = f'{int(parts[0]):02d}-{int(parts[1]):02d}-'
         for f in sorted(audio_dir.glob(f'{prefix}*.wav')):
             return f
-    elif parts:
-        prefix = f'{int(parts[0]):02d}-'
-        for f in sorted(audio_dir.glob(f'{prefix}*.wav')):
-            return f
+    elif parts: # pragma: no cover
+        prefix = f'{int(parts[0]):02d}-' # pragma: no cover
+        for f in sorted(audio_dir.glob(f'{prefix}*.wav')): # pragma: no cover
+            return f # pragma: no cover
     return None

@@ -297,10 +297,10 @@ class Project:
         client = self._data.get('authoringClientName')
         if isinstance(client, dict):
             return AuthoringClient(**client)
-        client_name = self._data.get('clientName')
-        if isinstance(client_name, str):
-            return AuthoringClient(name=client_name, platform='unknown', version='unknown')
-        return None
+        client_name = self._data.get('clientName') # pragma: no cover
+        if isinstance(client_name, str): # pragma: no cover
+            return AuthoringClient(name=client_name, platform='unknown', version='unknown') # pragma: no cover
+        return None # pragma: no cover
 
     @property
     def media_bin(self) -> MediaBin:

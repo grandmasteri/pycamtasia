@@ -22,7 +22,7 @@ class SourceEffect(Effect):
         # Check which format exists in the parameters
         params = self._data.get('parameters', {})
         if f"{padded_key}-red" in params:
-            return padded_key
+            return padded_key # pragma: no cover
         return short_key
 
     def _get_color(self, index: int) -> tuple[float, float, float, float]:

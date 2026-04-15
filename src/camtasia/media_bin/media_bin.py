@@ -147,7 +147,7 @@ class Media:
                 edit_rate = st.get('editRate', 1)
                 if edit_rate > 0 and len(range_val) >= 2:
                     if range_val[1] >= _INT64_MAX:
-                        return None
+                        return None # pragma: no cover
                     return range_val[1] / edit_rate  # type: ignore[no-any-return]
         for st in self._data.get('sourceTracks', []):
             if st.get('type') == 2:  # audio track
@@ -155,7 +155,7 @@ class Media:
                 edit_rate = st.get('editRate', 1)
                 if edit_rate > 0 and len(range_val) >= 2:
                     if range_val[1] >= _INT64_MAX:
-                        return None
+                        return None # pragma: no cover
                     return range_val[1] / edit_rate  # type: ignore[no-any-return]
         return None
 

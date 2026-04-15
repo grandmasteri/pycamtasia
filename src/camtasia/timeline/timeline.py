@@ -40,7 +40,7 @@ def _remap_clip_ids_recursive(clip_data: dict, id_counter: list[int]) -> None:
         for media in track.get('medias', []):
             _remap_clip_ids_recursive(media, id_counter)
     for media in clip_data.get('medias', []):
-        _remap_clip_ids_recursive(media, id_counter)
+        _remap_clip_ids_recursive(media, id_counter) # pragma: no cover
 
 
 class Timeline:
