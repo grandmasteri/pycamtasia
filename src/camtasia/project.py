@@ -287,9 +287,15 @@ class Project:
         return int(self._data.get('editRate', EDIT_RATE))
 
     @property
-    def authoring_client(self) -> AuthoringClient:
+    def authoring_client(self) -> AuthoringClient | None:
         """Details about the software used to edit the project."""
-        return AuthoringClient(**self._data['authoringClientName'])
+        client = self._data.get('authoringClientName')
+        if isinstance(client, dict):
+            return AuthoringClient(**client)
+        client_name = self._data.get('clientName')
+        if isinstance(client_name, str):
+            return AuthoringClient(name=client_name, platform='unknown', version='unknown')
+        return None
 
     @property
     def media_bin(self) -> MediaBin:
@@ -370,6 +376,11 @@ class Project:
         idx_b = track_b.index
         track_a._data['trackIndex'] = idx_b
         track_b._data['trackIndex'] = idx_a
+        tracks = self.timeline._track_list
+        tracks[idx_a], tracks[idx_b] = tracks[idx_b], tracks[idx_a]
+        attrs = self.timeline._data.get('trackAttributes')
+        if attrs and len(attrs) > max(idx_a, idx_b):
+            attrs[idx_a], attrs[idx_b] = attrs[idx_b], attrs[idx_a]
 
     def remove_track_by_name(self, track_name: str) -> bool:
         """Remove the first track with the given name.

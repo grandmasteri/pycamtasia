@@ -36,6 +36,8 @@ def _collect_ids(media: dict, ids: list, path: str) -> None:
     for track in media.get('tracks', []):
         for inner in track.get('medias', []):
             _collect_ids(inner, ids, f'{path}/group{mid}')
+    for inner in media.get('medias', []):
+        _collect_ids(inner, ids, f'{path}/stitched{mid}')
 
 
 def _check_duplicate_clip_ids(data: dict) -> list[ValidationIssue]:

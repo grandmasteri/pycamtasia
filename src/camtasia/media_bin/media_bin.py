@@ -7,9 +7,13 @@ from __future__ import annotations
 
 import datetime
 import shutil
+import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Any, Iterator
+
+# Shader/Lottie assets use INT64_MAX to signal unbounded duration.
+_INT64_MAX = 9223372036854775807
 
 
 class MediaType(Enum):
@@ -41,6 +45,12 @@ class IntEncodedTime:
     """
 
     def __init__(self, encoded_time: int) -> None:
+        warnings.warn(
+            "IntEncodedTime is deprecated. Range values are frame/sample counts "
+            "in the track's native editRate, not millisecond-encoded times.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._seconds, self._milliseconds = divmod(encoded_time, 1000)
 
     @property
@@ -126,18 +136,26 @@ class Media:
 
     @property
     def duration_seconds(self) -> float | None:
-        """Return the source media duration in seconds, or None if unavailable."""
+        """Return the source media duration in seconds, or None if unavailable.
+
+        Shader and Lottie assets use INT64_MAX as their range end to signal
+        unbounded/infinite duration; this method returns ``None`` for those.
+        """
         for st in self._data.get('sourceTracks', []):
             if st.get('type') == 0:  # video track
                 range_val = st.get('range', [0, 0])
                 edit_rate = st.get('editRate', 1)
                 if edit_rate > 0 and len(range_val) >= 2:
+                    if range_val[1] >= _INT64_MAX:
+                        return None
                     return range_val[1] / edit_rate  # type: ignore[no-any-return]
         for st in self._data.get('sourceTracks', []):
             if st.get('type') == 2:  # audio track
                 range_val = st.get('range', [0, 0])
                 edit_rate = st.get('editRate', 1)
                 if edit_rate > 0 and len(range_val) >= 2:
+                    if range_val[1] >= _INT64_MAX:
+                        return None
                     return range_val[1] / edit_rate  # type: ignore[no-any-return]
         return None
 

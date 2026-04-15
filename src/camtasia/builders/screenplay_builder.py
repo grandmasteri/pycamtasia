@@ -81,9 +81,13 @@ def _find_audio_file(audio_dir: Path, vo_id: str) -> Path | None:
     exact = audio_dir / f'{vo_id}.wav'
     if exact.exists():
         return exact
-    # Try numbered prefix: 01-*.wav for VO-1.1
+    # Try numbered prefix using full VO ID: e.g. VO-1.1 -> 01-01-*.wav
     parts = vo_id.split('.')
-    if parts:
+    if len(parts) >= 2:
+        prefix = f'{int(parts[0]):02d}-{int(parts[1]):02d}-'
+        for f in sorted(audio_dir.glob(f'{prefix}*.wav')):
+            return f
+    elif parts:
         prefix = f'{int(parts[0]):02d}-'
         for f in sorted(audio_dir.glob(f'{prefix}*.wav')):
             return f

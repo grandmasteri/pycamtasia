@@ -25,10 +25,10 @@ class TestFindAudioFile:
         assert actual.name == '1.1.wav'
 
     def test_numbered_prefix(self, tmp_path):
-        (tmp_path / '01-intro.wav').write_bytes(b'\x00' * 44)
+        (tmp_path / '01-01-intro.wav').write_bytes(b'\x00' * 44)
         actual = _find_audio_file(tmp_path, '1.1')
         assert actual is not None
-        assert '01-' in actual.name
+        assert '01-01-' in actual.name
 
     def test_not_found(self, tmp_path):
         actual = _find_audio_file(tmp_path, '99.99')

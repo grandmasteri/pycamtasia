@@ -63,6 +63,7 @@ def export_edl(
                     pass
 
             # Determine edit type
+            is_unified = clip.clip_type == 'UnifiedMedia'
             edit_type = 'V' if clip.clip_type in ('VMFile', 'IMFile', 'ScreenVMFile', 'ScreenIMFile', 'PlaceholderMedia', 'Group', 'UnifiedMedia', 'StitchedMedia', 'Callout') else 'A'
 
             src_in_offset = ticks_to_seconds(int(Fraction(str(clip.media_start))))
@@ -76,6 +77,13 @@ def export_edl(
                 f'{src_in} {src_out} {rec_in} {rec_out}'
             )
             event_num += 1
+
+            if is_unified:
+                lines.append(
+                    f'{event_num:03d}  {source:<8s} A     C        '
+                    f'{src_in} {src_out} {rec_in} {rec_out}'
+                )
+                event_num += 1
 
     lines.append('')
     path.write_text('\n'.join(lines))

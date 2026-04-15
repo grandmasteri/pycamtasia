@@ -39,6 +39,8 @@ def _remap_clip_ids_recursive(clip_data: dict, id_counter: list[int]) -> None:
     for track in clip_data.get('tracks', []):
         for media in track.get('medias', []):
             _remap_clip_ids_recursive(media, id_counter)
+    for media in clip_data.get('medias', []):
+        _remap_clip_ids_recursive(media, id_counter)
 
 
 class Timeline:
@@ -655,14 +657,13 @@ class Timeline:
         import copy
         target = self.add_track(target_track_name)
         target_idx = target.index
-        next_id = self.next_clip_id()
+        next_id = [self.next_clip_id()]
         for track in self.tracks:
             if track.index == target_idx:
                 continue
             for m in track._data.get('medias', []):
                 new_clip = copy.deepcopy(m)
-                new_clip['id'] = next_id
-                next_id += 1
+                _remap_clip_ids_recursive(new_clip, next_id)
                 target._data.setdefault('medias', []).append(new_clip)
         return target
 
