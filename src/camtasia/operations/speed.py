@@ -76,6 +76,12 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
             for inner in track.get("medias", []):
                 _process_clip(inner, factor)
 
+    elif ctype == "UnifiedMedia":
+        for child_key in ("video", "audio"):
+            child = clip.get(child_key)
+            if child:
+                _process_clip(child, factor)
+
 
 def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
     """Scale all timing values in a project by *factor*.

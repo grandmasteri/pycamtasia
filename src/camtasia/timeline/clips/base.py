@@ -221,15 +221,17 @@ class BaseClip:
         """
         if speed <= 0:
             raise ValueError(f'speed must be > 0, got {speed}')
-        self._data['scalar'] = 1 if speed == 1.0 else str(Fraction(speed).limit_denominator(100000))
-        self._data['mediaDuration'] = int(self.duration / speed)
+        scalar_fraction = Fraction(1) / Fraction(speed).limit_denominator(100000)
+        self._data['scalar'] = 1 if speed == 1.0 else str(scalar_fraction)
+        self._data['mediaDuration'] = int(self.duration / float(scalar_fraction))
         self._data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': True}
         return self
 
     @property
     def speed(self) -> float:
         """Current playback speed multiplier."""
-        return float(self._data.get('scalar', 1))
+        from camtasia.timing import scalar_to_speed
+        return float(scalar_to_speed(self.scalar))
 
     @property
     def has_effects(self) -> bool:
@@ -1250,7 +1252,7 @@ class BaseClip:
             f'  Duration: {self.duration_seconds:.2f}s',
         ]
         if self.scalar != 1:
-            lines.append(f'  Speed: {float(Fraction(str(self.scalar))):.2f}x')
+            lines.append(f'  Speed: {self.speed:.2f}x')
         effects = self._data.get('effects', [])
         if effects:
             names = [e.get('effectName', '?') for e in effects]

@@ -39,11 +39,11 @@ class TestSummaryBasic:
 class TestSummarySpeed:
     def test_speed_shown_when_not_one(self) -> None:
         clip = _clip(scalar="1/2")
-        assert "Speed: 0.50x" in clip.summary()
+        assert "Speed: 2.00x" in clip.summary()
 
     def test_speed_2x(self) -> None:
         clip = _clip(scalar=2)
-        assert "Speed: 2.00x" in clip.summary()
+        assert "Speed: 0.50x" in clip.summary()
 
 
 class TestSummaryEffects:

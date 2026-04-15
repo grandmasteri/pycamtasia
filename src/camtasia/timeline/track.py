@@ -638,11 +638,11 @@ class Track:
         if builder._width and builder._height:
             clip.resize(builder._width, builder._height)
         if builder._fill_color:
-            clip.fill_color = builder._fill_color
+            clip.fill_color = tuple(c / 255 for c in builder._fill_color)  # type: ignore[assignment]
         if builder._font_color:
             clip.set_colors(font_color=builder._font_color)  # type: ignore[arg-type]
         if builder._stroke_color:
-            clip.stroke_color = builder._stroke_color
+            clip.stroke_color = tuple(c / 255 for c in builder._stroke_color)  # type: ignore[assignment]
         clip.set_alignment(builder._alignment, 'center')
         return clip
 

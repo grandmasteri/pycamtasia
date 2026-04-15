@@ -352,4 +352,4 @@ class ScreenplayBuildResult(TypedDict):
     """Result of build_from_screenplay()."""
     clips_placed: int
     pauses_added: int
-    total_duration: floatat
+    total_duration: float
