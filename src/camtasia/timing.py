@@ -46,10 +46,12 @@ def format_duration(ticks: int) -> str:
         Formatted string like '2:15.30'.
     """
     total_seconds = ticks / EDIT_RATE
-    minutes = int(total_seconds) // 60
-    seconds = int(total_seconds) % 60
-    fraction = total_seconds - int(total_seconds)
-    return f"{minutes}:{seconds:02d}.{int(fraction * 100):02d}"
+    sign = '-' if total_seconds < 0 else ''
+    abs_seconds = abs(total_seconds)
+    minutes = int(abs_seconds) // 60
+    seconds = int(abs_seconds) % 60
+    fraction = abs_seconds - int(abs_seconds)
+    return f"{sign}{minutes}:{seconds:02d}.{int(fraction * 100):02d}"
 
 
 def parse_scalar(value: int | float | str | Fraction) -> Fraction:

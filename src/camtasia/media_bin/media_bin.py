@@ -443,6 +443,7 @@ def _visual_track_to_json(
     width: int,
     height: int,
     duration: int,
+    edit_rate: int = 30,
     filename: str = "",
 ) -> dict[str, Any]:
     """Build a sourceBin entry for a video or image track."""
@@ -457,7 +458,7 @@ def _visual_track_to_json(
             {
                 "range": [0, duration],
                 "type": media_type.value,
-                "editRate": 1000,
+                "editRate": edit_rate,
                 "trackRect": media_rect,
                 "sampleRate": 0,
                 "bitDepth": 0,
@@ -482,6 +483,7 @@ def _audio_track_to_json(
     bit_depth: int,
     num_channels: int,
     duration: int,
+    edit_rate: int = 30,
     filename: str = "",
 ) -> dict[str, Any]:
     """Build a sourceBin entry for an audio track."""
