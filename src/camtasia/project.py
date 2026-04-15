@@ -2463,6 +2463,62 @@ class Project:
 
         return '\n'.join(lines)
 
+    def extract_audio_track(
+        self,
+        output_path: str | Path,
+        track_name: str | None = None,
+    ) -> Path:
+        """Export audio clips from a track as a list of file references.
+
+        Returns a text file listing all audio source files on the track.
+        If track_name is None, exports from all tracks.
+        """
+        from pathlib import Path as P
+        path = P(output_path)
+        audio_sources: list[str] = []
+
+        for track, clip in self.all_clips:
+            if track_name and track.name != track_name:
+                continue
+            if clip.is_audio and clip.source_id is not None:
+                for media in self.media_bin:
+                    if media.id == clip.source_id:
+                        audio_sources.append(str(media.source))
+                        break
+
+        path.write_text('\n'.join(audio_sources))
+        return path
+
+    def timeline_to_dict(self) -> dict[str, Any]:
+        """Export the timeline structure as a clean dict for serialization.
+
+        Returns a simplified representation of the timeline suitable for
+        JSON export, debugging, or comparison.
+        """
+        tracks_data: list[dict[str, Any]] = []
+        for track in self.timeline.tracks:
+            clips_data: list[dict[str, Any]] = []
+            for clip in track.clips:
+                clips_data.append({
+                    'id': clip.id,
+                    'type': clip.clip_type,
+                    'start_seconds': clip.start_seconds,
+                    'duration_seconds': clip.duration_seconds,
+                    'speed': clip.speed,
+                    'effects': [e.get('effectName', '?') for e in clip._data.get('effects', [])],
+                })
+            tracks_data.append({
+                'name': track.name,
+                'clip_count': len(track),
+                'clips': clips_data,
+            })
+        return {
+            'title': self.title,
+            'duration_seconds': self.duration_seconds,
+            'resolution': f'{self.width}x{self.height}',
+            'tracks': tracks_data,
+        }
+
     def clean_inherited_state(self, preserve_groups: bool = True) -> None:
         """Reset project to a clean state.
 
