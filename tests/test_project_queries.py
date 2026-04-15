@@ -42,7 +42,7 @@ def _clip(clip_id: int, src: int = 1, effects: list[dict] | None = None) -> dict
         "duration": 300,
         "mediaStart": 0,
         "mediaDuration": 300,
-        "type": "VMFile",
+        "_type": "VMFile",
         "effects": effects or [],
         "parameters": {},
     }

@@ -57,38 +57,54 @@ def _check_duplicate_clip_ids(data: dict) -> list[ValidationIssue]:
 
 
 def _check_track_indices(data: dict) -> list[ValidationIssue]:
-    """Check that trackIndex values match array positions."""
+    """Check that trackIndex values match array positions, recursing into Groups."""
     issues: list[ValidationIssue] = []
+
+    def _check_tracks(tracks: list, path: str) -> None:
+        for i, track in enumerate(tracks):
+            idx = track.get('trackIndex')
+            if idx != i:
+                issues.append(ValidationIssue('warning', f'{path}[{i}] has trackIndex={idx} (expected {i})'))
+            for media in track.get('medias', []):
+                inner = media.get('tracks', [])
+                if inner:
+                    _check_tracks(inner, f'{path}[{i}]/group{media.get("id")}')
+
     tracks = data.get('timeline', {}).get('sceneTrack', {}).get('scenes', [{}])[0].get('csml', {}).get('tracks', [])
-    for i, track in enumerate(tracks):
-        idx = track.get('trackIndex')
-        if idx != i:
-            issues.append(ValidationIssue('warning', f'Track array[{i}] has trackIndex={idx} (expected {i})'))
+    _check_tracks(tracks, 'Track array')
     return issues
 
 
 def _check_transition_references(data: dict) -> list[ValidationIssue]:
-    """Check that all transitions reference existing clips on their track."""
+    """Check that all transitions reference existing clips on their track, recursing into Groups."""
     issues: list[ValidationIssue] = []
+
+    def _check_tracks(tracks: list, path: str) -> None:
+        for ti, track in enumerate(tracks):
+            clip_ids = {m['id'] for m in track.get('medias', [])}
+            for j, trans in enumerate(track.get('transitions', [])):
+                left = trans.get('leftMedia')
+                right = trans.get('rightMedia')
+                if left is not None and left not in clip_ids:
+                    issues.append(ValidationIssue(
+                        'error',
+                        f'{path}[{ti}] transition[{j}] leftMedia={left} '
+                        f'not found in track clips {clip_ids}'
+                    ))
+                if right is not None and right not in clip_ids:
+                    issues.append(ValidationIssue(
+                        'error',
+                        f'{path}[{ti}] transition[{j}] rightMedia={right} '
+                        f'not found in track clips {clip_ids}'
+                    ))
+            for media in track.get('medias', []):
+                inner = media.get('tracks', [])
+                if inner:
+                    _check_tracks(inner, f'{path}[{ti}]/group{media.get("id")}')
+
     tracks = (data.get('timeline', {}).get('sceneTrack', {})
               .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
-    for ti, track in enumerate(tracks):
-        clip_ids = {m['id'] for m in track.get('medias', [])}
-        for j, trans in enumerate(track.get('transitions', [])):
-            left = trans.get('leftMedia')
-            right = trans.get('rightMedia')
-            if left is not None and left not in clip_ids:
-                issues.append(ValidationIssue(
-                    'error',
-                    f'Track[{ti}] transition[{j}] leftMedia={left} '
-                    f'not found in track clips {clip_ids}'
-                ))
-            if right is not None and right not in clip_ids:
-                issues.append(ValidationIssue(
-                    'error',
-                    f'Track[{ti}] transition[{j}] rightMedia={right} '
-                    f'not found in track clips {clip_ids}'
-                ))
+    _check_tracks(tracks, 'Track')
     return issues
 
 

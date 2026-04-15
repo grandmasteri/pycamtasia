@@ -298,18 +298,38 @@ class Timeline:
         return self.add_track(name)
 
     def all_clips(self) -> list[BaseClip]:
-        """Collect all clips across all tracks.
+        """All clips across all tracks, including nested clips inside Groups/StitchedMedia/UnifiedMedia."""
+        from typing import Iterable
+        result: list[BaseClip] = []
 
-        Returns:
-            A flat list of every clip on the timeline.
-        """
-        return [clip for track in self.tracks for clip in track.clips]
+        def _collect(clips: Iterable[BaseClip]) -> None:
+            for clip in clips:
+                result.append(clip)
+                if clip.clip_type == 'Group':
+                    from camtasia.timeline.clips.group import Group
+                    if isinstance(clip, Group):
+                        for gt in clip.tracks:
+                            _collect(gt.clips)
+                elif clip.clip_type == 'StitchedMedia':
+                    from camtasia.timeline.clips import clip_from_dict
+                    for nested in clip._data.get('medias', []):
+                        result.append(clip_from_dict(nested))
+                elif clip.clip_type == 'UnifiedMedia':
+                    from camtasia.timeline.clips import clip_from_dict
+                    if 'video' in clip._data:
+                        result.append(clip_from_dict(clip._data['video']))
+                    if 'audio' in clip._data:
+                        result.append(clip_from_dict(clip._data['audio']))
+
+        for track in self.tracks:
+            _collect(track.clips)
+        return result
 
     @property
     def groups(self) -> list[Group]:
-        """All Group clips across all tracks."""
+        """All Group clips across all tracks, including nested groups."""
         from camtasia.timeline.clips.group import Group
-        return [clip for track in self.tracks for clip in track.clips if isinstance(clip, Group)]
+        return [clip for clip in self.all_clips() if isinstance(clip, Group)]
 
     def find_track(self, name: str) -> Track | None:
         """Find a track by name, or return None."""
@@ -607,27 +627,26 @@ class Timeline:
             if track.index != i:
                 issues.append(f'Track array[{i}] has trackIndex={track.index}')
 
-        # Check 2: No duplicate clip IDs across all tracks
+        # Check 2: No duplicate clip IDs across all tracks (recursive)
         all_ids: dict[int, str] = {}
-        for track in self.tracks:
-            for clip in track.clips:
-                if clip.id in all_ids:
-                    issues.append(
-                        f'Duplicate clip ID {clip.id} on track {track.index} '
-                        f'(also on {all_ids[clip.id]})'
-                    )
-                all_ids[clip.id] = f'track {track.index}'
+        for clip in self.all_clips():
+            if clip.id in all_ids:
+                issues.append(
+                    f'Duplicate clip ID {clip.id} '
+                    f'(also on {all_ids[clip.id]})'
+                )
+            all_ids[clip.id] = 'timeline'
 
-        # Check 3: No stale transition references
+        # Check 3: No stale transition references (recursive clip IDs)
+        all_clip_ids = {c.id for c in self.all_clips()}
         for track in self.tracks:
-            clip_ids = {c.id for c in track.clips}
             for trans in track.transitions:
-                if trans.left_media_id and trans.left_media_id not in clip_ids:
+                if trans.left_media_id and trans.left_media_id not in all_clip_ids:
                     issues.append(
                         f'Track {track.index}: transition leftMedia={trans.left_media_id} '
                         f'not found in clips'
                     )
-                if trans.right_media_id and trans.right_media_id not in clip_ids:
+                if trans.right_media_id and trans.right_media_id not in all_clip_ids:
                     issues.append(
                         f'Track {track.index}: transition rightMedia={trans.right_media_id} '
                         f'not found in clips'

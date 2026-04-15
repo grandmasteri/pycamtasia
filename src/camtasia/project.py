@@ -484,8 +484,32 @@ class Project:
 
     @property
     def all_clips(self) -> list[tuple[Track, BaseClip]]:
-        """All clips across all tracks as (track, clip) tuples."""
-        return [(t, c) for t in self.timeline.tracks for c in t.clips]
+        """All clips across all tracks as (track, clip) tuples, including nested clips."""
+        from typing import Iterable
+        results: list[tuple[Track, BaseClip]] = []
+
+        def _collect(track: Track, clips: Iterable[BaseClip]) -> None:
+            for clip in clips:
+                results.append((track, clip))
+                if clip.clip_type == 'Group':
+                    from camtasia.timeline.clips.group import Group
+                    if isinstance(clip, Group):
+                        for gt in clip.tracks:
+                            _collect(track, gt.clips)
+                elif clip.clip_type == 'StitchedMedia':
+                    from camtasia.timeline.clips import clip_from_dict
+                    for nested in clip._data.get('medias', []):
+                        results.append((track, clip_from_dict(nested)))
+                elif clip.clip_type == 'UnifiedMedia':
+                    from camtasia.timeline.clips import clip_from_dict
+                    if 'video' in clip._data:
+                        results.append((track, clip_from_dict(clip._data['video'])))
+                    if 'audio' in clip._data:
+                        results.append((track, clip_from_dict(clip._data['audio'])))
+
+        for track in self.timeline.tracks:
+            _collect(track, track.clips)
+        return results
 
     @property
     def all_groups(self) -> list[tuple[Track, Group]]:
