@@ -1432,6 +1432,7 @@ class Project:
         start_seconds: float = 0.0,
         per_step_seconds: float = 5.0,
         fade_in_seconds: float = 0.5,
+        fade_out_seconds: float = 0.0,
         track_name_prefix: str = 'Prog',
     ) -> list[BaseClip]:
         """Place images on separate tracks for progressive visual accumulation.
@@ -1445,6 +1446,7 @@ class Project:
             start_seconds: When the first image appears.
             per_step_seconds: Time between each image appearing.
             fade_in_seconds: Fade-in duration for each image.
+            fade_out_seconds: Fade-out duration for the last image (0 = no fade).
             track_name_prefix: Prefix for auto-generated track names.
 
         Returns:
@@ -1469,6 +1471,10 @@ class Project:
             if fade_in_seconds > 0:
                 clip.fade_in(fade_in_seconds)
             placed_clips.append(clip)
+
+        if fade_out_seconds > 0 and placed_clips:
+            for placed_clip in placed_clips:
+                placed_clip.fade_out(fade_out_seconds)
 
         return placed_clips
 
