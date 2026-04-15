@@ -209,10 +209,13 @@ class Callout(BaseClip):
     def stroke_color(self, rgba: tuple[float, float, float, float]) -> None:
         """Set the stroke color as an (r, g, b, opacity) tuple."""
         d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
-        d['stroke-color-red'] = rgba[0]
-        d['stroke-color-green'] = rgba[1]
-        d['stroke-color-blue'] = rgba[2]
-        d['stroke-color-opacity'] = rgba[3]
+        color_keys = ('stroke-color-red', 'stroke-color-green', 'stroke-color-blue', 'stroke-color-opacity')
+        for key, val in zip(color_keys, rgba):
+            existing = d.get(key)
+            if isinstance(existing, dict):
+                existing['defaultValue'] = val
+            else:
+                d[key] = val
 
     @property
     def corner_radius(self) -> float:

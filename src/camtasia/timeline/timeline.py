@@ -388,11 +388,34 @@ class Timeline:
     @property
     def all_effects(self) -> list[tuple[Track, BaseClip, dict]]:
         """All effects across all tracks as (track, clip, effect_dict) tuples."""
-        results = []
-        for track in self.tracks:
-            for clip in track.clips:
+        from typing import Iterable
+        results: list[tuple[Track, BaseClip, dict]] = []
+
+        def _collect(track: Track, clips: Iterable[BaseClip]) -> None:
+            for clip in clips:
                 for eff in clip._data.get('effects', []):
                     results.append((track, clip, eff))
+                if clip.clip_type == 'Group':
+                    from camtasia.timeline.clips.group import Group
+                    if isinstance(clip, Group):
+                        for gt in clip.tracks:
+                            _collect(track, gt.clips)
+                elif clip.clip_type == 'StitchedMedia':
+                    from camtasia.timeline.clips import clip_from_dict
+                    for nested in clip._data.get('medias', []):
+                        nc = clip_from_dict(nested)
+                        for eff in nc._data.get('effects', []):
+                            results.append((track, nc, eff))
+                elif clip.clip_type == 'UnifiedMedia':
+                    from camtasia.timeline.clips import clip_from_dict
+                    for key in ('video', 'audio'):
+                        if key in clip._data:
+                            nc = clip_from_dict(clip._data[key])
+                            for eff in nc._data.get('effects', []):
+                                results.append((track, nc, eff))
+
+        for track in self.tracks:
+            _collect(track, track.clips)
         return results
 
     def remove_all_transitions(self) -> int:

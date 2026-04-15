@@ -410,11 +410,7 @@ class Project:
     @property
     def total_effect_count(self) -> int:
         """Total number of effects across all clips on all tracks."""
-        return sum(
-            clip.effect_count
-            for track in self.timeline.tracks
-            for clip in track.clips
-        )
+        return sum(clip.effect_count for _, clip in self.all_clips)
 
     @property
     def has_effects(self) -> bool:
@@ -600,10 +596,9 @@ class Project:
         """Count of each effect type across all clips."""
         from collections import Counter
         counts: Counter[str] = Counter()
-        for track in self.timeline.tracks:
-            for clip in track.clips:
-                for e in clip._data.get('effects', []):
-                    counts[e.get('effectName', '?')] += 1
+        for _, clip in self.all_clips:
+            for e in clip._data.get('effects', []):
+                counts[e.get('effectName', '?')] += 1
         return dict(counts)
 
     @property
@@ -1665,10 +1660,9 @@ class Project:
     def remove_all_effects(self) -> int:
         """Remove all effects from all clips. Returns count removed."""
         count = 0
-        for track in self.timeline.tracks:
-            for clip in track.clips:
-                count += len(clip._data.get('effects', []))
-                clip._data['effects'] = []
+        for _, clip in self.all_clips:
+            count += len(clip._data.get('effects', []))
+            clip._data['effects'] = []
         return count
 
     def summary_table(self) -> str:

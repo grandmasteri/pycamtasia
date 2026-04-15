@@ -1747,8 +1747,8 @@ def test_reverse_track_order():
 
 def test_track_remove_all_effects():
     data = {'trackIndex': 0, 'medias': [
-        {'id': 1, 'start': 0, 'duration': 100, 'effects': [{'type': 'blur'}, {'type': 'glow'}]},
-        {'id': 2, 'start': 100, 'duration': 100, 'effects': [{'type': 'shadow'}]},
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100, 'effects': [{'type': 'blur'}, {'type': 'glow'}]},
+        {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 100, 'effects': [{'type': 'shadow'}]},
     ]}
     t = Track({'ident': 'test'}, data)
     removed = t.remove_all_effects()
@@ -1839,11 +1839,11 @@ def test_track_clip_types():
 
 def test_track_effect_names():
     medias = [
-        {'id': 1, 'start': 0, 'duration': 100, 'effects': [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100, 'effects': [
             {'effectName': 'Blur'},
             {'effectName': 'Glow'},
         ]},
-        {'id': 2, 'start': 100, 'duration': 100, 'effects': [
+        {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 100, 'effects': [
             {'effectName': 'Blur'},
         ]},
     ]
@@ -1855,23 +1855,13 @@ def test_track_effect_names():
 # Project.effect_summary
 # ---------------------------------------------------------------------------
 
-def test_project_effect_summary():
-    from camtasia.project import Project
-    from unittest.mock import MagicMock
-
-    medias = [
-        {'id': 1, 'start': 0, 'duration': 100, 'effects': [
-            {'effectName': 'Blur'},
-            {'effectName': 'Glow'},
-        ]},
-        {'id': 2, 'start': 100, 'duration': 100, 'effects': [
-            {'effectName': 'Blur'},
-        ]},
-    ]
-    proj = MagicMock(spec=Project)
-    proj._data = _make_project_data([medias])
-    proj.timeline = Timeline(proj._data['timeline'])
-    result = Project.effect_summary.fget(proj)
+def test_project_effect_summary(project):
+    track = project.timeline.add_track('Test')
+    c1 = track.add_clip('VMFile', 1, 0, 100)
+    c1._data['effects'] = [{'effectName': 'Blur'}, {'effectName': 'Glow'}]
+    c2 = track.add_clip('VMFile', 1, 100, 100)
+    c2._data['effects'] = [{'effectName': 'Blur'}]
+    result = project.effect_summary
     assert result == {'Blur': 2, 'Glow': 1}
 
 
@@ -1901,10 +1891,10 @@ def test_project_clip_type_summary():
 
 def test_find_clips_with_effect():
     medias = [
-        {'id': 1, 'start': 0, 'duration': 100, 'effects': [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100, 'effects': [
             {'effectName': 'Blur'},
         ]},
-        {'id': 2, 'start': 100, 'duration': 100, 'effects': []},
+        {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 100, 'effects': []},
         {'id': 3, 'start': 200, 'duration': 100, 'effects': [
             {'effectName': 'Glow'},
             {'effectName': 'Blur'},
@@ -1924,7 +1914,7 @@ def test_find_clips_with_effect():
 
 def test_find_clips_without_effects():
     medias = [
-        {'id': 1, 'start': 0, 'duration': 100, 'effects': [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100, 'effects': [
             {'effectName': 'Blur'},
         ]},
         {'id': 2, 'start': 100, 'duration': 100},
@@ -1943,7 +1933,7 @@ def test_find_clips_without_effects():
 
 def test_clip_effect_names():
     medias = [
-        {'id': 1, 'start': 0, 'duration': 100, 'effects': [
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100, 'effects': [
             {'effectName': 'Blur'},
             {'effectName': 'Glow'},
         ]},
