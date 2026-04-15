@@ -168,3 +168,18 @@ class TestEffectRepr:
         data = {"effectName": "Glow", "bypassed": False, "category": "", "parameters": {}}
         effect = Effect(data)
         assert repr(effect) == "Effect(name='Glow')"
+
+
+class TestDropShadowEnabled:
+    def test_enabled_getter(self):
+        from camtasia.effects.visual import DropShadow
+        data = {'effectName': 'DropShadow', 'parameters': {'enabled': 1}}
+        ds = DropShadow(data)
+        assert ds.enabled == 1
+
+    def test_enabled_setter(self):
+        from camtasia.effects.visual import DropShadow
+        data = {'effectName': 'DropShadow', 'parameters': {'enabled': 1}}
+        ds = DropShadow(data)
+        ds.enabled = 0
+        assert ds.enabled == 0

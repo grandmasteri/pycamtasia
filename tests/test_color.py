@@ -96,3 +96,18 @@ class TestRGBABehavior:
     def test_repr(self):
         actual_result = repr(RGBA(10, 20, 30, 40))
         assert actual_result == "RGBA(red=10, green=20, blue=30, alpha=40)"
+
+
+class TestRGBAToHex:
+    def test_to_hex(self):
+        c = RGBA(255, 128, 0, 255)
+        assert c.to_hex() == '#ff8000ff'
+
+class TestRGBAToFloats:
+    def test_to_floats(self):
+        c = RGBA(255, 0, 128, 255)
+        r, g, b, a = c.to_floats()
+        assert r == 1.0
+        assert g == 0.0
+        assert abs(b - 128/255) < 0.001
+        assert a == 1.0
