@@ -678,3 +678,21 @@ def test_remove_internal_clip_reduces_count(num_clips):
     original_count: int = group.clip_count
     group.remove_internal_clip(10)  # remove first clip
     assert group.clip_count == original_count - 1
+
+
+# ---------------------------------------------------------------------------
+# 32. clone_track preserves clip count
+# ---------------------------------------------------------------------------
+
+@given(st.integers(min_value=1, max_value=5))
+@settings(max_examples=20, deadline=None)
+def test_clone_track_preserves_clip_count(num_clips):
+    """Cloning a track should preserve the number of clips."""
+    from camtasia import load_project
+    proj = load_project(RESOURCES / 'new.cmproj')
+    track = proj.timeline.add_track('Source')
+    for i in range(num_clips):
+        track.add_clip('AMFile', 1, i * TICK, TICK)
+    
+    cloned = proj.clone_track('Source', 'Cloned')
+    assert len(cloned) == num_clips
