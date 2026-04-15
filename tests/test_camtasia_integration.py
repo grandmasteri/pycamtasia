@@ -167,7 +167,7 @@ class TestEffectsAndAnnotations:
         proj = _make_project(tmp_path)
         track = proj.timeline.add_track('Callouts')
         callout = track.add_callout('Hello World', start_seconds=0.0, duration_seconds=5.0)
-        callout.add_behavior('Reveal')
+        callout.add_behavior('reveal')
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
 
@@ -334,7 +334,7 @@ class TestBehaviorPresets:
         proj = _make_project(tmp_path)
         track = proj.timeline.add_track('Callouts')
         callout = track.add_callout('Hello World', start_seconds=0.0, duration_seconds=5.0)
-        callout.add_behavior('Fade')
+        callout.add_behavior('fade')
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
 
@@ -343,7 +343,7 @@ class TestBehaviorPresets:
         proj = _make_project(tmp_path)
         track = proj.timeline.add_track('Callouts')
         callout = track.add_callout('Hello World', start_seconds=0.0, duration_seconds=5.0)
-        callout.add_behavior('FlyIn')
+        callout.add_behavior('flyIn')
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
 
@@ -353,7 +353,7 @@ class TestBehaviorPresets:
         proj = _make_project(tmp_path)
         track = proj.timeline.add_track('Callouts')
         callout = track.add_callout('Hello World', start_seconds=0.0, duration_seconds=5.0)
-        callout.add_behavior('PopUp')
+        callout.add_behavior('popUp')
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0
 

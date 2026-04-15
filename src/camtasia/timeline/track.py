@@ -1130,9 +1130,8 @@ class Track:
                 if new_dur <= 0:
                     raise ValueError(f'Extension would result in non-positive duration for clip {clip_id}')
                 m['duration'] = new_dur
-                scalar = m.get('scalar', 1)
-                scalar_val = float(scalar) if not isinstance(scalar, (int, float)) else scalar
-                m['mediaDuration'] = new_dur * scalar_val
+                scalar_val = _parse_scalar(m.get('scalar', 1))
+                m['mediaDuration'] = new_dur / scalar_val if scalar_val != 0 else new_dur
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1543,14 +1542,14 @@ class Track:
                 if trim_start > 0:
                     m['start'] = m.get('start', 0) + trim_start
                     m['duration'] = m.get('duration', 0) - trim_start
-                    m['mediaStart'] = m.get('mediaStart', 0) + trim_start
+                    scalar_val = _parse_scalar(m.get('scalar', 1))
+                    m['mediaStart'] = m.get('mediaStart', 0) + (trim_start / scalar_val if scalar_val != 0 else trim_start)
                 if trim_end > 0:
                     m['duration'] = m.get('duration', 0) - trim_end
                 if m.get('duration', 0) <= 0:
                     raise ValueError(f'Trim would result in zero or negative duration for clip {clip_id}')
-                scalar = m.get('scalar', 1)
-                scalar_val = float(scalar) if not isinstance(scalar, (int, float)) else scalar
-                m['mediaDuration'] = m['duration'] * scalar_val
+                scalar_val = _parse_scalar(m.get('scalar', 1))
+                m['mediaDuration'] = m['duration'] / scalar_val if scalar_val != 0 else m['duration']
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1667,22 +1666,22 @@ class Track:
         split_offset = split_point - orig_start
 
         # Preserve original mediaStart before mutation
-        orig_media_start = left_data.get('mediaStart', 0)
+        orig_media_start = Fraction(str(left_data.get('mediaStart', 0)))
         orig_scalar = left_data.get('scalar', 1)
-        scalar_val = float(_parse_scalar(orig_scalar))
+        scalar_val = _parse_scalar(orig_scalar)
 
         # Deep copy for right half
         right_data = copy.deepcopy(left_data)
 
         # Mutate left half
         left_data['duration'] = split_offset
-        left_data['mediaDuration'] = split_offset * scalar_val
+        left_data['mediaDuration'] = split_offset / scalar_val if scalar_val != 0 else split_offset
 
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
-        right_data['mediaStart'] = orig_media_start + split_offset
-        right_data['mediaDuration'] = (orig_duration - split_offset) * scalar_val
+        right_data['mediaStart'] = float(orig_media_start + Fraction(split_offset) / Fraction(orig_scalar) if orig_scalar != 0 else orig_media_start + split_offset)
+        right_data['mediaDuration'] = (orig_duration - split_offset) / scalar_val if scalar_val != 0 else (orig_duration - split_offset)
 
         # Assign new sequential IDs to right half
         next_id = self._next_clip_id()
@@ -1760,9 +1759,8 @@ class Track:
             raise KeyError(f'No clip with id={missing}')
         # Extend a to cover b
         a['duration'] = (b['start'] + b['duration']) - a['start']
-        scalar = a.get('scalar', 1)
-        scalar_val = float(scalar) if not isinstance(scalar, (int, float)) else scalar
-        a['mediaDuration'] = a['duration'] * scalar_val
+        scalar_val = _parse_scalar(a.get('scalar', 1))
+        a['mediaDuration'] = a['duration'] / scalar_val if scalar_val != 0 else a['duration']
         # Remove b (cascade-deletes transitions)
         self.remove_clip(clip_id_b)
         return clip_from_dict(a)

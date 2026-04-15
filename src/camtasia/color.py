@@ -10,16 +10,16 @@ def hex_rgb(argument: str) -> tuple[int, ...]:
     num_digits = len(h)
     if num_digits == 3:
         return (
-            int(h[0], 16),
-            int(h[1], 16),
-            int(h[2], 16),
+            int(h[0]*2, 16),
+            int(h[1]*2, 16),
+            int(h[2]*2, 16),
         )
     elif num_digits == 4:
         return (
-            int(h[0], 16),
-            int(h[1], 16),
-            int(h[2], 16),
-            int(h[3], 16),
+            int(h[0]*2, 16),
+            int(h[1]*2, 16),
+            int(h[2]*2, 16),
+            int(h[3]*2, 16),
         )
     elif num_digits == 6:
         return (

@@ -28,6 +28,19 @@ class ZoomPanKeyframe:
                 f'scale={self.scale:.2f}, center=({self.center_x:.2f}, {self.center_y:.2f}))')
 
 
+def _remap_clip_ids_recursive(clip_data: dict, id_counter: list[int]) -> None:
+    """Recursively remap all 'id' fields in a clip and its nested children."""
+    if 'id' in clip_data:
+        clip_data['id'] = id_counter[0]
+        id_counter[0] += 1
+    for key in ('video', 'audio'):
+        if key in clip_data and isinstance(clip_data[key], dict):
+            _remap_clip_ids_recursive(clip_data[key], id_counter)
+    for track in clip_data.get('tracks', []):
+        for media in track.get('medias', []):
+            _remap_clip_ids_recursive(media, id_counter)
+
+
 class Timeline:
     """Represents the timeline of a Camtasia project.
 
@@ -123,11 +136,11 @@ class Timeline:
         duplicated_attrs: dict[str, Any] = copy.deepcopy(source_attrs)
         duplicated_attrs['ident'] = f"{duplicated_attrs.get('ident', '')} (copy)"
 
-        # Remap clip IDs to avoid collisions
+        # Remap clip IDs to avoid collisions (recursively, including nested clips)
         next_id: int = self.next_clip_id()
+        id_counter: list[int] = [next_id]
         for media_dict in duplicated_track_data.get('medias', []):
-            media_dict['id'] = next_id
-            next_id += 1
+            _remap_clip_ids_recursive(media_dict, id_counter)
 
         # Insert after source
         insert_index: int = source_track_index + 1

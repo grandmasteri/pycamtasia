@@ -8,7 +8,7 @@ REQUIRED_FIELDS = {'_type', 'effectName', 'bypassed', 'start', 'duration', 'in',
 
 
 def test_reveal_preset_structure():
-    effect = get_behavior_preset('Reveal', 30 * 60 * 5880000)
+    effect = get_behavior_preset('reveal', 30 * 60 * 5880000)
     assert REQUIRED_FIELDS <= set(effect.keys())
     assert effect['_type'] == 'GenericBehaviorEffect'
     assert effect['effectName'] == 'reveal'
@@ -18,7 +18,7 @@ def test_reveal_preset_structure():
 
 
 def test_sliding_preset_structure():
-    effect = get_behavior_preset('Sliding', 30 * 60 * 5880000)
+    effect = get_behavior_preset('sliding', 30 * 60 * 5880000)
     assert REQUIRED_FIELDS <= set(effect.keys())
     assert effect['_type'] == 'GenericBehaviorEffect'
     assert effect['effectName'] == 'sliding'
@@ -28,30 +28,30 @@ def test_sliding_preset_structure():
 
 
 def test_fade_preset_structure():
-    effect = get_behavior_preset('Fade', 30 * 60 * 5880000)
+    effect = get_behavior_preset('fade', 30 * 60 * 5880000)
     assert REQUIRED_FIELDS <= set(effect.keys())
     assert effect['_type'] == 'GenericBehaviorEffect'
     assert effect['effectName'] == 'fade'
     assert effect['in']['attributes']['name'] == 'fadeIn'
-    assert effect['metadata']['presetName'] == 'Fade'
+    assert effect['metadata']['presetName'] == 'fade'
 
 
 def test_flyin_preset_structure():
-    effect = get_behavior_preset('FlyIn', 30 * 60 * 5880000)
+    effect = get_behavior_preset('flyIn', 30 * 60 * 5880000)
     assert REQUIRED_FIELDS <= set(effect.keys())
     assert effect['_type'] == 'GenericBehaviorEffect'
     assert effect['effectName'] == 'flyIn'
     assert effect['in']['attributes']['name'] == 'flyIn'
-    assert effect['metadata']['presetName'] == 'FlyIn'
+    assert effect['metadata']['presetName'] == 'flyIn'
 
 
 def test_popup_preset_structure():
-    effect = get_behavior_preset('PopUp', 30 * 60 * 5880000)
+    effect = get_behavior_preset('popUp', 30 * 60 * 5880000)
     assert REQUIRED_FIELDS <= set(effect.keys())
     assert effect['_type'] == 'GenericBehaviorEffect'
     assert effect['effectName'] == 'popUp'
-    assert effect['in']['attributes']['name'] == 'popUp'
-    assert effect['metadata']['presetName'] == 'PopUp'
+    assert effect['in']['attributes']['name'] == 'grow'
+    assert effect['metadata']['presetName'] == 'popUp'
 
 
 def test_unknown_preset_raises():
@@ -61,11 +61,11 @@ def test_unknown_preset_raises():
 
 def test_preset_duration_calculated():
     clip_dur = 30 * 60 * 5880000
-    reveal = get_behavior_preset('Reveal', clip_dur)
+    reveal = get_behavior_preset('reveal', clip_dur)
     assert reveal['duration'] == clip_dur - reveal['start']
 
-    sliding = get_behavior_preset('Sliding', clip_dur)
+    sliding = get_behavior_preset('sliding', clip_dur)
     assert sliding['duration'] == clip_dur - sliding['start']
 
-    fade = get_behavior_preset('Fade', clip_dur)
+    fade = get_behavior_preset('fade', clip_dur)
     assert fade['duration'] == clip_dur - fade['start']

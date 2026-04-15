@@ -35,7 +35,7 @@ _NONE_OUT = {
 }
 
 PRESETS = {
-    'Reveal': {
+    'reveal': {
         'effectName': 'reveal',
         'start': 1411200000,
         'in': {
@@ -64,10 +64,10 @@ PRESETS = {
             'default-behavior-in-type': {'type': 'double', 'value': 1.0},
             'default-behavior-out-direction': {'type': 'int', 'value': 2},
             'default-behavior-out-type': {'type': 'double', 'value': 1.0},
-            'presetName': 'Reveal',
+            'presetName': 'reveal',
         },
     },
-    'Fade': {
+    'fade': {
         'effectName': 'fade',
         'start': 470400000,
         'in': {
@@ -81,9 +81,9 @@ PRESETS = {
         },
         'center': _NONE_CENTER,
         'out': _NONE_OUT,
-        'metadata': {'presetName': 'Fade'},
+        'metadata': {'presetName': 'fade'},
     },
-    'FlyIn': {
+    'flyIn': {
         'effectName': 'flyIn',
         'start': 0,
         'in': {
@@ -98,14 +98,14 @@ PRESETS = {
         },
         'center': _NONE_CENTER,
         'out': _NONE_OUT,
-        'metadata': {'presetName': 'FlyIn'},
+        'metadata': {'presetName': 'flyIn'},
     },
-    'PopUp': {
+    'popUp': {
         'effectName': 'popUp',
         'start': 0,
         'in': {
             'attributes': {
-                'name': 'popUp', 'type': 1, 'characterOrder': 6,
+                'name': 'grow', 'type': 1, 'characterOrder': 6,
                 'offsetBetweenCharacters': 35280000,
                 'suggestedDurationPerCharacter': 705600000,
                 'overlapProportion': 0, 'movement': 0,
@@ -114,9 +114,9 @@ PRESETS = {
         },
         'center': _NONE_CENTER,
         'out': _NONE_OUT,
-        'metadata': {'presetName': 'PopUp'},
+        'metadata': {'presetName': 'popUp'},
     },
-    'Sliding': {
+    'sliding': {
         'effectName': 'sliding',
         'start': 0,
         'in': {
@@ -160,7 +160,7 @@ PRESETS = {
         'metadata': {
             'default-behavior-center-style': 'fading',
             'default-behavior-out-direction': {'type': 'int', 'value': 2},
-            'presetName': 'Sliding',
+            'presetName': 'sliding',
         },
     },
 }
@@ -170,7 +170,7 @@ def get_behavior_preset(preset_name: str, duration_ticks: int) -> dict:
     """Get a complete behavior effect dict for a preset.
     
     Args:
-        preset_name: Preset name (e.g. 'Reveal', 'Sliding').
+        preset_name: Preset name (e.g. 'reveal', 'sliding').
         duration_ticks: Clip duration in ticks.
     
     Returns:

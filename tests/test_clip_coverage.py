@@ -161,11 +161,11 @@ class TestCalloutConvenience:
         data = _base(_type="Callout", **{"def": {}})
         data['duration'] = 705600000 * 10  # 10 seconds
         clip = Callout(data)
-        actual_result = clip.add_behavior("Reveal")
+        actual_result = clip.add_behavior("reveal")
         assert actual_result is clip  # chaining
         assert data["effects"][0]["_type"] == "GenericBehaviorEffect"
         assert data["effects"][0]["effectName"] == "reveal"
-        assert data["effects"][0]["metadata"]["presetName"] == "Reveal"
+        assert data["effects"][0]["metadata"]["presetName"] == "reveal"
 
     def test_font_default(self):
         clip = Callout(_base(_type="Callout"))
