@@ -4,7 +4,7 @@ from __future__ import annotations
 
 # Project management
 from camtasia.project import Project, load_project, use_project, new_project
-from camtasia.validation import ValidationIssue
+from camtasia.validation import ValidationIssue, validate_all
 
 # Timeline
 from camtasia.timeline import (
@@ -107,6 +107,7 @@ __all__ = [
     "use_project",
     "new_project",
     "ValidationIssue",
+    "validate_all",
     # Timeline
     "Timeline",
     "Track",

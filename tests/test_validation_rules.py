@@ -1,7 +1,7 @@
 """Tests for duplicate clip ID and track index consistency validation rules."""
 from __future__ import annotations
 
-from camtasia.validation import _check_duplicate_clip_ids, _check_track_indices, _check_transition_references
+from camtasia.validation import _check_duplicate_clip_ids, _check_track_indices, _check_transition_references, _check_transition_completeness, _check_track_attributes_count
 
 
 def _make_data(tracks):
@@ -116,3 +116,79 @@ class TestStaleLeftMediaTransition:
         }])
         actual_issues = _check_transition_references(data)
         assert any('leftMedia=999' in i.message for i in actual_issues)
+
+
+# --- Transition completeness ---
+
+def test_transition_missing_both_media_detected():
+    data = _make_data([
+        {'medias': [{'id': 1}],
+         'transitions': [{'leftMedia': None, 'rightMedia': None, 'name': 'Fade', 'duration': 100}]},
+    ])
+    issues = _check_transition_completeness(data)
+    assert len(issues) == 1
+    assert issues[0].level == 'error'
+    assert 'neither leftMedia nor rightMedia' in issues[0].message
+
+
+def test_transition_with_left_media_passes():
+    data = _make_data([
+        {'medias': [{'id': 1}],
+         'transitions': [{'leftMedia': 1, 'rightMedia': None, 'name': 'Fade', 'duration': 100}]},
+    ])
+    issues = _check_transition_completeness(data)
+    assert issues == []
+
+
+def test_transition_with_right_media_passes():
+    data = _make_data([
+        {'medias': [{'id': 1}],
+         'transitions': [{'leftMedia': None, 'rightMedia': 1, 'name': 'Fade', 'duration': 100}]},
+    ])
+    issues = _check_transition_completeness(data)
+    assert issues == []
+
+
+def test_transition_with_both_media_passes():
+    data = _make_data([
+        {'medias': [{'id': 1}, {'id': 2}],
+         'transitions': [{'leftMedia': 1, 'rightMedia': 2, 'name': 'Fade', 'duration': 100}]},
+    ])
+    issues = _check_transition_completeness(data)
+    assert issues == []
+
+
+# --- Track attributes count ---
+
+def _make_data_with_attrs(tracks, attrs):
+    """Wrap tracks and trackAttributes into project data."""
+    return {
+        'timeline': {
+            'sceneTrack': {
+                'scenes': [{
+                    'csml': {'tracks': tracks}
+                }]
+            },
+            'trackAttributes': attrs,
+        }
+    }
+
+
+def test_track_attributes_count_mismatch_detected():
+    data = _make_data_with_attrs(
+        [{'medias': []}, {'medias': []}],
+        [{}],
+    )
+    issues = _check_track_attributes_count(data)
+    assert len(issues) == 1
+    assert issues[0].level == 'warning'
+    assert 'trackAttributes length (1) != tracks length (2)' in issues[0].message
+
+
+def test_track_attributes_count_matches_passes():
+    data = _make_data_with_attrs(
+        [{'medias': []}, {'medias': []}],
+        [{}, {}],
+    )
+    issues = _check_track_attributes_count(data)
+    assert issues == []

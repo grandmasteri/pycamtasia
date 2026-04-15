@@ -108,6 +108,52 @@ def _check_transition_references(data: dict) -> list[ValidationIssue]:
     return issues
 
 
+def _check_transition_completeness(data: dict) -> list[ValidationIssue]:
+    """Check that every transition has at least one of leftMedia/rightMedia and required keys."""
+    issues: list[ValidationIssue] = []
+    tracks = (data.get('timeline', {}).get('sceneTrack', {})
+              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    for ti, track in enumerate(tracks):
+        for j, trans in enumerate(track.get('transitions', [])):
+            if trans.get('leftMedia') is None and trans.get('rightMedia') is None:
+                issues.append(ValidationIssue(
+                    'error',
+                    f'Track[{ti}] transition[{j}] has neither leftMedia nor rightMedia',
+                ))
+            for key in ('name', 'duration'):
+                if key not in trans:
+                    issues.append(ValidationIssue(
+                        'error',
+                        f'Track[{ti}] transition[{j}] missing required key {key!r}',
+                    ))
+    return issues
+
+
+def _check_track_attributes_count(data: dict) -> list[ValidationIssue]:
+    """Check that trackAttributes length matches the number of top-level tracks."""
+    issues: list[ValidationIssue] = []
+    tracks = (data.get('timeline', {}).get('sceneTrack', {})
+              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    attrs = data.get('timeline', {}).get('trackAttributes', [])
+    if len(attrs) != len(tracks):
+        issues.append(ValidationIssue(
+            'warning',
+            f'trackAttributes length ({len(attrs)}) != tracks length ({len(tracks)})',
+        ))
+    return issues
+
+
+def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
+    """Run all structural validation checks on project data."""
+    issues: list[ValidationIssue] = []
+    issues.extend(_check_duplicate_clip_ids(data))
+    issues.extend(_check_track_indices(data))
+    issues.extend(_check_transition_references(data))
+    issues.extend(_check_transition_completeness(data))
+    issues.extend(_check_track_attributes_count(data))
+    return issues
+
+
 def validate_against_schema(project_data: dict[str, Any]) -> list[ValidationIssue]:
     """Validate project data against the Camtasia JSON schema.
 
