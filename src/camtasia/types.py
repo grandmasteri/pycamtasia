@@ -182,10 +182,10 @@ class _ClipData(TypedDict, total=False):
     id: int
     start: int
     duration: int
-    mediaStart: int | Fraction
-    mediaDuration: int | Fraction
+    mediaStart: int | float | str
+    mediaDuration: int | float | str
     src: Any
-    scalar: float | str
+    scalar: int | float | str
     parameters: dict[str, Any]
     effects: list[dict[str, Any]]
     metadata: dict[str, Any]
@@ -196,7 +196,7 @@ class _ClipData(TypedDict, total=False):
     video: dict[str, Any]
     audio: dict[str, Any]
     medias: list[dict[str, Any]]
-    minMediaStart: int
+    minMediaStart: int | float
     sourceEffect: dict[str, Any]
     # 'def' key exists at runtime but can't be declared (Python keyword);
     # accesses use type: ignore[typeddict-item].
@@ -352,4 +352,4 @@ class ScreenplayBuildResult(TypedDict):
     """Result of build_from_screenplay()."""
     clips_placed: int
     pauses_added: int
-    total_duration: float
+    total_duration: floatat

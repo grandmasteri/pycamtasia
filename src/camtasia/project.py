@@ -606,9 +606,8 @@ class Project:
         """Count of each clip type across all tracks."""
         from collections import Counter
         counts: Counter[str] = Counter()
-        for track in self.timeline.tracks:
-            for clip in track.clips:
-                counts[clip.clip_type] += 1
+        for _track, clip in self.all_clips:
+            counts[clip.clip_type] += 1
         return dict(counts)
 
     def search_clips(

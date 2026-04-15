@@ -112,6 +112,9 @@ class RGBA:
         """Alpha channel value (0–255)."""
         return self._alpha
 
+    def to_hex(self) -> str:
+        return f'#{self.red:02x}{self.green:02x}{self.blue:02x}{self.alpha:02x}'
+
     def to_floats(self) -> tuple[float, float, float, float]:
         """Return the color as 0.0–1.0 float channels ``(r, g, b, a)``."""
         return (self.red / 255.0, self.green / 255.0, self.blue / 255.0, self.alpha / 255.0)

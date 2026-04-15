@@ -980,6 +980,12 @@ class Track:
                 'channelNumber': '0',
                 'parameters': {},
                 'effects': [],
+                'start': 0,
+                'duration': dur_ticks,
+                'mediaStart': 0,
+                'mediaDuration': dur_ticks,
+                'scalar': 1,
+                'animationTracks': {},
             },
             'effects': [],
             'start': 0,
@@ -1961,7 +1967,7 @@ class Track:
         earliest_start: int = min(
             int(media_dict.get('start', 0)) for media_dict in medias
         )
-        if earliest_start <= 0:
+        if earliest_start == 0:
             return
         for media_dict in medias:
             current_start: int = int(media_dict.get('start', 0))

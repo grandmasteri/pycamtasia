@@ -99,12 +99,14 @@ class Media:
         return self.source.stem
 
     @property
-    def type(self) -> MediaType:
+    def type(self) -> MediaType | None:
         """Media type derived from the first source track."""
+        if not self._data.get('sourceTracks'):
+            return None
         return MediaType(self._data["sourceTracks"][0]["type"])
 
     @property
-    def rect(self) -> tuple[int, int, int, int]:
+    def rect(self) -> tuple[float, float, float, float]:
         """Native bounding rect as ``(x, y, width, height)``."""
         return tuple(self._data["rect"])
 
@@ -551,6 +553,7 @@ def _visual_track_to_json(
     height: int,
     duration: int,
     edit_rate: int = 30,
+    sample_rate: int = 0,
     filename: str = "",
 ) -> dict[str, Any]:
     """Build a sourceBin entry for a video or image track."""
@@ -567,7 +570,7 @@ def _visual_track_to_json(
                 "type": media_type.value,
                 "editRate": edit_rate,
                 "trackRect": media_rect,
-                "sampleRate": 0,
+                "sampleRate": sample_rate,
                 "bitDepth": 0,
                 "numChannels": 0,
                 "integratedLUFS": 100.0,

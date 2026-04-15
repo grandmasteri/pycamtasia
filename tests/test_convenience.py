@@ -1869,20 +1869,14 @@ def test_project_effect_summary(project):
 # Project.clip_type_summary
 # ---------------------------------------------------------------------------
 
-def test_project_clip_type_summary():
-    from camtasia.project import Project
-    from unittest.mock import MagicMock
-
-    medias = [
-        {'id': 1, '_type': 'ScreenRecording', 'start': 0, 'duration': 100},
-        {'id': 2, '_type': 'UnifiedMedia', 'start': 100, 'duration': 100},
-        {'id': 3, '_type': 'ScreenRecording', 'start': 200, 'duration': 100},
-    ]
-    proj = MagicMock(spec=Project)
-    proj._data = _make_project_data([medias])
-    proj.timeline = Timeline(proj._data['timeline'])
-    result = Project.clip_type_summary.fget(proj)
-    assert result == {'ScreenRecording': 2, 'UnifiedMedia': 1}
+def test_project_clip_type_summary(project):
+    track = project.timeline.add_track('Test')
+    track.add_clip('VMFile', 1, 0, 100)
+    track.add_clip('AMFile', 1, 100, 100)
+    track.add_clip('VMFile', 1, 200, 100)
+    result = project.clip_type_summary
+    assert result['VMFile'] == 2
+    assert result['AMFile'] == 1
 
 
 # ---------------------------------------------------------------------------
