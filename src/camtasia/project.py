@@ -1911,6 +1911,55 @@ class Project:
             callout.fade_out(fade_seconds)
         return callout
 
+    def add_section_divider(
+        self,
+        title_text: str,
+        at_seconds: float,
+        duration_seconds: float = 3.0,
+        track_name: str = 'Section Dividers',
+        fade_seconds: float = 0.5,
+    ) -> BaseClip:
+        """Add a section divider title card at the specified time.
+        
+        Creates a full-screen text callout that serves as a visual
+        separator between sections of the video.
+        """
+        track = self.timeline.get_or_create_track(track_name)
+        callout = track.add_callout(
+            title_text, at_seconds, duration_seconds,
+            font_size=48.0,
+        )
+        if fade_seconds > 0:
+            callout.fade_in(fade_seconds)
+            callout.fade_out(fade_seconds)
+        # Add a marker at this section
+        from camtasia.timing import seconds_to_ticks
+        self.timeline.markers.add(title_text, seconds_to_ticks(at_seconds))
+        return callout
+
+    def add_end_card(
+        self,
+        title_text: str = 'Thank You',
+        subtitle_text: str = '',
+        duration_seconds: float = 5.0,
+        track_name: str = 'End Card',
+        fade_seconds: float = 1.0,
+    ) -> BaseClip:
+        """Add an end card at the end of the timeline."""
+        end_time: float = self.duration_seconds
+        display_text: str = title_text
+        if subtitle_text:
+            display_text = f'{title_text}\n{subtitle_text}'
+        track = self.timeline.get_or_create_track(track_name)
+        callout = track.add_callout(
+            display_text, end_time, duration_seconds,
+            font_size=48.0,
+        )
+        if fade_seconds > 0:
+            callout.fade_in(fade_seconds)
+            callout.fade_out(fade_seconds)
+        return callout
+
     def add_chapter_markers(
         self,
         chapters: list[tuple[float, str]],
@@ -2111,6 +2160,61 @@ class Project:
         # Convert to WAV
         wav_path = self.convert_audio_to_wav(input_p, sample_rate=sample_rate)
         return self.import_media(wav_path)
+
+    def build_from_screenplay_file(
+        self,
+        screenplay_path: str | Path,
+        audio_dir: str | Path,
+        track_name: str = 'Voiceover',
+        gap_seconds: float = 0.5,
+    ) -> dict[str, Any]:
+        """Parse a screenplay file and build the voiceover timeline.
+
+        Reads the screenplay markdown, finds matching audio files in
+        audio_dir, and places them sequentially on the timeline.
+
+        Args:
+            screenplay_path: Path to the screenplay markdown file.
+            audio_dir: Directory containing VO audio files.
+            track_name: Name for the voiceover track.
+            gap_seconds: Gap between VO clips in seconds.
+
+        Returns:
+            Dict with 'clips' (placed clips), 'total_duration' (seconds),
+            'sections' (parsed screenplay sections).
+        """
+        from camtasia.screenplay import parse_screenplay
+        screenplay = parse_screenplay(Path(screenplay_path))
+
+        track = self.timeline.get_or_create_track(track_name)
+        cursor_seconds: float = 0.0
+        placed_clips: list[BaseClip] = []
+        audio_dir_path = Path(audio_dir)
+
+        for vo_block in screenplay.vo_blocks:
+            audio_file = audio_dir_path / f'{vo_block.id}.wav'
+            if not audio_file.exists():
+                continue
+            media = self.import_media(audio_file)
+            duration_seconds: float = 5.0  # fallback
+            for source in self._data.get('sourceBin', []):
+                if source.get('id') == media.id:
+                    tracks = source.get('sourceTracks', [])
+                    if tracks:
+                        r = tracks[0].get('range', [0, 0])
+                        er = tracks[0].get('editRate', 48000)
+                        if er > 0:
+                            duration_seconds = (r[1] - r[0]) / er
+                    break
+            clip = track.add_audio(media.id, start_seconds=cursor_seconds, duration_seconds=duration_seconds)
+            placed_clips.append(clip)
+            cursor_seconds += duration_seconds + gap_seconds
+
+        return {
+            'clips': placed_clips,
+            'total_duration': cursor_seconds,
+            'sections': screenplay.sections,
+        }
 
     def solo_track(self, track_name: str) -> bool:
         """Solo a track by name (mute all others). Returns True if found."""
