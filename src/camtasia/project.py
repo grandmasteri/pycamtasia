@@ -129,6 +129,21 @@ class _ChangeTracker:
                 self._project._data,
             )
 
+
+def _remap_src_recursive(clip_data: dict, src_map: dict[int, int]) -> None:
+    """Recursively remap src references in a clip and its nested children."""
+    if 'src' in clip_data and clip_data['src'] in src_map:
+        clip_data['src'] = src_map[clip_data['src']]
+    for key in ('video', 'audio'):
+        if key in clip_data and isinstance(clip_data[key], dict):
+            _remap_src_recursive(clip_data[key], src_map)
+    for track in clip_data.get('tracks', []):
+        for media in track.get('medias', []):
+            _remap_src_recursive(media, src_map)
+    for nested in clip_data.get('medias', []):
+        _remap_src_recursive(nested, src_map)
+
+
 class Project:
     """Main entry-point for interacting with Camtasia projects.
 
@@ -671,6 +686,7 @@ class Project:
         return proj
 
     @classmethod
+
     def merge_projects(
         cls,
         projects: list[Project],
@@ -705,9 +721,8 @@ class Project:
                     cloned = copy.deepcopy(clip._data)
                     cloned['start'] = cloned.get('start', 0) + int(cursor_seconds * 705600000)
                     _remap_clip_ids_recursive(cloned, id_counter)
-                    # Remap src references
-                    if 'src' in cloned and cloned['src'] in src_id_map:
-                        cloned['src'] = src_id_map[cloned['src']]
+                    # Remap src references recursively
+                    _remap_src_recursive(cloned, src_id_map)
                     new_track._data.setdefault('medias', []).append(cloned)
 
             cursor_seconds += source_project.duration_seconds
