@@ -141,8 +141,9 @@ class SourceEffect(Effect):
         """
         params = self._data.setdefault('parameters', {})
         for i, rgb in enumerate(colors):
+            prefix = self._color_key_prefix(i)
             r, g, b = rgb[0] / 255, rgb[1] / 255, rgb[2] / 255
-            params[f'Color{i}-red'] = r
-            params[f'Color{i}-green'] = g
-            params[f'Color{i}-blue'] = b
-            params[f'Color{i}-alpha'] = 1.0
+            params[f'{prefix}-red'] = r
+            params[f'{prefix}-green'] = g
+            params[f'{prefix}-blue'] = b
+            params[f'{prefix}-alpha'] = 1.0

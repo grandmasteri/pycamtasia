@@ -106,7 +106,11 @@ class ChangeHistory:
         if not self._undo_stack:
             raise IndexError("nothing to undo")
         record = self._undo_stack.pop()
-        record.inverse_patch.apply(project_data, in_place=True)
+        try:
+            record.inverse_patch.apply(project_data, in_place=True)
+        except Exception:
+            self._undo_stack.append(record)
+            raise
         self._redo_stack.append(record)
         return record.description
 
@@ -115,7 +119,11 @@ class ChangeHistory:
         if not self._redo_stack:
             raise IndexError("nothing to redo")
         record = self._redo_stack.pop()
-        record.forward_patch.apply(project_data, in_place=True)
+        try:
+            record.forward_patch.apply(project_data, in_place=True)
+        except Exception:
+            self._redo_stack.append(record)
+            raise
         self._undo_stack.append(record)
         return record.description
 

@@ -10,11 +10,13 @@ if TYPE_CHECKING:
 
 def _format_timecode(seconds: float, fps: int = 30) -> str:
     """Format seconds as SMPTE timecode HH:MM:SS:FF."""
+    sign = '-' if seconds < 0 else ''
+    seconds = abs(seconds)
     h = int(seconds // 3600)
     m = int((seconds % 3600) // 60)
     s = int(seconds % 60)
     f = int((seconds % 1) * fps)
-    return f'{h:02d}:{m:02d}:{s:02d}:{f:02d}'
+    return f'{sign}{h:02d}:{m:02d}:{s:02d}:{f:02d}'
 
 
 def export_edl(
