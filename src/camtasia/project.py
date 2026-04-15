@@ -1785,6 +1785,37 @@ class Project:
             placed_subtitles.append(callout)
         return placed_subtitles
 
+    def add_callout_sequence(
+        self,
+        callout_entries: list[tuple[float, float, str]],
+        track_name: str = 'Callouts',
+        font_size: float = 24.0,
+        fade_seconds: float = 0.3,
+    ) -> list[BaseClip]:
+        """Add a sequence of timed callout annotations.
+
+        Args:
+            callout_entries: List of (start_seconds, duration_seconds, text) tuples.
+            track_name: Name of the track to place callouts on.
+            font_size: Font size in points for all callouts.
+            fade_seconds: Fade-in and fade-out duration (0 to disable).
+
+        Returns:
+            List of created callout clips.
+        """
+        track = self.timeline.get_or_create_track(track_name)
+        placed_callouts: list[BaseClip] = []
+        for entry_start, entry_duration, entry_text in callout_entries:
+            callout = track.add_callout(
+                entry_text, entry_start, entry_duration,
+                font_size=font_size,
+            )
+            if fade_seconds > 0:
+                callout.fade_in(fade_seconds)
+                callout.fade_out(fade_seconds)
+            placed_callouts.append(callout)
+        return placed_callouts
+
     def add_lower_third(
         self,
         title_text: str,
@@ -1826,6 +1857,40 @@ class Project:
         for time_seconds, chapter_name in chapters:
             self.timeline.markers.add(chapter_name, seconds_to_ticks(time_seconds))
         return len(chapters)
+
+    def add_zoom_to_region(
+        self,
+        clip: BaseClip,
+        start_seconds: float,
+        duration_seconds: float,
+        scale: float = 2.0,
+        center_x: float = 0.5,
+        center_y: float = 0.5,
+    ) -> BaseClip:
+        """Add a zoom-in animation to a clip at a specific time.
+
+        Creates scale and translation keyframes that zoom into a region
+        of the clip, hold, then zoom back out.
+        """
+        # Calculate translation to center on the target region
+        translate_x: float = (0.5 - center_x) * (scale - 1) * self.width
+        translate_y: float = (0.5 - center_y) * (scale - 1) * self.height
+
+        clip.set_scale_keyframes([
+            (0.0, 1.0),
+            (start_seconds, 1.0),
+            (start_seconds + 0.3, scale),
+            (start_seconds + duration_seconds - 0.3, scale),
+            (start_seconds + duration_seconds, 1.0),
+        ])
+        clip.set_position_keyframes([
+            (0.0, (0.0, 0.0)),
+            (start_seconds, (0.0, 0.0)),
+            (start_seconds + 0.3, (translate_x, translate_y)),
+            (start_seconds + duration_seconds - 0.3, (translate_x, translate_y)),
+            (start_seconds + duration_seconds, (0.0, 0.0)),
+        ])
+        return clip
 
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
