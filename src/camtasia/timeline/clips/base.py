@@ -169,12 +169,12 @@ class BaseClip:
         return self
 
     @property
-    def media_start(self) -> int | Fraction:
+    def media_start(self) -> int | float | str | Fraction:  # type: ignore[override]
         """Offset into source media in ticks.
 
         May be a rational fraction string for speed-changed clips.
         """
-        raw = self._data['mediaStart']
+        raw = self._data['mediaStart'] # type: ignore[typeddict-item]
         if isinstance(raw, str):
             return Fraction(raw)
         return raw
@@ -182,12 +182,12 @@ class BaseClip:
     @media_start.setter
     def media_start(self, value: int | Fraction) -> None:
         """Set the media start."""
-        self._data['mediaStart'] = value
+        self._data['mediaStart'] = value # type: ignore[typeddict-item]
 
     @property
-    def media_duration(self) -> int | Fraction:
+    def media_duration(self) -> int | float | str | Fraction:  # type: ignore[override]
         """Source media window in ticks."""
-        raw = self._data['mediaDuration']
+        raw = self._data['mediaDuration'] # type: ignore[typeddict-item]
         if isinstance(raw, str):
             return Fraction(raw)
         return raw
@@ -195,7 +195,7 @@ class BaseClip:
     @media_duration.setter
     def media_duration(self, value: int | Fraction) -> None:
         """Set the media duration."""
-        self._data['mediaDuration'] = value
+        self._data['mediaDuration'] = value # type: ignore[typeddict-item]
 
     @property
     def scalar(self) -> Fraction:
@@ -223,7 +223,7 @@ class BaseClip:
             raise ValueError(f'speed must be > 0, got {speed}')
         scalar_fraction = Fraction(1) / Fraction(speed).limit_denominator(100000)
         self._data['scalar'] = 1 if speed == 1.0 else str(scalar_fraction)
-        self._data['mediaDuration'] = int(self.duration / float(scalar_fraction))
+        self._data['mediaDuration'] = int(self.duration / float(scalar_fraction)) # type: ignore[typeddict-item]
         self._data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': True}
         return self
 

@@ -183,7 +183,7 @@ class Media:
         return hash(self.id)
 
     def __repr__(self) -> str:
-        return f'Media(id={self.id}, identity={self.identity!r}, type={self.type.name})'
+        return f'Media(id={self.id}, identity={self.identity!r}, type={self.type.name if self.type is not None else "unknown"})'
 
 
 class MediaBin:
@@ -430,7 +430,7 @@ def _detect_codec(file_path: Path) -> str | None:
         data = json.loads(result.stdout)
         streams = data.get("streams", [])
         if streams:
-            return streams[0].get("codec_name")
+            return streams[0].get("codec_name") # type: ignore[no-any-return]
         # Retry with video stream
         result = subprocess.run(
             [
@@ -445,7 +445,7 @@ def _detect_codec(file_path: Path) -> str | None:
         data = json.loads(result.stdout)
         streams = data.get("streams", [])
         if streams:
-            return streams[0].get("codec_name")
+            return streams[0].get("codec_name") # type: ignore[no-any-return]
     except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
         pass
     return None

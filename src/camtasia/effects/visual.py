@@ -107,8 +107,8 @@ class DropShadow(Effect):
         self.set_parameter("angle", value)
 
     @property
-    def enabled(self) -> int:
-        return self.get_parameter('enabled')
+    def enabled(self) -> int:  # type: ignore[no-any-return]
+        return self.get_parameter('enabled') # type: ignore[no-any-return]
 
     @enabled.setter
     def enabled(self, value: int) -> None:

@@ -46,7 +46,7 @@ def _build_json_report(project: Project) -> dict:
         media.append({
             'id': m.id,
             'identity': m.identity,
-            'type': m.type.name if hasattr(m.type, 'name') else str(m.type),
+            'type': m.type.name if m.type is not None and hasattr(m.type, 'name') else str(m.type),
         })
     return {
         'project': str(project.file_path.name),
@@ -81,7 +81,7 @@ def _build_markdown_report(project: Project) -> str:
     lines.append('## Media Bin')
     lines.append('')
     for m in project.media_bin:
-        type_name = m.type.name if hasattr(m.type, 'name') else str(m.type)
+        type_name = m.type.name if m.type is not None and hasattr(m.type, 'name') else str(m.type)
         lines.append(f'- [{m.id}] {m.identity} ({type_name})')
     lines.append('')
     return '\n'.join(lines)
