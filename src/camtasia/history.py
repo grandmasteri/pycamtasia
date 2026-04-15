@@ -136,16 +136,18 @@ class ChangeHistory:
 
     def to_json(self) -> str:
         """Serialize history to JSON string for persistence."""
-        serialized_records: list[dict[str, Any]] = [
-            {
-                'description': record.description,
-                'forward_patch': record.forward_patch.patch,
-                'inverse_patch': record.inverse_patch.patch,
-            }
-            for record in self._undo_stack
-        ]
+        def _serialize_stack(stack: list[ChangeRecord]) -> list[dict[str, Any]]:
+            return [
+                {
+                    'description': record.description,
+                    'forward_patch': record.forward_patch.patch,
+                    'inverse_patch': record.inverse_patch.patch,
+                }
+                for record in stack
+            ]
         return json.dumps({
-            'undo_stack': serialized_records,
+            'undo_stack': _serialize_stack(self._undo_stack),
+            'redo_stack': _serialize_stack(self._redo_stack),
             'max_history_depth': self._max_history_depth,
         }, indent=2)
 
@@ -154,12 +156,17 @@ class ChangeHistory:
         """Deserialize history from JSON string."""
         raw_data: dict[str, Any] = json.loads(json_string)
         restored_history: ChangeHistory = cls(max_history_depth=raw_data.get('max_history_depth', 100))
-        for serialized_record in raw_data.get('undo_stack', []):
-            restored_history._undo_stack.append(ChangeRecord(
-                description=serialized_record['description'],
-                forward_patch=jsonpatch.JsonPatch(serialized_record['forward_patch']),
-                inverse_patch=jsonpatch.JsonPatch(serialized_record['inverse_patch']),
-            ))
+        def _restore_stack(records: list[dict[str, Any]]) -> list[ChangeRecord]:
+            return [
+                ChangeRecord(
+                    description=r['description'],
+                    forward_patch=jsonpatch.JsonPatch(r['forward_patch']),
+                    inverse_patch=jsonpatch.JsonPatch(r['inverse_patch']),
+                )
+                for r in records
+            ]
+        restored_history._undo_stack = _restore_stack(raw_data.get('undo_stack', []))
+        restored_history._redo_stack = _restore_stack(raw_data.get('redo_stack', []))
         return restored_history
 
 

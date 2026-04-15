@@ -1275,8 +1275,9 @@ def test_interpolation_type_values():
     from camtasia.types import InterpolationType
     assert InterpolationType.LINEAR == 'linr'
     assert InterpolationType.EASE_IN_OUT_ELASTIC == 'eioe'
-    assert InterpolationType.HOLD == 'hold'
-    assert len(InterpolationType) == 3
+    assert InterpolationType.SPRING == 'sprg'
+    assert InterpolationType.BOUNCE == 'bnce'
+    assert len(InterpolationType) == 4
 
 
 # ---------------------------------------------------------------------------

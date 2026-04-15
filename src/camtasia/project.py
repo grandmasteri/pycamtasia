@@ -21,7 +21,7 @@ from camtasia.timeline.track import Track
 from camtasia.timeline.clips import BaseClip
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 from camtasia.types import ClipType, CompactResult, HealthCheckResult
-from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_indices, _check_transition_references
+from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_indices, _check_transition_references, validate_against_schema
 
 
 import subprocess as _sp
@@ -668,8 +668,19 @@ class Project:
         # Transition references
         issues.extend(_check_transition_references(self._data))
 
+        # JSON schema validation
+        # Schema validation available via validate_schema() method
+
         return issues
 
+
+    def validate_schema(self) -> list[ValidationIssue]:
+        """Validate the project data against the Camtasia JSON Schema.
+
+        This is a stricter check than validate() — it verifies the project
+        structure matches the schema derived from 93 TechSmith sample projects.
+        """
+        return validate_against_schema(self._data)
     def validate_and_report(self) -> str:
         """Run validation and return a human-readable report."""
         validation_issues: list[ValidationIssue] = self.validate()

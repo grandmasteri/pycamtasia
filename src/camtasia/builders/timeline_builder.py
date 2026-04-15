@@ -60,7 +60,7 @@ class TimelineBuilder:
         """
         media = self._project.import_media(Path(file_path))
         track = self._project.timeline.get_or_create_track(track_name)
-        dur = duration or (media.duration_seconds or 5.0)
+        dur = duration if duration is not None else (media.duration_seconds if media.duration_seconds is not None else 5.0)
         clip = track.add_audio(media.id, start_seconds=self._cursor, duration_seconds=dur)
         self._cursor += dur
         return clip

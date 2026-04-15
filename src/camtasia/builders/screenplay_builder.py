@@ -25,6 +25,11 @@ def build_from_screenplay(
     Places voiceover audio clips sequentially with pauses between them.
     Uses the TimelineBuilder cursor for automatic timing.
 
+    Note:
+        Pauses are placed after all VO blocks in each section rather than
+        interleaved with individual VO blocks. This is a design limitation
+        of the current section-based iteration.
+
     Args:
         project: Target project.
         screenplay: Parsed Screenplay object.
@@ -77,7 +82,7 @@ def _find_audio_file(audio_dir: Path, vo_id: str) -> Path | None:
     if exact.exists():
         return exact
     # Try numbered prefix: 01-*.wav for VO-1.1
-    parts = vo_id.replace('VO-', '').split('.')
+    parts = vo_id.split('.')
     if parts:
         prefix = f'{int(parts[0]):02d}-'
         for f in sorted(audio_dir.glob(f'{prefix}*.wav')):

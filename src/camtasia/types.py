@@ -8,7 +8,7 @@ __all__ = [
     'BehaviorInnerName', 'BlendMode', 'ValidationLevel', 'MediaType',
     'MaskShape', 'CalloutShape', 'CalloutKind', 'InterpolationType',
     'TrackType', 'EffectCategory', 'Alignment', 'ReportFormat',
-    'RGBA', 'DropShadowParams', 'RoundCornersParams', 'ColorAdjustmentParams',
+    '_RGBADict', 'DropShadowParams', 'RoundCornersParams', 'ColorAdjustmentParams',
     'EffectDict', 'TransitionDict', 'ClipSummary', 'HealthCheckResult',
     'CompactResult', 'TimelineSummary', 'ScreenplayBuildResult',
 ]
@@ -50,38 +50,37 @@ class EffectName(str, Enum):
     EMPHASIZE = 'Emphasize'
     MEDIA_MATTE = 'MediaMatte'
     BLEND_MODE = 'BlendModeEffect'
+    SOURCE_EFFECT = 'SourceEffect'
+    CURSOR_MOTION_BLUR = 'CursorMotionBlur'
+    CURSOR_SHADOW = 'CursorShadow'
+    CURSOR_PHYSICS = 'CursorPhysics'
+    LEFT_CLICK_SCALING = 'LeftClickScaling'
+    VST_NOISE_REMOVAL = 'VSTEffect-DFN3NoiseRemoval'
 
 
 class TransitionType(str, Enum):
     """Known Camtasia transition types."""
+    CARD_FLIP = 'CardFlip'
+    FADE = 'Fade'
     FADE_THROUGH_BLACK = 'FadeThroughBlack'
-    DISSOLVE = 'Dissolve'
-    FADE_TO_WHITE = 'FadeThroughColor'
+    GLITCH3 = 'Glitch3'
+    LINEAR_BLUR = 'LinearBlur'
+    PAINT_ARCS = 'PaintArcs'
     SLIDE_LEFT = 'SlideLeft'
     SLIDE_RIGHT = 'SlideRight'
-    SLIDE_UP = 'SlideUp'
-    SLIDE_DOWN = 'SlideDown'
-    WIPE_LEFT = 'WipeLeft'
-    WIPE_RIGHT = 'WipeRight'
-    WIPE_UP = 'WipeUp'
-    WIPE_DOWN = 'WipeDown'
-    CARD_FLIP = 'CardFlip'
-    GLITCH = 'Glitch'
-    LINEAR_BLUR = 'LinearBlur'
-    STRETCH = 'Stretch'
-    FADE = 'Fade'
-    GLITCH3 = 'Glitch3'
-    PAINT_ARCS = 'PaintArcs'
     SPHERICAL_SPIN = 'SphericalSpin'
+    STRETCH = 'Stretch'
 
 
 class BehaviorPreset(str, Enum):
     """Known behavior animation presets."""
-    REVEAL = 'Reveal'
-    SLIDING = 'Sliding'
-    FADE = 'Fade'
-    FLY_IN = 'FlyIn'
-    POP_UP = 'PopUp'
+    REVEAL = 'reveal'
+    SLIDING = 'sliding'
+    FADE = 'fade'
+    FLY_IN = 'flyIn'
+    POP_UP = 'popUp'
+    PULSATING = 'pulsating'
+    SHIFTING = 'shifting'
 
 
 class BehaviorInnerName(str, Enum):
@@ -101,6 +100,7 @@ class BehaviorInnerName(str, Enum):
     # Center-phase animations
     NONE = 'none'
     TREMBLE = 'tremble'
+    PULSATE = 'pulsate'
 
 
 class BlendMode(IntEnum):
@@ -133,7 +133,8 @@ class InterpolationType(str, Enum):
     """Keyframe interpolation types."""
     LINEAR = 'linr'
     EASE_IN_OUT_ELASTIC = 'eioe'
-    HOLD = 'hold'
+    SPRING = 'sprg'
+    BOUNCE = 'bnce'
 
 
 class CalloutKind(str, Enum):
@@ -261,7 +262,7 @@ class _CaptionData(TypedDict, total=False):
 # ---------------------------------------------------------------------------
 
 
-class RGBA(TypedDict):
+class _RGBADict(TypedDict):
     """RGBA color as 0.0-1.0 floats."""
     red: float
     green: float

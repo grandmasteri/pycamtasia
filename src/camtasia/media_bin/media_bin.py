@@ -425,7 +425,7 @@ def _visual_track_to_json(
                 "parameters": {},
             }
         ],
-        "metadata": {},
+        "metadata": {"timeAdded": datetime.datetime.now().strftime("%Y%m%dT%H%M%S")},
     }
 
 
@@ -463,7 +463,7 @@ def _audio_track_to_json(
                 "parameters": {},
             }
         ],
-        "metadata": {},
+        "metadata": {"timeAdded": datetime.datetime.now().strftime("%Y%m%dT%H%M%S")},
     }
 
 

@@ -53,7 +53,7 @@ class TestRGBAConstruction:
     def test_from_floats(self):
         color = RGBA.from_floats(1.0, 0.5, 0.0, 1.0)
         assert color.red == 255
-        assert color.green == 127.5
+        assert color.green == 128  # round(0.5 * 255) = 128
         assert color.blue == 0
         assert color.alpha == 255
 

@@ -1,5 +1,9 @@
 """Tests for camtasia.types enums."""
-from camtasia.types import ClipType, EffectName, BlendMode, MaskShape, CalloutShape, TransitionType, CalloutKind, BehaviorInnerName
+from camtasia.types import (
+    ClipType, EffectName, BlendMode, MaskShape, CalloutShape,
+    TransitionType, CalloutKind, BehaviorInnerName, BehaviorPreset,
+    InterpolationType, _RGBADict,
+)
 
 
 class TestClipTypeValues:
@@ -38,9 +42,143 @@ class TestEffectNameValues:
             'EMPHASIZE': 'Emphasize',
             'MEDIA_MATTE': 'MediaMatte',
             'BLEND_MODE': 'BlendModeEffect',
+            'SOURCE_EFFECT': 'SourceEffect',
+            'CURSOR_MOTION_BLUR': 'CursorMotionBlur',
+            'CURSOR_SHADOW': 'CursorShadow',
+            'CURSOR_PHYSICS': 'CursorPhysics',
+            'LEFT_CLICK_SCALING': 'LeftClickScaling',
+            'VST_NOISE_REMOVAL': 'VSTEffect-DFN3NoiseRemoval',
         }
         for name, value in expected.items():
             assert EffectName[name].value == value
+
+    def test_effect_name_count(self):
+        assert len(EffectName) == 17
+
+
+class TestTransitionTypeValues:
+    """Verify TransitionType only contains schema-valid values."""
+
+    def test_transition_type_values(self):
+        expected = {
+            'CARD_FLIP': 'CardFlip',
+            'FADE': 'Fade',
+            'FADE_THROUGH_BLACK': 'FadeThroughBlack',
+            'GLITCH3': 'Glitch3',
+            'LINEAR_BLUR': 'LinearBlur',
+            'PAINT_ARCS': 'PaintArcs',
+            'SLIDE_LEFT': 'SlideLeft',
+            'SLIDE_RIGHT': 'SlideRight',
+            'SPHERICAL_SPIN': 'SphericalSpin',
+            'STRETCH': 'Stretch',
+        }
+        for name, value in expected.items():
+            assert TransitionType[name].value == value
+
+    def test_transition_type_count(self):
+        assert len(TransitionType) == 10
+
+    def test_fabricated_values_removed(self):
+        removed = [
+            'DISSOLVE', 'FADE_TO_WHITE', 'SLIDE_UP', 'SLIDE_DOWN',
+            'WIPE_LEFT', 'WIPE_RIGHT', 'WIPE_UP', 'WIPE_DOWN', 'GLITCH',
+        ]
+        for name in removed:
+            assert name not in TransitionType.__members__
+
+    def test_str_enum_comparison(self):
+        assert TransitionType.GLITCH3 == 'Glitch3'
+        assert TransitionType.PAINT_ARCS == 'PaintArcs'
+        assert TransitionType.SPHERICAL_SPIN == 'SphericalSpin'
+
+
+class TestBehaviorPresetValues:
+    """Verify BehaviorPreset uses lowercase values matching schema."""
+
+    def test_behavior_preset_values(self):
+        expected = {
+            'REVEAL': 'reveal',
+            'SLIDING': 'sliding',
+            'FADE': 'fade',
+            'FLY_IN': 'flyIn',
+            'POP_UP': 'popUp',
+            'PULSATING': 'pulsating',
+            'SHIFTING': 'shifting',
+        }
+        for name, value in expected.items():
+            assert BehaviorPreset[name].value == value
+
+    def test_behavior_preset_count(self):
+        assert len(BehaviorPreset) == 7
+
+    def test_str_enum_comparison(self):
+        assert BehaviorPreset.REVEAL == 'reveal'
+        assert BehaviorPreset.PULSATING == 'pulsating'
+
+
+class TestBehaviorInnerNameValues:
+    """Verify BehaviorInnerName enum values match inner name strings from TechSmith samples."""
+
+    def test_behavior_inner_name_values(self):
+        expected = {
+            'FADE_IN': 'fadeIn',
+            'REVEAL': 'reveal',
+            'SLIDING': 'sliding',
+            'FLY_IN': 'flyIn',
+            'GROW': 'grow',
+            'HINGE': 'hinge',
+            'FADE_OUT': 'fadeOut',
+            'FLY_OUT': 'flyOut',
+            'SHRINK': 'shrink',
+            'SHIFTING': 'shifting',
+            'NONE': 'none',
+            'TREMBLE': 'tremble',
+            'PULSATE': 'pulsate',
+        }
+        for name, value in expected.items():
+            assert BehaviorInnerName[name].value == value
+
+    def test_behavior_inner_name_count(self):
+        assert len(BehaviorInnerName) == 13
+
+    def test_str_enum_comparison(self):
+        assert BehaviorInnerName.FADE_IN == 'fadeIn'
+        assert BehaviorInnerName.NONE == 'none'
+        assert BehaviorInnerName.PULSATE == 'pulsate'
+
+
+class TestInterpolationTypeValues:
+    """Verify InterpolationType has correct members."""
+
+    def test_interpolation_type_values(self):
+        expected = {
+            'LINEAR': 'linr',
+            'EASE_IN_OUT_ELASTIC': 'eioe',
+            'SPRING': 'sprg',
+            'BOUNCE': 'bnce',
+        }
+        for name, value in expected.items():
+            assert InterpolationType[name].value == value
+
+    def test_hold_removed(self):
+        assert 'HOLD' not in InterpolationType.__members__
+
+    def test_interpolation_type_count(self):
+        assert len(InterpolationType) == 4
+
+
+class TestRGBADictRenamed:
+    """Verify RGBA TypedDict was renamed to _RGBADict."""
+
+    def test_rgba_dict_is_typed_dict(self):
+        assert hasattr(_RGBADict, '__annotations__')
+        assert 'red' in _RGBADict.__annotations__
+        assert 'green' in _RGBADict.__annotations__
+        assert 'blue' in _RGBADict.__annotations__
+
+    def test_no_public_rgba_in_types(self):
+        import camtasia.types as t
+        assert not hasattr(t, 'RGBA') or t.RGBA is t._RGBADict
 
 
 class TestBlendModeValues:
@@ -106,19 +244,6 @@ class TestCalloutShapeSetter:
         assert data['def']['shape'] == 'triangle'
 
 
-class TestNewTransitionTypes:
-    """Verify the three new transition type enum values."""
-
-    def test_new_transition_types(self):
-        assert TransitionType.GLITCH3.value == 'Glitch3'
-        assert TransitionType.PAINT_ARCS.value == 'PaintArcs'
-        assert TransitionType.SPHERICAL_SPIN.value == 'SphericalSpin'
-        # str enum comparison
-        assert TransitionType.GLITCH3 == 'Glitch3'
-        assert TransitionType.PAINT_ARCS == 'PaintArcs'
-        assert TransitionType.SPHERICAL_SPIN == 'SphericalSpin'
-
-
 class TestCalloutKindValues:
     """Verify CalloutKind enum values."""
 
@@ -128,28 +253,3 @@ class TestCalloutKindValues:
         # str enum comparison
         assert CalloutKind.REMIX == 'remix'
         assert CalloutKind.WIN_BLUR == 'TypeWinBlur'
-
-
-class TestBehaviorInnerNameValues:
-    """Verify BehaviorInnerName enum values match inner name strings from TechSmith samples."""
-
-    def test_behavior_inner_name_values(self):
-        expected = {
-            'FADE_IN': 'fadeIn',
-            'REVEAL': 'reveal',
-            'SLIDING': 'sliding',
-            'FLY_IN': 'flyIn',
-            'GROW': 'grow',
-            'HINGE': 'hinge',
-            'FADE_OUT': 'fadeOut',
-            'FLY_OUT': 'flyOut',
-            'SHRINK': 'shrink',
-            'SHIFTING': 'shifting',
-            'NONE': 'none',
-            'TREMBLE': 'tremble',
-        }
-        for name, value in expected.items():
-            assert BehaviorInnerName[name].value == value
-        # str enum comparison
-        assert BehaviorInnerName.FADE_IN == 'fadeIn'
-        assert BehaviorInnerName.NONE == 'none'

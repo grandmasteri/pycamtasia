@@ -188,7 +188,7 @@ class TransitionList:
     ) -> Transition:
         """Add a dissolve transition between two clips."""
         ticks = int(duration_seconds * EDIT_RATE)
-        return self.add(TransitionType.DISSOLVE, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        return self.add('Dissolve', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_fade_to_white(
         self,
@@ -198,7 +198,7 @@ class TransitionList:
     ) -> Transition:
         """Add a fade-through-white transition."""
         ticks = int(duration_seconds * EDIT_RATE)
-        t = self.add(TransitionType.FADE_TO_WHITE, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        t = self.add('FadeThroughColor', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
         t._data['attributes']['Color-red'] = 1.0
         t._data['attributes']['Color-green'] = 1.0
         t._data['attributes']['Color-blue'] = 1.0
@@ -220,8 +220,8 @@ class TransitionList:
         name_map = {
             'left': TransitionType.SLIDE_LEFT,
             'right': TransitionType.SLIDE_RIGHT,
-            'up': TransitionType.SLIDE_UP,
-            'down': TransitionType.SLIDE_DOWN,
+            'up': 'SlideUp',
+            'down': 'SlideDown',
         }
         if direction not in name_map:
             raise ValueError(f'Invalid direction {direction!r}. Use: {sorted(name_map)}')
@@ -242,10 +242,10 @@ class TransitionList:
             direction: 'left', 'right', 'up', or 'down'.
         """
         name_map = {
-            'left': TransitionType.WIPE_LEFT,
-            'right': TransitionType.WIPE_RIGHT,
-            'up': TransitionType.WIPE_UP,
-            'down': TransitionType.WIPE_DOWN,
+            'left': 'WipeLeft',
+            'right': 'WipeRight',
+            'up': 'WipeUp',
+            'down': 'WipeDown',
         }
         if direction not in name_map:
             raise ValueError(f'Invalid direction {direction!r}. Use: {sorted(name_map)}')
@@ -270,7 +270,7 @@ class TransitionList:
     ) -> Transition:
         """Add a glitch transition."""
         ticks = int(duration_seconds * EDIT_RATE)
-        return self.add(TransitionType.GLITCH, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        return self.add('Glitch', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_linear_blur(
         self,

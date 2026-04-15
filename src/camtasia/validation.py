@@ -1,8 +1,11 @@
 """Project validation — checks for common issues before save."""
 from __future__ import annotations
 
+import json
 from collections import Counter
 from dataclasses import dataclass
+from importlib import resources as importlib_resources
+from typing import Any
 
 
 @dataclass
@@ -84,4 +87,26 @@ def _check_transition_references(data: dict) -> list[ValidationIssue]:
                     f'Track[{ti}] transition[{j}] rightMedia={right} '
                     f'not found in track clips {clip_ids}'
                 ))
+    return issues
+
+
+def validate_against_schema(project_data: dict[str, Any]) -> list[ValidationIssue]:
+    """Validate project data against the Camtasia JSON schema.
+
+    Returns:
+        A list of :class:`ValidationIssue` for each schema violation.
+    """
+    try:
+        import jsonschema
+    except ImportError:
+        return [ValidationIssue('warning', 'jsonschema not installed; skipping schema validation')]
+
+    schema_path = importlib_resources.files('camtasia.resources') / 'camtasia-project-schema.json'
+    schema = json.loads(schema_path.read_text(encoding='utf-8'))
+
+    issues: list[ValidationIssue] = []
+    validator = jsonschema.Draft7Validator(schema)
+    for error in validator.iter_errors(project_data):
+        path = '/'.join(str(p) for p in error.absolute_path) or '(root)'
+        issues.append(ValidationIssue('error', f'Schema violation at {path}: {error.message}'))
     return issues

@@ -27,6 +27,10 @@ def export_markers_as_srt(
     for i, marker in enumerate(markers, 1):
         start = marker.time_seconds
         end = start + duration_seconds
+        if i < len(markers):
+            next_start = markers[i].time_seconds
+            if end > next_start:
+                end = next_start
         lines.append(str(i))
         lines.append(f'{_format_srt_time(start)} --> {_format_srt_time(end)}')
         lines.append(marker.name)
