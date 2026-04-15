@@ -6,7 +6,7 @@ pycamtasia is a Python library for reading, writing, and manipulating TechSmith 
 
 Primary use case: assembling demo videos from voiceover audio, diagram images, screen recordings, and title cards via scripts.
 
-- 390+ commits, 1825+ tests, 100% line coverage (`fail_under = 100`)
+- 390+ commits, 2312 tests, 100% line coverage (`fail_under = 100`), 0 mypy errors, 93 TechSmith samples validated
 - Python 3.10+, no required runtime dependencies (optional: `pymediainfo`, `docopt-subcommands`, `jsonpatch>=1.33`)
 - Package: `src/camtasia/`, installed as `camtasia`, CLI entry point: `pytsc`
 
@@ -103,6 +103,7 @@ src/camtasia/
 ├── app_validation.py       # Camtasia app-level validation
 ├── authoring_client.py     # Export/authoring settings
 └── resources/              # Bundled template projects (new.cmproj, simple-video.cmproj)
+    └── camtasia-project-schema.json  # JSON Schema for .tscproj validation
 ```
 
 ### Two API Layers
@@ -161,7 +162,11 @@ Always reverse-engineer from real Camtasia output:
 
 No raw `_data` access in consumer/assembly scripts. If pycamtasia doesn't support an operation, implement it in the library first, then use the API.
 
-### Documentation Consistency
+### 7. Adversarial review process
+
+This library was hardened through 7 rounds of adversarial review, uncovering 63+ bugs across edge cases, format assumptions, and silent data corruption paths. Any new feature or format change should be subjected to the same scrutiny: assume the format is hostile, test boundary conditions, and verify round-trip fidelity against real Camtasia output.
+
+### 8. Documentation Consistency
 Every commit that changes source code MUST include corresponding documentation updates. This includes:
 - Docstrings on new/changed public methods
 - Updates to relevant docs/guides/ if behavior changes
@@ -246,14 +251,15 @@ Every clip ID must be unique across the entire project. The validation module ch
 ```
 pycamtasia/
 ├── src/camtasia/           # Library source (the package)
-├── tests/                  # 100+ test files, 1825+ tests
+├── tests/                  # 100+ test files, 2312 tests
 │   ├── conftest.py         # Fixtures: project, simple_video, test_project_a_data
 │   └── fixtures/           # .tscproj files and .wav files for testing
 ├── scripts/
 │   └── camtasia_validate.sh  # Integration validation script
 ├── docs/                   # Sphinx documentation
 │   ├── api/                # API reference (.rst)
-│   └── guides/             # User guides (.md)
+│   ├── guides/             # User guides (.md)
+│   └── camtasia-format-reference.md  # Reverse-engineered .tscproj format reference
 ├── pyproject.toml          # Build config, test config, coverage config
 ├── ARCHITECTURE.md         # Detailed architecture design doc
 ├── ROADMAP.md              # Planned and completed features
@@ -272,3 +278,4 @@ pycamtasia/
 - `tests/fixtures/empty.wav`, `empty2.wav` — Audio fixtures for media tests
 - `src/camtasia/resources/new.cmproj` — Blank template project
 - `src/camtasia/resources/simple-video.cmproj` — Simple video template
+- `src/camtasia/resources/camtasia-project-schema.json` — JSON Schema for .tscproj validation
