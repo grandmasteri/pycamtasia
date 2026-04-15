@@ -670,6 +670,41 @@ class Project:
         proj.save()
         return proj
 
+    @classmethod
+    def merge_projects(
+        cls,
+        projects: list[Project],
+        output_path: str | Path,
+        title: str = 'Merged Project',
+    ) -> Project:
+        """Merge multiple projects into one by concatenating their timelines.
+
+        Each project's tracks are appended sequentially. Media bins are merged.
+        """
+        merged = cls.new(output_path, title=title)
+        cursor_seconds: float = 0.0
+
+        for source_project in projects:
+            # Copy media bin entries
+            for media in source_project.media_bin:
+                merged._data.setdefault('sourceBin', []).append(
+                    copy.deepcopy(media._data)
+                )
+
+            # Copy tracks with time offset
+            for track in source_project.timeline.tracks:
+                new_track = merged.timeline.add_track(track.name)
+                for clip in track.clips:
+                    cloned = copy.deepcopy(clip._data)
+                    cloned['start'] = cloned.get('start', 0) + int(cursor_seconds * 705600000)
+                    cloned['id'] = merged.next_available_id
+                    new_track._data.setdefault('medias', []).append(cloned)
+
+            cursor_seconds += source_project.duration_seconds
+
+        merged.save()
+        return merged
+
     def batch_apply(
         self,
         operation: Callable[[BaseClip], Any],
