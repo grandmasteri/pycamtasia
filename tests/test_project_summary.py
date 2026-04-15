@@ -1,4 +1,4 @@
-"""Tests for Project.summary() and Project.__repr__."""
+"""Tests for Project.summary(), Project.__repr__, and Project.__str__."""
 from __future__ import annotations
 
 
@@ -101,3 +101,21 @@ class TestRepr:
 
     def test_repr_ends_with_angle_bracket(self, project):
         assert repr(project).endswith('>')
+
+
+class TestStr:
+    def test_str_contains_title(self, project):
+        project.title = 'Demo'
+        assert 'Demo' in str(project)
+
+    def test_str_contains_duration(self, project):
+        assert project.total_duration_formatted in str(project)
+
+    def test_str_contains_track_count(self, project):
+        assert f'{project.track_count} tracks' in str(project)
+
+    def test_str_contains_clip_count(self, project):
+        assert f'{project.clip_count} clips' in str(project)
+
+    def test_str_is_one_liner(self, project):
+        assert '\n' not in str(project)

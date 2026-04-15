@@ -103,7 +103,7 @@ class TestToMarkdownReport:
 
 
 class TestInfoUsesNewStatistics:
-    """Ensure info() still works with the new statistics shape."""
+    """Ensure info() returns the comprehensive dict."""
 
     def test_info_has_clip_count(self, project):
         info = project.info()
@@ -112,6 +112,39 @@ class TestInfoUsesNewStatistics:
     def test_info_has_resolution(self, project):
         info = project.info()
         assert 'resolution' in info
+
+    def test_info_has_file_path(self, project):
+        info = project.info()
+        assert 'file_path' in info
+        assert isinstance(info['file_path'], str)
+
+    def test_info_has_version(self, project):
+        info = project.info()
+        assert 'version' in info
+
+    def test_info_has_frame_rate(self, project):
+        info = project.info()
+        assert 'frame_rate' in info
+        assert info['frame_rate'] == project.frame_rate
+
+    def test_info_has_sample_rate(self, project):
+        info = project.info()
+        assert 'sample_rate' in info
+        assert info['sample_rate'] == project.sample_rate
+
+    def test_info_has_authoring_client(self, project):
+        info = project.info()
+        assert 'authoring_client' in info
+
+    def test_info_has_has_screen_recording(self, project):
+        info = project.info()
+        assert 'has_screen_recording' in info
+        assert info['has_screen_recording'] is False
+
+    def test_info_has_validation_issues(self, project):
+        info = project.info()
+        assert 'validation_issues' in info
+        assert isinstance(info['validation_issues'], int)
 
 
 class TestHealthCheckUsesNewStatistics:

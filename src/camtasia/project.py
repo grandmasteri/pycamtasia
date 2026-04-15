@@ -287,6 +287,11 @@ class Project:
         return int(self._data.get('editRate', EDIT_RATE))
 
     @property
+    def version(self) -> str:
+        """Project format version string."""
+        return str(self._data.get('version', ''))
+
+    @property
     def authoring_client(self) -> AuthoringClient | None:
         """Details about the software used to edit the project."""
         client = self._data.get('authoringClientName')
@@ -1064,25 +1069,17 @@ class Project:
         return '\n'.join(lines)
 
     def info(self) -> dict[str, Any]:
-        """Return comprehensive project information.
-
-        Combines statistics, validation, and structural analysis
-        into a single dict for debugging and inspection.
-        """
+        """Comprehensive project information dict."""
         stats = self.statistics()
-        issues = self.validate()
-        structure = self.timeline.validate_structure()
-
         return {
             **stats,
-            'validation_errors': [i.message for i in issues if i.level == 'error'],
-            'validation_warnings': [i.message for i in issues if i.level == 'warning'],
-            'structural_issues': structure,
-            'has_screen_recording': self.has_screen_recording,
-            'title': self.title,
-            'author': self.author,
+            'file_path': str(self.file_path),
+            'version': self.version,
             'frame_rate': self.frame_rate,
             'sample_rate': self.sample_rate,
+            'authoring_client': str(self.authoring_client) if self.authoring_client else None,
+            'has_screen_recording': self.has_screen_recording,
+            'validation_issues': len(self.validate()),
         }
 
     def health_check(self) -> HealthCheckResult:
@@ -1630,6 +1627,9 @@ class Project:
 
     def __repr__(self) -> str:
         return f'<Project {self.title!r} {self.width}x{self.height} tracks={self.track_count} clips={self.clip_count}>'
+
+    def __str__(self) -> str:
+        return f'{self.title} ({self.total_duration_formatted}, {self.track_count} tracks, {self.clip_count} clips)'
 
     def strip_audio(self) -> int:
         """Remove all audio clips from all tracks. Returns count removed."""

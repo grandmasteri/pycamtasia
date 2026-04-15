@@ -1849,6 +1849,9 @@ class Track:
     def __repr__(self) -> str:
         return f'Track(name={self.name!r}, index={self.index})'
 
+    def __str__(self) -> str:
+        return f'{self.name} ({len(self)} clips, {self.total_duration_seconds:.1f}s)'
+
     def apply_to_all(self, fn) -> int:
         """Apply a function to every clip on this track. Returns count."""
         count = 0

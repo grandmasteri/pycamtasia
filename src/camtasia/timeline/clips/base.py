@@ -487,6 +487,9 @@ class BaseClip:
             f"duration={self.duration_seconds:.2f}s)"
         )
 
+    def __str__(self) -> str:
+        return f'{self.clip_type}(id={self.id}, {self.duration_seconds:.1f}s)'
+
     # ------------------------------------------------------------------
     # L2 convenience — time-bounded effects
     # ------------------------------------------------------------------
