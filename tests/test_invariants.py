@@ -696,3 +696,67 @@ def test_clone_track_preserves_clip_count(num_clips):
     
     cloned = proj.clone_track('Source', 'Cloned')
     assert len(cloned) == num_clips
+
+
+# ---------------------------------------------------------------------------
+# 32. strip_all_effects then effect_count is 0
+# ---------------------------------------------------------------------------
+
+@given(st.integers(min_value=1, max_value=4))
+@settings(max_examples=20, deadline=None)
+def test_strip_all_effects_zeroes_count(num_clips):
+    """After strip_all_effects, no clip should have effects."""
+    from camtasia import load_project
+    proj = load_project(RESOURCES / 'new.cmproj')
+    track = proj.timeline.add_track('Test')
+    for i in range(num_clips):
+        clip = track.add_clip('VMFile', 1, i * TICK, TICK)
+        clip.add_drop_shadow()
+    
+    proj.strip_all_effects()
+    
+    for _, clip in proj.all_clips:
+        assert len(clip._data.get('effects', [])) == 0
+
+
+# ---------------------------------------------------------------------------
+# 33. normalize_audio sets all audio gains equal
+# ---------------------------------------------------------------------------
+
+@given(st.floats(min_value=0.1, max_value=2.0))
+@settings(max_examples=20, deadline=None)
+def test_normalize_audio_equalizes_gain(target_gain):
+    """After normalize_audio, all audio clips should have the target gain."""
+    from camtasia import load_project
+    proj = load_project(RESOURCES / 'new.cmproj')
+    track = proj.timeline.add_track('Audio')
+    for i in range(3):
+        clip = track.add_audio(1, start_seconds=float(i), duration_seconds=1.0)
+        clip.gain = float(i + 1) * 0.5  # different gains
+    
+    proj.normalize_audio(target_gain)
+    
+    for _, clip in proj.all_clips:
+        if clip.is_audio:
+            assert abs(clip.gain - target_gain) < 0.001
+
+
+# ---------------------------------------------------------------------------
+# 34. replace_all_media changes all matching sources
+# ---------------------------------------------------------------------------
+
+@given(st.integers(min_value=1, max_value=5))
+@settings(max_examples=20, deadline=None)
+def test_replace_all_media_changes_all(num_clips):
+    """replace_all_media should change all clips with the old source ID."""
+    from camtasia import load_project
+    proj = load_project(RESOURCES / 'new.cmproj')
+    track = proj.timeline.add_track('Test')
+    for i in range(num_clips):
+        track.add_clip('VMFile', 42, i * TICK, TICK)
+    
+    count = proj.replace_all_media(42, 99)
+    
+    assert count == num_clips
+    for _, clip in proj.all_clips:
+        assert clip._data.get('src') != 42
