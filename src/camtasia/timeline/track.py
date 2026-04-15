@@ -1980,6 +1980,49 @@ class Track:
         self._data['medias'] = sorted_medias
         self._data['transitions'] = []
 
+    def insert_gap(
+        self,
+        at_seconds: float,
+        gap_duration_seconds: float,
+    ) -> None:
+        """Insert a gap at the specified time, pushing all subsequent clips forward."""
+        gap_ticks: int = seconds_to_ticks(gap_duration_seconds)
+        at_ticks: int = seconds_to_ticks(at_seconds)
+        for media_dict in self._data.get('medias', []):
+            if media_dict.get('start', 0) >= at_ticks:
+                media_dict['start'] = media_dict.get('start', 0) + gap_ticks
+        for trans in self._data.get('transitions', []):
+            if trans.get('start', 0) >= at_ticks:
+                trans['start'] = trans.get('start', 0) + gap_ticks
+
+    def remove_gap_at(self, at_seconds: float) -> None:
+        """Remove a gap at the specified time by pulling subsequent clips backward.
+
+        Finds the gap that contains *at_seconds* and shifts all clips that
+        start at or after the gap's end backward by the gap's duration.
+        Does nothing if no gap exists at the given time.
+        """
+        at_ticks: int = seconds_to_ticks(at_seconds)
+        medias = sorted(self._data.get('medias', []), key=lambda m: m.get('start', 0))
+        gap_start: int | None = None
+        gap_end: int | None = None
+        for i in range(len(medias) - 1):
+            end = medias[i].get('start', 0) + medias[i].get('duration', 0)
+            next_start = medias[i + 1].get('start', 0)
+            if next_start > end and end <= at_ticks < next_start:
+                gap_start = end
+                gap_end = next_start
+                break
+        if gap_start is None or gap_end is None:
+            return
+        gap_ticks: int = gap_end - gap_start
+        for media_dict in self._data.get('medias', []):
+            if media_dict.get('start', 0) >= gap_end:
+                media_dict['start'] = media_dict.get('start', 0) - gap_ticks
+        for trans in self._data.get('transitions', []):
+            if trans.get('start', 0) >= gap_end:
+                trans['start'] = trans.get('start', 0) - gap_ticks
+
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""
         from collections import defaultdict

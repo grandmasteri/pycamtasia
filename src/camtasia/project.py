@@ -145,6 +145,19 @@ class Project:
         self._data: dict[str, Any] = json.loads(self._project_file.read_text(encoding=encoding))
         self._history: ChangeHistory | None = None
 
+    @classmethod
+    def load(cls, file_path: str | Path, encoding: str | None = None) -> Project:
+        """Load a Camtasia project from disk.
+
+        Args:
+            file_path: Path to the .cmproj directory or .tscproj file.
+            encoding: Text encoding of the project file.
+
+        Returns:
+            A Project instance.
+        """
+        return cls(Path(file_path).resolve(), encoding=encoding)
+
     @property
     def history(self) -> ChangeHistory:
         """Undo/redo history for this project."""
@@ -548,23 +561,31 @@ class Project:
         return matching_results
 
     @classmethod
-    def from_template(
-        cls,
-        dest_path: str | Path,
-        *,
-        width: int = 1920,
-        height: int = 1080,
-        title: str = '',
-        frame_rate: int = 30,
-    ) -> Project:
-        """Create a new project from the built-in template with custom settings."""
-        new_project(str(dest_path))
-        proj = load_project(str(dest_path))
+    def from_template(cls, template_path: str | Path, output_path: str | Path) -> Project:
+        """Create a new project by copying an existing one as a template.
+
+        Copies the entire .cmproj bundle to the output path and loads it.
+        """
+        src = Path(template_path)
+        dst = Path(output_path)
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.copytree(src, dst)
+        return cls.load(str(dst))
+
+    @classmethod
+    def new(cls, output_path: str | Path, title: str = 'Untitled', width: int = 1920, height: int = 1080) -> Project:
+        """Create a brand new empty project at the given path."""
+        template = importlib_resources.files('camtasia.resources') / 'new.cmproj'
+        dst = Path(output_path)
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.copytree(str(template), dst)
+        proj = cls.load(str(dst))
+        proj.title = title
         proj.width = width
         proj.height = height
-        if title:
-            proj.title = title
-        proj.frame_rate = frame_rate
+        proj.save()
         return proj
 
     def batch_apply(
