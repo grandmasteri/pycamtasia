@@ -4,7 +4,7 @@ from __future__ import annotations
 import copy
 import json
 from fractions import Fraction
-from typing import Any, cast, Iterator, TYPE_CHECKING
+from typing import Any, Callable, cast, Iterator, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from camtasia.timeline.clips.callout import CalloutBuilder
@@ -1348,6 +1348,25 @@ class Track:
     def filter_clips(self, predicate) -> list[BaseClip]:
         """Return clips matching a predicate function."""
         return [c for c in self.clips if predicate(c)]
+
+    def filter_and_remove(
+        self,
+        predicate: Callable[[BaseClip], bool],
+    ) -> int:
+        """Remove all clips matching the predicate. Returns count removed."""
+        ids_to_remove: list[int] = [
+            clip.id for clip in self.clips if predicate(clip)
+        ]
+        for clip_id in ids_to_remove:
+            self.remove_clip(clip_id)
+        return len(ids_to_remove)
+
+    def keep_only(
+        self,
+        predicate: Callable[[BaseClip], bool],
+    ) -> int:
+        """Keep only clips matching the predicate, remove the rest. Returns count removed."""
+        return self.filter_and_remove(lambda clip: not predicate(clip))
 
     def clips_between(self, range_start_seconds: float, range_end_seconds: float) -> list[BaseClip]:
         """Return all clips that fall entirely within the given time range."""

@@ -2298,6 +2298,37 @@ class Project:
             clips.append(callout)
         return clips
 
+    def apply_to_all_clips(
+        self,
+        operation: Callable[[BaseClip], Any],
+        clip_filter: Callable[[BaseClip], bool] | None = None,
+    ) -> int:
+        """Apply an operation to all clips, optionally filtered.
+
+        Args:
+            operation: Function to call on each clip.
+            clip_filter: Optional predicate to filter clips.
+        Returns:
+            Number of clips the operation was applied to.
+        """
+        count: int = 0
+        for _, clip in self.all_clips:
+            if clip_filter is None or clip_filter(clip):
+                operation(clip)
+                count += 1
+        return count
+
+    def for_each_track(
+        self,
+        operation: Callable[[Track], Any],
+    ) -> int:
+        """Apply an operation to every track. Returns count."""
+        count: int = 0
+        for track in self.timeline.tracks:
+            operation(track)
+            count += 1
+        return count
+
     def solo_track(self, track_name: str) -> bool:
         """Solo a track by name (mute all others). Returns True if found."""
         target = self.timeline.find_track_by_name(track_name)
