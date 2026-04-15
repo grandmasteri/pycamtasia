@@ -2026,6 +2026,33 @@ class Project:
         return clip
 
 
+    def normalize_audio(self, target_gain: float = 1.0) -> int:
+        """Set all audio clips to the same gain level. Returns count adjusted."""
+        count: int = 0
+        for _, clip in self.all_clips:
+            if clip.is_audio or clip.clip_type in ('AMFile', 'UnifiedMedia'):
+                clip.gain = target_gain
+                count += 1
+        return count
+
+    def mute_track(self, track_name: str) -> bool:
+        """Mute a track by name. Returns True if found."""
+        track = self.timeline.find_track_by_name(track_name)
+        if track is None:
+            return False
+        track.audio_muted = True
+        return True
+
+    def solo_track(self, track_name: str) -> bool:
+        """Solo a track by name (mute all others). Returns True if found."""
+        target = self.timeline.find_track_by_name(track_name)
+        if target is None:
+            return False
+        for track in self.timeline.tracks:
+            track.audio_muted = track.name != track_name
+        return True
+
+
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
     """Load a Camtasia project from disk.
 

@@ -1263,16 +1263,14 @@ class BaseClip:
             lines.append(f'  Effects: {", ".join(names)}')
         return '\n'.join(lines)
 
-    def clone(self) -> _ClipData:
-        """Return a deep copy of this clip's data dict.
-
-        The copy has no ID assigned — the caller must set one before
-        adding to a track.
-        """
+    def clone(self) -> BaseClip:
+        """Create a deep copy of this clip with a new ID."""
         import copy
-        data = copy.deepcopy(self._data)
-        data.pop('id', None)
-        return data
+        cloned_data: dict[str, Any] = copy.deepcopy(dict(self._data))
+        # ID will be assigned when added to a track
+        cloned_data['id'] = -1  # sentinel, must be reassigned
+        from camtasia.timeline.clips import clip_from_dict
+        return clip_from_dict(cloned_data)
 
     def clear_keyframes(self, parameter: str | None = None) -> Self:
         """Remove keyframes from a parameter, or all parameters if *parameter* is ``None``.
@@ -1503,6 +1501,10 @@ class BaseClip:
     def matches_type(self, clip_type: str | ClipType) -> bool:
         """Check if this clip matches the given type."""
         return self.clip_type == clip_type
+
+    def matches_any_type(self, *clip_types: str | ClipType) -> bool:
+        """Check if this clip matches any of the given types."""
+        return any(self.matches_type(ct) for ct in clip_types)
 
     def snap_to_seconds(self, target_start_seconds: float) -> Self:
         """Move this clip to start at the given time in seconds."""

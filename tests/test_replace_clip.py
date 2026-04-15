@@ -62,14 +62,14 @@ class TestClone:
 
         cloned = clip.clone()
 
-        cloned["effects"][0]["effectName"] = "Shadow"
+        cloned._data["effects"][0]["effectName"] = "Shadow"
         assert clip._data["effects"][0]["effectName"] == "Glow"
 
-    def test_clone_has_no_id(self):
+    def test_clone_has_sentinel_id(self):
         track = _make_track()
         clip = track.add_callout("A", 0, 5)
         assert "id" in clip._data
 
         cloned = clip.clone()
 
-        assert "id" not in cloned
+        assert cloned.id == -1
