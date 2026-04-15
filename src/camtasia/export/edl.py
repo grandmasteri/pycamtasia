@@ -66,7 +66,13 @@ def export_edl(
 
             # Determine edit type
             is_unified = clip.clip_type == 'UnifiedMedia'
-            edit_type = 'V' if clip.clip_type in ('VMFile', 'IMFile', 'ScreenVMFile', 'ScreenIMFile', 'PlaceholderMedia', 'Group', 'UnifiedMedia', 'StitchedMedia', 'Callout') else 'A'
+            video_types = ('VMFile', 'IMFile', 'ScreenVMFile', 'ScreenIMFile', 'PlaceholderMedia', 'Group', 'UnifiedMedia', 'Callout')
+            if clip.clip_type == 'StitchedMedia':
+                # Check sub-clips to determine if video or audio
+                sub_types = {m.get('_type') for m in clip._data.get('medias', [])}
+                edit_type = 'V' if sub_types & {'VMFile', 'IMFile', 'ScreenVMFile', 'ScreenIMFile'} else 'A'
+            else:
+                edit_type = 'V' if clip.clip_type in video_types else 'A'
 
             src_in_offset = ticks_to_seconds(int(Fraction(str(clip.media_start))))
             src_in = _format_timecode(src_in_offset, fps)
