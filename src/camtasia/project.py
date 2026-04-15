@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 import shutil
 import warnings
@@ -818,15 +819,16 @@ class Project:
         import re
 
         for issue in self.validate():
-            message = f'[{issue.level}] {issue.message}'
-            warnings.warn(message, stacklevel=2)
+            if issue.level == 'error':
+                warnings.warn(f'[{issue.level}] {issue.message}', stacklevel=2)
 
-        self._flatten_parameters(self._data)
+        save_data = copy.deepcopy(self._data)
+        self._flatten_parameters(save_data)
 
         # Step 1: Standard pretty-print, preserving extreme floats
         # Python converts -1.79769e+308 to -inf during json.loads, then
         # json.dumps writes -Infinity which Camtasia cannot parse.
-        text = json.dumps(self._data, indent=2, ensure_ascii=False,
+        text = json.dumps(save_data, indent=2, ensure_ascii=False,
                           allow_nan=True)
         # Replace -Infinity/Infinity/NaN with the original extreme values
         # Only replace when they appear as bare JSON values (after : or , or [)

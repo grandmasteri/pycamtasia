@@ -78,4 +78,4 @@ def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:
         raise ValueError(f'Grid must be positive, got {grid_seconds}')
     for m in track._data.get('medias', []):
         start = m.get('start', 0)
-        m['start'] = max(0, round(start / grid_ticks) * grid_ticks)
+        m['start'] = max(0, int(round(start / grid_ticks) * grid_ticks))

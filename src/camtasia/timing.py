@@ -48,9 +48,12 @@ def format_duration(ticks: int) -> str:
     total_seconds = ticks / EDIT_RATE
     sign = '-' if total_seconds < 0 else ''
     abs_seconds = abs(total_seconds)
-    minutes = int(abs_seconds) // 60
+    hours = int(abs_seconds) // 3600
+    minutes = int(abs_seconds) % 3600 // 60
     seconds = int(abs_seconds) % 60
     fraction = abs_seconds - int(abs_seconds)
+    if hours > 0:
+        return f"{sign}{hours}:{minutes:02d}:{seconds:02d}.{int(fraction * 100):02d}"
     return f"{sign}{minutes}:{seconds:02d}.{int(fraction * 100):02d}"
 
 

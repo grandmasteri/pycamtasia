@@ -221,7 +221,7 @@ class BaseClip:
         """
         if speed <= 0:
             raise ValueError(f'speed must be > 0, got {speed}')
-        self._data['scalar'] = speed
+        self._data['scalar'] = 1 if speed == 1.0 else str(Fraction(speed).limit_denominator(100000))
         self._data['mediaDuration'] = int(self.duration / speed)
         self._data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': True}
         return self

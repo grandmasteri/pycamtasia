@@ -70,7 +70,7 @@ def test_round_trip(seconds: float) -> None:
         (seconds_to_ticks(90.5), "1:30.50"),
         (seconds_to_ticks(1.0), "0:01.00"),
         (seconds_to_ticks(59.99), "0:59.99"),
-        (seconds_to_ticks(3600.0), "60:00.00"),
+        (seconds_to_ticks(3600.0), "1:00:00.00"),
     ],
     ids=["zero", "ninety-half", "one-second", "just-under-minute", "one-hour"],
 )
