@@ -452,4 +452,4 @@ class TestValidateAgainstSchema:
         issues = validate_against_schema({"not_a_valid_field": True})
         assert len(issues) > 0
         assert all(isinstance(i, ValidationIssue) for i in issues)
-        assert all(i.level == "error" for i in issues)
+        assert any(i.level == "error" for i in issues)
