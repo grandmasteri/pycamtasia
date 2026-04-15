@@ -1,5 +1,7 @@
 """Export timeline as CMX 3600 EDL format."""
 from __future__ import annotations
+
+from fractions import Fraction
 from pathlib import Path
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -63,7 +65,7 @@ def export_edl(
             # Determine edit type
             edit_type = 'V' if clip.clip_type in ('VMFile', 'IMFile', 'ScreenVMFile', 'ScreenIMFile', 'PlaceholderMedia', 'Group', 'UnifiedMedia', 'StitchedMedia', 'Callout') else 'A'
 
-            src_in_offset = ticks_to_seconds(clip.media_start)
+            src_in_offset = ticks_to_seconds(int(Fraction(str(clip.media_start))))
             src_in = _format_timecode(src_in_offset, fps)
             src_out = _format_timecode(src_in_offset + end - start, fps)
             rec_in = _format_timecode(start, fps)
