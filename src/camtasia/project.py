@@ -1700,6 +1700,36 @@ class Project:
             callout.fade_out(fade_seconds)
         return callout
 
+    def add_background_music(
+        self,
+        audio_path: Path | str,
+        volume: float = 0.3,
+        fade_in_seconds: float = 2.0,
+        fade_out_seconds: float = 3.0,
+        track_name: str = 'Background Music',
+    ) -> BaseClip:
+        """Import and place background music spanning the full timeline.
+
+        The audio is placed at the start and trimmed to match the timeline
+        duration. Volume is reduced and fades are applied.
+        """
+        media = self.import_media(Path(audio_path))
+        track = self.timeline.get_or_create_track(track_name)
+        timeline_duration: float = self.duration_seconds
+        if timeline_duration == 0:
+            timeline_duration = 60.0  # fallback for empty projects
+        clip = track.add_audio(
+            media.id,
+            start_seconds=0.0,
+            duration_seconds=timeline_duration,
+        )
+        clip.volume = volume
+        if fade_in_seconds > 0:
+            clip.fade_in(fade_in_seconds)
+        if fade_out_seconds > 0:
+            clip.fade_out(fade_out_seconds)
+        return clip
+
     def apply_to_all_groups(self, operation: Callable[[Group], Any]) -> int:
         """Apply a callable to every Group clip in the project.
 
@@ -1754,6 +1784,48 @@ class Project:
             callout.set_colors(font_color=font_color)
             placed_subtitles.append(callout)
         return placed_subtitles
+
+    def add_lower_third(
+        self,
+        title_text: str,
+        subtitle_text: str = '',
+        start_seconds: float = 0.0,
+        duration_seconds: float = 5.0,
+        track_name: str = 'Lower Thirds',
+        fade_seconds: float = 0.5,
+    ) -> BaseClip:
+        """Add a lower-third title overlay.
+
+        Creates a callout positioned in the lower portion of the frame
+        with title and optional subtitle text.
+        """
+        display_text: str = title_text
+        if subtitle_text:
+            display_text = f'{title_text}\n{subtitle_text}'
+        track = self.timeline.get_or_create_track(track_name)
+        callout = track.add_callout(
+            display_text, start_seconds, duration_seconds,
+            font_size=28.0,
+        )
+        if fade_seconds > 0:
+            callout.fade_in(fade_seconds)
+            callout.fade_out(fade_seconds)
+        return callout
+
+    def add_chapter_markers(
+        self,
+        chapters: list[tuple[float, str]],
+    ) -> int:
+        """Add timeline markers at chapter boundaries.
+
+        Args:
+            chapters: List of (time_seconds, chapter_name) tuples.
+        Returns:
+            Number of markers added.
+        """
+        for time_seconds, chapter_name in chapters:
+            self.timeline.markers.add(chapter_name, seconds_to_ticks(time_seconds))
+        return len(chapters)
 
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
