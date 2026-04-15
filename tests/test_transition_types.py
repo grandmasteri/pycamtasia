@@ -13,7 +13,7 @@ class TestAddDissolve:
     def test_add_dissolve(self):
         tl = _tl()
         t = tl.add_dissolve(1, 2, 0.5)
-        assert t.name == "Dissolve"
+        assert t.name == "Fade"
         assert t.left_media_id == 1
         assert t.right_media_id == 2
         assert t.duration == int(0.5 * EDIT_RATE)

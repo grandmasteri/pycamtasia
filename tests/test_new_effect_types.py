@@ -138,7 +138,7 @@ class TestNewTransitionTypes:
     def test_add_glitch(self):
         tl = self._make_list()
         t = tl.add_glitch(1, 2, duration_seconds=0.5)
-        assert t.name == "Glitch"
+        assert t.name == "Glitch3"
 
     def test_add_linear_blur(self):
         tl = self._make_list()

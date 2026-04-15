@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
+from camtasia.timing import EDIT_RATE
 from camtasia.types import TransitionType, _TransitionData
-
-EDIT_RATE = 705_600_000
 
 
 class Transition:
@@ -186,9 +185,9 @@ class TransitionList:
         right_clip: Any,
         duration_seconds: float = 0.5,
     ) -> Transition:
-        """Add a dissolve transition between two clips."""
+        """Add a dissolve (fade) transition between two clips."""
         ticks = int(duration_seconds * EDIT_RATE)
-        return self.add('Dissolve', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        return self.add(TransitionType.FADE, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_fade_to_white(
         self,
@@ -196,7 +195,12 @@ class TransitionList:
         right_clip: Any,
         duration_seconds: float = 0.5,
     ) -> Transition:
-        """Add a fade-through-white transition."""
+        """Add a fade-through-white transition.
+
+        .. warning::
+            The transition name 'FadeThroughColor' is not in the JSON schema
+            (built from sample projects) and may not work in all Camtasia versions.
+        """
         ticks = int(duration_seconds * EDIT_RATE)
         t = self.add('FadeThroughColor', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
         t._data['attributes']['Color-red'] = 1.0
@@ -216,6 +220,11 @@ class TransitionList:
 
         Args:
             direction: 'left', 'right', 'up', or 'down'.
+
+        .. warning::
+            The 'up' and 'down' directions use transition names ('SlideUp',
+            'SlideDown') not in the JSON schema (built from sample projects)
+            and may not work in all Camtasia versions.
         """
         name_map = {
             'left': TransitionType.SLIDE_LEFT,
@@ -240,6 +249,11 @@ class TransitionList:
 
         Args:
             direction: 'left', 'right', 'up', or 'down'.
+
+        .. warning::
+            Wipe transition names ('WipeLeft', 'WipeRight', 'WipeUp',
+            'WipeDown') are not in the JSON schema (built from sample projects)
+            and may not work in all Camtasia versions.
         """
         name_map = {
             'left': 'WipeLeft',
@@ -270,7 +284,7 @@ class TransitionList:
     ) -> Transition:
         """Add a glitch transition."""
         ticks = int(duration_seconds * EDIT_RATE)
-        return self.add('Glitch', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+        return self.add('Glitch3', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_linear_blur(
         self,

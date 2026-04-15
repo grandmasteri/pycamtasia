@@ -223,6 +223,7 @@ class BaseClip:
             raise ValueError(f'speed must be > 0, got {speed}')
         self._data['scalar'] = speed
         self._data['mediaDuration'] = int(self.duration / speed)
+        self._data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': True}
         return self
 
     @property
@@ -1312,7 +1313,7 @@ class BaseClip:
             'type': 'double',
             'defaultValue': start_opacity,
             'keyframes': [
-                {'endTime': 0, 'time': 0, 'value': start_opacity, 'duration': 0},
+                {'endTime': dur, 'time': 0, 'value': start_opacity, 'duration': dur},
                 {'endTime': dur, 'time': dur, 'value': end_opacity, 'duration': 0},
             ],
         }
@@ -1424,7 +1425,7 @@ class BaseClip:
 
         if fade_in > 0:
             self.set_opacity_fade(0.0, 1.0, fade_in)
-        elif fade_out > 0:
+        if fade_out > 0:
             self.set_opacity_fade(1.0, 0.0, fade_out)
 
         if scale_from is not None and scale_to is not None:
