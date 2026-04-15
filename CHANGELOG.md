@@ -4,6 +4,39 @@ All notable changes to pycamtasia are documented in this file.
 
 ## [Unreleased]
 
+## [7.1.0] (2026-04-14)
+
+7 rounds of adversarial code review. 63+ bugs found and fixed. Test count: 1825 → 2126 (+301 tests). 100% coverage maintained.
+
+### Added
+
+#### JSON Schema & Format Reference
+- Camtasia `.tscproj` JSON Schema — built from 93 TechSmith sample projects with strict enum validation
+- Camtasia format reference document — comprehensive field-level documentation of the `.tscproj` structure
+
+### Fixed
+
+#### Fabricated Enum Values
+- Replaced invented enum strings with values validated against TechSmith samples across effects, transitions, behaviors, and clip types
+
+#### Inverted mediaDuration Formula
+- Corrected mediaDuration calculation that had numerator and denominator swapped, producing wrong durations at non-1× speeds
+
+#### Missing Required Fields
+- Added required fields omitted from serialized output (detected via JSON Schema validation against real projects)
+
+#### Wrong Parameter Keys
+- Fixed parameter key names that diverged from Camtasia's actual format (e.g., camelCase vs hyphenated, misspelled keys)
+
+#### Additional Fixes (63+ total across 7 review rounds)
+- Enum values, parameter formats, default values, and serialization logic corrected throughout the codebase
+- All fixes verified against TechSmith sample corpus and JSON Schema
+
+### Testing & Reliability
+- 2126 tests, 100% line coverage
+- JSON Schema validation integrated into test suite
+- All 93 TechSmith sample projects pass schema validation
+
 ## [7.0.0] (2026-04-14)
 
 390 commits. Test count: 925 → 1825 (+900 tests, +97%). 100% coverage maintained throughout.
