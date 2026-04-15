@@ -139,11 +139,10 @@ class SourceEffect(Effect):
         Args:
             colors: ``(r, g, b)`` tuples with values 0–255.
         """
-        params = self._data.setdefault('parameters', {})
         for i, rgb in enumerate(colors):
             prefix = self._color_key_prefix(i)
             r, g, b = rgb[0] / 255, rgb[1] / 255, rgb[2] / 255
-            params[f'{prefix}-red'] = r
-            params[f'{prefix}-green'] = g
-            params[f'{prefix}-blue'] = b
-            params[f'{prefix}-alpha'] = 1.0
+            self.set_parameter(f'{prefix}-red', r)
+            self.set_parameter(f'{prefix}-green', g)
+            self.set_parameter(f'{prefix}-blue', b)
+            self.set_parameter(f'{prefix}-alpha', 1.0)

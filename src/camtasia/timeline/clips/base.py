@@ -1140,13 +1140,13 @@ class BaseClip:
 
     @property
     def rotation(self) -> float:
-        """Z-rotation in radians (stored as ``rotation1``)."""
-        return self._get_param_value('rotation1')
+        """Z-rotation in radians (stored as ``rotation2``)."""
+        return self._get_param_value('rotation2')
 
     @rotation.setter
     def rotation(self, value: float) -> None:
         """Set the rotation."""
-        self._set_param_value('rotation1', value)
+        self._set_param_value('rotation2', value)
 
     def move_to(self, x: float, y: float) -> Self:
         """Set the clip's canvas translation.
@@ -1368,7 +1368,7 @@ class BaseClip:
         for t, deg in keyframes:
             ticks = seconds_to_ticks(t)
             kfs.append({'endTime': ticks, 'time': ticks, 'value': math.radians(deg), 'duration': 0})
-        params['rotation1'] = {'type': 'double', 'defaultValue': kfs[0]['value'], 'keyframes': kfs}
+        params['rotation2'] = {'type': 'double', 'defaultValue': kfs[0]['value'], 'keyframes': kfs}
         return self
 
     def set_crop_keyframes(self, keyframes: list[tuple[float, float, float, float, float]]) -> Self:

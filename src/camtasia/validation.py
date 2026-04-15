@@ -110,21 +110,29 @@ def _check_transition_references(data: dict) -> list[ValidationIssue]:
 def _check_transition_completeness(data: dict) -> list[ValidationIssue]:
     """Check that every transition has at least one of leftMedia/rightMedia and required keys."""
     issues: list[ValidationIssue] = []
-    tracks = (data.get('timeline', {}).get('sceneTrack', {})
-              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
-    for ti, track in enumerate(tracks):
-        for j, trans in enumerate(track.get('transitions', [])):
-            if trans.get('leftMedia') is None and trans.get('rightMedia') is None:
-                issues.append(ValidationIssue(
-                    'error',
-                    f'Track[{ti}] transition[{j}] has neither leftMedia nor rightMedia',
-                ))
-            for key in ('name', 'duration'):
-                if key not in trans:
+
+    def _check_tracks(tracks: list, path: str) -> None:
+        for ti, track in enumerate(tracks):
+            for j, trans in enumerate(track.get('transitions', [])):
+                if trans.get('leftMedia') is None and trans.get('rightMedia') is None:
                     issues.append(ValidationIssue(
                         'error',
-                        f'Track[{ti}] transition[{j}] missing required key {key!r}',
+                        f'{path}[{ti}] transition[{j}] has neither leftMedia nor rightMedia',
                     ))
+                for key in ('name', 'duration'):
+                    if key not in trans:
+                        issues.append(ValidationIssue(
+                            'error',
+                            f'{path}[{ti}] transition[{j}] missing required key {key!r}',
+                        ))
+            for media in track.get('medias', []):
+                inner = media.get('tracks', [])
+                if inner:
+                    _check_tracks(inner, f'{path}[{ti}]/group{media.get("id")}')
+
+    tracks = (data.get('timeline', {}).get('sceneTrack', {})
+              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    _check_tracks(tracks, 'Track')
     return issues
 
 

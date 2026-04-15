@@ -50,18 +50,23 @@ def build_from_screenplay(
     pauses_added = 0
 
     for section in screenplay.sections:
-        for vo in section.vo_blocks:
+        has_explicit_pauses = bool(section.pauses)
+        vo_blocks = section.vo_blocks
+        for vi, vo in enumerate(vo_blocks):
             # Resolve audio file
             if vo_file_resolver:
                 audio_path = vo_file_resolver(vo)
             else:
-                # Default: look for files matching VO ID pattern
-                # e.g. VO-1.1 -> try 01-*.wav, VO-1.1.wav, etc.
                 audio_path = _find_audio_file(audio_dir, vo.id)
 
             if audio_path and Path(audio_path).exists():
                 builder.add_audio(audio_path, track_name=audio_track_name)
                 clips_placed += 1
+
+            # Insert default pause between VO blocks when no explicit PAUSE markers
+            if not has_explicit_pauses and default_pause > 0 and vi < len(vo_blocks) - 1:
+                builder.add_pause(default_pause)
+                pauses_added += 1
 
         # Add pauses from the section
         for pause in section.pauses:

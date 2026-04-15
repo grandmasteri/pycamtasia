@@ -48,7 +48,7 @@ camtasia = ["resources/**"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-m 'not integration'"
+addopts = "-n auto -m 'not integration'"
 timeout = 10
 markers = [
     "integration: Camtasia integration tests (slow, requires Camtasia app)",

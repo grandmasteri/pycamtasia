@@ -1522,7 +1522,7 @@ def test_set_rotation_keyframes():
     result = clip.set_rotation_keyframes([(0.0, 0), (2.0, 90), (5.0, 180)])
     assert result is clip  # fluent
     params = clip._data['parameters']
-    rot = params['rotation1']
+    rot = params['rotation2']
     assert rot['type'] == 'double'
     assert rot['defaultValue'] == pytest.approx(math.radians(0))
     assert len(rot['keyframes']) == 3

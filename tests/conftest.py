@@ -18,9 +18,13 @@ pymediainfo_required = pytest.mark.skipif(
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 
 @pytest.fixture
-def project():
+def project(tmp_path):
+    import shutil
+    src = RESOURCES / 'new.cmproj'
+    dst = tmp_path / 'new.cmproj'
+    shutil.copytree(src, dst)
     from camtasia.project import load_project
-    return load_project(RESOURCES / 'new.cmproj')
+    return load_project(dst)
 
 @pytest.fixture
 def simple_video_path():

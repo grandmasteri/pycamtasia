@@ -10,6 +10,7 @@ import json
 import shutil
 import subprocess
 import warnings
+from fractions import Fraction
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -141,7 +142,7 @@ class Media:
         for st in self._data.get('sourceTracks', []):
             if st.get('type') == 0:  # video track
                 range_val = st.get('range', [0, 0])
-                edit_rate = st.get('editRate', 1)
+                edit_rate = float(Fraction(str(st.get('editRate', 1))))
                 if edit_rate > 0 and len(range_val) >= 2:
                     if range_val[1] >= _INT64_MAX:
                         return None # pragma: no cover
@@ -149,7 +150,7 @@ class Media:
         for st in self._data.get('sourceTracks', []):
             if st.get('type') == 2:  # audio track
                 range_val = st.get('range', [0, 0])
-                edit_rate = st.get('editRate', 1)
+                edit_rate = float(Fraction(str(st.get('editRate', 1))))
                 if edit_rate > 0 and len(range_val) >= 2:
                     if range_val[1] >= _INT64_MAX:
                         return None # pragma: no cover
@@ -552,7 +553,7 @@ def _visual_track_to_json(
     width: int,
     height: int,
     duration: int,
-    edit_rate: int = 30,
+    edit_rate: int = 600,
     sample_rate: int = 0,
     filename: str = "",
 ) -> dict[str, Any]:
@@ -580,7 +581,7 @@ def _visual_track_to_json(
                 "parameters": {},
             }
         ],
-        "metadata": {"timeAdded": datetime.datetime.now().strftime("%Y%m%dT%H%M%S")},
+        "metadata": {"timeAdded": timestamp.strftime("%Y%m%dT%H%M%S")},
     }
 
 
@@ -619,7 +620,7 @@ def _audio_track_to_json(
                 "parameters": {},
             }
         ],
-        "metadata": {"timeAdded": datetime.datetime.now().strftime("%Y%m%dT%H%M%S")},
+        "metadata": {"timeAdded": timestamp.strftime("%Y%m%dT%H%M%S")},
     }
 
 
