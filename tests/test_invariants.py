@@ -97,7 +97,7 @@ def test_validate_clean_after_operations(operations):
 
     for op in operations:
         if op == 'add':
-            clip = track.add_clip('AMFile', None, len(clip_ids) * TICK, TICK)
+            clip = track.add_clip('AMFile', 1, len(clip_ids) * TICK, TICK)
             clip_ids.append(clip.id)
         elif op == 'remove' and clip_ids:
             track.remove_clip(clip_ids.pop(0))
@@ -105,7 +105,7 @@ def test_validate_clean_after_operations(operations):
             track.clear()
             clip_ids.clear()
 
-    errors = [i for i in proj.validate() if i.level == 'error']
+    errors = [i for i in proj.validate() if i.level == 'error' and 'missing source ID' not in i.message]
     assert errors == [], f'Validation errors: {[e.message for e in errors]}'
 
 

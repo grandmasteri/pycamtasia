@@ -329,13 +329,22 @@ class Track:
 
         scalar = kwargs.pop('scalar', 1)
         scalar_val = _parse_scalar(scalar)
+
+        # Ensure media-file types have required trackNumber, attributes, channelNumber
+        _MEDIA_FILE_TYPES = {'VMFile', 'AMFile', 'IMFile', 'ScreenVMFile', 'ScreenIMFile'}
+        if clip_type in _MEDIA_FILE_TYPES:
+            kwargs.setdefault('trackNumber', 0)
+            kwargs.setdefault('attributes', {'ident': ''})
+        if clip_type == 'AMFile':
+            kwargs.setdefault('channelNumber', '0')
+
         record: dict[str, Any] = {
             'id': self._next_clip_id(),
             '_type': clip_type,
             'start': start,
             'duration': duration,
             'mediaStart': kwargs.pop('media_start', 0),
-            'mediaDuration': kwargs.pop('media_duration', duration / scalar_val if scalar_val != 0 else duration),
+            'mediaDuration': kwargs.pop('media_duration', int(duration / scalar_val) if scalar_val != 0 else duration),
             'scalar': scalar,
             'metadata': {
                 'audiateLinkedSession': '',
@@ -350,6 +359,8 @@ class Track:
         }
         if source_id is not None:
             record['src'] = source_id
+        elif clip_type in _MEDIA_FILE_TYPES:
+            record['src'] = 0
         record.update(kwargs)
 
         self._data.setdefault('medias', []).append(record)
@@ -1133,7 +1144,7 @@ class Track:
                     raise ValueError(f'Extension would result in non-positive duration for clip {clip_id}')
                 m['duration'] = new_dur
                 scalar_val = _parse_scalar(m.get('scalar', 1))
-                m['mediaDuration'] = new_dur / scalar_val if scalar_val != 0 else new_dur
+                m['mediaDuration'] = int(new_dur / scalar_val) if scalar_val != 0 else new_dur
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1548,7 +1559,7 @@ class Track:
                 if m.get('duration', 0) <= 0:
                     raise ValueError(f'Trim would result in zero or negative duration for clip {clip_id}')
                 scalar_val = _parse_scalar(m.get('scalar', 1))
-                m['mediaDuration'] = m['duration'] / scalar_val if scalar_val != 0 else m['duration']
+                m['mediaDuration'] = int(m['duration'] / scalar_val) if scalar_val != 0 else m['duration']
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1674,13 +1685,13 @@ class Track:
 
         # Mutate left half
         left_data['duration'] = split_offset
-        left_data['mediaDuration'] = split_offset / scalar_val if scalar_val != 0 else split_offset
+        left_data['mediaDuration'] = int(split_offset / scalar_val) if scalar_val != 0 else split_offset
 
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
         right_data['mediaStart'] = float(orig_media_start + Fraction(split_offset) / Fraction(orig_scalar) if orig_scalar != 0 else orig_media_start + split_offset)
-        right_data['mediaDuration'] = (orig_duration - split_offset) / scalar_val if scalar_val != 0 else (orig_duration - split_offset)
+        right_data['mediaDuration'] = int((orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
 
         # Assign new sequential IDs to right half
         next_id = self._next_clip_id()
@@ -1759,7 +1770,7 @@ class Track:
         # Extend a to cover b
         a['duration'] = (b['start'] + b['duration']) - a['start']
         scalar_val = _parse_scalar(a.get('scalar', 1))
-        a['mediaDuration'] = a['duration'] / scalar_val if scalar_val != 0 else a['duration']
+        a['mediaDuration'] = int(a['duration'] / scalar_val) if scalar_val != 0 else a['duration']
         # Remove b (cascade-deletes transitions)
         self.remove_clip(clip_id_b)
         return clip_from_dict(a)
