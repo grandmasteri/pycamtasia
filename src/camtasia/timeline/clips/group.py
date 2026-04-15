@@ -172,7 +172,7 @@ class Group(BaseClip):
         extracted_clips: list[BaseClip] = []
         for group_track in self.tracks:
             for clip in group_track.clips:
-                cloned_data: dict[str, Any] = copy.deepcopy(clip._data)
+                cloned_data: dict[str, Any] = copy.deepcopy(dict(clip._data))
                 cloned_data['start'] = cloned_data.get('start', 0) + group_start
                 from camtasia.timeline.clips import clip_from_dict
                 extracted_clips.append(clip_from_dict(cloned_data))

@@ -222,7 +222,7 @@ class BaseClip:
         if speed <= 0:
             raise ValueError(f'speed must be > 0, got {speed}')
         self._data['scalar'] = speed
-        self._data['mediaDuration'] = self.duration / speed
+        self._data['mediaDuration'] = int(self.duration / speed)
         return self
 
     @property
@@ -1447,7 +1447,7 @@ class BaseClip:
     def media_start_seconds(self) -> float:
         """Media start offset in seconds."""
         from camtasia.timing import ticks_to_seconds
-        return float(ticks_to_seconds(float(Fraction(str(self.media_start)))))
+        return float(ticks_to_seconds(int(Fraction(str(self.media_start)))))
 
     def overlaps_with(self, other_clip: BaseClip) -> bool:
         """Check if this clip's time range overlaps with another clip."""
