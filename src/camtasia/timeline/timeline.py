@@ -228,6 +228,30 @@ class Timeline:
         return self.total_duration_seconds()
 
     @property
+    def total_duration_formatted(self) -> str:
+        """Total timeline duration as HH:MM:SS or MM:SS string."""
+        total_seconds: float = self.total_duration_seconds()
+        hours: int = int(total_seconds // 3600)
+        minutes: int = int((total_seconds % 3600) // 60)
+        remaining_seconds: int = int(total_seconds % 60)
+        if hours > 0:
+            return f'{hours}:{minutes:02d}:{remaining_seconds:02d}'
+        return f'{minutes}:{remaining_seconds:02d}'
+
+    def summary(self) -> str:
+        """Human-readable timeline summary."""
+        lines: list[str] = [
+            f'Timeline: {self.total_duration_formatted}',
+            f'Tracks: {len(list(self.tracks))}',
+            f'Total clips: {sum(len(t) for t in self.tracks)}',
+            f'Clip density: {self.clip_density:.2f}',
+        ]
+        groups = self.groups
+        if groups:
+            lines.append(f'Groups: {len(groups)}')
+        return '\n'.join(lines)
+
+    @property
     def end_seconds(self) -> float:
         """End time of the timeline in seconds."""
         return ticks_to_seconds(self.total_duration_ticks)

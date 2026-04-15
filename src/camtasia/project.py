@@ -20,7 +20,7 @@ from camtasia.timeline import Timeline
 from camtasia.timeline.track import Track
 from camtasia.timeline.clips import BaseClip
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
-from camtasia.types import ClipType, CompactResult, HealthCheckResult
+from camtasia.types import ClipType, CompactResult, EffectName, HealthCheckResult
 from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_indices, _check_transition_references, validate_against_schema
 
 
@@ -504,6 +504,23 @@ class Project:
     def find_clips_by_type(self, clip_type: str) -> list[tuple[Track, BaseClip]]:
         """Find all clips of a specific type across all tracks."""
         return [(t, c) for t, c in self.all_clips if c.clip_type == clip_type]
+
+    def find_clips_with_effect(self, effect_name: str | EffectName) -> list[tuple[Track, BaseClip]]:
+        """Find all clips that have a specific effect applied."""
+        return [(track, clip) for track, clip in self.all_clips if clip.is_effect_applied(effect_name)]
+
+    def find_clips_by_source(self, source_id: int) -> list[tuple[Track, BaseClip]]:
+        """Find all clips that reference a specific source bin entry."""
+        return [(track, clip) for track, clip in self.all_clips if clip._data.get('src') == source_id]
+
+    def replace_all_media(self, old_source_id: int, new_source_id: int) -> int:
+        """Replace all references to one media source with another. Returns count."""
+        count: int = 0
+        for _, clip in self.all_clips:
+            if clip._data.get('src') == old_source_id:
+                clip._data['src'] = new_source_id
+                count += 1
+        return count
 
     @property
     def longest_clip(self) -> tuple[Track, BaseClip] | None:
