@@ -105,3 +105,13 @@ class MarkerList:
     def clear(self) -> None:
         """Remove all markers."""
         self._ensure_keyframes().clear()
+
+    def replace(self, markers: list[tuple[str, int]]) -> None:
+        """Replace all markers with a new set.
+
+        Args:
+            markers: List of (name, time_ticks) tuples.
+        """
+        self.clear()
+        for name, time_ticks in markers:
+            self.add(name, time_ticks)

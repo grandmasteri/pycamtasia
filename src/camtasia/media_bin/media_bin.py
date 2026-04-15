@@ -6,7 +6,9 @@ to imported media entries (video, image, audio).
 from __future__ import annotations
 
 import datetime
+import json
 import shutil
+import subprocess
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -293,8 +295,10 @@ class MediaBin:
 
     def import_media(
         self,
-        file_path: Path,
+        file_path: Path | str,
         *,
+        validate_format: bool = False,
+        auto_convert: bool = False,
         width: int | None = None,
         height: int | None = None,
         duration: int | None = None,
@@ -331,6 +335,11 @@ class MediaBin:
         file_path = Path(file_path)
         if not file_path.exists():
             raise FileNotFoundError(file_path)
+
+        if validate_format:
+            file_path = _validate_media_format(
+                file_path, auto_convert=auto_convert,
+            )
 
         # Try pymediainfo if explicit metadata not provided
         if media_type is None:
@@ -385,6 +394,111 @@ class MediaBin:
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
+
+# Maps ffprobe codec names to the file extensions they correspond to.
+_CODEC_TO_EXTENSIONS: dict[str, set[str]] = {
+    "mp3": {".mp3"},
+    "aac": {".aac", ".m4a"},
+    "vorbis": {".ogg"},
+    "opus": {".opus", ".ogg"},
+    "pcm_s16le": {".wav"},
+    "pcm_s24le": {".wav"},
+    "pcm_s32le": {".wav"},
+    "pcm_f32le": {".wav"},
+    "pcm_u8": {".wav"},
+    "flac": {".flac"},
+    "h264": {".mp4", ".m4v", ".mov"},
+    "hevc": {".mp4", ".m4v", ".mov"},
+    "vp9": {".webm"},
+    "av1": {".mp4", ".webm"},
+    "png": {".png"},
+    "mjpeg": {".jpg", ".jpeg"},
+}
+
+
+def _detect_codec(file_path: Path) -> str | None:
+    """Use ffprobe to detect the codec of the first stream.
+
+    Returns the codec name string, or ``None`` if ffprobe is unavailable or fails.
+    """
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "quiet",
+                "-select_streams", "a:0",
+                "-show_entries", "stream=codec_name",
+                "-of", "json",
+                str(file_path),
+            ],
+            capture_output=True, text=True, timeout=10,
+        )
+        data = json.loads(result.stdout)
+        streams = data.get("streams", [])
+        if streams:
+            return streams[0].get("codec_name")
+        # Retry with video stream
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "quiet",
+                "-select_streams", "v:0",
+                "-show_entries", "stream=codec_name",
+                "-of", "json",
+                str(file_path),
+            ],
+            capture_output=True, text=True, timeout=10,
+        )
+        data = json.loads(result.stdout)
+        streams = data.get("streams", [])
+        if streams:
+            return streams[0].get("codec_name")
+    except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+        pass
+    return None
+
+
+def _validate_media_format(
+    file_path: Path,
+    *,
+    auto_convert: bool = False,
+) -> Path:
+    """Check that the file's actual codec matches its extension.
+
+    Emits a warning on mismatch.  If *auto_convert* is ``True``, converts
+    the file to the format implied by its extension using ffmpeg and returns
+    the path to the converted file.
+
+    Returns the (possibly converted) file path.
+    """
+    codec = _detect_codec(file_path)
+    if codec is None:
+        return file_path
+
+    ext = file_path.suffix.lower()
+    expected_exts = _CODEC_TO_EXTENSIONS.get(codec)
+    if expected_exts is None or ext in expected_exts:
+        return file_path
+
+    warnings.warn(
+        f"Format mismatch: {file_path.name} has extension '{ext}' "
+        f"but contains '{codec}' data (expected extensions: "
+        f"{', '.join(sorted(expected_exts))})",
+        UserWarning,
+        stacklevel=3,
+    )
+
+    if not auto_convert:
+        return file_path
+
+    try:
+        converted = file_path.with_suffix(f".converted{ext}")
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(file_path), str(converted)],
+            capture_output=True, timeout=60, check=True,
+        )
+        return converted
+    except (FileNotFoundError, subprocess.TimeoutExpired, subprocess.CalledProcessError, OSError):
+        return file_path
+
 
 def _parse_with_pymediainfo(file_path: Path) -> dict[str, Any] | None:
     """Attempt to parse media metadata via pymediainfo.

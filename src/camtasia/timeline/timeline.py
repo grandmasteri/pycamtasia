@@ -946,3 +946,7 @@ class _TimelineMarkers:
     def clear(self) -> None:
         """Remove all markers."""
         self._inner.clear()
+
+    def replace(self, markers: list[tuple[str, int]]) -> None:
+        """Replace all markers with a new set."""
+        self._inner.replace(markers)

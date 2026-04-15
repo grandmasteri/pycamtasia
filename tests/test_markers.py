@@ -130,3 +130,45 @@ class TestMarkerListRemoveAt:
         ml = MarkerList(data)
         ml.remove_at(100)
         assert list(ml) == []
+
+
+class TestMarkerListReplace:
+    def test_replace_on_empty(self):
+        data: dict = {}
+        ml = MarkerList(data)
+        ml.replace([("A", 100), ("B", 200)])
+        actual_result = [(m.name, m.time) for m in ml]
+        assert actual_result == [("A", 100), ("B", 200)]
+
+    def test_replace_clears_existing(self):
+        data = _make_data_with_markers(
+            _make_keyframe("Old1", 10),
+            _make_keyframe("Old2", 20),
+        )
+        ml = MarkerList(data)
+        ml.replace([("New1", 300)])
+        actual_result = [(m.name, m.time) for m in ml]
+        assert actual_result == [("New1", 300)]
+
+    def test_replace_with_empty_list(self):
+        data = _make_data_with_markers(_make_keyframe("M1", 100))
+        ml = MarkerList(data)
+        ml.replace([])
+        assert list(ml) == []
+
+
+class TestTimelineMarkersReplace:
+    def _make_timeline_data(self) -> dict:
+        return {
+            "parameters": {"toc": {"type": "string", "keyframes": [
+                _make_keyframe("Old", 50),
+            ]}},
+        }
+
+    def test_replace_delegates(self):
+        from camtasia.timeline.timeline import _TimelineMarkers
+        data = self._make_timeline_data()
+        tm = _TimelineMarkers(data)
+        tm.replace([("X", 1000), ("Y", 2000)])
+        actual_result = [(m.name, m.time) for m in tm]
+        assert actual_result == [("X", 1000), ("Y", 2000)]
