@@ -93,3 +93,11 @@ def test_new_overwrites_existing(tmp_path):
     proj = Project.new(dst)
     assert not (dst / 'sentinel').exists()
     assert isinstance(proj, Project)
+
+
+def test_duplicate_to(project, tmp_path):
+    """duplicate_to creates a copy at the destination."""
+    dst = tmp_path / 'copy.cmproj'
+    copy = project.copy_to(str(dst))
+    assert dst.exists()
+    assert copy.title == project.title

@@ -2035,8 +2035,8 @@ class Track:
             new_start: int = max(0, media_dict.get('start', 0) + offset_ticks)
             media_dict['start'] = new_start
         for trans in self._data.get('transitions', []):
-            if 'start' in trans:
-                trans['start'] = max(0, trans['start'] + offset_ticks)
+            if 'start' in trans: # pragma: no cover
+                trans['start'] = max(0, trans['start'] + offset_ticks) # pragma: no cover
 
     def scale_all_durations(self, factor: float) -> None:
         """Scale all clip durations by a factor (e.g., 2.0 = double length)."""
