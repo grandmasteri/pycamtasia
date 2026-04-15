@@ -125,3 +125,20 @@ class TestStripAllEffects:
         removed = proj.strip_all_effects()
         assert removed == applied_count
         assert proj.total_effect_count == 0
+
+
+class TestApplyColorGrade:
+    def test_applies_to_video_clips(self, project):
+        track = project.timeline.add_track('Video')
+        track.add_clip('VMFile', 1, 0, 705600000)
+        count = project.apply_color_grade(brightness=0.1)
+        assert count == 1
+
+    def test_skips_audio_clips(self, project):
+        track = project.timeline.add_track('Audio')
+        track.add_audio(1, start_seconds=0, duration_seconds=1)
+        count = project.apply_color_grade()
+        assert count == 0
+
+    def test_empty_project(self, project):
+        assert project.apply_color_grade() == 0

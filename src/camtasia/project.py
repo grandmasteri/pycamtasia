@@ -2031,6 +2031,34 @@ class Project:
                         count += 1
         return count
 
+    def apply_color_grade(
+        self,
+        brightness: float = 0.0,
+        contrast: float = 0.0,
+        saturation: float = 0.0,
+        clip_types: list[str] | None = None,
+    ) -> int:
+        """Apply color adjustment to all video/image clips.
+
+        Args:
+            brightness: Brightness adjustment (-1.0 to 1.0).
+            contrast: Contrast adjustment (-1.0 to 1.0).
+            saturation: Saturation adjustment (-1.0 to 1.0).
+            clip_types: Clip types to apply to. Defaults to ['VMFile', 'IMFile', 'ScreenVMFile'].
+        """
+        if clip_types is None:
+            clip_types = ['VMFile', 'IMFile', 'ScreenVMFile']
+        count: int = 0
+        for _, clip in self.all_clips:
+            if clip.clip_type in clip_types:
+                clip.add_color_adjustment(
+                    brightness=brightness,
+                    contrast=contrast,
+                    saturation=saturation,
+                )
+                count += 1
+        return count
+
     def strip_all_effects(self) -> int:
         """Remove all effects from all clips. Returns count removed."""
         count: int = 0
@@ -2215,6 +2243,49 @@ class Project:
             'total_duration': cursor_seconds,
             'sections': screenplay.sections,
         }
+
+    def add_watermark(
+        self,
+        image_path: str | Path,
+        opacity: float = 0.3,
+        track_name: str = 'Watermark',
+    ) -> BaseClip:
+        """Add a watermark image that spans the entire timeline.
+
+        The image is placed on its own track with reduced opacity.
+        """
+        media = self.import_media(Path(image_path))
+        track = self.timeline.get_or_create_track(track_name)
+        timeline_duration: float = self.duration_seconds
+        if timeline_duration == 0:
+            timeline_duration = 60.0
+        clip = track.add_image(
+            media.id,
+            start_seconds=0.0,
+            duration_seconds=timeline_duration,
+        )
+        clip.opacity = opacity
+        return clip
+
+    def add_countdown(
+        self,
+        seconds: int = 3,
+        track_name: str = 'Countdown',
+        per_number_seconds: float = 1.0,
+    ) -> list[BaseClip]:
+        """Add a countdown (3, 2, 1) at the start of the timeline."""
+        track = self.timeline.get_or_create_track(track_name)
+        clips: list[BaseClip] = []
+        for i in range(seconds, 0, -1):
+            offset: float = (seconds - i) * per_number_seconds
+            callout = track.add_callout(
+                str(i), offset, per_number_seconds,
+                font_size=96.0,
+            )
+            callout.fade_in(0.2)
+            callout.fade_out(0.2)
+            clips.append(callout)
+        return clips
 
     def solo_track(self, track_name: str) -> bool:
         """Solo a track by name (mute all others). Returns True if found."""
