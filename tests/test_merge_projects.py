@@ -1,6 +1,7 @@
 """Tests for Project.merge_projects classmethod."""
 from __future__ import annotations
 
+import pytest
 from pathlib import Path
 
 import pytest
@@ -20,6 +21,8 @@ def project_b(tmp_path):
     return Project.new(tmp_path / 'b.cmproj', title='Project B')
 
 
+
+@pytest.mark.timeout(30)
 def test_merge_empty_projects(tmp_path, project_a, project_b):
     merged = Project.merge_projects(
         [project_a, project_b],
@@ -29,6 +32,8 @@ def test_merge_empty_projects(tmp_path, project_a, project_b):
     assert (tmp_path / 'merged.cmproj').exists()
 
 
+
+@pytest.mark.timeout(30)
 def test_merge_custom_title(tmp_path, project_a, project_b):
     merged = Project.merge_projects(
         [project_a, project_b],
@@ -38,12 +43,16 @@ def test_merge_custom_title(tmp_path, project_a, project_b):
     assert merged.title == 'Combined'
 
 
+
+@pytest.mark.timeout(30)
 def test_merge_empty_list(tmp_path):
     merged = Project.merge_projects([], tmp_path / 'merged.cmproj')
     assert merged.clip_count == 0
     assert merged.track_count >= 0
 
 
+
+@pytest.mark.timeout(30)
 def test_merge_single_project(tmp_path, project_a):
     merged = Project.merge_projects(
         [project_a],
@@ -52,6 +61,8 @@ def test_merge_single_project(tmp_path, project_a):
     assert isinstance(merged, Project)
 
 
+
+@pytest.mark.timeout(30)
 def test_merge_preserves_tracks(tmp_path):
     a = Project.new(tmp_path / 'a.cmproj', title='A')
     a.timeline.add_track('Track-A')
@@ -70,6 +81,8 @@ def test_merge_preserves_tracks(tmp_path):
     assert 'Track-B' in names
 
 
+
+@pytest.mark.timeout(30)
 def test_merge_copies_media_bin(tmp_path):
     a = Project.new(tmp_path / 'a.cmproj', title='A')
     # Manually add a source bin entry
@@ -91,6 +104,8 @@ def test_merge_copies_media_bin(tmp_path):
     assert './media/test.png' in sources
 
 
+
+@pytest.mark.timeout(30)
 def test_merge_result_is_loadable(tmp_path, project_a):
     out = tmp_path / 'merged.cmproj'
     Project.merge_projects([project_a], out)
@@ -98,6 +113,8 @@ def test_merge_result_is_loadable(tmp_path, project_a):
     assert reloaded.title == 'Merged Project'
 
 
+
+@pytest.mark.timeout(30)
 def test_merge_clips_get_unique_ids(tmp_path):
     a = Project.new(tmp_path / 'a.cmproj', title='A')
     track_a = a.timeline.add_track('T')

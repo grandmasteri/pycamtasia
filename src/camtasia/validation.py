@@ -25,9 +25,8 @@ class ValidationIssue:
 
 def _collect_ids(media: dict, ids: list, path: str) -> None:
     """Recursively collect clip IDs from a media dict."""
-    mid = media.get('id')
-    if mid is not None:
-        ids.append((mid, path))
+    if media.get('id') is not None:
+        ids.append((media['id'], path))
     for key in ('video', 'audio'):
         if key in media:
             sid = media[key].get('id')
@@ -35,9 +34,9 @@ def _collect_ids(media: dict, ids: list, path: str) -> None:
                 ids.append((sid, f'{path}/{key}'))
     for track in media.get('tracks', []):
         for inner in track.get('medias', []):
-            _collect_ids(inner, ids, f'{path}/group{mid}')
+            _collect_ids(inner, ids, f'{path}/group{media.get("id")}')
     for inner in media.get('medias', []):
-        _collect_ids(inner, ids, f'{path}/stitched{mid}')
+        _collect_ids(inner, ids, f'{path}/stitched{media.get("id")}')
 
 
 def _check_duplicate_clip_ids(data: dict) -> list[ValidationIssue]:
@@ -81,7 +80,7 @@ def _check_transition_references(data: dict) -> list[ValidationIssue]:
 
     def _check_tracks(tracks: list, path: str) -> None:
         for ti, track in enumerate(tracks):
-            clip_ids = {m['id'] for m in track.get('medias', [])}
+            clip_ids = {m['id'] for m in track.get('medias', []) if 'id' in m}
             for j, trans in enumerate(track.get('transitions', [])):
                 left = trans.get('leftMedia')
                 right = trans.get('rightMedia')

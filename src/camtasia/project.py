@@ -681,23 +681,33 @@ class Project:
 
         Each project's tracks are appended sequentially. Media bins are merged.
         """
+        from camtasia.timeline.timeline import _remap_clip_ids_recursive
+
         merged = cls.new(output_path, title=title)
         cursor_seconds: float = 0.0
 
         for source_project in projects:
-            # Copy media bin entries
+            # Build sourceBin ID remap
+            src_id_map: dict[int, int] = {}
             for media in source_project.media_bin:
-                merged._data.setdefault('sourceBin', []).append(
-                    copy.deepcopy(media._data)
-                )
+                cloned_media = copy.deepcopy(media._data)
+                old_id = cloned_media['id']
+                new_id = merged.media_bin.next_id()
+                cloned_media['id'] = new_id
+                src_id_map[old_id] = new_id
+                merged._data.setdefault('sourceBin', []).append(cloned_media)
 
             # Copy tracks with time offset
+            id_counter = [merged.next_available_id]
             for track in source_project.timeline.tracks:
                 new_track = merged.timeline.add_track(track.name)
                 for clip in track.clips:
                     cloned = copy.deepcopy(clip._data)
                     cloned['start'] = cloned.get('start', 0) + int(cursor_seconds * 705600000)
-                    cloned['id'] = merged.next_available_id
+                    _remap_clip_ids_recursive(cloned, id_counter)
+                    # Remap src references
+                    if 'src' in cloned and cloned['src'] in src_id_map:
+                        cloned['src'] = src_id_map[cloned['src']]
                     new_track._data.setdefault('medias', []).append(cloned)
 
             cursor_seconds += source_project.duration_seconds
