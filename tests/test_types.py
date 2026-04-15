@@ -153,7 +153,7 @@ class TestInterpolationTypeValues:
     def test_interpolation_type_values(self):
         expected = {
             'LINEAR': 'linr',
-            'EASE_IN_OUT_ELASTIC': 'eioe',
+            'EASE_IN_OUT': 'eioe',
             'SPRING': 'sprg',
             'BOUNCE': 'bnce',
         }

@@ -32,7 +32,7 @@ def export_csv(project: Project, output_path: str | Path) -> Path:
                     f'{ticks_to_seconds(clip.start):.3f}',
                     f'{ticks_to_seconds(clip.duration):.3f}',
                     f'{clip.end_seconds:.3f}',
-                    clip.source_id or '',
+                    clip.source_id if clip.source_id is not None else '',
                     clip.effect_count,
                     '; '.join(clip.effect_names) if clip.has_effects else '',
                 ])

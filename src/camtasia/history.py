@@ -107,7 +107,6 @@ class ChangeHistory:
             raise IndexError("nothing to undo")
         record = self._undo_stack.pop()
         try:
-            import copy
             test_data = copy.deepcopy(project_data)
             record.inverse_patch.apply(test_data, in_place=True)
             # Success — apply to real data
@@ -125,7 +124,6 @@ class ChangeHistory:
             raise IndexError("nothing to redo")
         record = self._redo_stack.pop()
         try:
-            import copy
             test_data = copy.deepcopy(project_data)
             record.forward_patch.apply(test_data, in_place=True)
             project_data.clear()

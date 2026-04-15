@@ -17,7 +17,7 @@ __all__ = [
 EffectCategory = Literal['', 'categoryVisualEffects', 'categoryAudioEffects', 'categoryCursorEffects', 'categoryClickEffects']
 
 # Alignment values for CaptionAttributes
-Alignment = Literal[0, 1, 2]  # left, center, right
+Alignment = Literal[0, 1, 2]  # 0 = center, 1 = left, 2 = right
 
 # Export formats
 ReportFormat = Literal['markdown', 'json']
@@ -132,7 +132,7 @@ class CalloutShape(str, Enum):
 class InterpolationType(str, Enum):
     """Keyframe interpolation types."""
     LINEAR = 'linr'
-    EASE_IN_OUT_ELASTIC = 'eioe'
+    EASE_IN_OUT = 'eioe'
     SPRING = 'sprg'
     BOUNCE = 'bnce'
 
@@ -159,9 +159,9 @@ class ValidationLevel(str, Enum):
 
 class MediaType(IntEnum):
     """Media source types (matches existing MediaType in media_bin)."""
-    VIDEO = 0
-    IMAGE = 1
-    AUDIO = 2
+    Video = 0
+    Image = 1
+    Audio = 2
 
 
 # ---------------------------------------------------------------------------

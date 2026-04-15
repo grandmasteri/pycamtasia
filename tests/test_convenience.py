@@ -1274,7 +1274,7 @@ def test_track_rename():
 def test_interpolation_type_values():
     from camtasia.types import InterpolationType
     assert InterpolationType.LINEAR == 'linr'
-    assert InterpolationType.EASE_IN_OUT_ELASTIC == 'eioe'
+    assert InterpolationType.EASE_IN_OUT == 'eioe'
     assert InterpolationType.SPRING == 'sprg'
     assert InterpolationType.BOUNCE == 'bnce'
     assert len(InterpolationType) == 4
