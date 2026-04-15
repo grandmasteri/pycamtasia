@@ -942,56 +942,47 @@ class Project:
         return media
 
     def statistics(self) -> dict[str, Any]:
-        """Return detailed project statistics.
-
-        Returns a dict with:
-        - total_tracks: int
-        - empty_tracks: int
-        - total_clips: int
-        - clips_by_type: dict[str, int]
-        - total_media: int
-        - media_by_type: dict[str, int]
-        - total_transitions: int
-        - total_markers: int
-        - duration_seconds: float
-        - canvas: dict with width and height
-        """
-        clips_by_type: dict[str, int] = {}
-        total_clips = 0
-        total_transitions = 0
-        total_markers = 0
-        empty_tracks = 0
-
-        for track in self.timeline.tracks:
-            track_clips = list(track.clips)
-            if not track_clips:
-                empty_tracks += 1
-            for clip in track_clips:
-                total_clips += 1
-                ct = clip.clip_type
-                clips_by_type[ct] = clips_by_type.get(ct, 0) + 1
-            total_transitions += len(list(track.transitions))
-            total_markers += len(list(track.markers))
-
-        total_markers += len(list(self.timeline.markers))
-
-        media_by_type: dict[str, int] = {}
-        for m in self.media_bin:
-            mt = m.type.name if hasattr(m.type, 'name') else str(m.type)
-            media_by_type[mt] = media_by_type.get(mt, 0) + 1
-
+        """Comprehensive project statistics as a dict."""
+        all_clips_list = [(t, c) for t, c in self.all_clips]
+        total_effects: int = sum(len(c._data.get('effects', [])) for _, c in all_clips_list)
+        total_transitions: int = self.timeline.total_transition_count
         return {
-            'total_tracks': self.timeline.track_count,
-            'empty_tracks': empty_tracks,
-            'total_clips': total_clips,
-            'clips_by_type': clips_by_type,
-            'total_media': len(self.media_bin),
-            'media_by_type': media_by_type,
-            'total_transitions': total_transitions,
-            'total_markers': total_markers,
-            'duration_seconds': self.total_duration_seconds(),
-            'canvas': {'width': self.width, 'height': self.height},
+            'title': self.title,
+            'duration_seconds': self.duration_seconds,
+            'duration_formatted': self.total_duration_formatted,
+            'resolution': f'{self.width}x{self.height}',
+            'track_count': self.track_count,
+            'clip_count': self.clip_count,
+            'group_count': self.group_count,
+            'effect_count': total_effects,
+            'transition_count': total_transitions,
+            'media_count': len(list(self.media_bin)),
+            'empty_tracks': len(self.empty_tracks),
+            'clip_density': self.timeline.clip_density,
         }
+
+    def to_markdown_report(self) -> str:
+        """Format project statistics as a markdown document."""
+        stats = self.statistics()
+        lines = [
+            f'# Project Report: {stats["title"] or "(untitled)"}',
+            '',
+            '## Overview',
+            '',
+            f'| Metric | Value |',
+            f'|--------|-------|',
+            f'| Duration | {stats["duration_formatted"]} ({stats["duration_seconds"]:.1f}s) |',
+            f'| Resolution | {stats["resolution"]} |',
+            f'| Tracks | {stats["track_count"]} |',
+            f'| Clips | {stats["clip_count"]} |',
+            f'| Groups | {stats["group_count"]} |',
+            f'| Effects | {stats["effect_count"]} |',
+            f'| Transitions | {stats["transition_count"]} |',
+            f'| Media files | {stats["media_count"]} |',
+            f'| Empty tracks | {stats["empty_tracks"]} |',
+            f'| Clip density | {stats["clip_density"]:.2f} |',
+        ]
+        return '\n'.join(lines)
 
     def info(self) -> dict[str, Any]:
         """Return comprehensive project information.

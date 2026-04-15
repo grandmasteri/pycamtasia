@@ -1238,6 +1238,21 @@ class BaseClip:
             }
         return self
 
+    def summary(self) -> str:
+        """Human-readable clip summary."""
+        lines: list[str] = [
+            f'{self.clip_type}(id={self.id})',
+            f'  Time: {self.time_range_formatted}',
+            f'  Duration: {self.duration_seconds:.2f}s',
+        ]
+        if self.scalar != 1:
+            lines.append(f'  Speed: {float(Fraction(str(self.scalar))):.2f}x')
+        effects = self._data.get('effects', [])
+        if effects:
+            names = [e.get('effectName', '?') for e in effects]
+            lines.append(f'  Effects: {", ".join(names)}')
+        return '\n'.join(lines)
+
     def describe(self) -> str:
         """Human-readable clip description."""
         from camtasia.timing import ticks_to_seconds
