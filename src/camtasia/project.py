@@ -1657,6 +1657,23 @@ class Project:
     def __str__(self) -> str:
         return f'{self.title} ({self.total_duration_formatted}, {self.track_count} tracks, {self.clip_count} clips)'
 
+    def diff(self, other: Project) -> dict[str, Any]:
+        """Compare this project with another and return differences."""
+        diffs: dict[str, Any] = {}
+        if self.title != other.title:
+            diffs['title'] = (self.title, other.title)
+        if self.width != other.width or self.height != other.height:
+            diffs['resolution'] = (f'{self.width}x{self.height}', f'{other.width}x{other.height}')
+        if self.track_count != other.track_count:
+            diffs['track_count'] = (self.track_count, other.track_count)
+        if self.clip_count != other.clip_count:
+            diffs['clip_count'] = (self.clip_count, other.clip_count)
+        self_media = len(list(self.media_bin))
+        other_media = len(list(other.media_bin))
+        if self_media != other_media:
+            diffs['media_count'] = (self_media, other_media)
+        return diffs
+
     def strip_audio(self) -> int:
         """Remove all audio clips from all tracks. Returns count removed."""
         count = 0
@@ -2371,6 +2388,45 @@ class Project:
         """
         from camtasia.operations.cleanup import remove_orphaned_media as _remove
         return len(_remove(self))
+
+    def health_report(self) -> str:
+        """Generate a comprehensive project health report."""
+        lines: list[str] = [f'# Health Report: {self.title}', '']
+
+        # Statistics
+        stats = self.statistics()
+        lines.append('## Statistics')
+        for key, value in stats.items():
+            lines.append(f'- {key}: {value}')
+        lines.append('')
+
+        # Validation
+        issues = self.validate()
+        lines.append('## Validation')
+        if issues:
+            errors = [i for i in issues if i.level == 'error']
+            warnings = [i for i in issues if i.level == 'warning']
+            lines.append(f'- Errors: {len(errors)}')
+            lines.append(f'- Warnings: {len(warnings)}')
+            for issue in issues:
+                lines.append(f'  - [{issue.level}] {issue.message}')
+        else:
+            lines.append('All checks passed.')
+        lines.append('')
+
+        # Track details
+        lines.append('## Tracks')
+        for track in self.timeline.tracks:
+            lines.append(f'### {track.name}')
+            lines.append(f'- Clips: {len(track)}')
+            lines.append(f'- Duration: {track.total_duration_seconds:.2f}s')
+            if track.has_transitions:
+                lines.append(f'- Transitions: {track.transition_count}')
+            gaps = track.gaps()
+            if gaps:
+                lines.append(f'- Gaps: {len(gaps)} ({track.total_gap_seconds:.2f}s)')
+
+        return '\n'.join(lines)
 
     def clean_inherited_state(self, preserve_groups: bool = True) -> None:
         """Reset project to a clean state.
