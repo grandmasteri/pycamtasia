@@ -382,6 +382,8 @@ class Group(BaseClip):
         segments: list[tuple[float, float, float]],
         *,
         next_id: int | None = None,
+        canvas_width: float | None = None,
+        canvas_height: float | None = None,
     ) -> None:
         """Replace the internal track's media with per-segment StitchedMedia clips.
 
@@ -398,6 +400,12 @@ class Group(BaseClip):
                 timeline_duration_s)`` tuples.
             next_id: Starting ID for generated clips. If ``None``,
                 auto-detects from existing internal clip IDs.
+            canvas_width: Optional width to set on each created
+                ScreenVMFile clip.  When provided, overrides the source
+                recording's native width so the clip fits the project
+                canvas (e.g. 1920 for a Retina recording).
+            canvas_height: Optional height to set on each created
+                ScreenVMFile clip.
         """
         # Find the internal track containing UnifiedMedia or existing media
         media_track = None
@@ -478,6 +486,10 @@ class Group(BaseClip):
                 'animationTracks': {},
             }
             new_medias.append(clip)
+            if canvas_width is not None:
+                clip['parameters']['width'] = canvas_width
+            if canvas_height is not None:
+                clip['parameters']['height'] = canvas_height
             timeline_cursor += tl_dur
             cid += 1
 

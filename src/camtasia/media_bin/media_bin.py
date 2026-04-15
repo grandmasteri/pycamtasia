@@ -325,10 +325,11 @@ class MediaBin:
             media_type = _get_media_type(track)
             width = width or track.get("width")
             height = height or track.get("height")
-            duration = duration or int(track.get("duration", 1))
             sample_rate = sample_rate or track.get("sampling_rate")
             bit_depth = bit_depth or track.get("bit_depth", 0)
             num_channels = num_channels or track.get("channel_s")
+            if duration is None:
+                duration = _compute_audio_duration(track, sample_rate) if media_type == MediaType.Audio else int(track.get("duration", 1))
 
         # Copy file into project media directory
         timestamp = datetime.datetime.now()
@@ -387,6 +388,23 @@ def _parse_with_pymediainfo(file_path: Path) -> dict[str, Any] | None:
     if len(media_info.tracks) < 2:
         return None
     return media_info.tracks[1].to_data()  # type: ignore[no-any-return]
+
+
+_COMPRESSED_AUDIO_FORMATS = frozenset({"MPEG Audio", "AAC", "Vorbis", "Opus"})
+
+
+def _compute_audio_duration(track: dict[str, Any], sample_rate: int | None) -> int:
+    """Return the audio duration as a sample count suitable for ``range``.
+
+    For compressed formats (MP3, AAC, Vorbis, Opus) pymediainfo reports
+    compressed frame counts rather than decoded sample counts.  In that case
+    we derive the sample count from ``duration (ms) * sample_rate / 1000``.
+    """
+    fmt = track.get("format", "")
+    if fmt in _COMPRESSED_AUDIO_FORMATS and sample_rate:
+        duration_ms = float(track.get("duration", 0))
+        return int(duration_ms * sample_rate / 1000)
+    return int(track.get("duration", 0))
 
 
 def _get_media_type(track: dict[str, Any]) -> MediaType:
