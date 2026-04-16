@@ -110,10 +110,18 @@ class SourceEffect(Effect):
         """Set the mid point position."""
         params = self._data.setdefault('parameters', {})
         if isinstance(value, (int, float)):
-            params['MidPoint'] = value
+            existing = params.get('MidPoint')
+            if isinstance(existing, dict):
+                existing['defaultValue'] = value
+            else:
+                params['MidPoint'] = value
         else:
-            params['MidPointX'] = value[0]
-            params['MidPointY'] = value[1]
+            for key, val in [('MidPointX', value[0]), ('MidPointY', value[1])]:
+                existing = params.get(key)
+                if isinstance(existing, dict):
+                    existing['defaultValue'] = val
+                else:
+                    params[key] = val
 
     @property
     def speed(self) -> float | None:

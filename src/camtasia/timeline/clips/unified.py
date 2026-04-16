@@ -83,6 +83,9 @@ class UnifiedMedia(BaseClip):
     def add_glow_timed(self, **kwargs: Any) -> Any:
         raise TypeError(_EFFECT_MSG)
 
+    def copy_effects_from(self, source: Any) -> Self:
+        raise TypeError(_EFFECT_MSG)
+
     def mute_audio(self) -> Self:
         """Set audio gain to zero."""
         if self.has_audio:

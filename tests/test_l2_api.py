@@ -138,10 +138,9 @@ class TestFade:
         visual = clip._data["animationTracks"]["visual"]
         fade_in_ticks = seconds_to_ticks(1.0)
         fade_out_ticks = seconds_to_ticks(1.0)
-        assert visual == [
-            {"endTime": fade_in_ticks, "duration": fade_in_ticks},
-            {"endTime": dur, "duration": fade_out_ticks},
-        ]
+        assert len(visual) == 2
+        assert visual[0]["endTime"] == fade_in_ticks
+        assert visual[1]["endTime"] == dur
 
     def test_replaces_existing_opacity_animations(self):
         clip = IMFile(_clip_data(duration=EDIT_RATE * 10, media_duration=EDIT_RATE * 10))

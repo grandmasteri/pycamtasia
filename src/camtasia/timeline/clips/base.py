@@ -182,7 +182,10 @@ class BaseClip:
         if self._data.get('_type') in ('Group', 'StitchedMedia'):
             self._data.setdefault('parameters', {})['volume'] = 0.0
         elif self._data.get('_type') == 'UnifiedMedia':
-            self._data.get('audio', {}).setdefault('attributes', {})['gain'] = 0.0
+            audio = self._data.get('audio')
+            if audio is None:
+                raise ValueError('UnifiedMedia has no audio sub-clip to mute')
+            audio.setdefault('attributes', {})['gain'] = 0.0
         else:
             self.gain = 0.0
         return self
@@ -634,7 +637,7 @@ class BaseClip:
         # Build animationTracks.visual — one segment per keyframe
         visual = self._ensure_visual_tracks()
         for kf in keyframes:
-            visual.append({'endTime': kf['endTime'], 'duration': kf['duration']})
+            visual.append({'endTime': kf['endTime'], 'duration': kf['duration'], 'range': [kf['time'], kf['duration']], 'interp': 'linr'})
 
     def _get_existing_opacity_keyframes(self) -> list[dict[str, Any]] | None:
         """Return existing opacity keyframes in the new format, or None."""
