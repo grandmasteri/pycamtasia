@@ -191,7 +191,10 @@ def _check_group_required_fields(data: dict) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     required_params = {'geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3', 'volume'}
     required_meta = {'clipSpeedAttribute', 'effectApplied', 'isOpen'}
-    version = float(data.get('version', '0'))
+    try:
+        version = float(data.get('version', '0'))
+    except (ValueError, TypeError):
+        version = 0.0
     if version >= 10.0:
         required_meta = required_meta | {'colorAttribute'}
 
