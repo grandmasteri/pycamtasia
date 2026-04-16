@@ -730,7 +730,7 @@ class Project:
                 for clip in track.clips:
                     old_id = clip.id
                     cloned = copy.deepcopy(clip._data)
-                    cloned['start'] = cloned.get('start', 0) + int(cursor_seconds * 705600000)
+                    cloned['start'] = cloned.get('start', 0) + seconds_to_ticks(cursor_seconds)
                     _remap_clip_ids_recursive(cloned, id_counter)
                     clip_id_map[old_id] = cloned['id']
                     _remap_src_recursive(cloned, src_id_map)
@@ -2228,15 +2228,6 @@ class Project:
                     saturation=saturation,
                 )
                 count += 1
-        return count
-
-    def strip_all_effects(self) -> int:
-        """Remove all effects from all clips. Returns count removed."""
-        count: int = 0
-        for _, clip in self.all_clips:
-            effects = clip._data.get('effects', [])
-            count += len(effects)
-            clip._data['effects'] = []
         return count
 
     def add_zoom_to_region(

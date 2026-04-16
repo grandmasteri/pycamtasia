@@ -150,6 +150,30 @@ def _check_track_attributes_count(data: dict) -> list[ValidationIssue]:
     return issues
 
 
+def _check_src_references(data: dict) -> list[ValidationIssue]:
+    """Check that all clip src values reference existing sourceBin IDs."""
+    issues: list[ValidationIssue] = []
+    source_ids = {s.get('id') for s in data.get('sourceBin', [])}
+    tracks = (data.get('timeline', {}).get('sceneTrack', {})
+              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+
+    def _check_medias(medias: list, path: str) -> None:
+        for media in medias:
+            src = media.get('src')
+            if src is not None and src not in source_ids:
+                issues.append(ValidationIssue(
+                    'error',
+                    f'{path} clip id={media.get("id")} src={src} not found in sourceBin',
+                ))
+            for inner_track in media.get('tracks', []):
+                _check_medias(inner_track.get('medias', []),
+                              f'{path}/group{media.get("id")}')
+
+    for ti, track in enumerate(tracks):
+        _check_medias(track.get('medias', []), f'track[{ti}]')
+    return issues
+
+
 def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     """Run all structural validation checks on project data."""
     issues: list[ValidationIssue] = []
@@ -158,7 +182,20 @@ def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     issues.extend(_check_transition_references(data))
     issues.extend(_check_transition_completeness(data))
     issues.extend(_check_track_attributes_count(data))
+    issues.extend(_check_src_references(data))
     return issues
+
+
+_CACHED_SCHEMA: dict[str, Any] | None = None
+
+
+def _get_schema() -> dict[str, Any]:
+    """Load and cache the Camtasia project JSON schema."""
+    global _CACHED_SCHEMA
+    if _CACHED_SCHEMA is None:
+        schema_path = importlib_resources.files('camtasia.resources') / 'camtasia-project-schema.json'
+        _CACHED_SCHEMA = json.loads(schema_path.read_text(encoding='utf-8'))
+    return _CACHED_SCHEMA
 
 
 def validate_against_schema(project_data: dict[str, Any]) -> list[ValidationIssue]:
@@ -172,8 +209,7 @@ def validate_against_schema(project_data: dict[str, Any]) -> list[ValidationIssu
     except ImportError:  # pragma: no cover
         return [ValidationIssue('warning', 'jsonschema not installed; skipping schema validation')]  # pragma: no cover
 
-    schema_path = importlib_resources.files('camtasia.resources') / 'camtasia-project-schema.json'
-    schema = json.loads(schema_path.read_text(encoding='utf-8'))
+    schema = _get_schema()
 
     issues: list[ValidationIssue] = []
     validator = jsonschema.Draft7Validator(schema)

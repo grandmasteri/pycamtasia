@@ -153,30 +153,6 @@ BLUR_REGION_DICT = {
 }
 
 
-class TestBlurRegion:
-    def test_all_parameters(self):
-        actual_effect = BlurRegion(BLUR_REGION_DICT)
-        assert actual_effect.sigma == 10.0
-        assert actual_effect.mask_corner_radius == 5.0
-        assert actual_effect.mask_invert == 0
-        assert actual_effect.color_alpha == 0.8
-
-    def test_sigma_write(self):
-        data = json.loads(json.dumps(BLUR_REGION_DICT))
-        actual_effect = BlurRegion(data)
-        actual_effect.sigma = 25.0
-        assert actual_effect.sigma == 25.0
-        assert data["parameters"]["sigma"]["defaultValue"] == 25.0
-
-    def test_effect_from_dict_dispatches_blur_region(self):
-        actual_effect = effect_from_dict(BLUR_REGION_DICT)
-        assert isinstance(actual_effect, BlurRegion)
-        assert actual_effect.sigma == 10.0
-
-
-# ------------------------------------------------------------------
-# effect_from_dict dispatch for all 3 new types
-# ------------------------------------------------------------------
 
 class TestEffectFromDictDispatch:
     @pytest.mark.parametrize(
@@ -184,9 +160,8 @@ class TestEffectFromDictDispatch:
         [
             (MOTION_BLUR_DICT, MotionBlur),
             (MASK_DICT, Mask),
-            (BLUR_REGION_DICT, BlurRegion),
         ],
-        ids=["MotionBlur", "Mask", "BlurRegion"],
+        ids=["MotionBlur", "Mask"],
     )
     def test_dispatches_to_correct_class(self, effect_dict, expected_type):
         actual_effect = effect_from_dict(effect_dict)

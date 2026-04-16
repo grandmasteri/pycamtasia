@@ -1,4 +1,4 @@
-"""Tests for Timeline.pack_all_tracks and Timeline.remove_all_empty_tracks."""
+"""Tests for Timeline.pack_all_tracks and Timeline.remove_empty_tracks."""
 from __future__ import annotations
 
 from camtasia.timeline.timeline import Timeline
@@ -117,14 +117,14 @@ class TestPackAllTracks:
         assert tracks[0]["medias"][1]["start"] == 100
 
 
-# ── remove_all_empty_tracks ──────────────────────────────────────────
+# ── remove_empty_tracks ──────────────────────────────────────────
 
 
 class TestRemoveAllEmptyTracks:
     def test_returns_zero_when_no_empty_tracks(self) -> None:
         tracks = [{"medias": [_clip(1, 0, 100)]}]
         timeline = Timeline(_make_timeline_data(tracks))
-        assert timeline.remove_all_empty_tracks() == 0
+        assert timeline.remove_empty_tracks() == 0
 
     def test_removes_single_empty_track(self) -> None:
         tracks = [
@@ -133,7 +133,7 @@ class TestRemoveAllEmptyTracks:
         ]
         timeline = Timeline(_make_timeline_data(tracks))
 
-        removed_count: int = timeline.remove_all_empty_tracks()
+        removed_count: int = timeline.remove_empty_tracks()
 
         assert removed_count == 1
         assert timeline.track_count == 1
@@ -146,33 +146,33 @@ class TestRemoveAllEmptyTracks:
         ]
         timeline = Timeline(_make_timeline_data(tracks))
 
-        removed_count: int = timeline.remove_all_empty_tracks()
+        removed_count: int = timeline.remove_empty_tracks()
 
         assert removed_count == 2
         assert timeline.track_count == 1
 
     def test_returns_zero_for_empty_timeline(self) -> None:
         timeline = Timeline(_make_timeline_data())
-        assert timeline.remove_all_empty_tracks() == 0
+        assert timeline.remove_empty_tracks() == 0
 
     def test_removes_all_when_every_track_empty(self) -> None:
         tracks = [{"medias": []}, {"medias": []}]
         timeline = Timeline(_make_timeline_data(tracks))
 
-        removed_count: int = timeline.remove_all_empty_tracks()
+        removed_count: int = timeline.remove_empty_tracks()
 
         assert removed_count == 2
         assert timeline.track_count == 0
 
     def test_delegates_to_remove_empty_tracks(self) -> None:
-        """Verify remove_all_empty_tracks produces the same result as remove_empty_tracks."""
+        """Verify remove_empty_tracks produces the same result as remove_empty_tracks."""
         tracks_a = [{"medias": []}, {"medias": [_clip(1, 0, 100)]}, {"medias": []}]
         tracks_b = [{"medias": []}, {"medias": [_clip(1, 0, 100)]}, {"medias": []}]
 
         timeline_a = Timeline(_make_timeline_data(tracks_a))
         timeline_b = Timeline(_make_timeline_data(tracks_b))
 
-        count_a: int = timeline_a.remove_all_empty_tracks()
+        count_a: int = timeline_a.remove_empty_tracks()
         count_b: int = timeline_b.remove_empty_tracks()
 
         assert count_a == count_b

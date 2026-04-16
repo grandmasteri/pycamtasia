@@ -640,7 +640,7 @@ class Track:
         if builder._fill_color:
             clip.fill_color = tuple(c / 255 for c in builder._fill_color)  # type: ignore[assignment]
         if builder._font_color:
-            clip.set_colors(font_color=builder._font_color)  # type: ignore[arg-type]
+            clip.set_colors(font_color=tuple(c / 255 for c in builder._font_color[:3]))  # type: ignore[arg-type]
         if builder._stroke_color:
             clip.stroke_color = tuple(c / 255 for c in builder._stroke_color)  # type: ignore[assignment]
         clip.set_alignment(builder._alignment, 'center')
@@ -884,14 +884,30 @@ class Track:
         for clip_id in clip_ids:
             self.remove_clip(clip_id)
 
-        # Create the Group
-        # NOTE: ticks→seconds→ticks round-trip may introduce a ±1 tick
-        # rounding error in the Group's start/duration because
-        # ticks_to_seconds and seconds_to_ticks use floating-point division.
-        group = self.add_group(
-            start_seconds=ticks_to_seconds(earliest_start),
-            duration_seconds=ticks_to_seconds(group_duration),
-            internal_tracks=[{
+        # Build the Group dict directly to avoid ticks→seconds→ticks roundtrip
+        group_record: dict[str, Any] = {
+            'id': self._next_clip_id(),
+            '_type': 'Group',
+            'start': earliest_start,
+            'duration': group_duration,
+            'mediaStart': 0,
+            'mediaDuration': group_duration,
+            'scalar': 1,
+            'metadata': {
+                'audiateLinkedSession': '',
+                'clipSpeedAttribute': {'type': 'bool', 'value': False},
+                'colorAttribute': {'type': 'color', 'value': [0, 0, 0, 0]},
+                'effectApplied': 'none',
+            },
+            'animationTracks': {},
+            'parameters': {},
+            'effects': [],
+            'attributes': {
+                'ident': '', 'gain': 1.0, 'mixToMono': False,
+                'widthAttr': 0.0, 'heightAttr': 0.0,
+                'maxDurationAttr': 0, 'assetProperties': [],
+            },
+            'tracks': [{
                 'trackIndex': 0,
                 'medias': internal_medias,
                 'transitions': [],
@@ -903,7 +919,9 @@ class Track:
                 'matte': 0,
                 'solo': False,
             }],
-        )
+        }
+        self._data.setdefault('medias', []).append(group_record)
+        group = cast(Group, clip_from_dict(group_record))
         return group
 
     def add_screen_recording(
@@ -1127,6 +1145,8 @@ class Track:
             source_clip.source_id,
             freeze_start_ticks,
             freeze_duration_ticks,
+            media_duration=1,
+            trimStartSum=0,
             mediaStart=media_offset_ticks,
             trackNumber=0,
         )
@@ -2047,12 +2067,13 @@ class Track:
             media_dict['start'] = new_start
 
     def scale_all_durations(self, factor: float) -> None:
-        """Scale all clip durations by a factor (e.g., 2.0 = double length)."""
+        """Scale all clip durations and start times by a factor (e.g., 2.0 = double length)."""
         if factor <= 0:
             raise ValueError(f'factor must be > 0, got {factor}')
         for media_dict in self._data.get('medias', []):
             media_dict['duration'] = int(media_dict.get('duration', 0) * factor)
             media_dict['mediaDuration'] = int(float(Fraction(str(media_dict.get('mediaDuration', 0)))) * factor)
+            media_dict['start'] = int(media_dict.get('start', 0) * factor)
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""

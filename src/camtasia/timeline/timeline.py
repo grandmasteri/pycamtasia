@@ -331,13 +331,6 @@ class Timeline:
         from camtasia.timeline.clips.group import Group
         return [clip for clip in self.all_clips() if isinstance(clip, Group)]
 
-    def find_track(self, name: str) -> Track | None:
-        """Find a track by name, or return None."""
-        for track in self.tracks:
-            if track.name == name:
-                return track
-        return None
-
     @property
     def empty_tracks(self) -> list[Track]:
         """Return all tracks with no clips."""
@@ -430,14 +423,6 @@ class Timeline:
         for idx in reversed(empty_indices):
             self.remove_track(idx)
         return len(empty_indices)
-
-    def remove_all_empty_tracks(self) -> int:
-        """Remove every track that contains no clips.
-
-        Returns:
-            Number of tracks removed.
-        """
-        return self.remove_empty_tracks()
 
     def pack_all_tracks(self) -> int:
         """Pack every track, removing intra-track gaps between clips.
@@ -657,16 +642,16 @@ class Timeline:
                 )
             all_ids[clip.id] = 'timeline'
 
-        # Check 3: No stale transition references (recursive clip IDs)
-        all_clip_ids = {c.id for c in self.all_clips()}
+        # Check 3: No stale transition references (per-track clip IDs)
         for track in self.tracks:
+            track_clip_ids = {c.id for c in track.clips}
             for trans in track.transitions:
-                if trans.left_media_id and trans.left_media_id not in all_clip_ids:
+                if trans.left_media_id and trans.left_media_id not in track_clip_ids:
                     issues.append(
                         f'Track {track.index}: transition leftMedia={trans.left_media_id} '
                         f'not found in clips'
                     )
-                if trans.right_media_id and trans.right_media_id not in all_clip_ids:
+                if trans.right_media_id and trans.right_media_id not in track_clip_ids:
                     issues.append(
                         f'Track {track.index}: transition rightMedia={trans.right_media_id} '
                         f'not found in clips'

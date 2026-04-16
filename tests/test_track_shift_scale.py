@@ -75,14 +75,14 @@ class TestScaleAllDurations:
 
         assert track._data['medias'][0]['duration'] == int(orig_dur * 0.5)
 
-    def test_does_not_change_start_times(self):
+    def test_scales_start_times_proportionally(self):
         track = _make_track()
         track.add_callout("A", 3, 5)
         orig_start = track._data['medias'][0]['start']
 
         track.scale_all_durations(2.0)
 
-        assert track._data['medias'][0]['start'] == orig_start
+        assert track._data["medias"][0]["start"] == int(orig_start * 2.0)  # scaled proportionally
 
 
 class TestScaleAllDurationsValidation:

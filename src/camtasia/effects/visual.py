@@ -317,14 +317,14 @@ class Glow(Effect):
         self.set_parameter("intensity", value)
 
 
-@register_effect("BlurRegion")
+# Not registered via @register_effect — unverified against real Camtasia projects.
 class BlurRegion(Effect):
     """Blur region effect.
 
     .. warning::
-        This effect is registered but has **not** been verified against any
-        TechSmith sample project.  Parameter names and semantics may differ
-        from what Camtasia actually produces.
+        This effect is **not registered** with ``effect_from_dict`` because it
+        has not been verified against any TechSmith sample project.  Parameter
+        names and semantics may differ from what Camtasia actually produces.
 
     Parameters:
         sigma, mask-cornerRadius, mask-invert, color-alpha

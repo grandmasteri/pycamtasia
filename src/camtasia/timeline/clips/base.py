@@ -1077,15 +1077,6 @@ class BaseClip:
         })
         return self
 
-    def remove_effects(self) -> Self:
-        """Remove all effects from this clip.
-
-        Returns:
-            ``self`` for chaining.
-        """
-        self._data['effects'] = []
-        return self
-
     # ------------------------------------------------------------------
     # L2 — Transform parameter helpers
     # ------------------------------------------------------------------

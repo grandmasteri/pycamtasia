@@ -1,4 +1,4 @@
-"""Tests for Project.apply_template_effects() and Project.strip_all_effects()."""
+"""Tests for Project.apply_template_effects() and Project.remove_all_effects()."""
 
 from __future__ import annotations
 
@@ -114,19 +114,19 @@ class TestStripAllEffects:
         # First apply some effects
         proj.apply_template_effects({'VMFile': ['add_drop_shadow'], 'IMFile': ['add_drop_shadow']})
         assert proj.total_effect_count > 0
-        removed = proj.strip_all_effects()
+        removed = proj.remove_all_effects()
         assert removed > 0
         assert proj.total_effect_count == 0
 
     def test_strips_zero_on_no_effects(self, project_with_clips):
         proj = project_with_clips
-        removed = proj.strip_all_effects()
+        removed = proj.remove_all_effects()
         assert removed == 0
 
     def test_strips_empty_project(self):
         from camtasia.project import load_project
         proj = _isolated_project()
-        assert proj.strip_all_effects() == 0
+        assert proj.remove_all_effects() == 0
 
     def test_roundtrip_apply_then_strip(self, project_with_clips):
         proj = project_with_clips
@@ -136,7 +136,7 @@ class TestStripAllEffects:
         })
         applied_count = proj.total_effect_count
         assert applied_count >= 3
-        removed = proj.strip_all_effects()
+        removed = proj.remove_all_effects()
         assert removed == applied_count
         assert proj.total_effect_count == 0
 

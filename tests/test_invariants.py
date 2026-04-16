@@ -713,13 +713,13 @@ def test_clone_track_preserves_clip_count(num_clips):
 
 
 # ---------------------------------------------------------------------------
-# 32. strip_all_effects then effect_count is 0
+# 32. remove_all_effects then effect_count is 0
 # ---------------------------------------------------------------------------
 
 @given(st.integers(min_value=1, max_value=4))
 @settings(max_examples=20, deadline=None)
-def test_strip_all_effects_zeroes_count(num_clips):
-    """After strip_all_effects, no clip should have effects."""
+def test_remove_all_effects_zeroes_count(num_clips):
+    """After remove_all_effects, no clip should have effects."""
     from camtasia import load_project
     proj = _isolated_project()
     track = proj.timeline.add_track('Test')
@@ -727,7 +727,7 @@ def test_strip_all_effects_zeroes_count(num_clips):
         clip = track.add_clip('VMFile', 1, i * TICK, TICK)
         clip.add_drop_shadow()
     
-    proj.strip_all_effects()
+    proj.remove_all_effects()
     
     for _, clip in proj.all_clips:
         assert len(clip._data.get('effects', [])) == 0

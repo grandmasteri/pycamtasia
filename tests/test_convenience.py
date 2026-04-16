@@ -72,14 +72,14 @@ def test_track_end_time_ticks_empty():
 
 def test_timeline_find_track_found():
     tl = _make_timeline([('Audio', []), ('Video', [{'id': 1, 'start': 0, 'duration': 1}])])
-    found = tl.find_track('Video')
+    found = tl.find_track_by_name('Video')
     assert found is not None
     assert found.name == 'Video'
 
 
 def test_timeline_find_track_not_found():
     tl = _make_timeline([('Audio', [])])
-    assert tl.find_track('Missing') is None
+    assert tl.find_track_by_name('Missing') is None
 
 
 # ---------------------------------------------------------------------------
@@ -327,7 +327,7 @@ def test_flatten_to_track():
     ids = {c.id for c in clips}
     assert ids.isdisjoint({1, 2})
     # Original tracks unchanged
-    orig_a = tl.find_track('A')
+    orig_a = tl.find_track_by_name('A')
     assert len(list(orig_a.clips)) == 1
 
 

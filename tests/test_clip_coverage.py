@@ -642,7 +642,7 @@ class TestBaseClipEffects:
     def test_remove_effects(self):
         data = _base(effects=[{"effectName": "Glow"}])
         clip = BaseClip(data)
-        actual_result = clip.remove_effects()
+        actual_result = clip.remove_all_effects()
         assert actual_result is clip
         assert data["effects"] == []
 
