@@ -18,7 +18,7 @@ def _add_markers(project, labels_and_seconds):
 def _add_clip(project, start_seconds=0.0, duration_seconds=5.0):
     track = project.timeline.get_or_create_track('Test')
     track.add_clip(
-        'VMFile', None,
+        'VMFile', 1,
         seconds_to_ticks(start_seconds),
         seconds_to_ticks(duration_seconds),
     )

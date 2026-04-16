@@ -154,7 +154,7 @@ class TestCleanInheritedState:
         }
         track._data.setdefault('medias', []).append(group_data)
         # Also add a regular clip
-        track.add_clip('IMFile', None, 705_600_000, 705_600_000)
+        track.add_clip('IMFile', 1, 705_600_000, 705_600_000)
         project.timeline.markers.add("M", 0)
 
         initial_clip_count = len(track.clips)

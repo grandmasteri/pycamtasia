@@ -98,7 +98,7 @@ class TestNextAvailableId:
 
     def test_with_clips(self, project) -> None:  # type: ignore[no-untyped-def]
         track = project.timeline.add_track("Test")
-        track.add_clip("AMFile", None, 0, 705600000)
+        track.add_clip("AMFile", 1, 0, 705600000)
         existing_ids = project.timeline.all_clip_ids
         assert project.next_available_id == max(existing_ids) + 1
 

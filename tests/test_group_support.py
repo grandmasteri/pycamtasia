@@ -113,15 +113,17 @@ class TestGroupTrackAddClip:
         clip: BaseClip = group_track.add_clip(
             'IMFile', source_id=99,
             start_ticks=0, duration_ticks=seconds_to_ticks(2.0),
+            next_id=100,
         )
         assert isinstance(clip, BaseClip)
 
     def test_add_clip_increments_id(self, group: Group) -> None:
         group_track: GroupTrack = group.tracks[0]
-        clip: BaseClip = group_track.add_clip(
-            'IMFile', source_id=99,
-            start_ticks=0, duration_ticks=seconds_to_ticks(2.0),
-        )
+        with pytest.warns(UserWarning, match='auto-generated locally-unique ID'):
+            clip: BaseClip = group_track.add_clip(
+                'IMFile', source_id=99,
+                start_ticks=0, duration_ticks=seconds_to_ticks(2.0),
+            )
         assert clip.id == 12  # max existing is 11
 
     def test_add_clip_increases_track_length(self, group: Group) -> None:
@@ -130,6 +132,7 @@ class TestGroupTrackAddClip:
         group_track.add_clip(
             'IMFile', source_id=99,
             start_ticks=0, duration_ticks=seconds_to_ticks(2.0),
+            next_id=100,
         )
         assert len(group_track) == original_count + 1
 
@@ -138,6 +141,7 @@ class TestGroupTrackAddClip:
         clip: BaseClip = group_track.add_clip(
             'Callout', source_id=None,
             start_ticks=0, duration_ticks=seconds_to_ticks(1.0),
+            next_id=100,
         )
         assert 'src' not in clip._data
 
@@ -146,6 +150,7 @@ class TestGroupTrackAddClip:
         clip: BaseClip = group_track.add_clip(
             'VMFile', source_id=7,
             start_ticks=0, duration_ticks=seconds_to_ticks(1.0),
+            next_id=100,
             trackNumber=1,
         )
         assert clip._data['trackNumber'] == 1
@@ -242,6 +247,7 @@ class TestGroupClipCount:
         group.tracks[0].add_clip(
             'IMFile', source_id=99,
             start_ticks=0, duration_ticks=seconds_to_ticks(1.0),
+            next_id=100,
         )
         assert group.clip_count == 3
 
@@ -250,6 +256,7 @@ class TestGroupClipCount:
         new_track.add_clip(
             'AMFile', source_id=20,
             start_ticks=0, duration_ticks=seconds_to_ticks(2.0),
+            next_id=100,
         )
         assert group.clip_count == 3
 

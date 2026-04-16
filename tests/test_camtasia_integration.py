@@ -108,7 +108,7 @@ class TestBasicOperations:
         """Project after add+remove cycle opens without exceptions."""
         proj = _make_project(tmp_path)
         track = proj.timeline.add_track('Test')
-        clip = track.add_clip('AMFile', None, 0, seconds_to_ticks(5))
+        clip = track.add_clip('AMFile', 1, 0, seconds_to_ticks(5))
         track.remove_clip(clip.id)
         proj.save()
         assert _validate_in_camtasia(str(tmp_path / 'test.cmproj')) == 0

@@ -15,7 +15,7 @@ class TestCopyToTrack:
     def test_copy_creates_clip_on_target_track(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        original_clip = source_track.add_clip('VMFile', None, 0, EDIT_RATE * 5)
+        original_clip = source_track.add_clip('VMFile', 1, 0, EDIT_RATE * 5)
 
         copied_clip: BaseClip = original_clip.copy_to_track(target_track)
 
@@ -25,7 +25,7 @@ class TestCopyToTrack:
     def test_copy_preserves_original_on_source_track(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        original_clip = source_track.add_clip('VMFile', None, 0, EDIT_RATE * 3)
+        original_clip = source_track.add_clip('VMFile', 1, 0, EDIT_RATE * 3)
 
         original_clip.copy_to_track(target_track)
 
@@ -34,7 +34,7 @@ class TestCopyToTrack:
     def test_copy_assigns_new_id(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        original_clip = source_track.add_clip('VMFile', None, 0, EDIT_RATE)
+        original_clip = source_track.add_clip('VMFile', 1, 0, EDIT_RATE)
 
         copied_clip: BaseClip = original_clip.copy_to_track(target_track)
 
@@ -43,7 +43,7 @@ class TestCopyToTrack:
     def test_copy_preserves_timing(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        original_clip = source_track.add_clip('VMFile', None, EDIT_RATE * 2, EDIT_RATE * 4)
+        original_clip = source_track.add_clip('VMFile', 1, EDIT_RATE * 2, EDIT_RATE * 4)
 
         copied_clip: BaseClip = original_clip.copy_to_track(target_track)
 
@@ -53,7 +53,7 @@ class TestCopyToTrack:
     def test_copy_preserves_clip_type(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        original_clip = source_track.add_clip('AMFile', None, 0, EDIT_RATE)
+        original_clip = source_track.add_clip('AMFile', 1, 0, EDIT_RATE)
 
         copied_clip: BaseClip = original_clip.copy_to_track(target_track)
 
@@ -62,7 +62,7 @@ class TestCopyToTrack:
     def test_copy_is_independent_of_original(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        original_clip = source_track.add_clip('VMFile', None, 0, EDIT_RATE * 5)
+        original_clip = source_track.add_clip('VMFile', 1, 0, EDIT_RATE * 5)
 
         copied_clip: BaseClip = original_clip.copy_to_track(target_track)
         copied_clip._data['start'] = EDIT_RATE * 99
@@ -76,7 +76,7 @@ class TestMoveClipToTrack:
     def test_move_removes_clip_from_source(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        clip = source_track.add_clip('VMFile', None, 0, EDIT_RATE * 3)
+        clip = source_track.add_clip('VMFile', 1, 0, EDIT_RATE * 3)
         original_clip_id: int = clip.id
 
         source_track.move_clip_to_track(original_clip_id, target_track)
@@ -86,7 +86,7 @@ class TestMoveClipToTrack:
     def test_move_adds_clip_to_target(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        clip = source_track.add_clip('VMFile', None, 0, EDIT_RATE * 3)
+        clip = source_track.add_clip('VMFile', 1, 0, EDIT_RATE * 3)
 
         moved_clip: BaseClip = source_track.move_clip_to_track(clip.id, target_track)
 
@@ -96,7 +96,7 @@ class TestMoveClipToTrack:
         """Moved clip gets an ID from the target track's ID space."""
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        clip = source_track.add_clip('VMFile', None, 0, EDIT_RATE)
+        clip = source_track.add_clip('VMFile', 1, 0, EDIT_RATE)
         original_id: int = clip.id
 
         moved_clip: BaseClip = source_track.move_clip_to_track(original_id, target_track)
@@ -107,7 +107,7 @@ class TestMoveClipToTrack:
     def test_move_preserves_timing(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        clip = source_track.add_clip('VMFile', None, EDIT_RATE * 2, EDIT_RATE * 4)
+        clip = source_track.add_clip('VMFile', 1, EDIT_RATE * 2, EDIT_RATE * 4)
         original_start: int = clip.start
         original_duration: int = clip.duration
 
@@ -126,7 +126,7 @@ class TestMoveClipToTrack:
     def test_move_preserves_clip_type(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        clip = source_track.add_clip('AMFile', None, 0, EDIT_RATE)
+        clip = source_track.add_clip('AMFile', 1, 0, EDIT_RATE)
 
         moved_clip: BaseClip = source_track.move_clip_to_track(clip.id, target_track)
 
@@ -139,9 +139,9 @@ class TestMoveAllClipsToTrack:
     def test_moves_all_clips(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        source_track.add_clip('VMFile', None, 0, EDIT_RATE)
-        source_track.add_clip('VMFile', None, EDIT_RATE * 2, EDIT_RATE)
-        source_track.add_clip('AMFile', None, EDIT_RATE * 4, EDIT_RATE)
+        source_track.add_clip('VMFile', 1, 0, EDIT_RATE)
+        source_track.add_clip('VMFile', 1, EDIT_RATE * 2, EDIT_RATE)
+        source_track.add_clip('AMFile', 1, EDIT_RATE * 4, EDIT_RATE)
 
         clips_moved: int = project.move_all_clips_to_track('Source', 'Target')
 
@@ -172,8 +172,8 @@ class TestMoveAllClipsToTrack:
     def test_preserves_timing_of_moved_clips(self, project: Project) -> None:
         source_track = project.timeline.add_track('Source')
         target_track = project.timeline.add_track('Target')
-        source_track.add_clip('VMFile', None, 0, EDIT_RATE * 2)
-        source_track.add_clip('VMFile', None, EDIT_RATE * 5, EDIT_RATE * 3)
+        source_track.add_clip('VMFile', 1, 0, EDIT_RATE * 2)
+        source_track.add_clip('VMFile', 1, EDIT_RATE * 5, EDIT_RATE * 3)
 
         project.move_all_clips_to_track('Source', 'Target')
 

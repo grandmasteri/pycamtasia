@@ -2157,21 +2157,21 @@ def test_clip_at_index_out_of_range():
 
 
 # ---------------------------------------------------------------------------
-# BaseClip.source_path
+# BaseClip.source_id
 # ---------------------------------------------------------------------------
 
-def test_source_path():
+def test_source_id_replaces_source_path():
     from camtasia.timeline.clips import clip_from_dict
     clip_with_src = clip_from_dict({
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'src': '/media/video.mp4',
     })
-    assert clip_with_src.source_path == '/media/video.mp4'
+    assert clip_with_src.source_id == '/media/video.mp4'
 
     clip_without_src = clip_from_dict({
         'id': 2, '_type': 'AMFile', 'start': 0, 'duration': 100,
     })
-    assert clip_without_src.source_path == ''
+    assert clip_without_src.source_id is None
 
 
 # ---------------------------------------------------------------------------
@@ -2591,7 +2591,7 @@ def test_is_at_origin():
 
 def test_total_effect_count(project):
     track = project.timeline.add_track('FX')
-    clip = track.add_clip('VMFile', None, 0, 705600000)
+    clip = track.add_clip('VMFile', 1, 0, 705600000)
     clip.add_drop_shadow()
     clip.add_round_corners()
     assert project.total_effect_count >= 2
@@ -2860,8 +2860,8 @@ def test_is_shorter_than():
 
 def test_longest_clip(project):
     track = project.timeline.add_track('Test')
-    track.add_clip('VMFile', None, 0, 705600000 * 2)  # 2s
-    track.add_clip('VMFile', None, 705600000 * 3, 705600000 * 5)  # 5s
+    track.add_clip('VMFile', 1, 0, 705600000 * 2)  # 2s
+    track.add_clip('VMFile', 1, 705600000 * 3, 705600000 * 5)  # 5s
     result = project.longest_clip
     assert result is not None
     _, longest_clip = result
@@ -2878,8 +2878,8 @@ def test_longest_clip_empty(project):
 
 def test_shortest_clip(project):
     track = project.timeline.add_track('Test')
-    track.add_clip('VMFile', None, 0, 705600000 * 5)  # 5s
-    track.add_clip('VMFile', None, 705600000 * 6, 705600000 * 2)  # 2s
+    track.add_clip('VMFile', 1, 0, 705600000 * 5)  # 5s
+    track.add_clip('VMFile', 1, 705600000 * 6, 705600000 * 2)  # 2s
     result = project.shortest_clip
     assert result is not None
     _, shortest_clip = result
@@ -2914,8 +2914,8 @@ def test_track_average_clip_duration_empty():
 
 def test_project_average_clip_duration(project):
     track = project.timeline.add_track('Test')
-    track.add_clip('VMFile', None, 0, 705600000 * 3)  # 3s
-    track.add_clip('VMFile', None, 705600000 * 4, 705600000 * 5)  # 5s
+    track.add_clip('VMFile', 1, 0, 705600000 * 3)  # 3s
+    track.add_clip('VMFile', 1, 705600000 * 4, 705600000 * 5)  # 5s
     assert project.average_clip_duration_seconds == pytest.approx(4.0)
 
 
@@ -2929,8 +2929,8 @@ def test_project_average_clip_duration_empty(project):
 
 def test_batch_apply(project):
     track = project.timeline.add_track('BA')
-    track.add_clip('VMFile', None, 0, 705600000)
-    track.add_clip('VMFile', None, 705600000, 705600000)
+    track.add_clip('VMFile', 1, 0, 705600000)
+    track.add_clip('VMFile', 1, 705600000, 705600000)
     titles: list[str] = []
     modified_count: int = project.batch_apply(lambda clip: titles.append(clip.clip_type))
     assert modified_count == 2
@@ -2939,8 +2939,8 @@ def test_batch_apply(project):
 
 def test_batch_apply_with_filter(project):
     track = project.timeline.add_track('BAF')
-    track.add_clip('VMFile', None, 0, 705600000)
-    track.add_clip('AMFile', None, 0, 705600000)
+    track.add_clip('VMFile', 1, 0, 705600000)
+    track.add_clip('AMFile', 1, 0, 705600000)
     modified_count: int = project.batch_apply(
         lambda clip: None,
         clip_type='VMFile',
@@ -3180,7 +3180,7 @@ def test_total_duration_formatted_with_hours(project):
     """total_duration_formatted shows hours when duration exceeds 60 minutes."""
     # Add a very long clip to get hours
     track = project.timeline.add_track('Long')
-    track.add_clip('VMFile', None, 0, 705600000 * 3700)  # ~3700 seconds = 1:01:40
+    track.add_clip('VMFile', 1, 0, 705600000 * 3700)  # ~3700 seconds = 1:01:40
     actual_formatted: str = project.total_duration_formatted
     assert ':' in actual_formatted
     parts = actual_formatted.split(':')

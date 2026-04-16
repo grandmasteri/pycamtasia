@@ -339,7 +339,7 @@ class TestGroupEdgeCases:
     def test_group_add_internal_track_then_add_clip(self):
         group = _make_group([[]])
         new_track = group.add_internal_track()
-        new_track.add_clip('IMFile', 5, 0, 705600000)
+        new_track.add_clip('IMFile', 5, 0, 705600000, next_id=100)
         assert group.clip_count == 1
 
     def test_group_ungroup_empty(self):

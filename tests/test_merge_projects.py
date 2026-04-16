@@ -115,6 +115,7 @@ def test_merge_result_is_loadable(tmp_path, project_a):
 
 
 @pytest.mark.timeout(30)
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_merge_clips_get_unique_ids(tmp_path):
     a = Project.new(tmp_path / 'a.cmproj', title='A')
     track_a = a.timeline.add_track('T')

@@ -302,7 +302,7 @@ def _check_edit_rate(data: dict[str, Any]) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     edit_rate = data.get('editRate')
     if edit_rate is not None and edit_rate != 705600000:
-        issues.append(ValidationIssue('error', f'editRate is {edit_rate}, expected 705600000'))
+        issues.append(ValidationIssue('warning', f'editRate is {edit_rate}, expected 705600000'))
     return issues
 
 

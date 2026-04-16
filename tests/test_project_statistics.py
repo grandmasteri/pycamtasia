@@ -36,14 +36,14 @@ class TestStatistics:
 
     def test_with_clips(self, project):
         track = project.timeline.get_or_create_track('Test')
-        track.add_clip('VMFile', None, 0, seconds_to_ticks(5.0))
-        track.add_clip('AMFile', None, 0, seconds_to_ticks(3.0))
+        track.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
+        track.add_clip('AMFile', 1, 0, seconds_to_ticks(3.0))
         stats = project.statistics()
         assert stats['clip_count'] == 2
 
     def test_effect_count(self, project):
         track = project.timeline.get_or_create_track('FX')
-        clip = track.add_clip('VMFile', None, 0, seconds_to_ticks(5.0))
+        clip = track.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
         clip._data['effects'] = [{'effectName': 'blur'}, {'effectName': 'glow'}]
         stats = project.statistics()
         assert stats['effect_count'] == 2
@@ -90,7 +90,7 @@ class TestToMarkdownReport:
 
     def test_values_match_statistics(self, project):
         track = project.timeline.get_or_create_track('V')
-        track.add_clip('VMFile', None, 0, seconds_to_ticks(10.0))
+        track.add_clip('VMFile', 1, 0, seconds_to_ticks(10.0))
         stats = project.statistics()
         report = project.to_markdown_report()
         assert stats['resolution'] in report

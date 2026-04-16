@@ -33,11 +33,11 @@ def built_project(tmp_path: Path) -> dict:
 
     # -- tracks & clips --
     track_a = proj.timeline.add_track("Video")
-    clip1 = track_a.add_clip("VMFile", None, 0, 705600000)
-    clip2 = track_a.add_clip("VMFile", None, 705600000, 705600000)
+    clip1 = track_a.add_clip("VMFile", 1, 0, 705600000)
+    clip2 = track_a.add_clip("VMFile", 1, 705600000, 705600000)
 
     track_b = proj.timeline.add_track("Audio")
-    track_b.add_clip("AMFile", None, 0, 705600000 * 2)
+    track_b.add_clip("AMFile", 1, 0, 705600000 * 2)
 
     # -- effect on a clip --
     clip1.add_drop_shadow()
@@ -47,8 +47,8 @@ def built_project(tmp_path: Path) -> dict:
 
     # -- group two clips --
     track_c = proj.timeline.add_track("Grouped")
-    g1 = track_c.add_clip("VMFile", None, 0, 705600000)
-    g2 = track_c.add_clip("VMFile", None, 705600000, 705600000)
+    g1 = track_c.add_clip("VMFile", 1, 0, 705600000)
+    g2 = track_c.add_clip("VMFile", 1, 705600000, 705600000)
     track_c.group_clips([g1.id, g2.id])
 
     proj.save()
@@ -58,6 +58,7 @@ def built_project(tmp_path: Path) -> dict:
     return json.loads(project_json_path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_generated_project_is_schema_valid(built_project: dict) -> None:
     """Library output must produce zero schema violations."""
     issues = validate_against_schema(built_project)

@@ -65,7 +65,7 @@ def test_diff_track_count_changed():
 def test_diff_clip_count_changed():
     a, b = _load_empty(), _load_empty()
     track = b.timeline.get_or_create_track('T')
-    track.add_clip('VMFile', None, 0, seconds_to_ticks(5.0))
+    track.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
     result = a.diff(b)
     assert result['clip_count'] == (a.clip_count, b.clip_count)
 

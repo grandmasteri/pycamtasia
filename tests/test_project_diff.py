@@ -62,7 +62,7 @@ def test_clip_added():
     a, b = _load_empty(), _load_empty()
     track_a = a.timeline.get_or_create_track('T')
     track_b = b.timeline.get_or_create_track('T')
-    track_b.add_clip('VMFile', None, 0, seconds_to_ticks(5.0))
+    track_b.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
     result = diff_projects(a, b)
     assert len(result.clips_added) == 1
     assert result.clips_removed == []
@@ -72,7 +72,7 @@ def test_clip_removed():
     a, b = _load_empty(), _load_empty()
     track_a = a.timeline.get_or_create_track('T')
     track_b = b.timeline.get_or_create_track('T')
-    track_a.add_clip('VMFile', None, 0, seconds_to_ticks(5.0))
+    track_a.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
     result = diff_projects(a, b)
     assert len(result.clips_removed) == 1
     assert result.clips_added == []
