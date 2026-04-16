@@ -16,6 +16,7 @@ class PauseMarker:
     """A timed pause marker in the screenplay."""
     duration_seconds: float
     description: str
+    after_vo_index: int | None = None
 
 
 @dataclass
@@ -70,6 +71,21 @@ _IMAGE_RE = re.compile(r'!\[([^\]]*)\]\(([^)]+)\)')
 _SECTION_RE = re.compile(r'^(#{2,3})\s+(.+)', re.MULTILINE)
 
 
+def _pauses_with_positions(chunk: str) -> list[PauseMarker]:
+    """Parse pauses and assign each an after_vo_index based on text position."""
+    vo_positions = [v.start() for v in _VO_RE.finditer(chunk)]
+    pauses: list[PauseMarker] = []
+    for p in _PAUSE_RE.finditer(chunk):
+        # Count how many VO blocks appear before this pause
+        idx = sum(1 for vp in vo_positions if vp < p.start()) - 1
+        pauses.append(PauseMarker(
+            duration_seconds=float(p.group(1)),
+            description=p.group(0),
+            after_vo_index=idx if idx >= 0 else None,
+        ))
+    return pauses
+
+
 def parse_screenplay(path: str | Path) -> Screenplay:
     """Parse a markdown screenplay file into a Screenplay object."""
     text = Path(path).read_text()
@@ -87,7 +103,7 @@ def parse_screenplay(path: str | Path) -> Screenplay:
             title=title,
             level=level,
             vo_blocks=[VOBlock(id=v.group(1), text=v.group(2), section=title) for v in _VO_RE.finditer(chunk)],
-            pauses=[PauseMarker(duration_seconds=float(p.group(1)), description=p.group(0)) for p in _PAUSE_RE.finditer(chunk)],
+            pauses=_pauses_with_positions(chunk),
             transitions=[TransitionMarker(name=t.group(1).strip()) for t in _TRANSITION_RE.finditer(chunk)],
             images=[ImageRef(alt=img.group(1), path=img.group(2)) for img in _IMAGE_RE.finditer(chunk)],
         )

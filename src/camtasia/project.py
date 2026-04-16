@@ -321,7 +321,7 @@ class Project:
     @property
     def media_bin(self) -> MediaBin:
         """The project's media bin (sourceBin)."""
-        return MediaBin(self._data.setdefault('sourceBin', []), self._file_path)
+        return MediaBin(self._data.setdefault('sourceBin', []), self._file_path, project=self)
 
     @property
     def media_count(self) -> int:
@@ -490,9 +490,17 @@ class Project:
 
     @property
     def next_available_id(self) -> int:
-        """Next available clip ID (max existing + 1)."""
-        existing = self.timeline.all_clip_ids
-        return max(existing, default=0) + 1
+        """Next available ID across the entire project (max existing + 1).
+
+        Scans sourceBin IDs, all clip IDs on the timeline, and the
+        timeline's own ``id`` field (if present) to avoid collisions.
+        """
+        ids = self.timeline.all_clip_ids
+        ids.update(m.id for m in self.media_bin)
+        tl_id = self._data.get('timeline', {}).get('id')
+        if tl_id is not None:
+            ids.add(tl_id)
+        return max(ids, default=0) + 1
 
     @property
     def all_clips(self) -> list[tuple[Track, BaseClip]]:

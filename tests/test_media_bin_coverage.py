@@ -1,4 +1,4 @@
-"""Tests for camtasia.media_bin.media_bin — IntEncodedTime, Media range/lastMod, import."""
+"""Tests for camtasia.media_bin.media_bin — Media range/lastMod, import."""
 from __future__ import annotations
 
 import datetime
@@ -9,7 +9,6 @@ from unittest.mock import patch
 import pytest
 
 from camtasia.media_bin.media_bin import (
-    IntEncodedTime,
     Media,
     MediaBin,
     MediaType,
@@ -44,38 +43,13 @@ def _make_entry(
     }
 
 
-class TestIntEncodedTime:
-    def test_seconds_and_milliseconds(self):
-        t = IntEncodedTime(5500)
-        assert t.seconds == 5
-        assert t.milliseconds == 500
-
-    def test_to_frame(self):
-        t = IntEncodedTime(2000)  # 2 seconds, 0 ms
-        assert t.to_frame(30) == 60
-
-    def test_to_frame_with_millis(self):
-        t = IntEncodedTime(1500)  # 1s 500ms
-        assert t.to_frame(30) == 45
-
-    def test_str(self):
-        t = IntEncodedTime(3250)
-        assert str(t) == "3s250ms"
-
-    def test_repr(self):
-        t = IntEncodedTime(3250)
-        assert repr(t) == "IntEncodedTime(encoded_time=3250)"
-
-
 class TestMediaRange:
-    def test_range_returns_int_encoded_times(self):
+    def test_range_returns_raw_ints(self):
         entry = _make_entry(range_vals=[0, 5000])
         media = Media(entry)
-        actual_start, actual_stop = media.range
-        assert isinstance(actual_start, IntEncodedTime)
-        assert isinstance(actual_stop, IntEncodedTime)
-        assert actual_start.seconds == 0
-        assert actual_stop.seconds == 5
+        start, stop = media.range
+        assert start == 0
+        assert stop == 5000
 
 
 class TestMediaLastModification:

@@ -102,7 +102,12 @@ class ChangeHistory:
         self._redo_stack.clear()
 
     def undo(self, project_data: dict[str, Any]) -> str:
-        """Apply the most recent inverse patch. Returns the description."""
+        """Apply the most recent inverse patch. Returns the description.
+
+        Warning: After undo/redo, any previously-obtained references to
+        nested project objects (Timeline, Track, MediaBin) become stale.
+        Always re-access project properties after undo/redo.
+        """
         if not self._undo_stack:
             raise IndexError("nothing to undo")
         record = self._undo_stack.pop()
@@ -119,7 +124,12 @@ class ChangeHistory:
         return record.description
 
     def redo(self, project_data: dict[str, Any]) -> str:
-        """Re-apply the most recently undone patch. Returns the description."""
+        """Re-apply the most recently undone patch. Returns the description.
+
+        Warning: After undo/redo, any previously-obtained references to
+        nested project objects (Timeline, Track, MediaBin) become stale.
+        Always re-access project properties after undo/redo.
+        """
         if not self._redo_stack:
             raise IndexError("nothing to redo")
         record = self._redo_stack.pop()

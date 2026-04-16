@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Union
 
+from camtasia.effects.base import Effect
 from camtasia.types import _BehaviorEffectData, _BehaviorPhaseData
 
 
@@ -133,7 +134,7 @@ class BehaviorPhase:
         return f"BehaviorPhase(name={self.name!r}, type={self.phase_type})"
 
 
-class GenericBehaviorEffect:
+class GenericBehaviorEffect(Effect):
     """Wraps a ``GenericBehaviorEffect`` dict — Camtasia's text behavior system.
 
     Unlike regular effects, behavior effects have a ``_type`` field set to
@@ -145,12 +146,7 @@ class GenericBehaviorEffect:
     """
 
     def __init__(self, data: dict[str, Any]) -> None:
-        self._data: _BehaviorEffectData = data  # type: ignore[assignment]
-
-    @property
-    def data(self) -> _BehaviorEffectData:
-        """The underlying raw dict."""
-        return self._data
+        Effect.__init__(self, data)
 
     @property
     def effect_name(self) -> str:
@@ -158,14 +154,19 @@ class GenericBehaviorEffect:
         return self._data["effectName"]
 
     @property
-    def bypassed(self) -> bool:
-        """Whether the effect is bypassed (disabled)."""
-        return bool(self._data.get("bypassed", False))
+    def name(self) -> str:
+        """Alias for effect_name (polymorphic with Effect)."""
+        return self.effect_name
 
-    @bypassed.setter
-    def bypassed(self, value: bool) -> None:
-        """Set whether the effect is bypassed."""
-        self._data["bypassed"] = value
+    @property
+    def category(self) -> str:
+        """Behavior effects have no category."""
+        return ''
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        """Behavior effects have no flat parameters."""
+        return {}
 
     @property
     def start(self) -> int:

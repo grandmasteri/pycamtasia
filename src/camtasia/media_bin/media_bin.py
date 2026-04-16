@@ -20,63 +20,6 @@ from camtasia.types import MediaType
 _INT64_MAX = 9223372036854775807
 
 
-class IntEncodedTime:
-    """Integer-encoded time used in ``sourceTracks[].range``.
-
-    The three least significant digits represent milliseconds; everything
-    above represents whole seconds.  This encoding is specific to Camtasia's
-    sourceTracks range fields and is **not** interchangeable with tick-based
-    timeline timing.
-
-    .. warning::
-        This class exists for **legacy compatibility** only.  The ``range``
-        values in ``sourceTracks`` are frame or sample counts expressed in
-        the track's native ``editRate``, not millisecond-encoded wall-clock
-        times.  Interpreting them via the seconds/milliseconds split will
-        produce incorrect results for tracks whose ``editRate`` differs from
-        1000.
-
-    Args:
-        encoded_time: The raw integer from the ``range`` array.
-    """
-
-    def __init__(self, encoded_time: int) -> None:
-        warnings.warn(
-            "IntEncodedTime is deprecated. Range values are frame/sample counts "
-            "in the track's native editRate, not millisecond-encoded times.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self._seconds, self._milliseconds = divmod(encoded_time, 1000)
-
-    @property
-    def seconds(self) -> int:
-        """Whole-second component."""
-        return self._seconds
-
-    @property
-    def milliseconds(self) -> int:
-        """Millisecond component (0–999)."""
-        return self._milliseconds
-
-    def to_frame(self, frame_rate: int = 30) -> int:
-        """Convert to a frame index at the given frame rate.
-
-        Args:
-            frame_rate: Frames per second (default 30).
-
-        Returns:
-            Zero-based frame index.
-        """
-        return int((self.seconds + self.milliseconds / 1000) * frame_rate)
-
-    def __str__(self) -> str:
-        return f"{self.seconds}s{self.milliseconds}ms"
-
-    def __repr__(self) -> str:
-        return f"IntEncodedTime(encoded_time={self.seconds * 1000 + self.milliseconds})"
-
-
 class Media:
     """A single media entry from the project's source bin.
 
@@ -118,14 +61,14 @@ class Media:
         return (r[2], r[3])
 
     @property
-    def range(self) -> tuple[IntEncodedTime, IntEncodedTime]:
-        """Start and stop times from the first source track.
+    def range(self) -> tuple[int, int]:
+        """Start and stop values from the first source track.
 
         Returns:
-            A ``(start, stop)`` tuple of :class:`IntEncodedTime` values.
+            A ``(start, stop)`` tuple of raw integer values.
         """
         r = self._data["sourceTracks"][0]["range"]
-        return (IntEncodedTime(r[0]), IntEncodedTime(r[1]))
+        return (int(r[0]), int(r[1]))
 
     @property
     def last_modification(self) -> datetime.datetime:
@@ -196,11 +139,13 @@ class MediaBin:
     Args:
         media_bin_data: The ``sourceBin`` list from the project dict.
         root_path: Path to the root directory of the ``.cmproj`` bundle.
+        project: Optional project reference for whole-project ID scanning.
     """
 
-    def __init__(self, media_bin_data: list[dict[str, Any]], root_path: Path) -> None:
+    def __init__(self, media_bin_data: list[dict[str, Any]], root_path: Path, project: Any = None) -> None:
         self._data = media_bin_data
         self._root_path = root_path
+        self._project = project
 
     def __len__(self) -> int:
         return len(self._data)
@@ -266,12 +211,18 @@ class MediaBin:
         raise KeyError(f"No media with id {media_id}")
 
     def next_id(self) -> int:
-        """Return the next available media ID (max existing + 1).
+        """Return the next available media ID.
+
+        When a project reference is available, scans the entire project
+        (sourceBin IDs, clip IDs, timeline ID) to avoid collisions.
+        Otherwise falls back to max sourceBin ID + 1.
 
         Returns:
             An integer suitable for a new sourceBin entry's ``id`` field.
-            Returns ``1`` if the bin is empty.
+            Returns ``1`` if no IDs exist.
         """
+        if self._project is not None:
+            return self._project.next_available_id
         return max((rec["id"] for rec in self._data), default=0) + 1
 
     def add_media_entry(self, entry: dict[str, Any]) -> Media:

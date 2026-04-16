@@ -22,13 +22,8 @@ def build_from_screenplay(
 ) -> ScreenplayBuildResult:
     """Build a timeline from a parsed screenplay.
 
-    Places voiceover audio clips sequentially with pauses between them.
-    Uses the TimelineBuilder cursor for automatic timing.
-
-    Note:
-        Pauses are placed after all VO blocks in each section rather than
-        interleaved with individual VO blocks. This is a design limitation
-        of the current section-based iteration.
+    Places voiceover audio clips sequentially with pauses interleaved
+    at their original positions from the screenplay text.
 
     Args:
         project: Target project.
@@ -51,6 +46,16 @@ def build_from_screenplay(
 
     for section in screenplay.sections:
         has_explicit_pauses = bool(section.pauses)
+        # Build a map of pauses keyed by the VO index they follow
+        pauses_after: dict[int, list[float]] = {}
+        trailing_pauses: list[float] = []
+        if has_explicit_pauses:
+            for p in section.pauses:
+                if p.after_vo_index is not None:
+                    pauses_after.setdefault(p.after_vo_index, []).append(p.duration_seconds)
+                else:
+                    trailing_pauses.append(p.duration_seconds)
+
         vo_blocks = section.vo_blocks
         for vi, vo in enumerate(vo_blocks):
             # Resolve audio file
@@ -63,14 +68,18 @@ def build_from_screenplay(
                 builder.add_audio(audio_path, track_name=audio_track_name)
                 clips_placed += 1
 
-            # Insert default pause between VO blocks when no explicit PAUSE markers
-            if not has_explicit_pauses and default_pause > 0 and vi < len(vo_blocks) - 1:
+            # Insert interleaved explicit pauses that follow this VO block
+            if has_explicit_pauses:
+                for dur in pauses_after.get(vi, []):
+                    builder.add_pause(dur)
+                    pauses_added += 1
+            elif default_pause > 0 and vi < len(vo_blocks) - 1:
                 builder.add_pause(default_pause)
                 pauses_added += 1
 
-        # Add pauses from the section
-        for pause in section.pauses:
-            builder.add_pause(pause.duration_seconds)
+        # Add any trailing pauses (before any VO or unpositioned)
+        for dur in trailing_pauses:
+            builder.add_pause(dur)
             pauses_added += 1
 
     return {

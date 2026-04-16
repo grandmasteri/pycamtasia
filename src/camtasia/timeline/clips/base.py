@@ -58,7 +58,11 @@ class BaseClip:
     @property
     def is_video(self) -> bool:
         """Whether this clip is a video clip."""
-        return self.clip_type in (ClipType.VIDEO, ClipType.SCREEN_VIDEO)
+        if self.clip_type in (ClipType.VIDEO, ClipType.SCREEN_VIDEO, ClipType.UNIFIED_MEDIA):
+            return True
+        if self.clip_type == 'StitchedMedia':
+            return any(m.get('_type') in ('VMFile', 'ScreenVMFile', 'ScreenIMFile') for m in self._data.get('medias', []))
+        return False
 
     @property
     def is_visible(self) -> bool:
