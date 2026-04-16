@@ -156,5 +156,8 @@ def effect_from_dict(data: dict[str, Any]) -> Effect:
         An instance of the matching Effect subclass, or a generic
         ``Effect`` if no specific class is registered.
     """
+    if data.get('_type') == 'GenericBehaviorEffect':
+        from camtasia.effects.behaviors import GenericBehaviorEffect
+        return GenericBehaviorEffect(data)  # type: ignore[return-value]
     cls = _EFFECT_REGISTRY.get(data["effectName"], Effect)
     return cls(data)

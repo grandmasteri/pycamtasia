@@ -187,7 +187,7 @@ class BaseClip:
     @property
     def media_duration(self) -> int | float | str | Fraction:  # type: ignore[override]
         """Source media window in ticks."""
-        raw = self._data['mediaDuration'] # type: ignore[typeddict-item]
+        raw = self._data.get('mediaDuration', self._data.get('duration', 0))  # type: ignore[typeddict-item]
         if isinstance(raw, str):
             return Fraction(raw)
         return raw
@@ -1425,10 +1425,8 @@ class BaseClip:
         from camtasia.timing import ticks_to_seconds
         dur = ticks_to_seconds(self.duration)
 
-        if fade_in > 0:
-            self.set_opacity_fade(0.0, 1.0, fade_in)
-        if fade_out > 0:
-            self.set_opacity_fade(1.0, 0.0, fade_out)
+        if fade_in > 0 or fade_out > 0:
+            self.fade(fade_in, fade_out)
 
         if scale_from is not None and scale_to is not None:
             self.set_scale_keyframes([(0.0, scale_from), (dur, scale_to)])

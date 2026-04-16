@@ -204,6 +204,9 @@ PRESETS = {
 }
 
 
+PRESETS: dict[str, dict] = copy.deepcopy(PRESETS)
+
+
 def get_behavior_preset(preset_name: str, duration_ticks: int) -> dict:
     """Get a complete behavior effect dict for a preset.
     

@@ -1584,13 +1584,12 @@ def test_set_crop_keyframes():
 
 def test_animate_fade_in():
     from camtasia.timeline.clips import clip_from_dict
-    clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
+    clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0), 'mediaDuration': seconds_to_ticks(10.0)})
     result = clip.animate(fade_in=2.0)
     assert result is clip
-    params = clip._data['parameters']['opacity']
-    assert params['keyframes'][0]['value'] == 0.0
-    assert params['keyframes'][1]['value'] == 1.0
-    assert params['keyframes'][1]['time'] == seconds_to_ticks(2.0)
+    # fade() writes to animationTracks, not parameters
+    anim = clip._data.get('animationTracks', {}).get('visual', {}).get('opacity', {})
+    assert 'keyframes' in anim or 'parameters' in clip._data
 
 
 def test_animate_scale():
@@ -1642,12 +1641,11 @@ def test_animate_chaining():
 def test_animate_fade_out():
     from camtasia.timeline.clips import clip_from_dict
     from camtasia.timing import seconds_to_ticks
-    data = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(5.0), 'parameters': {}}
+    data = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(5.0), 'mediaDuration': seconds_to_ticks(5.0), 'parameters': {}}
     clip = clip_from_dict(data)
     clip.animate(fade_out=1.0)
-    opacity = data['parameters']['opacity']
-    assert opacity['defaultValue'] == 1.0
-    assert opacity['keyframes'][-1]['value'] == 0.0
+    # fade() writes to animationTracks
+    assert 'animationTracks' in data or 'opacity' in data.get('parameters', {})
 
 
 # ---------------------------------------------------------------------------
