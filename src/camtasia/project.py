@@ -928,7 +928,7 @@ class Project:
                 return '1.79769313486232e+308'  # pragma: no cover
             else:
                 return '0.0'  # pragma: no cover
-        text = re.sub(r'(?<=: |, |\[ )-?Infinity\b|(?<=: |, |\[ )NaN\b', _replace_special, text)
+        text = re.sub(r'(?:(?<=: )|(?<=, )|(?<=\[ )|(?<=\[))-?Infinity\b|(?:(?<=: )|(?<=, )|(?<=\[ )|(?<=\[))NaN\b', _replace_special, text)
 
         # Step 2: Add space before colon (NSJSONSerialization style)
         # "key": value  ->  "key" : value

@@ -527,7 +527,7 @@ class Timeline:
                 results.append((track, clip))
         return results
 
-    def clips_of_type(self, clip_type: str) -> list[tuple[Track, BaseClip]]:
+    def clips_of_type(self, clip_type: str) -> list[tuple[Track | None, BaseClip]]:
         """Find all clips of a specific type across all tracks.
 
         Args:

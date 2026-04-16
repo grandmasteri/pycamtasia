@@ -1353,14 +1353,12 @@ def test_set_opacity_fade():
     assert result is clip  # returns self
     params = clip._data['parameters']['opacity']
     assert params['defaultValue'] == 1.0
-    assert len(params['keyframes']) == 2
-    assert params['keyframes'][0]['value'] == 1.0
-    assert params['keyframes'][1]['value'] == 0.0
-    assert params['keyframes'][1]['time'] == seconds_to_ticks(3.0)
+    assert len(params['keyframes']) == 1
+    assert params['keyframes'][0]['value'] == 0.0  # target value
     # without duration_seconds — uses clip duration
     clip2 = clip_from_dict({'_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 9000})
     clip2.set_opacity_fade(0.5, 1.0)
-    assert clip2._data['parameters']['opacity']['keyframes'][1]['time'] == 9000
+    assert clip2._data['parameters']['opacity']['defaultValue'] == 0.5
 
 
 # ---------------------------------------------------------------------------
@@ -1587,9 +1585,9 @@ def test_animate_fade_in():
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0), 'mediaDuration': seconds_to_ticks(10.0)})
     result = clip.animate(fade_in=2.0)
     assert result is clip
-    # fade() writes to animationTracks, not parameters
-    anim = clip._data.get('animationTracks', {}).get('visual', {}).get('opacity', {})
-    assert 'keyframes' in anim or 'parameters' in clip._data
+    # _add_opacity_track writes to both parameters.opacity and animationTracks.visual
+    assert 'opacity' in clip._data.get('parameters', {})
+    assert 'animationTracks' in clip._data
 
 
 def test_animate_scale():

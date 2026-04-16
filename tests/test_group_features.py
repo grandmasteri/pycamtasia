@@ -276,17 +276,6 @@ class TestGroupTrackOperations:
         gt = GroupTrack(track_data)
         assert 'GroupTrack' in repr(gt)
 
-    def test_group_track_transitions_clear(self):
-        from camtasia.timeline.clips.group import GroupTrack
-        track_data = {'trackIndex': 0, 'medias': [
-            {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
-        ], 'transitions': [{'name': 'Fade', 'duration': 10, 'leftMedia': 1, 'rightMedia': 2}],
-           'parameters': {}, 'ident': '', 'audioMuted': False, 'videoHidden': False,
-           'magnetic': False, 'matte': 0, 'solo': False}
-        gt = GroupTrack(track_data)
-        gt.transitions.clear()
-        assert track_data['transitions'] == []
-
 
 class TestGroupEdgeCases:
     def test_empty_group_clip_count(self):

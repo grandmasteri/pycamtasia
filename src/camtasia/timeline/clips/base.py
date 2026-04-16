@@ -242,8 +242,16 @@ class BaseClip:
             raise ValueError(f'speed must be > 0, got {speed}')
         scalar_fraction = Fraction(1) / Fraction(speed).limit_denominator(100000)
         self._data['scalar'] = 1 if speed == 1.0 else str(scalar_fraction)
-        self._data['mediaDuration'] = int(self.duration / float(scalar_fraction)) # type: ignore[typeddict-item]
+        md = Fraction(self.duration) / scalar_fraction
+        self._data['mediaDuration'] = int(md) if md == int(md) else str(md)  # type: ignore[typeddict-item]
         self._data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': True}
+        if self._data.get('_type') == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = self._data.get(sub_key)
+                if sub is not None:
+                    sub['duration'] = self._data['duration']
+                    sub['mediaDuration'] = self._data['mediaDuration']
+                    sub['scalar'] = self._data['scalar']
         return self
 
     @property
@@ -666,7 +674,7 @@ class BaseClip:
             self._add_opacity_track([
                 {'time': 0, 'value': 1.0, 'endTime': in_ticks, 'duration': in_ticks},
                 fade_out_kf,
-            ])
+            ], default_value=0.0)
         else:  # pragma: no cover
             in_ticks = seconds_to_ticks(duration_seconds)
             self._add_opacity_track([
@@ -695,7 +703,7 @@ class BaseClip:
             self._add_opacity_track([
                 fade_in_kf,
                 {'time': end - ticks, 'value': 0.0, 'endTime': end, 'duration': ticks},
-            ], default_value=1.0)
+            ], default_value=0.0)
         else:  # pragma: no cover
             self._add_opacity_track([
                 {'time': end - ticks, 'value': 0.0, 'endTime': end, 'duration': ticks},
@@ -1317,8 +1325,7 @@ class BaseClip:
             'type': 'double',
             'defaultValue': start_opacity,
             'keyframes': [
-                {'endTime': dur, 'time': 0, 'value': start_opacity, 'duration': dur},
-                {'endTime': dur, 'time': dur, 'value': end_opacity, 'duration': 0},
+                {'endTime': dur, 'time': 0, 'value': end_opacity, 'duration': dur},
             ],
         }
         return self
@@ -1444,11 +1451,7 @@ class BaseClip:
                 fo_ticks = seconds_to_ticks(fade_out)
                 fo_start = dur_ticks - fo_ticks
                 keyframes.append({'endTime': dur_ticks, 'time': fo_start, 'value': 0.0, 'duration': fo_ticks})
-            self._data.setdefault('parameters', {})['opacity'] = {
-                'type': 'double',
-                'defaultValue': 0.0 if fade_in > 0 else 1.0,
-                'keyframes': keyframes,
-            }
+            self._add_opacity_track(keyframes, default_value=0.0 if fade_in > 0 else 1.0)
 
         if scale_from is not None and scale_to is not None:
             self.set_scale_keyframes([(0.0, scale_from), (dur, scale_to)])

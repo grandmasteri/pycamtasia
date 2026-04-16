@@ -39,40 +39,6 @@ class TestTransitionListClear:
 # Gap #4: GroupTrack.transitions
 # ---------------------------------------------------------------------------
 
-class TestGroupTrackTransitions:
-    def test_group_track_has_transitions_property(self, project):
-        track = project.timeline.tracks[0]
-        group = track.add_group(0, 10, internal_tracks=[
-            {'trackIndex': 0, 'medias': [], 'transitions': []},
-        ])
-        gt = group.tracks[0]
-        assert isinstance(gt.transitions, TransitionList)
-        assert len(gt.transitions) == 0
-
-    def test_group_track_transitions_reflects_data(self, project):
-        track = project.timeline.tracks[0]
-        group = track.add_group(0, 10, internal_tracks=[
-            {
-                'trackIndex': 0,
-                'medias': [
-                    {'id': 900, '_type': 'VMFile', 'start': 0, 'duration': 100},
-                    {'id': 901, '_type': 'VMFile', 'start': 100, 'duration': 100},
-                ],
-                'transitions': [
-                    {'name': 'FadeThroughBlack', 'duration': 50,
-                     'leftMedia': 900, 'rightMedia': 901, 'attributes': {}},
-                ],
-            },
-        ])
-        gt = group.tracks[0]
-        assert len(gt.transitions) == 1
-        assert gt.transitions[0].name == 'FadeThroughBlack'
-
-
-# ---------------------------------------------------------------------------
-# Gap #5: Project.repair()
-# ---------------------------------------------------------------------------
-
 class TestProjectRepair:
     def test_repair_removes_stale_transitions(self, project):
         track = project.timeline.tracks[0]

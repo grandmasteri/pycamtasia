@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import sys
+import warnings
 from fractions import Fraction
 from typing import TYPE_CHECKING
 
@@ -52,9 +53,8 @@ class GroupTrack:
 
     @property
     def transitions(self) -> 'TransitionList':
-        """Transitions on this internal track."""
-        from camtasia.timeline.transitions import TransitionList
-        return TransitionList(self._data)
+        """Transitions are not supported on internal Group tracks."""
+        raise AttributeError('Internal Group tracks do not support transitions')
 
     def add_clip(
         self,
@@ -86,6 +86,11 @@ class GroupTrack:
                 (int(m.get('id', 0)) for m in self._data.get('medias', [])),
                 default=0,
             ) + 1
+            warnings.warn(
+                'GroupTrack.add_clip auto-generated locally-unique ID; '
+                'pass next_id for global uniqueness',
+                stacklevel=2,
+            )
         clip_data: dict[str, Any] = {
             '_type': clip_type,
             'id': next_id,

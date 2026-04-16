@@ -374,6 +374,13 @@ class Track:
             import warnings; warnings.warn('source_id is None for media file clip; using src=0', stacklevel=2); record['src'] = 0
         record.update(kwargs)
 
+        if clip_type in ('IMFile', 'ScreenIMFile'):
+            record.setdefault('trimStartSum', 0)
+
+        # Enforce valid ID — clone() sets id=-1 as a sentinel
+        if record['id'] == -1:
+            record['id'] = self._next_clip_id()
+
         self._data.setdefault('medias', []).append(record)
         return clip_from_dict(record)
 
@@ -935,6 +942,7 @@ class Track:
         start_seconds: float,
         duration_seconds: float,
         background_source_id: int = 1,
+        audio_track_number: int = 1,
     ) -> Group:
         """Add a Camtasia Rev screen recording Group to the track.
 
@@ -995,7 +1003,7 @@ class Track:
                 'id': next_id + 4,
                 '_type': 'AMFile',
                 'src': source_id,
-                'trackNumber': 1,
+                'trackNumber': audio_track_number,
                 'attributes': {
                     'ident': '', 'gain': 1.0, 'mixToMono': False,
                     'loudnessNormalization': True, 'sourceFileOffset': 0,
@@ -1809,6 +1817,8 @@ class Track:
         if a is None or b is None:
             missing = clip_id_a if a is None else clip_id_b
             raise KeyError(f'No clip with id={missing}')
+        if _parse_scalar(a.get('scalar', 1)) != _parse_scalar(b.get('scalar', 1)):
+            raise ValueError('Cannot merge clips with different scalars')
         # Extend a to cover b
         a['duration'] = (b['start'] + b['duration']) - a['start']
         scalar_val = _parse_scalar(a.get('scalar', 1))
@@ -2082,6 +2092,7 @@ class Track:
             media_dict['duration'] = int(media_dict.get('duration', 0) * factor)
             media_dict['mediaDuration'] = int(float(Fraction(str(media_dict.get('mediaDuration', 0)))) * factor)
             media_dict['start'] = int(media_dict.get('start', 0) * factor)
+            media_dict['mediaStart'] = int(float(Fraction(str(media_dict.get('mediaStart', 0)))) * factor)
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""
