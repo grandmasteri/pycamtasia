@@ -439,7 +439,7 @@ class Group(BaseClip):
         # Following v2 Track 1 pattern: use bare ScreenVMFile clips with
         # scalar and clipSpeedAttribute for speed-changed segments.
         new_medias = []
-        timeline_cursor: float = 0
+        cursor_ticks: int = 0
 
         if next_id is None:
             max_id = 0
@@ -453,7 +453,7 @@ class Group(BaseClip):
             src_dur = src_end - src_start
             scalar = Fraction(src_dur / tl_dur).limit_denominator(100000)
 
-            start_ticks = seconds_to_ticks(timeline_cursor)
+            start_ticks = cursor_ticks
             dur_ticks = seconds_to_ticks(tl_dur)
             ms_ticks = seconds_to_ticks(src_start)
             media_dur_ticks = seconds_to_ticks(src_dur)
@@ -490,7 +490,7 @@ class Group(BaseClip):
                 clip['parameters']['width'] = canvas_width
             if canvas_height is not None:
                 clip['parameters']['height'] = canvas_height
-            timeline_cursor += tl_dur
+            cursor_ticks += dur_ticks
             cid += 1
 
         # Replace the internal track's medias
@@ -499,10 +499,10 @@ class Group(BaseClip):
         # Clear transitions on ALL internal tracks to prevent dangling
         # clip-ID references (new ScreenVMFile clips have new IDs).
         for track in self._data.get('tracks', []):
-            track.pop('transitions', None)
+            track['transitions'] = []
 
         # Update Group duration and mediaDuration to match total timeline
-        total_tl = seconds_to_ticks(timeline_cursor)
+        total_tl = cursor_ticks
         self._data['duration'] = total_tl
         self._data['mediaDuration'] = total_tl
         self._data['scalar'] = 1
