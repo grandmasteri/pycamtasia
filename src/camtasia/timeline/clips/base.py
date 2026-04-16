@@ -604,7 +604,7 @@ class BaseClip:
         params = self._data.setdefault('parameters', {})
         params['opacity'] = {
             'type': 'double',
-            'defaultValue': 0.0,
+            'defaultValue': default_value,
             'keyframes': param_kfs,
         }
         # Build animationTracks.visual — one segment per keyframe

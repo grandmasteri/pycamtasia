@@ -18,11 +18,13 @@ from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 from camtasia.types import ClipType, EffectName
 
 
-def _parse_scalar(value: Any) -> float:
-    """Convert a scalar value (int, float, or Fraction string like '6723/5755') to float."""
-    if isinstance(value, (int, float)):
-        return float(value)
-    return float(Fraction(str(value)))
+def _parse_scalar(value: Any) -> Fraction:
+    """Convert a scalar value (int, float, or Fraction string like '6723/5755') to Fraction."""
+    if isinstance(value, int):
+        return Fraction(value)
+    if isinstance(value, float):
+        return Fraction(value).limit_denominator()
+    return Fraction(str(value))
 
 
 _VALID_CLIP_TYPES = frozenset({
@@ -344,7 +346,7 @@ class Track:
             'start': start,
             'duration': duration,
             'mediaStart': kwargs.pop('media_start', 0),
-            'mediaDuration': kwargs.pop('media_duration', int(duration / scalar_val) if scalar_val != 0 else duration),
+            'mediaDuration': kwargs.pop('media_duration', int(Fraction(duration) / scalar_val) if scalar_val != 0 else duration),
             'scalar': scalar,
             'metadata': {
                 'audiateLinkedSession': '',
@@ -360,7 +362,7 @@ class Track:
         if source_id is not None:
             record['src'] = source_id
         elif clip_type in _MEDIA_FILE_TYPES:
-            record['src'] = 0
+            import warnings; warnings.warn('source_id is None for media file clip; using src=0', stacklevel=2); record['src'] = 0
         record.update(kwargs)
 
         self._data.setdefault('medias', []).append(record)
@@ -1173,7 +1175,7 @@ class Track:
                     raise ValueError(f'Extension would result in non-positive duration for clip {clip_id}')
                 m['duration'] = new_dur
                 scalar_val = _parse_scalar(m.get('scalar', 1))
-                m['mediaDuration'] = int(new_dur / scalar_val) if scalar_val != 0 else new_dur
+                m['mediaDuration'] = int(Fraction(new_dur) / scalar_val) if scalar_val != 0 else new_dur
                 return
         raise KeyError(f'No clip with id={clip_id}')
 

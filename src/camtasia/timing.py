@@ -53,8 +53,8 @@ def format_duration(ticks: int) -> str:
     seconds = int(abs_seconds) % 60
     fraction = abs_seconds - int(abs_seconds)
     if hours > 0:
-        return f"{sign}{hours}:{minutes:02d}:{seconds:02d}.{round(fraction * 100):02d}"
-    return f"{sign}{minutes}:{seconds:02d}.{round(fraction * 100):02d}"
+        return f"{sign}{hours}:{minutes:02d}:{seconds:02d}.{min(99, round(fraction * 100)):02d}"
+    return f"{sign}{minutes}:{seconds:02d}.{min(99, round(fraction * 100)):02d}"
 
 
 def parse_scalar(value: int | float | str | Fraction) -> Fraction:

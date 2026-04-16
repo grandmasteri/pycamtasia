@@ -81,14 +81,14 @@ def export_edl(
             rec_out = _format_timecode(end, fps)
 
             lines.append(
-                f'{event_num:03d}  {source:<8s} {edit_type}     C        '
+                f'{event_num:03d}  {source[:8]:<8s} {edit_type}     C        '
                 f'{src_in} {src_out} {rec_in} {rec_out}'
             )
             event_num += 1
 
             if is_unified:
                 lines.append( # pragma: no cover
-                    f'{event_num:03d}  {source:<8s} A     C        ' # pragma: no cover
+                    f'{event_num:03d}  {source[:8]:<8s} A     C        ' # pragma: no cover
                     f'{src_in} {src_out} {rec_in} {rec_out}' # pragma: no cover
                 ) # pragma: no cover
                 event_num += 1 # pragma: no cover

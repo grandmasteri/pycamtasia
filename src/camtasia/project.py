@@ -22,7 +22,7 @@ from camtasia.timeline.track import Track
 from camtasia.timeline.clips import BaseClip
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 from camtasia.types import ClipType, CompactResult, EffectName, HealthCheckResult
-from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_src_references, _check_track_attributes_count, _check_track_indices, _check_transition_completeness, _check_transition_references, validate_against_schema
+from camtasia.validation import ValidationIssue, validate_all, validate_against_schema
 
 
 import subprocess as _sp
@@ -842,27 +842,12 @@ class Project:
                 referenced_ids.add(clip.source_id)
 
         # Source reference validation
-        issues.extend(_check_src_references(self._data))
+        issues.extend(validate_all(self._data))
 
         # Orphaned media
         for media in self.media_bin:
             if media.id not in referenced_ids:
                 issues.append(ValidationIssue('warning', f'Orphaned media not used by any clip: {media.source}', media.id))
-
-        # Duplicate clip IDs
-        issues.extend(_check_duplicate_clip_ids(self._data))
-
-        # Track index consistency
-        issues.extend(_check_track_indices(self._data))
-
-        # Transition references
-        issues.extend(_check_transition_references(self._data))
-
-        # Transition completeness (leftMedia/rightMedia)
-        issues.extend(_check_transition_completeness(self._data))
-
-        # Track attributes count matches track count
-        issues.extend(_check_track_attributes_count(self._data))
 
         # JSON schema validation
         # Schema validation available via validate_schema() method
