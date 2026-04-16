@@ -256,6 +256,7 @@ class BaseClip:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['scalar'] = self._data['scalar']
+                    sub['mediaStart'] = self._data.get('mediaStart', 0)
         return self
 
     @property
@@ -1398,9 +1399,11 @@ class BaseClip:
         params = self._data.setdefault('parameters', {})
         for i, name in enumerate(['geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3']):
             kfs = []
-            for kf in keyframes:
+            for ki, kf in enumerate(keyframes):
                 ticks = seconds_to_ticks(kf[0])
-                kfs.append({'endTime': ticks, 'time': ticks, 'value': kf[i + 1], 'duration': 0})
+                next_ticks = seconds_to_ticks(keyframes[ki + 1][0]) if ki + 1 < len(keyframes) else ticks
+                dur = next_ticks - ticks
+                kfs.append({'endTime': next_ticks, 'time': ticks, 'value': kf[i + 1], 'duration': dur})
             params[name] = {'type': 'double', 'defaultValue': kfs[0]['value'], 'keyframes': kfs}
         return self
 
