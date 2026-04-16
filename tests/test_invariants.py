@@ -14,12 +14,16 @@ TICK = 705_600_000  # ~23.5 s at 30 fps editRate
 
 
 
+# Module-level list to prevent TemporaryDirectory from being GC'd during test
+_TEMP_DIRS: list = []
+
 def _isolated_project():
     """Load template into an isolated temp copy (safe for parallel execution)."""
     import shutil, tempfile
     from camtasia.project import load_project
-    tmp = tempfile.mkdtemp()
-    dst = Path(tmp) / 'test.cmproj'
+    td = tempfile.TemporaryDirectory()
+    _TEMP_DIRS.append(td)  # prevent premature GC
+    dst = Path(td.name) / 'test.cmproj'
     shutil.copytree(RESOURCES / 'new.cmproj', dst)
     return load_project(dst)
 
