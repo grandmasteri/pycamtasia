@@ -77,7 +77,10 @@ def parse_scalar(value: int | float | str | Fraction) -> Fraction:
     if isinstance(value, Fraction):
         return value
     if isinstance(value, str):
-        return Fraction(value)
+        try:
+            return Fraction(value)
+        except ZeroDivisionError:
+            raise ValueError('Invalid scalar: division by zero')
     return Fraction(value).limit_denominator(10_000)
 
 
@@ -112,6 +115,8 @@ def speed_to_scalar(speed: float) -> Fraction:
     """
     if speed == 0:
         raise ValueError('Speed cannot be zero')
+    if speed < 0:
+        raise ValueError('Speed cannot be negative')
     return Fraction(1, 1) / Fraction(speed).limit_denominator(10_000)
 
 
@@ -129,4 +134,6 @@ def scalar_to_speed(scalar: Fraction) -> float:
     """
     if scalar == 0:
         raise ValueError('Scalar cannot be zero')
+    if scalar < 0:
+        raise ValueError('Scalar cannot be negative')
     return float(Fraction(1, 1) / scalar)

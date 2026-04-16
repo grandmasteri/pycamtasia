@@ -1,6 +1,7 @@
 """Build a timeline from a parsed screenplay."""
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
 
@@ -67,15 +68,24 @@ def build_from_screenplay(
             if audio_path and Path(audio_path).exists():
                 builder.add_audio(audio_path, track_name=audio_track_name)
                 clips_placed += 1
+                vo_placed = True
+            else:
+                if audio_path:
+                    warnings.warn(f'Audio file not found: {audio_path}')
+                else:
+                    warnings.warn(f'No audio file found for VO block {vo.id}')
+                vo_placed = False
 
             # Insert interleaved explicit pauses that follow this VO block
             if has_explicit_pauses:
-                for dur in pauses_after.get(vi, []):
-                    builder.add_pause(dur)
-                    pauses_added += 1
+                if vo_placed:
+                    for dur in pauses_after.get(vi, []):
+                        builder.add_pause(dur)
+                        pauses_added += 1
             elif default_pause > 0 and vi < len(vo_blocks) - 1:
-                builder.add_pause(default_pause)
-                pauses_added += 1
+                if vo_placed:
+                    builder.add_pause(default_pause)
+                    pauses_added += 1
 
         # Add any trailing pauses (before any VO or unpositioned)
         for dur in trailing_pauses:

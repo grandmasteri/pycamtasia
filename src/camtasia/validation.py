@@ -39,11 +39,19 @@ def _collect_ids(media: dict, ids: list, path: str) -> None:
         _collect_ids(inner, ids, f'{path}/stitched{media.get("id")}')
 
 
+def _get_tracks(data: dict) -> list:
+    """Extract top-level tracks from project data, safely handling empty scenes."""
+    scenes = data.get('timeline', {}).get('sceneTrack', {}).get('scenes', [{}])
+    if not scenes:
+        return []
+    return scenes[0].get('csml', {}).get('tracks', [])
+
+
 def _check_duplicate_clip_ids(data: dict) -> list[ValidationIssue]:
     """Check for duplicate clip IDs across all tracks."""
     issues: list[ValidationIssue] = []
     all_ids: list[tuple] = []
-    tracks = data.get('timeline', {}).get('sceneTrack', {}).get('scenes', [{}])[0].get('csml', {}).get('tracks', [])
+    tracks = _get_tracks(data)
     for ti, track in enumerate(tracks):
         for media in track.get('medias', []):
             _collect_ids(media, all_ids, f'track[{ti}]')
@@ -69,7 +77,7 @@ def _check_track_indices(data: dict) -> list[ValidationIssue]:
                 if inner:
                     _check_tracks(inner, f'{path}[{i}]/group{media.get("id")}')
 
-    tracks = data.get('timeline', {}).get('sceneTrack', {}).get('scenes', [{}])[0].get('csml', {}).get('tracks', [])
+    tracks = _get_tracks(data)
     _check_tracks(tracks, 'Track array')
     return issues
 
@@ -101,8 +109,7 @@ def _check_transition_references(data: dict) -> list[ValidationIssue]:
                 if inner:
                     _check_tracks(inner, f'{path}[{ti}]/group{media.get("id")}')
 
-    tracks = (data.get('timeline', {}).get('sceneTrack', {})
-              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    tracks = _get_tracks(data)
     _check_tracks(tracks, 'Track')
     return issues
 
@@ -130,8 +137,7 @@ def _check_transition_completeness(data: dict) -> list[ValidationIssue]:
                 if inner:
                     _check_tracks(inner, f'{path}[{ti}]/group{media.get("id")}')
 
-    tracks = (data.get('timeline', {}).get('sceneTrack', {})
-              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    tracks = _get_tracks(data)
     _check_tracks(tracks, 'Track')
     return issues
 
@@ -139,8 +145,7 @@ def _check_transition_completeness(data: dict) -> list[ValidationIssue]:
 def _check_track_attributes_count(data: dict) -> list[ValidationIssue]:
     """Check that trackAttributes length matches the number of top-level tracks."""
     issues: list[ValidationIssue] = []
-    tracks = (data.get('timeline', {}).get('sceneTrack', {})
-              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    tracks = _get_tracks(data)
     attrs = data.get('timeline', {}).get('trackAttributes', [])
     if len(attrs) != len(tracks):
         issues.append(ValidationIssue(
@@ -154,8 +159,7 @@ def _check_src_references(data: dict) -> list[ValidationIssue]:
     """Check that all clip src values reference existing sourceBin IDs."""
     issues: list[ValidationIssue] = []
     source_ids = {s.get('id') for s in data.get('sourceBin', [])}
-    tracks = (data.get('timeline', {}).get('sceneTrack', {})
-              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    tracks = _get_tracks(data)
 
     def _check_medias(medias: list, path: str) -> None:
         for media in medias:
@@ -190,7 +194,7 @@ def _check_group_required_fields(data: dict) -> list[ValidationIssue]:
 
     def _check_medias(medias: list, path: str) -> None:
         for media in medias:
-            if media.get('tracks'):
+            if 'tracks' in media:
                 mid = media.get('id')
                 params = set(media.get('parameters', {}).keys())
                 missing_p = required_params - params
@@ -210,8 +214,7 @@ def _check_group_required_fields(data: dict) -> list[ValidationIssue]:
                     _check_medias(inner_track.get('medias', []),
                                   f'{path}/group{mid}')
 
-    tracks = (data.get('timeline', {}).get('sceneTrack', {})
-              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    tracks = _get_tracks(data)
     for ti, track in enumerate(tracks):
         _check_medias(track.get('medias', []), f'track[{ti}]')
     return issues
@@ -246,9 +249,12 @@ def _check_timing_consistency(data: dict) -> list[ValidationIssue]:
                               f'{path}/group{media.get("id")}')
             _check_medias(media.get('medias', []),
                           f'{path}/stitched{media.get("id")}')
+            for key in ('video', 'audio'):
+                sub = media.get(key)
+                if sub is not None:
+                    _check_medias([sub], f'{path}/{key}{media.get("id")}')
 
-    tracks = (data.get('timeline', {}).get('sceneTrack', {})
-              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    tracks = _get_tracks(data)
     for ti, track in enumerate(tracks):
         _check_medias(track.get('medias', []), f'track[{ti}]')
     return issues
