@@ -44,9 +44,12 @@ class SourceEffect(Effect):
         self.set_parameter(f"{prefix}-alpha", rgba[3])
 
     @property
-    def color0(self) -> tuple[float, float, float, float]:
-        """First shader color as RGBA floats."""
-        return self._get_color(0)
+    def color0(self) -> tuple[float, float, float, float] | None:
+        """First shader color as RGBA floats, or None if not present."""
+        try:
+            return self._get_color(0)
+        except KeyError:
+            return None
 
     @color0.setter
     def color0(self, rgba: tuple[float, float, float, float]) -> None:
@@ -54,9 +57,12 @@ class SourceEffect(Effect):
         self._set_color(0, rgba)
 
     @property
-    def color1(self) -> tuple[float, float, float, float]:
-        """Second shader color as RGBA floats."""
-        return self._get_color(1)
+    def color1(self) -> tuple[float, float, float, float] | None:
+        """Second shader color as RGBA floats, or None if not present."""
+        try:
+            return self._get_color(1)
+        except KeyError:
+            return None
 
     @color1.setter
     def color1(self, rgba: tuple[float, float, float, float]) -> None:

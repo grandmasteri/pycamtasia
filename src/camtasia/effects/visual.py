@@ -33,7 +33,7 @@ class RoundCorners(Effect):
     @top_left.setter
     def top_left(self, value: bool) -> None:
         """Set whether the top-left corner is rounded."""
-        self.set_parameter("top-left", value)
+        self.set_parameter("top-left", float(value))
 
     @property
     def top_right(self) -> bool:
@@ -43,7 +43,7 @@ class RoundCorners(Effect):
     @top_right.setter
     def top_right(self, value: bool) -> None:
         """Set whether the top-right corner is rounded."""
-        self.set_parameter("top-right", value)
+        self.set_parameter("top-right", float(value))
 
     @property
     def bottom_left(self) -> bool:
@@ -53,7 +53,7 @@ class RoundCorners(Effect):
     @bottom_left.setter
     def bottom_left(self, value: bool) -> None:
         """Set whether the bottom-left corner is rounded."""
-        self.set_parameter("bottom-left", value)
+        self.set_parameter("bottom-left", float(value))
 
     @property
     def bottom_right(self) -> bool:
@@ -63,7 +63,7 @@ class RoundCorners(Effect):
     @bottom_right.setter
     def bottom_right(self, value: bool) -> None:
         """Set whether the bottom-right corner is rounded."""
-        self.set_parameter("bottom-right", value)
+        self.set_parameter("bottom-right", float(value))
 
 
 def _color_rgba(params: dict[str, Any], prefix: str) -> tuple[float, float, float, float]:
@@ -195,7 +195,7 @@ class Mask(Effect):
     @mask_shape.setter
     def mask_shape(self, value: int | MaskShape) -> None:
         """Set the mask shape identifier."""
-        self.set_parameter("mask-shape", value)
+        self.set_parameter("mask-shape", int(value))
 
     @property
     def mask_opacity(self) -> float:

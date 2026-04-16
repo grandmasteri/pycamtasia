@@ -43,6 +43,23 @@ def _remap_clip_ids_recursive(clip_data: dict, id_counter: list[int]) -> None:
         _remap_clip_ids_recursive(media, id_counter) # pragma: no cover
 
 
+def _remap_clip_ids_with_map(clip_data: dict, id_counter: list[int], id_map: dict[int, int]) -> None:
+    """Recursively remap 'id' fields, recording old→new in id_map."""
+    if 'id' in clip_data:
+        old_id = clip_data['id']
+        clip_data['id'] = id_counter[0]
+        id_map[old_id] = id_counter[0]
+        id_counter[0] += 1
+    for key in ('video', 'audio'):
+        if key in clip_data and isinstance(clip_data[key], dict):
+            _remap_clip_ids_with_map(clip_data[key], id_counter, id_map)
+    for track in clip_data.get('tracks', []):
+        for media in track.get('medias', []):
+            _remap_clip_ids_with_map(media, id_counter, id_map)
+    for media in clip_data.get('medias', []):
+        _remap_clip_ids_with_map(media, id_counter, id_map) # pragma: no cover
+
+
 class Timeline:
     """Represents the timeline of a Camtasia project.
 
@@ -141,8 +158,18 @@ class Timeline:
         # Remap clip IDs to avoid collisions (recursively, including nested clips)
         next_id: int = self.next_clip_id()
         id_counter: list[int] = [next_id]
+        clip_id_map: dict[int, int] = {}
         for media_dict in duplicated_track_data.get('medias', []):
-            _remap_clip_ids_recursive(media_dict, id_counter)
+            _remap_clip_ids_with_map(media_dict, id_counter, clip_id_map)
+
+        # Remap transition leftMedia/rightMedia references
+        for trans in duplicated_track_data.get('transitions', []):
+            old_left = trans.get('leftMedia')
+            if old_left in clip_id_map:
+                trans['leftMedia'] = clip_id_map[old_left]
+            old_right = trans.get('rightMedia')
+            if old_right in clip_id_map:
+                trans['rightMedia'] = clip_id_map[old_right]
 
         # Insert after source
         insert_index: int = source_track_index + 1
@@ -878,13 +905,29 @@ class Timeline:
                 and t.get('rightMedia') not in clip_id_set
             ]
 
-        # Create the Group on the target track
+        # Create the Group on the target track directly with tick values
+        # to avoid ticks→seconds→ticks roundtrip
+        from camtasia.timeline.clips import clip_from_dict
+        from typing import cast
         target_track = self.tracks[target_track_index]
-        group = target_track.add_group(
-            start_seconds=ticks_to_seconds(earliest_start),
-            duration_seconds=ticks_to_seconds(group_duration),
-            internal_tracks=internal_tracks,
-            attributes={
+        group_record: dict[str, Any] = {
+            'id': self.next_clip_id(),
+            '_type': 'Group',
+            'start': earliest_start,
+            'duration': group_duration,
+            'mediaStart': 0,
+            'mediaDuration': group_duration,
+            'scalar': 1,
+            'metadata': {
+                'audiateLinkedSession': '',
+                'clipSpeedAttribute': {'type': 'bool', 'value': False},
+                'colorAttribute': {'type': 'color', 'value': [0, 0, 0, 0]},
+                'effectApplied': 'none',
+            },
+            'animationTracks': {},
+            'parameters': {},
+            'effects': [],
+            'attributes': {
                 'ident': group_name,
                 'widthAttr': float(self._data.get('width', 1920)),
                 'heightAttr': float(self._data.get('height', 1080)),
@@ -893,7 +936,10 @@ class Timeline:
                 'mixToMono': False,
                 'assetProperties': [],
             },
-        )
+            'tracks': internal_tracks,
+        }
+        target_track._data.setdefault('medias', []).append(group_record)
+        group = cast(Group, clip_from_dict(group_record))
 
         return group
 

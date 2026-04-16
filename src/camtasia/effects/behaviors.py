@@ -168,6 +168,14 @@ class GenericBehaviorEffect(Effect):
         """Behavior effects have no flat parameters."""
         return {}
 
+    def get_parameter(self, name: str) -> Any:
+        """Behavior effects do not support flat parameters."""
+        raise NotImplementedError('Behavior effects do not support flat parameters. Use entrance/center/exit phases instead.')
+
+    def set_parameter(self, name: str, value: Any) -> None:
+        """Behavior effects do not support flat parameters."""
+        raise NotImplementedError('Behavior effects do not support flat parameters. Use entrance/center/exit phases instead.')
+
     @property
     def start(self) -> int:
         """Start time in ticks."""
