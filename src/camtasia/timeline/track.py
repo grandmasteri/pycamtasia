@@ -1738,7 +1738,7 @@ class Track:
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
-        right_data['mediaStart'] = int(Fraction(orig_media_start) + Fraction(split_offset) / Fraction(orig_scalar) if orig_scalar != 0 else orig_media_start + split_offset)
+        right_data['mediaStart'] = int((Fraction(orig_media_start) + Fraction(split_offset) / Fraction(orig_scalar)) if orig_scalar != 0 else (orig_media_start + split_offset))
         right_data['mediaDuration'] = int((orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
 
         # Re-ID the right half and all nested clips

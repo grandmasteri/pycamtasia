@@ -402,6 +402,12 @@ class Project:
         attrs = self.timeline._data.get('trackAttributes')
         if attrs and len(attrs) > max(idx_a, idx_b):
             attrs[idx_a], attrs[idx_b] = attrs[idx_b], attrs[idx_a]
+        elif attrs is not None:
+            warnings.warn(
+                f'trackAttributes too short ({len(attrs)}) to swap indices '
+                f'{idx_a} and {idx_b}; attribute swap skipped',
+                stacklevel=2,
+            )
 
     def remove_track_by_name(self, track_name: str) -> bool:
         """Remove the first track with the given name.
@@ -1037,7 +1043,8 @@ class Project:
                 kwargs.setdefault('bit_depth', 32)
             else:
                 dur_secs = meta.get('duration_seconds')
-                kwargs['duration'] = int(dur_secs * 30) if dur_secs else 30 * 60
+                edit_rate = meta.get('frame_rate', 30)
+                kwargs['duration'] = int(dur_secs * edit_rate) if dur_secs else int(edit_rate * 60)
         return self.media_bin.import_media(path, media_type=media_type, **kwargs)
 
     def import_shader(self, shader_path: str | Path) -> Media:
@@ -1395,9 +1402,21 @@ class Project:
         """
         existing = self.find_media_by_suffix('.tscshadervid')
         if existing:
-            media_id = existing[0].id
-            shader_name = existing[0].source.name
+            # Only reuse if it's a 2-color gradient shader (has Color0/Color1 effectDef)
+            gradient_media = None
+            for m in existing:
+                names = {e.get('name') for e in m._data.get('effectDef', [])}
+                if 'Color0' in names and 'Color1' in names:
+                    gradient_media = m
+                    break
+            if gradient_media is not None:
+                media_id = gradient_media.id
+                shader_name = gradient_media.source.name
+            else:
+                gradient_media = None
         else:
+            gradient_media = None
+        if gradient_media is None:
             import datetime
             import time as _time
 
@@ -1546,7 +1565,17 @@ class Project:
         """
         existing = self.find_media_by_suffix('.tscshadervid')
         if existing:
-            shader_id = existing[0].id
+            # Only reuse if it's NOT a 2-color gradient (i.e. not Color0/Color1 only)
+            shader_media = None
+            for m in existing:
+                names = {e.get('name') for e in m._data.get('effectDef', [])}
+                if not (names >= {'Color0', 'Color1'} and 'Color2' not in names):
+                    shader_media = m
+                    break
+            if shader_media is not None:
+                shader_id = shader_media.id
+            else:
+                shader_id = self.import_media(shader_path).id
         else:
             shader_id = self.import_media(shader_path).id
         track = self.timeline.get_or_create_track(track_name)

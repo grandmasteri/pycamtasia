@@ -168,6 +168,14 @@ def _check_src_references(data: dict) -> list[ValidationIssue]:
             for inner_track in media.get('tracks', []):
                 _check_medias(inner_track.get('medias', []),
                               f'{path}/group{media.get("id")}')
+            # Recurse into StitchedMedia
+            _check_medias(media.get('medias', []),
+                          f'{path}/stitched{media.get("id")}')
+            # Recurse into UnifiedMedia
+            for key in ('video', 'audio'):
+                sub = media.get(key)
+                if sub is not None:
+                    _check_medias([sub], f'{path}/{key}{media.get("id")}')
 
     for ti, track in enumerate(tracks):
         _check_medias(track.get('medias', []), f'track[{ti}]')

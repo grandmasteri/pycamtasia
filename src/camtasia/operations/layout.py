@@ -60,7 +60,7 @@ def ripple_delete(track: Track, clip_id: int) -> None:
         if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
     ]
     for m in medias:
-        if m.get('start', 0) > target_start:
+        if m.get('start', 0) >= target_start + gap:
             m['start'] -= gap
 
 

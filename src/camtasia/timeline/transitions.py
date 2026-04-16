@@ -109,7 +109,7 @@ class TransitionList:
     def add(
         self,
         name: str,
-        left_clip_id: int,
+        left_clip_id: int | None,
         right_clip_id: int | None,
         duration_ticks: int,
         **attributes: Any,
@@ -118,7 +118,7 @@ class TransitionList:
 
         Args:
             name: Transition type name (e.g. 'FadeThroughBlack').
-            left_clip_id: ID of the clip on the left.
+            left_clip_id: ID of the clip on the left, or None for fade-in.
             right_clip_id: ID of the clip on the right, or None for fade-out.
             duration_ticks: Duration in editRate ticks.
             **attributes: Additional transition attributes.
@@ -137,9 +137,10 @@ class TransitionList:
         record: dict[str, Any] = {
             'name': name,
             'duration': duration_ticks,
-            'leftMedia': left_clip_id,
             'attributes': merged,
         }
+        if left_clip_id is not None:
+            record['leftMedia'] = left_clip_id
         if right_clip_id is not None:
             record['rightMedia'] = right_clip_id
 

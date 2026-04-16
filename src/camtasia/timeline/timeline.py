@@ -713,16 +713,20 @@ class Timeline:
     def reverse_track_order(self) -> None:
         """Reverse the order of all tracks."""
         tracks = self._data['sceneTrack']['scenes'][0]['csml']['tracks']
-        attrs = self._data['trackAttributes']
+        attrs = self._data.get('trackAttributes', [])
         tracks.reverse()
-        attrs.reverse()
+        if attrs:
+            attrs.reverse()
         for i, t in enumerate(tracks):
             t['trackIndex'] = i
 
     def sort_tracks_by_name(self) -> None:
         """Sort tracks alphabetically by name."""
         tracks = self._data['sceneTrack']['scenes'][0]['csml']['tracks']
-        attrs = self._data['trackAttributes']
+        attrs = self._data.get('trackAttributes', [])
+        # Pad attrs to match tracks length so no data is dropped
+        while len(attrs) < len(tracks):
+            attrs.append({})
         pairs = list(zip(tracks, attrs))
         pairs.sort(key=lambda p: p[1].get('ident', ''))
         for i, (t, a) in enumerate(pairs):
@@ -1038,9 +1042,10 @@ class _TrackAccessor:
             )
         index_to_pos = {t['trackIndex']: i for i, t in enumerate(tracks)}
         new_tracks = [tracks[index_to_pos[idx]] for idx in order]
-        new_attrs = [attrs[index_to_pos[idx]] for idx in order]
         tracks[:] = new_tracks
-        attrs[:] = new_attrs
+        if attrs and len(attrs) > max(order):
+            new_attrs = [attrs[index_to_pos[idx]] for idx in order]
+            attrs[:] = new_attrs
         for j, t in enumerate(tracks):
             t['trackIndex'] = j
 
