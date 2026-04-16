@@ -805,7 +805,7 @@ class BaseClip:
             offset: Shadow offset distance.
             blur: Blur radius.
             opacity: Shadow opacity (0.0–1.0).
-            angle: Shadow angle in degrees.
+            angle: Shadow angle in radians.
             color: RGB colour tuple.
             enabled: Whether the shadow is enabled (1=on, 0=off).
 
