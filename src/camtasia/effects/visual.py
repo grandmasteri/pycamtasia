@@ -238,7 +238,7 @@ class Mask(Effect):
         self.set_parameter("mask-rotation", value)
 
     @property
-    def mask_width(self) -> float | dict:
+    def mask_width(self) -> float:
         """Mask width, scalar or keyframed dict."""
         return self.get_parameter("mask-width")  # type: ignore[no-any-return]
 
@@ -248,7 +248,7 @@ class Mask(Effect):
         self.set_parameter("mask-width", value)
 
     @property
-    def mask_height(self) -> float | dict:
+    def mask_height(self) -> float:
         """Mask height, scalar or keyframed dict."""
         return self.get_parameter("mask-height")  # type: ignore[no-any-return]
 
@@ -258,7 +258,7 @@ class Mask(Effect):
         self.set_parameter("mask-height", value)
 
     @property
-    def mask_position_x(self) -> float | dict:
+    def mask_position_x(self) -> float:
         """Mask horizontal position, scalar or keyframed dict."""
         return self.get_parameter("mask-positionX")  # type: ignore[no-any-return]
 
@@ -268,7 +268,7 @@ class Mask(Effect):
         self.set_parameter("mask-positionX", value)
 
     @property
-    def mask_position_y(self) -> float | dict:
+    def mask_position_y(self) -> float:
         """Mask vertical position, scalar or keyframed dict."""
         return self.get_parameter("mask-positionY")  # type: ignore[no-any-return]
 
