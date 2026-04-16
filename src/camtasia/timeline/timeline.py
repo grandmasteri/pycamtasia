@@ -725,7 +725,8 @@ class Timeline:
                 continue
             for m in track._data.get('medias', []):
                 new_clip = copy.deepcopy(m)
-                _remap_clip_ids_recursive(new_clip, next_id)
+                _flat_map: dict[int, int] = {}
+                _remap_clip_ids_with_map(new_clip, next_id, _flat_map)
                 target._data.setdefault('medias', []).append(new_clip)
         return target
 
@@ -891,7 +892,8 @@ class Timeline:
             for clip_data in clips_by_track[track_idx]:
                 cloned = copy.deepcopy(clip_data)
                 cloned['start'] = int(cloned.get('start', 0)) - earliest_start
-                _remap_clip_ids_recursive(cloned, id_counter)
+                _id_map: dict[int, int] = {}
+                _remap_clip_ids_with_map(cloned, id_counter, _id_map)
                 internal_medias.append(cloned)
             internal_tracks.append({
                 'trackIndex': len(internal_tracks),

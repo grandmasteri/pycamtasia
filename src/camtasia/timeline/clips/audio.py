@@ -74,7 +74,8 @@ class AMFile(BaseClip):
             self for chaining.
         """
         self._data.setdefault('attributes', {})['loudnessNormalization'] = True
-        self._data.setdefault('metadata', {})['targetLoudness'] = target_db
+        # targetLoudness is a project-level setting, not clip-level
+        # Only set loudnessNormalization on the clip
         return self
 
     def set_gain(self, gain: float) -> Self:
