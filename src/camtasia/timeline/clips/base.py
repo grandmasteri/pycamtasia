@@ -168,7 +168,7 @@ class BaseClip:
     def is_muted(self) -> bool:
         """Whether this clip's audio is muted (gain == 0)."""
         if self._data.get('_type') in ('Group', 'StitchedMedia'):
-            return self._data.get('parameters', {}).get('volume', 1.0) == 0.0
+            return self.volume == 0.0
         if self._data.get('_type') == 'UnifiedMedia':
             return self._data.get('audio', {}).get('attributes', {}).get('gain', 1.0) == 0.0
         return self.gain == 0.0

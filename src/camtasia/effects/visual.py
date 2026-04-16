@@ -81,7 +81,7 @@ def _set_color_rgba(
     """Write RGBA color to separate parameter keys."""
     for suffix, value in zip(("red", "green", "blue", "alpha"), rgba):
         key = f"{prefix}-{suffix}"
-        v = params[key]
+        v = params.get(key)
         if isinstance(v, dict):
             v["defaultValue"] = value
         else:

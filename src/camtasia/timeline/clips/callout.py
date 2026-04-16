@@ -86,6 +86,9 @@ class Callout(BaseClip):
         data: The raw clip dict.
     """
 
+    def set_source(self, source_id: int) -> None:
+        raise TypeError('Callout clips do not have a source ID')
+
     @property
     def definition(self) -> dict[str, Any]:
         """The full callout ``def`` dict."""

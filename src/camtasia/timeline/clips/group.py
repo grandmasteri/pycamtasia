@@ -131,6 +131,9 @@ class Group(BaseClip):
         data: The raw clip dict.
     """
 
+    def set_source(self, source_id: int) -> None:
+        raise TypeError('Group clips do not have a source ID')
+
     @property
     def tracks(self) -> list[GroupTrack]:
         """Internal tracks, each with their own clips."""

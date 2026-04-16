@@ -39,6 +39,9 @@ class StitchedMedia(BaseClip):
         """Number of nested clip segments."""
         return len(self._data.get('medias', []))
 
+    def set_source(self, source_id: int) -> None:
+        raise TypeError('StitchedMedia clips do not have a top-level source ID')
+
     @property
     def min_media_start(self) -> float:
         """Minimum media start offset in frames."""
