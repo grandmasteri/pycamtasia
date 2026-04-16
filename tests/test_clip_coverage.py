@@ -595,7 +595,7 @@ class TestBaseClipFade:
         clip = BaseClip(data)
         actual_result = clip.set_opacity(0.5)
         assert actual_result is clip
-        assert data["parameters"]["opacity"]["keyframes"][0]["value"] == 0.5
+        assert data["parameters"]["opacity"] == 0.5
 
     def test_clear_animations(self):
         data = _base(animationTracks={"visual": [{"track": "opacity"}]})
@@ -658,8 +658,8 @@ class TestBaseClipEffects:
         effect_dict = data["effects"][0]
         assert effect_dict["effectName"] == "Glow"
         assert effect_dict["parameters"]["radius"]["defaultValue"] == 40.0
-        assert effect_dict["leftEdgeMods"][0]["type"] == "fadeIn"
-        assert effect_dict["rightEdgeMods"][0]["type"] == "fadeOut"
+        assert effect_dict['leftEdgeMods'][0]['group'] == 'Video'
+        assert effect_dict['rightEdgeMods'][0]['group'] == 'Video'
 
 
 

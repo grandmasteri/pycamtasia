@@ -230,7 +230,8 @@ class BaseClip:
     @scalar.setter
     def scalar(self, value: Fraction | int | float | str) -> None:
         """Set the scalar."""
-        self._data['scalar'] = str(Fraction(value))
+        f = Fraction(value)
+        self._data['scalar'] = 1 if f == 1 else str(f)
 
     def set_speed(self, speed: float) -> Self:
         """Set playback speed multiplier.
@@ -588,8 +589,8 @@ class BaseClip:
                 'radius': {'type': 'double', 'defaultValue': radius, 'interp': 'linr'},
                 'intensity': {'type': 'double', 'defaultValue': intensity, 'interp': 'linr'},
             },
-            'leftEdgeMods': [{'type': 'fadeIn', 'duration': seconds_to_ticks(fade_in_seconds)}],
-            'rightEdgeMods': [{'type': 'fadeOut', 'duration': seconds_to_ticks(fade_out_seconds)}],
+            'leftEdgeMods': [{'group': 'Video', 'duration': seconds_to_ticks(fade_in_seconds), 'parameters': [{'name': 'opacity', 'func': 'FadeFromValueFunc', 'value': 1.0}]}],
+            'rightEdgeMods': [{'group': 'Video', 'duration': seconds_to_ticks(fade_out_seconds), 'parameters': [{'name': 'opacity', 'func': 'FadeFromValueFunc', 'value': 1.0}]}],
         }
         self._data.setdefault('effects', []).append(record)
         return Glow(record)
@@ -757,11 +758,7 @@ class BaseClip:
         """
         if not 0.0 <= opacity <= 1.0:
             raise ValueError(f'Opacity must be 0.0-1.0, got {opacity}')
-        self._clear_opacity()
-        end = int(Fraction(str(self._data.get('duration', self._data.get('mediaDuration', 0)))))
-        self._add_opacity_track([
-            {'time': 0, 'value': opacity, 'endTime': end, 'duration': end},
-        ])
+        self._data.setdefault('parameters', {})['opacity'] = opacity
         return self
 
     def clear_animations(self) -> Self:
@@ -1411,8 +1408,7 @@ class BaseClip:
             'type': 'double',
             'defaultValue': start_volume,
             'keyframes': [
-                {'endTime': 0, 'time': 0, 'value': start_volume, 'duration': 0},
-                {'endTime': dur, 'time': dur, 'value': end_volume, 'duration': 0},
+                {'endTime': dur, 'time': 0, 'value': end_volume, 'duration': dur},
             ],
         }
         return self

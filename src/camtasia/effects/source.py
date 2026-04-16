@@ -27,10 +27,10 @@ class SourceEffect(Effect):
         """Get RGBA for Color{index}."""
         prefix = self._color_key_prefix(index)
         return (
-            self.get_parameter(f"{prefix}-red"),
-            self.get_parameter(f"{prefix}-green"),
-            self.get_parameter(f"{prefix}-blue"),
-            self.get_parameter(f"{prefix}-alpha"),
+            float(self.get_parameter(f"{prefix}-red")),
+            float(self.get_parameter(f"{prefix}-green")),
+            float(self.get_parameter(f"{prefix}-blue")),
+            float(self.get_parameter(f"{prefix}-alpha")),
         )
 
     def _set_color(self, index: int, rgba: tuple[float, float, float, float]) -> None:
@@ -142,6 +142,8 @@ class SourceEffect(Effect):
         Args:
             colors: ``(r, g, b)`` tuples with values 0–255.
         """
+        if len(colors) not in (2, 4):
+            raise ValueError('Expected 2 or 4 colors')
         for i, rgb in enumerate(colors):
             prefix = self._color_key_prefix(i)
             r, g, b = rgb[0] / 255, rgb[1] / 255, rgb[2] / 255

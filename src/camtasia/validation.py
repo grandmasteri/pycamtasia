@@ -190,7 +190,10 @@ def _check_group_required_fields(data: dict) -> list[ValidationIssue]:
     """Check that Group clips have required parameters and metadata keys."""
     issues: list[ValidationIssue] = []
     required_params = {'geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3', 'volume'}
-    required_meta = {'clipSpeedAttribute', 'colorAttribute', 'effectApplied', 'isOpen'}
+    required_meta = {'clipSpeedAttribute', 'effectApplied', 'isOpen'}
+    version = float(data.get('version', '0'))
+    if version >= 10.0:
+        required_meta = required_meta | {'colorAttribute'}
 
     def _check_medias(medias: list, path: str) -> None:
         for media in medias:

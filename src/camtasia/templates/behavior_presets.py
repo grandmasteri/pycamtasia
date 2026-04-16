@@ -213,7 +213,7 @@ PRESETS = {
     },
 }
 
-PRESETS = copy.deepcopy(PRESETS)  # Break shared references between presets
+PRESETS = {k: copy.deepcopy(v) for k, v in PRESETS.items()}  # Break shared references between presets
 
 
 def get_behavior_preset(preset_name: str, duration_ticks: int) -> dict:

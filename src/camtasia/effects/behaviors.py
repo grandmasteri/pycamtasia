@@ -127,7 +127,7 @@ class BehaviorPhase:
     @property
     def parameters(self) -> dict[str, Any]:
         """Raw parameters dict (direction keyframes, etc.)."""
-        return self._data.get("parameters", {})
+        return self._data.setdefault("parameters", {})
 
     def __repr__(self) -> str:
         """Return a developer-friendly string representation."""

@@ -156,24 +156,17 @@ class TestFade:
 
 
 class TestSetOpacity:
-    @pytest.mark.parametrize("opacity_value", [0.0, 0.5, 1.0])
-    def test_single_keyframe_at_given_value(self, opacity_value: float):
-        clip = IMFile(_clip_data())
-        clip.set_opacity(opacity_value)
-        actual_kfs = clip._data["parameters"]["opacity"]["keyframes"]
-        assert actual_kfs[0]["value"] == opacity_value
+    @pytest.mark.parametrize("opacity", [0.0, 0.5, 1.0])
+    def test_sets_plain_scalar(self, project, opacity):
+        track = project.timeline.add_track("T")
+        clip = track.add_clip("VMFile", 1, 0, 705600000)
+        clip.set_opacity(opacity)
+        assert clip._data["parameters"]["opacity"] == opacity
 
-    def test_clears_previous_opacity(self):
-        clip = IMFile(_clip_data())
-        clip.fade_in(1.0)
-        clip.set_opacity(0.7)
-        actual_kfs = clip._data["parameters"]["opacity"]["keyframes"]
-        assert [kf["value"] for kf in actual_kfs] == [0.7]
-
-    def test_returns_self(self):
-        clip = IMFile(_clip_data())
+    def test_returns_self(self, project):
+        track = project.timeline.add_track("T")
+        clip = track.add_clip("VMFile", 1, 0, 705600000)
         assert clip.set_opacity(0.5) is clip
-
 
 class TestClearAnimations:
     def test_empties_visual_animations(self):

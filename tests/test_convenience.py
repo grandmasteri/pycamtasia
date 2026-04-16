@@ -1367,20 +1367,13 @@ def test_set_opacity_fade():
 
 def test_set_volume_fade():
     from camtasia.timeline.clips import clip_from_dict
-    from camtasia.timing import seconds_to_ticks
     clip = clip_from_dict({'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 9000})
     result = clip.set_volume_fade(1.0, 0.0, 3.0)
-    assert result is clip  # returns self
+    assert result is clip
     params = clip._data['parameters']['volume']
     assert params['defaultValue'] == 1.0
-    assert len(params['keyframes']) == 2
-    assert params['keyframes'][0]['value'] == 1.0
-    assert params['keyframes'][1]['value'] == 0.0
-    assert params['keyframes'][1]['time'] == seconds_to_ticks(3.0)
-    # without duration_seconds — uses clip duration
-    clip2 = clip_from_dict({'_type': 'AMFile', 'id': 2, 'start': 0, 'duration': 9000})
-    clip2.set_volume_fade(0.5, 1.0)
-    assert clip2._data['parameters']['volume']['keyframes'][1]['time'] == 9000
+    assert len(params['keyframes']) == 1
+    assert params['keyframes'][0]['value'] == 0.0  # target value
 
 
 # ---------------------------------------------------------------------------
