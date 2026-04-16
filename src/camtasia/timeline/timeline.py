@@ -62,7 +62,11 @@ def _remap_clip_ids_with_map(clip_data: dict, id_counter: list[int], id_map: dic
     # Remap assetProperties.objects references
     for ap in clip_data.get('attributes', {}).get('assetProperties', []):
         if 'objects' in ap:
-            ap['objects'] = [id_map.get(oid, oid) for oid in ap['objects']]
+            ap['objects'] = [
+            {**oid, 'media': id_map.get(oid['media'], oid['media'])} if isinstance(oid, dict) and 'media' in oid
+            else id_map.get(oid, oid)
+            for oid in ap['objects']
+        ]
 
 
 class Timeline:

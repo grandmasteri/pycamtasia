@@ -635,6 +635,7 @@ class Track:
             'Callout', None,
             seconds_to_ticks(start_seconds),
             seconds_to_ticks(duration_seconds),
+            attributes={'ident': '', 'autoRotateText': True},
             **{'def': callout_def, **kwargs},
         )
         return clip  # type: ignore[return-value]
