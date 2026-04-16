@@ -713,7 +713,7 @@ class Project:
 
         Each project's tracks are appended sequentially. Media bins are merged.
         """
-        from camtasia.timeline.timeline import _remap_clip_ids_recursive
+        from camtasia.timeline.timeline import _remap_clip_ids_recursive, _remap_clip_ids_with_map
 
         merged = cls.new(output_path, title=title)
         cursor_seconds: float = 0.0
@@ -739,7 +739,7 @@ class Project:
                     old_id = clip.id
                     cloned = copy.deepcopy(clip._data)
                     cloned['start'] = cloned.get('start', 0) + seconds_to_ticks(cursor_seconds)
-                    _remap_clip_ids_recursive(cloned, id_counter)
+                    _remap_clip_ids_with_map(cloned, id_counter, clip_id_map)
                     clip_id_map[old_id] = cloned['id']
                     _remap_src_recursive(cloned, src_id_map)
                     new_track._data.setdefault('medias', []).append(cloned)

@@ -532,7 +532,7 @@ Transitions appear in the `transitions` array on a track. They define visual tra
 - `leftMedia` only → transition at the **end** of that clip (fade-out / out-transition)
 - `rightMedia` only → transition at the **start** of that clip (fade-in / in-transition)
 - Both → transition **between** two adjacent clips (cross-dissolve)
-- The absent side is set to `null` (not omitted)
+- The absent side is omitted (not set to null)
 
 ### Transition Attributes
 

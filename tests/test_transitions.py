@@ -118,13 +118,13 @@ class TestTransitionListAdd:
         }
         assert data["transitions"][0] == expected_result
 
-    def test_add_without_right_clip_sets_right_media_null(self):
+    def test_add_without_right_clip_omits_right_media(self):
         data: dict = {"transitions": []}
         tl = TransitionList(data)
         tl.add("FadeThroughBlack", 80, None, 705_600_000)
 
         actual_record = data["transitions"][0]
-        assert actual_record["rightMedia"] is None
+        assert "rightMedia" not in actual_record
         assert actual_record["leftMedia"] == 80
 
     def test_add_returns_transition(self):
