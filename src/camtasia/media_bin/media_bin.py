@@ -524,15 +524,13 @@ _COMPRESSED_AUDIO_FORMATS = frozenset({"MPEG Audio", "AAC", "Vorbis", "Opus"})
 def _compute_audio_duration(track: dict[str, Any], sample_rate: int | None) -> int:
     """Return the audio duration as a sample count suitable for ``range``.
 
-    For compressed formats (MP3, AAC, Vorbis, Opus) pymediainfo reports
-    compressed frame counts rather than decoded sample counts.  In that case
-    we derive the sample count from ``duration (ms) * sample_rate / 1000``.
+    For all audio formats, pymediainfo reports duration in milliseconds.
+    We convert to sample counts via ``duration_ms * sample_rate / 1000``.
     """
-    fmt = track.get("format", "")
-    if fmt in _COMPRESSED_AUDIO_FORMATS and sample_rate:
-        duration_ms = float(track.get("duration", 0))
+    duration_ms = float(track.get("duration", 0))
+    if sample_rate and sample_rate > 0:
         return int(duration_ms * sample_rate / 1000)
-    return int(track.get("duration", 0))
+    return int(duration_ms)
 
 
 def _get_media_type(track: dict[str, Any]) -> MediaType:

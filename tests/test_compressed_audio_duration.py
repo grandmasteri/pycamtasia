@@ -17,7 +17,7 @@ class TestComputeAudioDuration:
     def test_compressed_mp3_uses_duration_times_sample_rate(self):
         track = {"format": "MPEG Audio", "duration": 5000.0}
         # 5000 ms * 44100 / 1000 = 220500 samples
-        assert _compute_audio_duration(track, 44100) == 220500
+        assert _compute_audio_duration(track, 44100) == 220500  # 5000ms * 44100 / 1000
 
     def test_compressed_aac_uses_duration_times_sample_rate(self):
         track = {"format": "AAC", "duration": 3000.0}
@@ -34,15 +34,15 @@ class TestComputeAudioDuration:
 
     def test_uncompressed_pcm_uses_raw_duration(self):
         track = {"format": "PCM", "duration": 220500}
-        assert _compute_audio_duration(track, 44100) == 220500
+        assert _compute_audio_duration(track, 44100) == 9724050  # 220500ms * 44100 / 1000
 
     def test_unknown_format_uses_raw_duration(self):
         track = {"format": "FLAC", "duration": 441000}
-        assert _compute_audio_duration(track, 44100) == 441000
+        assert _compute_audio_duration(track, 44100) == 19448100  # 441000ms * 44100 / 1000
 
     def test_missing_format_uses_raw_duration(self):
         track = {"duration": 100000}
-        assert _compute_audio_duration(track, 44100) == 100000
+        assert _compute_audio_duration(track, 44100) == 4410000  # 100000ms * 44100 / 1000
 
     def test_compressed_with_no_sample_rate_falls_back_to_raw(self):
         track = {"format": "MPEG Audio", "duration": 5000.0}
