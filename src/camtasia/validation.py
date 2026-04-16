@@ -297,6 +297,15 @@ def _check_timing_consistency(data: dict) -> list[ValidationIssue]:
     return issues
 
 
+def _check_edit_rate(data: dict[str, Any]) -> list[ValidationIssue]:
+    """Check that editRate is the expected 705600000."""
+    issues: list[ValidationIssue] = []
+    edit_rate = data.get('editRate')
+    if edit_rate is not None and edit_rate != 705600000:
+        issues.append(ValidationIssue('warning', f'editRate is {edit_rate}, expected 705600000'))
+    return issues
+
+
 def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     """Run all structural validation checks on project data."""
     issues: list[ValidationIssue] = []
@@ -308,6 +317,7 @@ def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     issues.extend(_check_src_references(data))
     issues.extend(_check_group_required_fields(data))
     issues.extend(_check_clip_timing(data))
+    issues.extend(_check_edit_rate(data))
     issues.extend(_check_timing_consistency(data))
     return issues
 
