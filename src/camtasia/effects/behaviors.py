@@ -46,7 +46,7 @@ class BehaviorPhase:
     @property
     def character_order(self) -> int:
         """Order in which characters animate (e.g. left-to-right, random)."""
-        return int(self._attrs["characterOrder"])
+        return int(self._attrs.get('characterOrder', 0))
 
     @character_order.setter
     def character_order(self, value: int) -> None:
@@ -214,4 +214,4 @@ class GenericBehaviorEffect:
     @property
     def is_time_bounded(self) -> bool:
         """Whether this behavior effect has explicit start/duration."""
-        return self._data.get('start', 0) > 0 or self._data.get('duration', 0) > 0
+        return 'start' in self._data and 'duration' in self._data

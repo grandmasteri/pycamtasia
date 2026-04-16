@@ -2013,9 +2013,6 @@ class Track:
         for media_dict in self._data.get('medias', []):
             if media_dict.get('start', 0) >= at_ticks:
                 media_dict['start'] = media_dict.get('start', 0) + gap_ticks
-        for trans in self._data.get('transitions', []):
-            if trans.get('start', 0) >= at_ticks:
-                trans['start'] = trans.get('start', 0) + gap_ticks
 
     def remove_gap_at(self, at_seconds: float) -> None:
         """Remove a gap at the specified time by pulling subsequent clips backward.
@@ -2041,9 +2038,6 @@ class Track:
         for media_dict in self._data.get('medias', []):
             if media_dict.get('start', 0) >= gap_end:
                 media_dict['start'] = media_dict.get('start', 0) - gap_ticks
-        for trans in self._data.get('transitions', []):
-            if trans.get('start', 0) >= gap_end:
-                trans['start'] = trans.get('start', 0) - gap_ticks
 
     def shift_all_clips(self, offset_seconds: float) -> None:
         """Shift all clips on this track by the given offset.
@@ -2056,9 +2050,6 @@ class Track:
         for media_dict in self._data.get('medias', []):
             new_start: int = max(0, media_dict.get('start', 0) + offset_ticks)
             media_dict['start'] = new_start
-        for trans in self._data.get('transitions', []):
-            if 'start' in trans: # pragma: no cover
-                trans['start'] = max(0, trans['start'] + offset_ticks) # pragma: no cover
 
     def scale_all_durations(self, factor: float) -> None:
         """Scale all clip durations by a factor (e.g., 2.0 = double length)."""

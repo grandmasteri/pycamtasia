@@ -35,16 +35,6 @@ class TestInsertGap:
         first = min(track.clips, key=lambda c: c.start)
         assert first.start == seconds_to_ticks(0)
 
-    def test_shifts_transitions_after_gap(self):
-        track = _make_track()
-        c1 = track.add_callout("A", 0, 5)
-        c2 = track.add_callout("B", 5, 5)
-        track._data['transitions'] = [{'start': seconds_to_ticks(5), 'duration': 100}]
-
-        track.insert_gap(at_seconds=5.0, gap_duration_seconds=2.0)
-
-        assert track._data['transitions'][0]['start'] == seconds_to_ticks(7)
-
     def test_no_effect_on_empty_track(self):
         track = _make_track()
         track.insert_gap(at_seconds=0.0, gap_duration_seconds=5.0)
@@ -100,16 +90,6 @@ class TestRemoveGapAt:
         track = _make_track()
         track.remove_gap_at(at_seconds=3.0)
         assert list(track.clips) == []
-
-    def test_shifts_transitions_backward(self):
-        track = _make_track()
-        track.add_callout("A", 0, 5)
-        track.add_callout("B", 10, 5)  # gap 5-10
-        track._data['transitions'] = [{'start': seconds_to_ticks(10), 'duration': 100}]
-
-        track.remove_gap_at(at_seconds=7.0)
-
-        assert track._data['transitions'][0]['start'] == seconds_to_ticks(5)
 
     def test_removes_only_targeted_gap(self):
         track = _make_track()
