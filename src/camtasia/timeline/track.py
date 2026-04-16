@@ -2094,7 +2094,6 @@ class Track:
             media_dict['duration'] = int(media_dict.get('duration', 0) * factor)
             media_dict['mediaDuration'] = int(float(Fraction(str(media_dict.get('mediaDuration', 0)))) * factor)
             media_dict['start'] = int(media_dict.get('start', 0) * factor)
-            media_dict['mediaStart'] = int(float(Fraction(str(media_dict.get('mediaStart', 0)))) * factor)
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""

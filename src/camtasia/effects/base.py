@@ -80,13 +80,13 @@ class Effect:
             name: The parameter key inside the ``parameters`` dict.
             value: The new default value.
 
-        Raises:
-            KeyError: If the parameter does not exist.
+        If the parameter exists as an animated dict, updates defaultValue.
+        If it exists as a scalar, replaces it. If missing, creates it.
         """
         params = self._data.setdefault("parameters", {})
-        val = params[name]
-        if isinstance(val, dict):
-            val["defaultValue"] = value
+        existing = params.get(name)
+        if isinstance(existing, dict):
+            existing["defaultValue"] = value
         else:
             params[name] = value
 

@@ -144,10 +144,8 @@ class TransitionList:
             'duration': duration_ticks,
             'attributes': merged,
         }
-        if left_clip_id is not None:
-            record['leftMedia'] = left_clip_id
-        if right_clip_id is not None:
-            record['rightMedia'] = right_clip_id
+        record['leftMedia'] = left_clip_id
+        record['rightMedia'] = right_clip_id
 
         self._transitions.append(record)
         return Transition(record)
