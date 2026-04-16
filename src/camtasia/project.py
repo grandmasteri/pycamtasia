@@ -361,6 +361,8 @@ class Project:
             for clip in track.clips:
                 if isinstance(clip, Group) and clip.is_screen_recording:
                     return True
+                if clip.clip_type in ('ScreenVMFile', 'UnifiedMedia'):
+                    return True
         return False
 
     @property

@@ -757,7 +757,7 @@ class Timeline:
     def sort_tracks_by_name(self) -> None:
         """Sort tracks alphabetically by name."""
         tracks = self._data['sceneTrack']['scenes'][0]['csml']['tracks']
-        attrs = self._data.get('trackAttributes', [])
+        attrs = self._data.setdefault('trackAttributes', [])
         # Pad attrs to match tracks length so no data is dropped
         while len(attrs) < len(tracks):
             attrs.append({})

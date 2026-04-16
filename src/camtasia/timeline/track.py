@@ -890,8 +890,8 @@ class Track:
             '_type': 'Group',
             'start': earliest_start,
             'duration': group_duration,
-            'mediaStart': 0,
-            'mediaDuration': group_duration,
+            'mediaStart': 0.0,
+            'mediaDuration': float(group_duration),
             'scalar': 1,
             'metadata': {
                 'audiateLinkedSession': '',

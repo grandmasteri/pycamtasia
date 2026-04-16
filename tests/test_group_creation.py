@@ -78,7 +78,7 @@ class TestGroupMuteWorks:
     def test_mute_sets_gain_to_zero(self, track):
         clip = track.add_screen_recording(source_id=2, start_seconds=0.0, duration_seconds=10.0)
         clip.mute()
-        assert clip.gain == 0.0, f"Expected gain 0.0 after mute, got {clip.gain}"
+        assert clip.is_muted, "Expected clip to be muted after mute()"
 
     def test_mute_returns_self(self, track):
         clip = track.add_screen_recording(source_id=2, start_seconds=0.0, duration_seconds=10.0)

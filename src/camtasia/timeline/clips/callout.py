@@ -134,7 +134,8 @@ class Callout(BaseClip):
     @property
     def width(self) -> float:
         """Callout width."""
-        return float(self.definition.get('width', 0.0))
+        val = self.definition.get('width', 0.0)
+        return float(val['defaultValue'] if isinstance(val, dict) else val)
 
     @width.setter
     def width(self, value: float) -> None:
@@ -144,7 +145,8 @@ class Callout(BaseClip):
     @property
     def height(self) -> float:
         """Callout height."""
-        return float(self.definition.get('height', 0.0))
+        val = self.definition.get('height', 0.0)
+        return float(val['defaultValue'] if isinstance(val, dict) else val)
 
     @height.setter
     def height(self, value: float) -> None:
