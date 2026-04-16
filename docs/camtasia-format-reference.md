@@ -98,7 +98,7 @@ Older files (version 6.x) use a top-level `clientName` string and `ident` string
 | `loudnessNormalization` | bool | yes | Whether loudness normalization applies to this asset |
 | `sourceTracks` | array | yes | One entry per track (video/audio/image) in the file |
 | `effectDef` | array | no | Parameter definitions for shader/Lottie assets (see below) |
-| `metadata` | object | yes | Contains `timeAdded` (ISO timestamp when added to project) and optionally `previewImageTime` |
+| `metadata` | object | yes | Contains `timeAdded` (ISO timestamp when added to project, includes fractional seconds in `.%f` format, e.g. `"20260408T014425.056345"`) and optionally `previewImageTime` |
 
 ### `sourceTracks` Entry
 
@@ -125,7 +125,7 @@ Each source track describes one stream within the media file.
 |-----|------|-------------|
 | `range` | [start, end] | Frame/sample range in the source file's native edit rate |
 | `type` | int | `0` = video, `1` = image/still, `2` = audio |
-| `editRate` | int or string | Native edit rate of this track (frames/sec for video, samples/sec for audio) |
+| `editRate` | int or string | Native edit rate of this track (frames/sec for video, samples/sec for audio). Can be a rational string like `"30000/1001"` for NTSC content |
 | `trackRect` | [x, y, w, h] | Dimensions of this track |
 | `sampleRate` | number or string | Frame rate or sample rate (may be a rational string like `"61531/5000"`) |
 | `bitDepth` | int | Bit depth (0 for images) |
@@ -271,11 +271,13 @@ These fields appear on **every** clip regardless of type:
 | `duration` | int | yes | Duration on the timeline (edit-rate ticks) |
 | `mediaStart` | int/number | yes | Start position within the source media |
 | `mediaDuration` | int/number | yes | Duration within the source media |
-| `scalar` | number/string | yes | Speed scalar. `1` = normal speed. Can be a rational string like `"4509/4825"` |
+| `scalar` | number/string | yes | Speed scalar. `1` = normal speed. Can be a rational string like `"4509/4825"`. **`scalar = 1/speed`**: a scalar < 1 means faster playback, scalar > 1 means slower playback |
 | `parameters` | object | yes | Transform and property parameters |
 | `effects` | array | yes | Array of applied effects |
 | `metadata` | object | yes | Arbitrary metadata (see below) |
 | `animationTracks` | object | yes | Animation keyframe tracks (see below) |
+
+**Speed/duration relationship:** `mediaDuration = duration / scalar = duration * speed`. When a clip is sped up (e.g., 2× speed → scalar = 0.5), the `mediaDuration` is larger than `duration` because more source media is consumed in less timeline time.
 
 ### `VMFile` — Video Media File
 
@@ -367,7 +369,7 @@ The most versatile clip type. Used for text overlays, shapes, buttons, blurs, an
 | `blur-invert` | number | For blur callouts (`TypeWinBlur`) |
 | `intensity` | number | For blur callouts |
 
-**Note:** `def` values for color properties can themselves be animated parameter objects (with `type`, `defaultValue`, `keyframes`) — this is unusual but observed in real projects.
+**Note:** `def` values for color properties can themselves be animated parameter objects (with `type`, `defaultValue`, `keyframes`) — this is unusual but observed in real projects. Any `def` property can potentially be an animated parameter object rather than a plain scalar.
 
 ### `Group` — Grouped Clips
 
@@ -379,6 +381,18 @@ A container that holds multiple tracks of child clips. Groups can be nested.
 | `attributes` | object | Group attributes (see §8) |
 
 Groups do **not** have `src`, `trackNumber`, or `def`. They have their own `parameters`, `effects`, `metadata`, and `animationTracks` like any clip.
+
+**Required Group `parameters`** (verified from real Camtasia before/after diff — Groups MUST have these):
+- `geometryCrop0`, `geometryCrop1`, `geometryCrop2`, `geometryCrop3` — crop values (typically `0`)
+- `volume` — audio volume (typically `1.0`)
+
+**Required Group `metadata`** keys:
+- `clipSpeedAttribute` — whether clip speed has been modified
+- `colorAttribute` — clip color label in the UI
+- `effectApplied` — name of the last applied effect (or `"none"`)
+- `isOpen` — whether the group is expanded in the UI
+
+Omitting these causes Camtasia to reject or silently repair the project file on load.
 
 ### `UnifiedMedia` — Linked Video+Audio
 
@@ -515,9 +529,10 @@ Transitions appear in the `transitions` array on a track. They define visual tra
 
 **Rules:**
 - A transition has either `leftMedia`, `rightMedia`, or both — never neither.
-- `leftMedia` only → transition at the **end** of that clip (out-transition)
-- `rightMedia` only → transition at the **start** of that clip (in-transition)
-- Both → transition **between** two adjacent clips
+- `leftMedia` only → transition at the **end** of that clip (fade-out / out-transition)
+- `rightMedia` only → transition at the **start** of that clip (fade-in / in-transition)
+- Both → transition **between** two adjacent clips (cross-dissolve)
+- The absent side is set to `null` (not omitted)
 
 ### Transition Attributes
 
@@ -574,6 +589,10 @@ Defines which child clips are theme-mappable and how:
 ### Group Nesting
 
 Groups can be deeply nested. A common pattern from TechSmith samples:
+
+**Internal Group track keys:** Each track inside a Group's `tracks` array has the following keys: `audioMuted`, `ident`, `magnetic`, `matte`, `medias`, `parameters`, `solo`, `trackIndex`, `videoHidden`. These match the top-level track structure but do **not** include `transitions` or `metadata`.
+
+**Cross-track grouping:** When clips from multiple source tracks are grouped, the Group preserves empty source tracks. For example, if a Group contains clips from tracks 0 and 2, track 1 will still exist inside the Group with an empty `medias` array.
 
 ```
 Group "BigMotionBrackets" (top-level asset)
@@ -635,6 +654,8 @@ Group "BigMotionBrackets" (top-level asset)
 ```
 
 The `video` sub-clip can have visual effects (DropShadow, RoundCorners, Mask, LutEffect). The `audio` sub-clip can have audio effects (Emphasize). The outer `UnifiedMedia` has its own `start`/`duration` that should match the sub-clips.
+
+**Important:** Effects belong on the `video` and `audio` children, **not** on the outer `UnifiedMedia` wrapper. The wrapper's `effects` array should be empty. Placing effects on the wrapper instead of the children will cause them to be ignored or produce unexpected behavior.
 
 ---
 

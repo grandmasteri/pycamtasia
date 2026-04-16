@@ -437,7 +437,8 @@
           "type": "array"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "required": []
     },
     "clipAttributes": {
       "type": "object",
@@ -532,7 +533,38 @@
           "type": "string"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "array"
+          },
+          {
+            "type": "object",
+            "description": "Animated parameter object with type, defaultValue, keyframes, interp",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "defaultValue": {},
+              "interp": {
+                "type": "string"
+              },
+              "keyframes": {
+                "type": "array"
+              }
+            }
+          }
+        ]
+      }
     },
     "AMFile": {
       "type": "object",
@@ -1120,6 +1152,7 @@
         "id",
         "_type",
         "parameters",
+        "metadata",
         "tracks",
         "attributes",
         "effects",
@@ -1194,7 +1227,14 @@
           "$ref": "#/definitions/animationTracks"
         },
         "metadata": {
-          "type": "object"
+          "type": "object",
+          "properties": {
+            "clipSpeedAttribute": {},
+            "colorAttribute": {},
+            "effectApplied": {},
+            "isOpen": {}
+          },
+          "additionalProperties": true
         },
         "parameters": {
           "$ref": "#/definitions/parametersMap"
@@ -1562,6 +1602,10 @@
           "type": "array",
           "items": {
             "type": "object",
+            "required": [
+              "name",
+              "duration"
+            ],
             "properties": {
               "name": {
                 "type": "string",
@@ -1577,8 +1621,39 @@
                   "SphericalSpin",
                   "Stretch"
                 ]
+              },
+              "start": {
+                "type": "integer"
+              },
+              "duration": {
+                "type": "integer"
+              },
+              "parameters": {
+                "type": "object"
+              },
+              "attributes": {
+                "type": "object"
+              },
+              "leftMedia": {
+                "type": "integer"
+              },
+              "rightMedia": {
+                "type": "integer"
               }
-            }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "leftMedia"
+                ]
+              },
+              {
+                "required": [
+                  "rightMedia"
+                ]
+              }
+            ],
+            "additionalProperties": false
           }
         }
       },

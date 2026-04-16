@@ -6,9 +6,10 @@ pycamtasia is a Python library for reading, writing, and manipulating TechSmith 
 
 Primary use case: assembling demo videos from voiceover audio, diagram images, screen recordings, and title cards via scripts.
 
-- 390+ commits, 2312 tests, 100% line coverage (`fail_under = 100`), 0 mypy errors, 93 TechSmith samples validated
-- Python 3.10+, no required runtime dependencies (optional: `pymediainfo`, `docopt-subcommands`, `jsonpatch>=1.33`)
+- 390+ commits, 2312+ tests, 100% line coverage (`fail_under = 100`), 0 mypy errors, 93 TechSmith samples validated
+- Python 3.10+, required: `jsonpatch>=1.33`; optional: `pymediainfo`, `docopt-subcommands`
 - Package: `src/camtasia/`, installed as `camtasia`, CLI entry point: `pytsc`
+- Hardened through 15 rounds of adversarial code review
 
 ## Architecture
 
@@ -23,7 +24,7 @@ Primary use case: assembling demo videos from voiceover audio, diagram images, s
         ├── Timeline
         │     └── Track[]
         │           ├── Clip[] (AMFile, VMFile, IMFile, Callout, Group, ...)
-        │           │     └── Effect[] (DropShadow, Glow, SourceEffect, ...)
+        │           │     └── Effect[] (DropShadow, Glow, SourceEffect, GenericBehaviorEffect, ...)
         │           ├── Transition[] (FadeThroughBlack, ...)
         │           └── Marker[]
         └── AuthoringClient (export settings)
@@ -37,27 +38,27 @@ All classes are thin wrappers over the JSON dict. Mutations go directly to `_dat
 
 ```
 src/camtasia/
-├── project.py              # Project: load/save .cmproj, import_media, validation
-├── timing.py               # EDIT_RATE (705600000 ticks/sec), tick↔second conversion, rational scalars
+├── project.py              # Project: load/save .cmproj, import_media, validation, group_clips_across_tracks
+├── timing.py               # EDIT_RATE (705600000 ticks/sec), tick↔second conversion, Fraction-based scalars
 ├── color.py                # RGBA, hex_rgb
-├── validation.py           # Pre-save checks: duplicate IDs, track indices, transition refs
+├── validation.py           # validate_all(): duplicate IDs, track indices, transition refs, src refs
 ├── effects.py              # Legacy effect helpers (being replaced by effects/)
 ├── effects/
 │   ├── base.py             # Effect base class, effect_from_dict factory
 │   ├── visual.py           # Glow, RoundCorners, DropShadow, Mask, ColorAdjustment, ...
 │   ├── source.py           # SourceEffect (shader parameters: gradients, colors)
 │   ├── cursor.py           # CursorMotionBlur, CursorShadow, CursorPhysics, LeftClickScaling
-│   └── behaviors.py        # Behavior effects (animations)
+│   └── behaviors.py        # GenericBehaviorEffect(Effect) — text behavior animations
 ├── timeline/
-│   ├── timeline.py         # Timeline class
+│   ├── timeline.py         # Timeline class, group_clips_across_tracks
 │   ├── track.py            # Track: add/remove clips, split, transitions, reorder
 │   ├── markers.py          # MarkerList
 │   ├── marker.py           # Marker dataclass
-│   ├── transitions.py      # Transition, TransitionList
+│   ├── transitions.py      # Transition, TransitionList (add supports rightMedia-only)
 │   ├── captions.py         # Caption support
 │   ├── track_media.py      # Low-level track media helpers
 │   └── clips/
-│       ├── base.py         # BaseClip: id, start, duration, scalar, effects, fade, mute, gain, opacity
+│       ├── base.py         # BaseClip: id, start, duration, scalar, effects, fade, mute, gain, opacity, is_video
 │       ├── audio.py        # AMFile
 │       ├── video.py        # VMFile
 │       ├── image.py        # IMFile
@@ -67,7 +68,7 @@ src/camtasia/
 │       ├── callout.py      # Callout (text overlays)
 │       └── unified.py      # UnifiedMedia
 ├── media_bin/
-│   ├── media_bin.py        # MediaBin, Media, MediaType enum
+│   ├── media_bin.py        # MediaBin, Media (range returns tuple[int,int], dimensions returns ints), next_id
 │   └── trec_probe.py       # .trec file metadata extraction
 ├── annotations/
 │   ├── callouts.py         # Callout definition builders
@@ -77,7 +78,7 @@ src/camtasia/
 │   ├── project.py          # AudiateProject reader
 │   └── transcript.py       # Word-level transcript with timestamps
 ├── operations/
-│   ├── speed.py            # rescale_project, set_audio_speed
+│   ├── speed.py            # rescale_project, set_audio_speed, set_internal_segment_speeds
 │   ├── sync.py             # Audio-video sync from transcript + markers
 │   ├── merge.py            # Project merging
 │   ├── layout.py           # Layout operations
@@ -87,9 +88,9 @@ src/camtasia/
 │   └── template.py         # Template-based project creation
 ├── builders/
 │   ├── timeline_builder.py # Fluent timeline construction
-│   └── screenplay_builder.py  # Screenplay-driven assembly
+│   └── screenplay_builder.py  # Screenplay-driven assembly (interleaves pauses correctly)
 ├── templates/
-│   ├── lower_third.py      # Right Angle Lower Third JSON template
+│   ├── lower_third.py      # Right Angle Lower Third JSON template (pre-flattened for Camtasia)
 │   └── behavior_presets.py # Animation presets
 ├── export/
 │   ├── edl.py              # EDL export
@@ -102,7 +103,7 @@ src/camtasia/
 ├── extras.py               # Miscellaneous helpers
 ├── app_validation.py       # Camtasia app-level validation
 ├── authoring_client.py     # Export/authoring settings
-└── resources/              # Bundled template projects (new.cmproj, simple-video.cmproj)
+└── resources/              # Bundled template projects (new.cmproj ~12KB), schema
     └── camtasia-project-schema.json  # JSON Schema for .tscproj validation
 ```
 
@@ -145,28 +146,47 @@ Effect parameter values use the plain scalar format — a flat dict with `defaul
 {"value": {"defaultValue": 16.0, "type": "double", "interp": "linr"}}
 ```
 
-### 4. Camtasia integration testing is mandatory
+### 4. Scalar convention: scalar = 1/speed
+
+Camtasia stores speed as a **scalar** (timeline_duration / source_duration). Faster playback means a smaller scalar:
+
+- 1x speed → scalar = 1
+- 2x speed → scalar = 1/2
+- 0.5x speed → scalar = 2
+
+Use `speed_to_scalar(speed)` and `scalar_to_speed(scalar)` from `timing.py`. Both raise `ValueError` on zero input. Scalars are `Fraction`-based for exact rational arithmetic — no floating-point drift.
+
+`_parse_scalar()` in `track.py` delegates to `timing.parse_scalar()` for consistent Fraction-based parsing across the codebase.
+
+### 5. Camtasia integration testing is mandatory
 
 Any change that affects `.tscproj` output MUST be validated by opening the result in Camtasia. The JSON format is reverse-engineered — there is no spec. Camtasia silently ignores some errors and crashes on others.
 
+**Before/after testing process:**
+1. Save the project JSON before your change (backup)
+2. Apply your change and save
+3. Open in Camtasia — check for exceptions, visual correctness, playback
+4. Compare JSON diff to verify only intended changes were made
+
 Run: `scripts/camtasia_validate.sh` (requires macOS with Camtasia installed)
 
-### 5. Never guess at JSON format
+### 6. Never guess at JSON format
 
 Always reverse-engineer from real Camtasia output:
 1. Perform the action in Camtasia GUI
 2. Diff the project JSON before/after
 3. Implement based on findings
 
-### 6. Library-first moratorium
+### 7. Library-first moratorium
 
 No raw `_data` access in consumer/assembly scripts. If pycamtasia doesn't support an operation, implement it in the library first, then use the API.
 
-### 7. Adversarial review process
+### 8. Adversarial review process
 
-This library was hardened through 7 rounds of adversarial review, uncovering 63+ bugs across edge cases, format assumptions, and silent data corruption paths. Any new feature or format change should be subjected to the same scrutiny: assume the format is hostile, test boundary conditions, and verify round-trip fidelity against real Camtasia output.
+This library was hardened through 15 rounds of adversarial review, uncovering numerous bugs across edge cases, format assumptions, and silent data corruption paths. Any new feature or format change should be subjected to the same scrutiny: assume the format is hostile, test boundary conditions, and verify round-trip fidelity against real Camtasia output.
 
-### 8. Documentation Consistency
+### 9. Documentation Consistency
+
 Every commit that changes source code MUST include corresponding documentation updates. This includes:
 - Docstrings on new/changed public methods
 - Updates to relevant docs/guides/ if behavior changes
@@ -178,15 +198,17 @@ Documentation must never go stale. If a PR changes the API, the docs changes are
 
 ## Running Tests
 
+Tests run in **parallel** via `pytest-xdist` (`-n auto` in `pyproject.toml`). Each test uses an **isolated temporary copy** of the template project via `tempfile.TemporaryDirectory` / `tmp_path` — no test ever mutates the shared template fixtures.
+
 ```bash
-# All unit tests (excludes integration by default)
+# All unit tests — parallel by default (configured in pyproject.toml: addopts = "-n auto")
 PYTHONPATH=src python3 -m pytest tests/ -q
 
-# Parallel execution
-PYTHONPATH=src python3 -m pytest tests/ -n auto -q
+# Serial execution (useful for debugging)
+PYTHONPATH=src python3 -m pytest tests/ -n0 -q
 
-# With coverage (must stay at 100%)
-PYTHONPATH=src python3 -m pytest tests/ --cov=camtasia --cov-report=term-missing
+# With coverage (CI uses -n0 for accurate coverage collection)
+PYTHONPATH=src python3 -m pytest tests/ -n0 --cov=camtasia --cov-report=term-missing
 
 # Integration tests only (requires Camtasia app on macOS)
 PYTHONPATH=src python3 -m pytest tests/ -m integration
@@ -200,10 +222,69 @@ PYTHONPATH=src python3 -m pytest tests/test_transitions.py -q
 # Timeout: 10s per test (configured in pyproject.toml)
 ```
 
+### Test conventions
+
+- **Parallel-safe**: All tests run under `-n auto`. No shared mutable state between tests.
+- **Isolated copies**: The `project` fixture in `conftest.py` copies `new.cmproj` into `tmp_path` before loading. Tests that need a project MUST use this fixture or create their own temp copy — never load templates in-place.
+- **No template pollution**: The template at `src/camtasia/resources/new.cmproj` must stay clean (~12KB). The `media/` directory is gitignored. If a test creates media files, they go in `tmp_path`.
+- **Coverage**: 100% line coverage enforced (`fail_under = 100`). CI runs with `-n0` and `--cov`.
+- **Temp path cleanup**: `tmp_path_retention_policy = "none"` — pytest cleans up temp dirs after each run.
+
 Key pytest config from `pyproject.toml`:
-- `addopts = "-m 'not integration'"` — integration tests excluded by default
+- `addopts = "-n auto -m 'not integration'"` — parallel, integration tests excluded by default
 - `timeout = 10` — per-test timeout
-- `markers = ["integration: Camtasia integration tests (slow, requires Camtasia app)"]`
+- `tmp_path_retention_policy = "none"` — no leftover temp dirs
+
+### Template cleanup
+
+The template project at `src/camtasia/resources/new.cmproj` should stay at ~12KB. The `media/` subdirectory is gitignored (pattern: `src/camtasia/resources/new.cmproj/media/`). If media files accumulate during development:
+
+```bash
+# Clean template media dir (safe — gitignored files only)
+rm -rf src/camtasia/resources/new.cmproj/media/*
+touch src/camtasia/resources/new.cmproj/media/.gitkeep
+```
+
+## API Surface — Recent Changes
+
+### New methods
+
+- `Timeline.group_clips_across_tracks(clip_ids, target_track_index, ...)` — groups clips from different tracks into a single Group clip
+- `Project.group_clips_across_tracks(clip_ids, target_track_name, ...)` — project-level wrapper for cross-track grouping
+- `TransitionList.add(...)` — now supports rightMedia-only transitions (no leftMedia required); validates at least one clip ID provided
+- `MediaBin.next_id()` — scans entire project (sourceBin IDs + clip IDs + timeline ID) to avoid collisions
+
+### Changed methods/behavior
+
+- `Project.validate()` — delegates to `validate_all()` for comprehensive structural checks (duplicate IDs, track indices, transition refs, src refs, trackAttributes count)
+- `Media.range` — returns `tuple[int, int]`; guards against empty `sourceTracks`
+- `Media.dimensions` — returns `int` values (not float)
+- `BaseClip.is_video` — now includes `UnifiedMedia` and video-containing `StitchedMedia`
+- `_parse_scalar()` (track.py) — delegates to `timing.parse_scalar()` for Fraction-based parsing
+- `speed_to_scalar()` / `scalar_to_speed()` — raise `ValueError` on zero input
+- `format_duration()` — rounds centiseconds with `min(99, round(...))` to avoid `100` overflow
+- `set_internal_segment_speeds()` — uses integer tick accumulator and correct scalar formula
+- `ScreenplayBuilder` — interleaves pauses at correct positions in the timeline
+
+### Type/class changes
+
+- `GenericBehaviorEffect` now inherits from `Effect` (was standalone)
+- `IntEncodedTime` deleted — `Media.range` returns plain `tuple[int, int]`
+
+### Schema changes
+
+- Version field relaxed: accepts any string (not just specific versions)
+- `bool` and `textAttributeList` added to allowed parameter types
+
+### Templates
+
+- `add_lower_third` template pre-flattened for Camtasia compatibility (no nested structures)
+- Template project cleaned to ~12KB, media dir gitignored
+
+### Undo/redo
+
+- Stale reference limitation documented: after `undo()`/`redo()`, previously-obtained references to Timeline, Track, MediaBin become stale. Always re-access project properties after undo/redo.
+- History persistence via `to_json()` / `from_json()`
 
 ## Camtasia Validation
 
@@ -219,6 +300,17 @@ The script:
 2. Launches Camtasia with the project
 3. Checks stderr for EXCEPTION lines
 4. Reports PASS (0 exceptions) or FAIL
+
+### Before/after testing with Camtasia
+
+For any change that modifies `.tscproj` output:
+
+1. **Before**: Save a copy of the project JSON (`cp project.tscproj /tmp/before.json`)
+2. **Apply**: Run your code change, save the project
+3. **Diff**: `diff /tmp/before.json project.tscproj` — verify only intended changes
+4. **Open**: Launch in Camtasia, check for crash/exception/visual issues
+5. **Playback**: Scrub through the timeline, verify effects render correctly
+6. **Round-trip**: Save from Camtasia, diff again — Camtasia may normalize your output
 
 ## Common Pitfalls
 
@@ -244,15 +336,21 @@ Callouts on the same track at the same time cause a "Collision exception" in Cam
 Groups contain internal tracks. `mediaStart`/`mediaDuration` act as a viewing window into the group's internal timeline — they don't define the group's content duration.
 
 ### Duplicate clip IDs
-Every clip ID must be unique across the entire project. The validation module checks this before save. Use `project.next_id()` for new clips.
+Every clip ID must be unique across the entire project. `next_id()` scans sourceBin IDs, clip IDs, and the timeline ID to avoid collisions. The validation module checks this before save.
+
+### Undo/redo stale references
+After `project.undo()` or `project.redo()`, any previously-obtained references to nested objects (Timeline, Track, Clip, MediaBin) become stale because the underlying `_data` dict is replaced. Always re-access `project.timeline`, `project.media_bin`, etc. after undo/redo.
+
+### Speed/scalar zero
+`speed_to_scalar(0)` and `scalar_to_speed(Fraction(0))` both raise `ValueError`. Guard against zero values before calling these functions.
 
 ## File Structure Overview
 
 ```
 pycamtasia/
 ├── src/camtasia/           # Library source (the package)
-├── tests/                  # 100+ test files, 2312 tests
-│   ├── conftest.py         # Fixtures: project, simple_video, test_project_a_data
+├── tests/                  # 100+ test files, 2312+ tests (parallel via pytest-xdist)
+│   ├── conftest.py         # Fixtures: project (isolated tmp_path copy), simple_video, test_project_a_data
 │   └── fixtures/           # .tscproj files and .wav files for testing
 ├── scripts/
 │   └── camtasia_validate.sh  # Integration validation script
@@ -260,7 +358,7 @@ pycamtasia/
 │   ├── api/                # API reference (.rst)
 │   ├── guides/             # User guides (.md)
 │   └── camtasia-format-reference.md  # Reverse-engineered .tscproj format reference
-├── pyproject.toml          # Build config, test config, coverage config
+├── pyproject.toml          # Build config, test config (pytest-xdist -n auto), coverage config
 ├── ARCHITECTURE.md         # Detailed architecture design doc
 ├── ROADMAP.md              # Planned and completed features
 ├── CHANGELOG.md            # Version history
@@ -275,7 +373,7 @@ pycamtasia/
 - `tests/fixtures/test_project_d.tscproj` — Additional test project
 - `tests/fixtures/techsmith_sample.tscproj` — TechSmith sample project (695KB)
 - `tests/fixtures/techsmith_library_asset.tscproj` — Library asset project
+- `tests/fixtures/techsmith_complex_asset.tscproj` — Complex asset project
 - `tests/fixtures/empty.wav`, `empty2.wav` — Audio fixtures for media tests
-- `src/camtasia/resources/new.cmproj` — Blank template project
-- `src/camtasia/resources/simple-video.cmproj` — Simple video template
+- `src/camtasia/resources/new.cmproj` — Blank template project (~12KB, media/ gitignored)
 - `src/camtasia/resources/camtasia-project-schema.json` — JSON Schema for .tscproj validation

@@ -4,6 +4,44 @@ All notable changes to pycamtasia are documented in this file.
 
 ## [Unreleased]
 
+## [7.2.0] (2026-04-16)
+
+15 rounds of adversarial code review. 100+ bugs found and fixed. Test count: 2126 → 2676 (+550 tests). 100% coverage maintained.
+
+### Added
+
+#### Cross-Track Grouping
+- `group_clips_across_tracks()` — group clips spanning multiple tracks into a single group clip
+
+#### Comprehensive Validation
+- `validate_all()` — unified validation entry point covering structural integrity, schema conformance, and semantic checks
+
+#### Fraction-Based Scalar Arithmetic
+- All time scalars now use `Fraction`-based arithmetic for lossless rational precision throughout the pipeline
+
+### Changed
+
+#### GenericBehaviorEffect Inheritance
+- `GenericBehaviorEffect` now inherits from `Effect`, unifying the behavior/effect class hierarchy
+
+#### IntEncodedTime Removed
+- `IntEncodedTime` class removed; all encoded-time logic consolidated into `Fraction`-based scalars
+
+#### Schema Relaxed
+- JSON Schema loosened for `version` and `parameter` types to accept values observed in real-world TechSmith projects
+
+#### Template Pre-Flattened
+- Built-in templates are now pre-flattened for direct Camtasia compatibility, eliminating runtime flattening overhead
+
+#### Integer Tick Accumulator
+- Segment speed calculations now use an integer tick accumulator to prevent floating-point drift across segments
+
+### Testing & Reliability
+- 2676 tests, 100% line coverage
+- Parallel test execution via `pytest-xdist` — **14 seconds** vs 4+ minutes sequential
+- 15 rounds of adversarial code review (100+ bugs fixed)
+- All 93 TechSmith sample projects pass schema validation
+
 ## [7.1.0] (2026-04-14)
 
 7 rounds of adversarial code review. 63+ bugs found and fixed. Test count: 1825 → 2126 (+301 tests). 100% coverage maintained.

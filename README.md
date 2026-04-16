@@ -12,7 +12,7 @@
 
 ---
 
-**pycamtasia** is a Python library for programmatic access to TechSmith Camtasia project files (`.cmproj` / `.tscproj`). Load projects, manipulate timelines, apply effects, manage media, and save — all from Python. Validated against 93 TechSmith sample assets (JSON Schema) with 2,312 tests at 100% coverage across 70 source files (0 mypy errors, 0 undocumented public symbols). Hardened through 7 rounds of adversarial code review (63+ bugs fixed). Tested on Python 3.10–3.13 in CI.
+**pycamtasia** is a Python library for programmatic access to TechSmith Camtasia project files (`.cmproj` / `.tscproj`). Load projects, manipulate timelines, apply effects, manage media, and save — all from Python. Validated against 93 TechSmith sample assets (JSON Schema) with 2,676 tests at 100% coverage across 70 source files (0 mypy errors, 0 undocumented public symbols). Hardened through 15 rounds of adversarial code review (100+ bugs fixed). Tested on Python 3.10–3.13 in CI.
 
 📖 **[Documentation](https://grandmasteri.github.io/pycamtasia/)** · 🐛 **[Issues](https://github.com/grandmasteri/pycamtasia/issues)**
 
@@ -52,21 +52,21 @@ proj.save()
 - **Timeline manipulation** — Tracks, clips, markers, transitions, reordering
 - **Type-safe clips** — Audio, video, image, screen recording, callout, group
 - **Effects & animation** — Drop shadow, glow, round corners, keyframes, fade in/out
-- **Speed control** — Rational-precision scalars with audio-video sync
+- **Speed control** — Fraction-based lossless scalar arithmetic with audio-video sync
 - **Transforms** — Move, scale, crop, rotate with canvas-aware positioning
 - **Cursor effects** — Motion blur, shadow, physics, click scaling
 - **Audiate integration** — Word-level transcript parsing from Audiate and WhisperX
 - **Batch operations** — `apply_to_clips()`, `fade_all()`, `scale_all()`, `move_all()`
 - **Layout operations** — `pack_track()`, `ripple_insert()`, `ripple_delete()`, `snap_to_grid()`
-- **Builders** — `TimelineBuilder`, `CalloutBuilder`, `build_from_screenplay()` for fluent assembly
+- **Builders** — `TimelineBuilder`, `CalloutBuilder`, `ScreenplayBuilder`, `build_from_screenplay()` for fluent assembly
 - **Undo & redo** — JSON Patch-based change history with `track_changes`, persist across sessions
 - **Export** — SRT subtitles, EDL, CSV, project reports (JSON/Markdown), timeline JSON
 - **Project tools** — Diff, merge, cleanup, validation, statistics
 - **Project introspection** — `Project.summary()`, `statistics()`, `to_markdown_report()`
 - **Project repair** — `Project.repair()` auto-fixes stale transitions and broken references
 - **Video production helpers** — `add_background_music`, `add_lower_third`, `add_progressive_disclosure`, `add_zoom_to_region`, `add_callout_sequence`, `add_chapter_markers`, `add_title_card`, `add_subtitle_track`, `add_voiceover_sequence`, `add_image_sequence`
-- **Group manipulation** — `group_clips()`, `ungroup_clip()`, `Group.add_internal_track()`, nested group support
-- **JSON Schema validation** — 93 TechSmith samples validated against schema; structural integrity checks on load/save
+- **Group manipulation** — `group_clips()`, `ungroup_clip()`, `group_clips_across_tracks()`, `Group.add_internal_track()`, nested group support
+- **JSON Schema validation** — 93 TechSmith samples validated against schema; `validate_all()` for comprehensive structural, schema, and semantic checks
 - **Camtasia v10 compatible** — NSJSONSerialization-style formatting preserved on save
 
 ## Contributing
@@ -74,7 +74,7 @@ proj.save()
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ```bash
-pytest                                    # 2,312 tests, ~13s
+pytest                                    # 2,676 tests, ~14s (parallel)
 pytest --cov=camtasia --cov-report=term   # with coverage
 mypy src/camtasia                         # 0 errors
 ```
