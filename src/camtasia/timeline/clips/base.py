@@ -4,6 +4,7 @@ from __future__ import annotations
 from fractions import Fraction
 from collections.abc import Callable
 from typing import Any, TYPE_CHECKING
+import warnings
 import sys
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -675,7 +676,7 @@ class BaseClip:
             ``self`` for chaining.
         """
         ticks = seconds_to_ticks(duration_seconds)
-        end = int(self._data.get('duration', self.media_duration))
+        end = int(Fraction(str(self._data.get('duration', self._data.get('mediaDuration', 0)))))
         existing = self._get_existing_opacity_keyframes()
         if existing and existing[0]['value'] == 1.0:
             # Fade-in already exists — merge
@@ -709,7 +710,7 @@ class BaseClip:
             ``self`` for chaining.
         """
         self._clear_opacity()
-        end = int(self._data.get('duration', self.media_duration))
+        end = int(Fraction(str(self._data.get('duration', self._data.get('mediaDuration', 0)))))
         kfs: list[dict[str, Any]] = []
         if fade_in_seconds > 0:
             in_ticks = seconds_to_ticks(fade_in_seconds)
@@ -739,7 +740,7 @@ class BaseClip:
         if not 0.0 <= opacity <= 1.0:
             raise ValueError(f'Opacity must be 0.0-1.0, got {opacity}')
         self._clear_opacity()
-        end = int(self._data.get('duration', self.media_duration))
+        end = int(Fraction(str(self._data.get('duration', self._data.get('mediaDuration', 0)))))
         self._add_opacity_track([
             {'time': 0, 'value': opacity, 'endTime': end, 'duration': end},
         ])
@@ -1463,6 +1464,7 @@ class BaseClip:
     @property
     def source_path(self) -> int | str:
         """Source bin ID (int) or empty string if absent (from the 'src' field)."""
+        warnings.warn('source_path is deprecated, use source_id', DeprecationWarning, stacklevel=2)
         return self._data.get('src', '')
 
     @property

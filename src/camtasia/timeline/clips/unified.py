@@ -23,8 +23,10 @@ class UnifiedMedia(BaseClip):
     recording) or a VMFile (camera recording).
     """
 
-    _video_cache: BaseClip | None = None
-    _audio_cache: BaseClip | None = None
+    def __init__(self, data: dict[str, Any]) -> None:
+        super().__init__(data)
+        self._video_cache: BaseClip | None = None
+        self._audio_cache: BaseClip | None = None
 
     @property
     def video(self) -> BaseClip:

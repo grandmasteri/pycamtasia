@@ -154,14 +154,14 @@ class TransitionList:
 
     def add_fade_through_black(
         self,
-        left_clip_id: int,
+        left_clip_id: int | None,
         right_clip_id: int | None,
         duration_ticks: int,
     ) -> Transition:
         """Add a FadeThroughBlack transition with default attributes.
 
         Args:
-            left_clip_id: ID of the clip on the left.
+            left_clip_id: ID of the clip on the left, or None for fade-in.
             right_clip_id: ID of the clip on the right, or None for fade-out.
             duration_ticks: Duration in editRate ticks.
 

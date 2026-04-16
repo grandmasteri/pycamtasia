@@ -50,7 +50,7 @@ class Media:
         return MediaType(self._data["sourceTracks"][0]["type"])
 
     @property
-    def rect(self) -> tuple[float, float, float, float]:
+    def rect(self) -> tuple[int | float, ...]:
         """Native bounding rect as ``(x, y, width, height)``."""
         return tuple(self._data["rect"])
 

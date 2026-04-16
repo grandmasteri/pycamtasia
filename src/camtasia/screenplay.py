@@ -68,7 +68,7 @@ _VO_RE = re.compile(r'\[VO-([\d.]+)\].*?:\*\*\s*"([^"]+)"')
 _PAUSE_RE = re.compile(r'PAUSE[:\s]+(\d+(?:\.\d+)?)\s*second')
 _TRANSITION_RE = re.compile(r'TRANSITION:\s*(.+)')
 _IMAGE_RE = re.compile(r'!\[([^\]]*)\]\(([^)]+)\)')
-_SECTION_RE = re.compile(r'^(#{2,3})\s+(.+)', re.MULTILINE)
+_SECTION_RE = re.compile(r'^(#{1,4})\s+(.+)', re.MULTILINE)
 
 
 def _pauses_with_positions(chunk: str) -> list[PauseMarker]:

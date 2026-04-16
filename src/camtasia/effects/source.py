@@ -108,12 +108,11 @@ class SourceEffect(Effect):
     @mid_point.setter
     def mid_point(self, value: tuple[float, float] | float) -> None:
         """Set the mid point position."""
-        params = self._data.setdefault('parameters', {})
         if isinstance(value, (int, float)):
-            params['MidPoint'] = value
+            self.set_parameter('MidPoint', value)
         else:
-            params['MidPointX'] = value[0]
-            params['MidPointY'] = value[1]
+            self.set_parameter('MidPointX', value[0])
+            self.set_parameter('MidPointY', value[1])
 
     @property
     def speed(self) -> float:

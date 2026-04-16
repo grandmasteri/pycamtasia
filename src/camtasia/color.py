@@ -55,12 +55,9 @@ class RGBA:
     @classmethod
     def from_floats(cls, red: float, green: float, blue: float, alpha: float) -> RGBA:
         """Create an RGBA instance from 0.0–1.0 float channel values."""
-        return cls(
-            round(red * cls.MAXIMUM_CHANNEL),
-            round(green * cls.MAXIMUM_CHANNEL),
-            round(blue * cls.MAXIMUM_CHANNEL),
-            round(alpha * cls.MAXIMUM_CHANNEL),
-        )
+        def _clamp(channel: float) -> int:
+            return max(0, min(255, round(channel * 255)))
+        return cls(_clamp(red), _clamp(green), _clamp(blue), _clamp(alpha))
 
     def __init__(self, red: int, green: int, blue: int, alpha: int) -> None:
         if not (self.MINIMUM_CHANNEL <= red <= self.MAXIMUM_CHANNEL):

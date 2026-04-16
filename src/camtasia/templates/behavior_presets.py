@@ -181,6 +181,10 @@ PRESETS = {
                 'offsetBetweenCharacters': 0, 'secondsPerLoop': 1,
                 'numberOfLoops': -1, 'delayBetweenLoops': 0,
             },
+            'parameters': {
+                'movement': {'type': 'int', 'defaultValue': 27, 'keyframes': [{'endTime': 0, 'time': 0, 'value': 27, 'duration': 0}]},
+                'scale': {'type': 'double', 'defaultValue': 1.08, 'keyframes': [{'endTime': 0, 'time': 0, 'value': 1.08, 'duration': 0}]},
+            },
         },
         'out': _NONE_OUT,
         'metadata': {'presetName': 'Pulsating'},

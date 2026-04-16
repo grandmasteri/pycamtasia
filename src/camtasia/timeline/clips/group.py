@@ -146,7 +146,6 @@ class Group(BaseClip):
         new_track_data: dict[str, Any] = {
             'trackIndex': track_index,
             'medias': [],
-            'transitions': [],
             'parameters': {},
             'ident': '',
             'audioMuted': False,

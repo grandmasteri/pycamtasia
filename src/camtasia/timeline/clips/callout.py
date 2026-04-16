@@ -222,7 +222,8 @@ class Callout(BaseClip):
     @property
     def corner_radius(self) -> float:
         """Corner radius for rounded shapes."""
-        return float(self.definition.get('corner-radius', 0.0))
+        val = self.definition.get('corner-radius', 0.0)
+        return float(val['defaultValue'] if isinstance(val, dict) else val)
 
     @corner_radius.setter
     def corner_radius(self, value: float) -> None:

@@ -545,8 +545,8 @@ class Timeline:
                         results.append((track, clip))
                         break
                 else:
-                    # Nested clip — pair with first track as fallback
-                    results.append((self.tracks[0] if self.tracks else None, clip))  # type: ignore[arg-type]
+                    # Nested clip — no owning top-level track
+                    results.append((None, clip))  # type: ignore[arg-type]
         return results
 
     @property
@@ -918,7 +918,7 @@ class Timeline:
         from typing import cast
         target_track = self.tracks[target_track_index]
         group_record: dict[str, Any] = {
-            'id': self.next_clip_id(),
+            'id': id_counter[0],
             '_type': 'Group',
             'start': earliest_start,
             'duration': group_duration,
@@ -946,6 +946,7 @@ class Timeline:
             },
             'tracks': internal_tracks,
         }
+        id_counter[0] += 1
         target_track._data.setdefault('medias', []).append(group_record)
         group = cast(Group, clip_from_dict(group_record))
 

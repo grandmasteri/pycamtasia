@@ -182,6 +182,78 @@ def _check_src_references(data: dict) -> list[ValidationIssue]:
     return issues
 
 
+def _check_group_required_fields(data: dict) -> list[ValidationIssue]:
+    """Check that Group clips have required parameters and metadata keys."""
+    issues: list[ValidationIssue] = []
+    required_params = {'geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3', 'volume'}
+    required_meta = {'clipSpeedAttribute', 'colorAttribute', 'effectApplied', 'isOpen'}
+
+    def _check_medias(medias: list, path: str) -> None:
+        for media in medias:
+            if media.get('tracks'):
+                mid = media.get('id')
+                params = set(media.get('parameters', {}).keys())
+                missing_p = required_params - params
+                if missing_p:
+                    issues.append(ValidationIssue(
+                        'warning',
+                        f'{path} group id={mid} missing parameters: {sorted(missing_p)}',
+                    ))
+                meta = set(media.get('metadata', {}).keys())
+                missing_m = required_meta - meta
+                if missing_m:
+                    issues.append(ValidationIssue(
+                        'warning',
+                        f'{path} group id={mid} missing metadata: {sorted(missing_m)}',
+                    ))
+                for inner_track in media.get('tracks', []):
+                    _check_medias(inner_track.get('medias', []),
+                                  f'{path}/group{mid}')
+
+    tracks = (data.get('timeline', {}).get('sceneTrack', {})
+              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    for ti, track in enumerate(tracks):
+        _check_medias(track.get('medias', []), f'track[{ti}]')
+    return issues
+
+
+def _check_timing_consistency(data: dict) -> list[ValidationIssue]:
+    """Check that mediaDuration ≈ duration / scalar for clips with non-unity scalar."""
+    issues: list[ValidationIssue] = []
+
+    def _check_medias(medias: list, path: str) -> None:
+        for media in medias:
+            scalar_raw = media.get('scalar', 1)
+            duration = media.get('duration')
+            media_dur = media.get('mediaDuration')
+            if duration is not None and media_dur is not None and scalar_raw not in (1, '1', '1/1'):
+                from fractions import Fraction
+                try:
+                    scalar = Fraction(str(scalar_raw))
+                except (ValueError, ZeroDivisionError):
+                    continue
+                if scalar != 0:
+                    expected = float(Fraction(duration) / scalar)
+                    media_dur_f = float(Fraction(str(media_dur)))
+                    if abs(expected - media_dur_f) > max(1, abs(expected) * 0.01):
+                        issues.append(ValidationIssue(
+                            'warning',
+                            f'{path} clip id={media.get("id")} mediaDuration={media_dur} '
+                            f'!= duration/scalar ({duration}/{scalar_raw} ≈ {expected:.0f})',
+                        ))
+            for inner_track in media.get('tracks', []):
+                _check_medias(inner_track.get('medias', []),
+                              f'{path}/group{media.get("id")}')
+            _check_medias(media.get('medias', []),
+                          f'{path}/stitched{media.get("id")}')
+
+    tracks = (data.get('timeline', {}).get('sceneTrack', {})
+              .get('scenes', [{}])[0].get('csml', {}).get('tracks', []))
+    for ti, track in enumerate(tracks):
+        _check_medias(track.get('medias', []), f'track[{ti}]')
+    return issues
+
+
 def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     """Run all structural validation checks on project data."""
     issues: list[ValidationIssue] = []
@@ -191,6 +263,8 @@ def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     issues.extend(_check_transition_completeness(data))
     issues.extend(_check_track_attributes_count(data))
     issues.extend(_check_src_references(data))
+    issues.extend(_check_group_required_fields(data))
+    issues.extend(_check_timing_consistency(data))
     return issues
 
 

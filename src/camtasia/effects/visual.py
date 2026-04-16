@@ -243,7 +243,7 @@ class Mask(Effect):
         return self.get_parameter("mask-width")  # type: ignore[no-any-return]
 
     @mask_width.setter
-    def mask_width(self, value: float | dict) -> None:
+    def mask_width(self, value: float) -> None:
         """Set the mask width."""
         self.set_parameter("mask-width", value)
 
@@ -253,7 +253,7 @@ class Mask(Effect):
         return self.get_parameter("mask-height")  # type: ignore[no-any-return]
 
     @mask_height.setter
-    def mask_height(self, value: float | dict) -> None:
+    def mask_height(self, value: float) -> None:
         """Set the mask height."""
         self.set_parameter("mask-height", value)
 
@@ -263,7 +263,7 @@ class Mask(Effect):
         return self.get_parameter("mask-positionX")  # type: ignore[no-any-return]
 
     @mask_position_x.setter
-    def mask_position_x(self, value: float | dict) -> None:
+    def mask_position_x(self, value: float) -> None:
         """Set the mask horizontal position."""
         self.set_parameter("mask-positionX", value)
 
@@ -273,7 +273,7 @@ class Mask(Effect):
         return self.get_parameter("mask-positionY")  # type: ignore[no-any-return]
 
     @mask_position_y.setter
-    def mask_position_y(self, value: float | dict) -> None:
+    def mask_position_y(self, value: float) -> None:
         """Set the mask vertical position."""
         self.set_parameter("mask-positionY", value)
 

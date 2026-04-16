@@ -911,7 +911,6 @@ class Track:
             'tracks': [{
                 'trackIndex': 0,
                 'medias': internal_medias,
-                'transitions': [],
                 'parameters': {},
                 'ident': '',
                 'audioMuted': False,

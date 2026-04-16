@@ -75,8 +75,9 @@ def export_edl(
                 edit_type = 'V' if clip.clip_type in video_types else 'A'
 
             src_in_offset = ticks_to_seconds(int(Fraction(str(clip.media_start))))
+            media_dur = ticks_to_seconds(int(Fraction(str(clip.media_duration))))
             src_in = _format_timecode(src_in_offset, fps)
-            src_out = _format_timecode(src_in_offset + end - start, fps)
+            src_out = _format_timecode(src_in_offset + media_dur, fps)
             rec_in = _format_timecode(start, fps)
             rec_out = _format_timecode(end, fps)
 
@@ -87,11 +88,16 @@ def export_edl(
             event_num += 1
 
             if is_unified:
-                lines.append( # pragma: no cover
-                    f'{event_num:03d}  {source[:8]:<8s} A     C        ' # pragma: no cover
-                    f'{src_in} {src_out} {rec_in} {rec_out}' # pragma: no cover
-                ) # pragma: no cover
-                event_num += 1 # pragma: no cover
+                audio_data = clip._data.get('audio', {})
+                audio_ms = ticks_to_seconds(int(Fraction(str(audio_data.get('mediaStart', 0)))))
+                audio_md = ticks_to_seconds(int(Fraction(str(audio_data.get('mediaDuration', clip.duration)))))
+                audio_src_in = _format_timecode(audio_ms, fps)
+                audio_src_out = _format_timecode(audio_ms + audio_md, fps)
+                lines.append(
+                    f'{event_num:03d}  {source[:8]:<8s} A     C        '
+                    f'{audio_src_in} {audio_src_out} {rec_in} {rec_out}'
+                )
+                event_num += 1
 
     lines.append('')
     path.write_text('\n'.join(lines))

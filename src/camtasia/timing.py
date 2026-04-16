@@ -48,13 +48,18 @@ def format_duration(ticks: int) -> str:
     total_seconds = ticks / EDIT_RATE
     sign = '-' if total_seconds < 0 else ''
     abs_seconds = abs(total_seconds)
-    hours = int(abs_seconds) // 3600
-    minutes = int(abs_seconds) % 3600 // 60
-    seconds = int(abs_seconds) % 60
-    fraction = abs_seconds - int(abs_seconds)
+    int_seconds = int(abs_seconds)
+    fraction = abs_seconds - int_seconds
+    cs = round(fraction * 100)
+    if cs >= 100:
+        cs = 0
+        int_seconds += 1
+    hours = int_seconds // 3600
+    minutes = int_seconds % 3600 // 60
+    seconds = int_seconds % 60
     if hours > 0:
-        return f"{sign}{hours}:{minutes:02d}:{seconds:02d}.{min(99, round(fraction * 100)):02d}"
-    return f"{sign}{minutes}:{seconds:02d}.{min(99, round(fraction * 100)):02d}"
+        return f"{sign}{hours}:{minutes:02d}:{seconds:02d}.{cs:02d}"
+    return f"{sign}{minutes}:{seconds:02d}.{cs:02d}"
 
 
 def parse_scalar(value: int | float | str | Fraction) -> Fraction:

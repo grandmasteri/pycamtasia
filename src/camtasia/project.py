@@ -910,7 +910,6 @@ class Project:
         # Replace -Infinity/Infinity/NaN with the original extreme values
         # Only replace when they appear as bare JSON values (after : or , or [)
         # not inside quoted strings
-        import re
         def _replace_special(m):
             token = m.group(0)
             if token == '-Infinity':
