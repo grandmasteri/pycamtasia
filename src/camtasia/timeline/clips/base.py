@@ -747,7 +747,8 @@ class BaseClip:
                 'endTime': end, 'duration': out_ticks,
             })
         if kfs:
-            self._add_opacity_track(kfs)
+            dv = 0.0 if fade_in_seconds > 0 else 1.0
+            self._add_opacity_track(kfs, default_value=dv)
         return self
 
     def set_opacity(self, opacity: float) -> Self:

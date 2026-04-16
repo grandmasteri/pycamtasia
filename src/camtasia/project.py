@@ -2302,7 +2302,9 @@ class Project:
         for _, clip in self.all_clips:
             if clip.is_audio or clip.clip_type in ('AMFile', 'UnifiedMedia'):
                 if clip.clip_type == 'UnifiedMedia':
-                    audio = clip._data.get('audio'); audio.setdefault('attributes', {})['gain'] = target_gain if audio is not None else None
+                    audio = clip._data.get('audio')
+                    if audio is not None:
+                        audio.setdefault('attributes', {})['gain'] = target_gain
                 else:
                     clip.gain = target_gain
                 count += 1

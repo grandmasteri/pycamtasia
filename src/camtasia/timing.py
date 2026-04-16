@@ -57,9 +57,6 @@ def format_duration(ticks: int) -> str:
     # Cascade carry into minutes/hours
     minutes, seconds = divmod(int_seconds, 60)
     hours, minutes = divmod(minutes, 60)
-    hours = int_seconds // 3600
-    minutes = int_seconds % 3600 // 60
-    seconds = int_seconds % 60
     if hours > 0:
         return f"{sign}{hours}:{minutes:02d}:{seconds:02d}.{cs:02d}"
     return f"{sign}{minutes}:{seconds:02d}.{cs:02d}"

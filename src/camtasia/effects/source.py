@@ -115,7 +115,10 @@ class SourceEffect(Effect):
                 existing['defaultValue'] = value
             else:
                 params['MidPoint'] = value
+            params.pop('MidPointX', None)
+            params.pop('MidPointY', None)
         else:
+            params.pop('MidPoint', None)
             for key, val in [('MidPointX', value[0]), ('MidPointY', value[1])]:
                 existing = params.get(key)
                 if isinstance(existing, dict):
