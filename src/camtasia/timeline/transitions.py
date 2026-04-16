@@ -125,7 +125,12 @@ class TransitionList:
 
         Returns:
             The newly created Transition.
+
+        Raises:
+            ValueError: If both left_clip_id and right_clip_id are None.
         """
+        if left_clip_id is None and right_clip_id is None:
+            raise ValueError('At least one of left_clip_id or right_clip_id must be provided')
         default_attributes = {
             'bypass': False,
             'reverse': False,

@@ -20,11 +20,8 @@ from camtasia.types import ClipType, EffectName
 
 def _parse_scalar(value: Any) -> Fraction:
     """Convert a scalar value (int, float, or Fraction string like '6723/5755') to Fraction."""
-    if isinstance(value, int):
-        return Fraction(value)
-    if isinstance(value, float):
-        return Fraction(value).limit_denominator()
-    return Fraction(str(value))
+    from camtasia.timing import parse_scalar
+    return parse_scalar(value)
 
 
 _VALID_CLIP_TYPES = frozenset({
