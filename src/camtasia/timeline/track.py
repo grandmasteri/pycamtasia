@@ -1721,14 +1721,9 @@ class Track:
         right_data['mediaStart'] = int(Fraction(orig_media_start) + Fraction(split_offset) / Fraction(orig_scalar) if orig_scalar != 0 else orig_media_start + split_offset)
         right_data['mediaDuration'] = int((orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
 
-        # Assign new sequential IDs to right half
-        next_id = self._next_clip_id()
-        right_data['id'] = next_id
-        next_id += 1
-
-        # Re-ID nested clips for all container types (Group, StitchedMedia, UnifiedMedia)
+        # Re-ID the right half and all nested clips
         from camtasia.timeline.timeline import _remap_clip_ids_recursive
-        id_counter = [next_id]
+        id_counter = [self._next_clip_id()]
         _remap_clip_ids_recursive(right_data, id_counter)
 
         # Insert right half after left half

@@ -717,13 +717,24 @@ class Project:
             id_counter = [merged.next_available_id]
             for track in source_project.timeline.tracks:
                 new_track = merged.timeline.add_track(track.name)
+                # Build old→new ID map for this track's clips
+                clip_id_map: dict[int, int] = {}
                 for clip in track.clips:
+                    old_id = clip.id
                     cloned = copy.deepcopy(clip._data)
                     cloned['start'] = cloned.get('start', 0) + int(cursor_seconds * 705600000)
                     _remap_clip_ids_recursive(cloned, id_counter)
-                    # Remap src references recursively
+                    clip_id_map[old_id] = cloned['id']
                     _remap_src_recursive(cloned, src_id_map)
                     new_track._data.setdefault('medias', []).append(cloned)
+                # Copy transitions with remapped clip IDs
+                for trans in track._data.get('transitions', []):
+                    cloned_trans = copy.deepcopy(trans)
+                    if 'leftMedia' in cloned_trans and cloned_trans['leftMedia'] in clip_id_map:
+                        cloned_trans['leftMedia'] = clip_id_map[cloned_trans['leftMedia']]
+                    if 'rightMedia' in cloned_trans and cloned_trans['rightMedia'] in clip_id_map:
+                        cloned_trans['rightMedia'] = clip_id_map[cloned_trans['rightMedia']]
+                    new_track._data.setdefault('transitions', []).append(cloned_trans)
 
             cursor_seconds += source_project.duration_seconds
 

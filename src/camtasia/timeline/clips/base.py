@@ -576,14 +576,6 @@ class BaseClip:
         tracks = self._data.setdefault('animationTracks', {})
         return tracks.setdefault('visual', [])  # type: ignore[no-any-return]
 
-    def _remove_opacity_tracks(self) -> None:
-        """Remove all opacity entries from ``animationTracks.visual``."""
-        visual = self._data.get('animationTracks', {}).get('visual')
-        if visual is not None:
-            self._data['animationTracks']['visual'] = [
-                t for t in visual if t.get('track') != 'opacity'
-            ]
-
     def _add_opacity_track(self, keyframes: list[dict[str, Any]]) -> None:
         """Add opacity animation via parameters.opacity and animationTracks.visual.
 

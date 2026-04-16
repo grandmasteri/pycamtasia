@@ -662,22 +662,6 @@ class TestBaseClipEffects:
         assert effect_dict["rightEdgeMods"][0]["type"] == "fadeOut"
 
 
-class TestBaseClipRemoveOpacityTracks:
-    def test_remove_opacity_tracks_no_visual(self):
-        """_remove_opacity_tracks is a no-op when no animationTracks exist."""
-        data = _base()
-        clip = BaseClip(data)
-        clip._remove_opacity_tracks()  # should not raise
-
-    def test_remove_opacity_tracks_filters(self):
-        data = _base(animationTracks={"visual": [
-            {"track": "opacity", "endTime": 100},
-            {"track": "position", "endTime": 200},
-        ]})
-        clip = BaseClip(data)
-        clip._remove_opacity_tracks()
-        assert data["animationTracks"]["visual"] == [{"track": "position", "endTime": 200}]
-
 
 class TestCalloutHorizontalAlignmentGetter:
     def test_horizontal_alignment_from_def(self):
