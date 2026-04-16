@@ -572,8 +572,6 @@ class Track:
             seconds_to_ticks(start_seconds),
             seconds_to_ticks(duration_seconds),
             attributes={'ident': '', 'gain': 1.0, 'mixToMono': False,
-                        'widthAttr': 1920.0, 'heightAttr': 1080.0,
-                        'maxDurationAttr': 0, 'assetProperties': [],
                         'loudnessNormalization': True, 'sourceFileOffset': 0},
             trackNumber=0,
             channelNumber='0',
