@@ -275,8 +275,6 @@ class Group(BaseClip):
     def remove_internal_clip(self, clip_id: int) -> None:
         """Remove a clip from any internal track by ID.
 
-        Cascade-deletes any transitions referencing the removed clip.
-
         Args:
             clip_id: The ``id`` of the internal clip to remove.
 
@@ -288,18 +286,11 @@ class Group(BaseClip):
             for i, media_dict in enumerate(medias):
                 if media_dict.get('id') == clip_id:
                     medias.pop(i)
-                    transitions: list[dict[str, Any]] = group_track._data.get('transitions', [])
-                    group_track._data['transitions'] = [
-                        t for t in transitions
-                        if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
-                    ]
                     return
         raise KeyError(f'No internal clip with id={clip_id}')
 
     def clear_all_internal_clips(self) -> int:
         """Remove all clips from all internal tracks.
-
-        Cascade-deletes all transitions on every internal track.
 
         Returns:
             The total number of clips removed.
@@ -309,7 +300,6 @@ class Group(BaseClip):
             medias: list[dict[str, Any]] = group_track._data.get('medias', [])
             total_removed += len(medias)
             medias.clear()
-            group_track._data['transitions'] = []
         return total_removed
 
     def set_dimensions(self, width_pixels: float, height_pixels: float) -> Self:

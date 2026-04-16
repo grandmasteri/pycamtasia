@@ -57,7 +57,8 @@ class BaseClip:
         if self.clip_type == ClipType.AUDIO:
             return True
         if self.clip_type == 'StitchedMedia':
-            return all(m.get('_type') == 'AMFile' for m in self._data.get('medias', []))
+            medias = self._data.get('medias', [])
+            return bool(medias) and all(m.get('_type') == 'AMFile' for m in medias)
         return False
 
     @property
@@ -1332,10 +1333,12 @@ class BaseClip:
         params = self._data.setdefault('parameters', {})
         x_kfs = []
         y_kfs = []
-        for t, x, y in keyframes:
+        for i, (t, x, y) in enumerate(keyframes):
             ticks = seconds_to_ticks(t)
-            x_kfs.append({'endTime': ticks, 'time': ticks, 'value': x, 'duration': 0})
-            y_kfs.append({'endTime': ticks, 'time': ticks, 'value': y, 'duration': 0})
+            next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
+            dur = next_ticks - ticks
+            x_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': x, 'duration': dur})
+            y_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': y, 'duration': dur})
         params['translation0'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': x_kfs}
         params['translation1'] = {'type': 'double', 'defaultValue': keyframes[0][2], 'keyframes': y_kfs}
         return self
@@ -1349,9 +1352,11 @@ class BaseClip:
         from camtasia.timing import seconds_to_ticks
         params = self._data.setdefault('parameters', {})
         kfs = []
-        for t, s in keyframes:
+        for i, (t, s) in enumerate(keyframes):
             ticks = seconds_to_ticks(t)
-            kfs.append({'endTime': ticks, 'time': ticks, 'value': s, 'duration': 0})
+            next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
+            dur = next_ticks - ticks
+            kfs.append({'endTime': next_ticks, 'time': ticks, 'value': s, 'duration': dur})
         params['scale0'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': kfs}
         params['scale1'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': list(kfs)}
         return self
@@ -1366,9 +1371,11 @@ class BaseClip:
         import math
         params = self._data.setdefault('parameters', {})
         kfs = []
-        for t, deg in keyframes:
+        for i, (t, deg) in enumerate(keyframes):
             ticks = seconds_to_ticks(t)
-            kfs.append({'endTime': ticks, 'time': ticks, 'value': math.radians(deg), 'duration': 0})
+            next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
+            dur = next_ticks - ticks
+            kfs.append({'endTime': next_ticks, 'time': ticks, 'value': math.radians(deg), 'duration': dur})
         params['rotation2'] = {'type': 'double', 'defaultValue': kfs[0]['value'], 'keyframes': kfs}
         return self
 

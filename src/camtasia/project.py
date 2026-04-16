@@ -846,6 +846,14 @@ class Project:
         # Source reference validation
         issues.extend(validate_all(self._data))
 
+        # Overlapping clips
+        for track in self.timeline.tracks:
+            for clip_a_id, clip_b_id in track.overlaps():
+                issues.append(ValidationIssue(
+                    'warning',
+                    f'Overlapping clips on track {track.name!r}: clip {clip_a_id} and clip {clip_b_id}',
+                ))
+
         # Orphaned media
         for media in self.media_bin:
             if media.id not in referenced_ids:
@@ -2011,6 +2019,7 @@ class Project:
             raise KeyError(f'Target track not found: {target_track_name}')
         return self.timeline.group_clips_across_tracks(
             clip_ids, target.index, group_name,
+            width=self.width, height=self.height,
         )
 
     def add_subtitle_track(
@@ -2292,7 +2301,10 @@ class Project:
         count: int = 0
         for _, clip in self.all_clips:
             if clip.is_audio or clip.clip_type in ('AMFile', 'UnifiedMedia'):
-                clip.gain = target_gain
+                if clip.clip_type == 'UnifiedMedia':
+                    clip._data.get('audio', {}).setdefault('attributes', {})['gain'] = target_gain
+                else:
+                    clip.gain = target_gain
                 count += 1
         return count
 

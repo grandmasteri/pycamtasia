@@ -832,6 +832,8 @@ class Timeline:
         clip_ids: list[int],
         target_track_index: int,
         group_name: str = '',
+        width: int = 1920,
+        height: int = 1080,
     ) -> Group:
         """Group clips from multiple tracks into a single Group clip.
 
@@ -937,8 +939,8 @@ class Timeline:
             'effects': [],
             'attributes': {
                 'ident': group_name,
-                'widthAttr': float(self._data.get('width', 1920)),
-                'heightAttr': float(self._data.get('height', 1080)),
+                'widthAttr': float(width),
+                'heightAttr': float(height),
                 'maxDurationAttr': 0,
                 'gain': 1.0,
                 'mixToMono': False,

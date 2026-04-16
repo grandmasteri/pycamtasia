@@ -40,9 +40,9 @@ class StitchedMedia(BaseClip):
         return len(self._data.get('medias', []))
 
     @property
-    def min_media_start(self) -> int:
+    def min_media_start(self) -> float:
         """Minimum media start offset in frames."""
-        return int(self._data.get('minMediaStart', 0))
+        return float(self._data.get('minMediaStart', 0))
 
     def clear_segments(self) -> None:
         """Remove all nested segments."""

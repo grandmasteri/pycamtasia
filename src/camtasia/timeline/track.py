@@ -809,6 +809,9 @@ class Track:
         start_seconds: float,
         duration_seconds: float,
         internal_tracks: list[dict[str, Any]] | None = None,
+        *,
+        width: float = 1920.0,
+        height: float = 1080.0,
         **kwargs: Any,
     ) -> Group:
         """Add a Group clip to the track.
@@ -818,6 +821,8 @@ class Track:
             duration_seconds: Playback duration in seconds.
             internal_tracks: List of internal track dicts. If ``None``, an
                 empty ``tracks`` list is created.
+            width: Canvas width for the group (default 1920.0).
+            height: Canvas height for the group (default 1080.0).
             **kwargs: Additional fields merged into the clip dict.
 
         Returns:
@@ -830,7 +835,7 @@ class Track:
             tracks=internal_tracks or [],
             attributes=kwargs.pop('attributes', {
                 'ident': '', 'gain': 1.0, 'mixToMono': False,
-                'widthAttr': 0.0, 'heightAttr': 0.0,
+                'widthAttr': width, 'heightAttr': height,
                 'maxDurationAttr': 0, 'assetProperties': [],
             }),
             parameters={**_GROUP_DEFAULT_PARAMETERS, **kwargs.pop('parameters', {})},
@@ -905,7 +910,7 @@ class Track:
             'effects': [],
             'attributes': {
                 'ident': '', 'gain': 1.0, 'mixToMono': False,
-                'widthAttr': 0.0, 'heightAttr': 0.0,
+                'widthAttr': 1920.0, 'heightAttr': 1080.0,
                 'maxDurationAttr': 0, 'assetProperties': [],
             },
             'tracks': [{
@@ -1147,7 +1152,7 @@ class Track:
             freeze_duration_ticks,
             media_duration=1,
             trimStartSum=0,
-            mediaStart=media_offset_ticks,
+            media_start=media_offset_ticks,
             trackNumber=0,
         )
         return freeze_clip
@@ -1537,13 +1542,16 @@ class Track:
             split_points.append(t)
 
         current = clip
+        split_piece_ids: set[int] = {clip.id}
         for sp in reversed(split_points):
             left, right = self.split_clip(current.id, sp)
+            split_piece_ids.add(left.id)
+            split_piece_ids.add(right.id)
             current = left
 
         # Collect the split pieces in order
         pieces = sorted(
-            [c for c in self.clips if c.start >= clip.start],
+            [c for c in self.clips if c.id in split_piece_ids],
             key=lambda c: c.start,
         )[:len(segments)]
 

@@ -77,42 +77,6 @@ class TestRemoveInternalClip:
         assert len(group.all_internal_clips) == 1
         assert group.all_internal_clips[0].id == 10
 
-    def test_cascade_deletes_transitions(self) -> None:
-        transitions_data: list[list[dict]] = [
-            [
-                {'leftMedia': 10, 'rightMedia': 11, 'type': 'fade'},
-                {'leftMedia': 11, 'rightMedia': 12, 'type': 'dissolve'},
-            ],
-        ]
-        group: Group = _make_group(
-            [[_clip_data('VMFile', 10, 0.0, 3.0),
-              _clip_data('VMFile', 11, 3.0, 3.0),
-              _clip_data('VMFile', 12, 6.0, 3.0)]],
-            transitions=transitions_data,
-        )
-        group.remove_internal_clip(11)
-        raw_transitions: list[dict] = group._data['tracks'][0]['transitions']
-        assert raw_transitions == []
-
-    def test_preserves_unrelated_transitions(self) -> None:
-        transitions_data: list[list[dict]] = [
-            [
-                {'leftMedia': 10, 'rightMedia': 11, 'type': 'fade'},
-                {'leftMedia': 12, 'rightMedia': 13, 'type': 'dissolve'},
-            ],
-        ]
-        group: Group = _make_group(
-            [[_clip_data('VMFile', 10, 0.0, 2.0),
-              _clip_data('VMFile', 11, 2.0, 2.0),
-              _clip_data('VMFile', 12, 4.0, 2.0),
-              _clip_data('VMFile', 13, 6.0, 2.0)]],
-            transitions=transitions_data,
-        )
-        group.remove_internal_clip(10)
-        raw_transitions: list[dict] = group._data['tracks'][0]['transitions']
-        assert len(raw_transitions) == 1
-        assert raw_transitions[0]['leftMedia'] == 12
-
     def test_raises_key_error_for_missing_id(self) -> None:
         group: Group = _make_group([[_clip_data('VMFile', 10, 0.0, 5.0)]])
         with pytest.raises(KeyError, match='No internal clip with id=999'):
@@ -145,17 +109,6 @@ class TestClearAllInternalClips:
         ])
         group.clear_all_internal_clips()
         assert group.all_internal_clips == []
-
-    def test_transitions_cleared(self) -> None:
-        transitions_data: list[list[dict]] = [
-            [{'leftMedia': 10, 'rightMedia': 11, 'type': 'fade'}],
-        ]
-        group: Group = _make_group(
-            [[_clip_data('VMFile', 10, 0.0, 5.0), _clip_data('VMFile', 11, 5.0, 3.0)]],
-            transitions=transitions_data,
-        )
-        group.clear_all_internal_clips()
-        assert group._data['tracks'][0]['transitions'] == []
 
     def test_returns_zero_for_empty_group(self) -> None:
         group: Group = _make_group([])

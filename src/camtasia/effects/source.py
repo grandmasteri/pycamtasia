@@ -115,9 +115,12 @@ class SourceEffect(Effect):
             self.set_parameter('MidPointY', value[1])
 
     @property
-    def speed(self) -> float:
-        """Shader animation speed."""
-        return float(self.get_parameter("Speed"))
+    def speed(self) -> float | None:
+        """Shader animation speed, or None if not present (e.g. Lottie assets)."""
+        try:
+            return float(self.get_parameter("Speed"))
+        except KeyError:
+            return None
 
     @speed.setter
     def speed(self, value: float) -> None:

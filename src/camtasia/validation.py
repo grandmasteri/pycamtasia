@@ -194,7 +194,7 @@ def _check_group_required_fields(data: dict) -> list[ValidationIssue]:
 
     def _check_medias(medias: list, path: str) -> None:
         for media in medias:
-            if 'tracks' in media:
+            if media.get('_type') == 'Group':
                 mid = media.get('id')
                 params = set(media.get('parameters', {}).keys())
                 missing_p = required_params - params
@@ -213,6 +213,37 @@ def _check_group_required_fields(data: dict) -> list[ValidationIssue]:
                 for inner_track in media.get('tracks', []):
                     _check_medias(inner_track.get('medias', []),
                                   f'{path}/group{mid}')
+
+    tracks = _get_tracks(data)
+    for ti, track in enumerate(tracks):
+        _check_medias(track.get('medias', []), f'track[{ti}]')
+    return issues
+
+
+def _check_clip_timing(data: dict) -> list[ValidationIssue]:
+    """Check for clips with negative start or zero/negative duration."""
+    issues: list[ValidationIssue] = []
+
+    def _check_medias(medias: list, path: str) -> None:
+        for media in medias:
+            mid = media.get('id')
+            start = media.get('start', 0)
+            duration = media.get('duration')
+            if start < 0:
+                issues.append(ValidationIssue(
+                    'warning',
+                    f'{path} clip id={mid} has negative start={start}',
+                ))
+            if duration is not None and duration <= 0:
+                issues.append(ValidationIssue(
+                    'warning',
+                    f'{path} clip id={mid} has non-positive duration={duration}',
+                ))
+            for inner_track in media.get('tracks', []):
+                _check_medias(inner_track.get('medias', []),
+                              f'{path}/group{mid}')
+            _check_medias(media.get('medias', []),
+                          f'{path}/stitched{mid}')
 
     tracks = _get_tracks(data)
     for ti, track in enumerate(tracks):
@@ -270,6 +301,7 @@ def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     issues.extend(_check_track_attributes_count(data))
     issues.extend(_check_src_references(data))
     issues.extend(_check_group_required_fields(data))
+    issues.extend(_check_clip_timing(data))
     issues.extend(_check_timing_consistency(data))
     return issues
 
