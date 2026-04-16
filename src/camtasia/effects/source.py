@@ -1,8 +1,6 @@
 """Source effects for shader videos."""
 from __future__ import annotations
 
-from typing import Any
-
 from camtasia.effects.base import Effect, register_effect
 
 
@@ -69,10 +67,6 @@ class SourceEffect(Effect):
         """Set the second shader color."""
         self._set_color(1, rgba)
 
-    def _get_value(self, val: Any) -> float:
-        """Extract scalar from a parameter value (dict or raw)."""
-        return float(val['defaultValue'] if isinstance(val, dict) else val)
-
     @property
     def color2(self) -> tuple[float, float, float, float] | None:
         """Third shader color as RGBA floats, or None if not present."""
@@ -104,11 +98,11 @@ class SourceEffect(Effect):
         """Mid point position. Returns (x, y) tuple for four-corner gradients or a single float for radial gradients."""
         params = self._data.get('parameters', {})
         if 'MidPointX' in params:
-            x = self._get_value(params.get('MidPointX', 0.5))
-            y = self._get_value(params.get('MidPointY', 0.5))
+            x = float(self.get_parameter('MidPointX'))
+            y = float(self.get_parameter('MidPointY'))
             return (x, y)
         elif 'MidPoint' in params:
-            return self._get_value(params.get('MidPoint', 0.5))
+            return float(self.get_parameter('MidPoint'))
         return (0.5, 0.5)
 
     @mid_point.setter

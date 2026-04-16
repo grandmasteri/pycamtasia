@@ -22,7 +22,7 @@ from camtasia.timeline.track import Track
 from camtasia.timeline.clips import BaseClip
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 from camtasia.types import ClipType, CompactResult, EffectName, HealthCheckResult
-from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_track_attributes_count, _check_track_indices, _check_transition_completeness, _check_transition_references, validate_against_schema
+from camtasia.validation import ValidationIssue, _check_duplicate_clip_ids, _check_src_references, _check_track_attributes_count, _check_track_indices, _check_transition_completeness, _check_transition_references, validate_against_schema
 
 
 import subprocess as _sp
@@ -840,8 +840,9 @@ class Project:
         for clip in self.timeline.all_clips():
             if clip.source_id is not None:
                 referenced_ids.add(clip.source_id)
-                if clip.source_id not in bin_ids:
-                    issues.append(ValidationIssue('error', f'Clip references missing source ID {clip.source_id}', clip.source_id))
+
+        # Source reference validation
+        issues.extend(_check_src_references(self._data))
 
         # Orphaned media
         for media in self.media_bin:

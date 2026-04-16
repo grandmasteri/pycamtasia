@@ -496,10 +496,9 @@ class Group(BaseClip):
         # Replace the internal track's medias
         media_track['medias'] = new_medias
 
-        # Clear transitions on ALL internal tracks to prevent dangling
+        # Clear transitions on the modified track to prevent dangling
         # clip-ID references (new ScreenVMFile clips have new IDs).
-        for track in self._data.get('tracks', []):
-            track['transitions'] = []
+        media_track['transitions'] = []
 
         # Update Group duration and mediaDuration to match total timeline
         total_tl = cursor_ticks

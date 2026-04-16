@@ -58,7 +58,7 @@ class Media:
     def dimensions(self) -> tuple[int, int]:
         """Native dimensions as ``(width, height)`` extracted from *rect*."""
         r = self._data["rect"]
-        return (r[2], r[3])
+        return (int(r[2]), int(r[3]))
 
     @property
     def range(self) -> tuple[int, int]:
@@ -67,6 +67,8 @@ class Media:
         Returns:
             A ``(start, stop)`` tuple of raw integer values.
         """
+        if not self._data.get('sourceTracks'):
+            return (0, 0)
         r = self._data["sourceTracks"][0]["range"]
         return (int(r[0]), int(r[1]))
 
@@ -543,7 +545,6 @@ def _audio_track_to_json(
     bit_depth: int,
     num_channels: int,
     duration: int,
-    edit_rate: int = 30,
     filename: str = "",
 ) -> dict[str, Any]:
     """Build a sourceBin entry for an audio track."""

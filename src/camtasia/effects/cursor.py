@@ -33,6 +33,14 @@ class CursorShadow(Effect):
     """
 
     @property
+    def enabled(self) -> int:  # type: ignore[no-any-return]
+        return self.get_parameter('enabled')  # type: ignore[no-any-return]
+
+    @enabled.setter
+    def enabled(self, value: int) -> None:
+        self.set_parameter('enabled', value)
+
+    @property
     def angle(self) -> float:
         """Shadow angle in radians."""
         return float(self.get_parameter("angle"))

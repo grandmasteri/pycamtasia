@@ -1,7 +1,7 @@
 """GenericBehaviorEffect — Camtasia's text animation/behaviors system."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 
 from camtasia.effects.base import Effect
 from camtasia.types import _BehaviorEffectData, _BehaviorPhaseData
@@ -220,7 +220,4 @@ class GenericBehaviorEffect(Effect):
         """Return a developer-friendly string representation."""
         return f"GenericBehaviorEffect(name={self.effect_name!r}, preset={self.preset_name!r})"
 
-    @property
-    def is_time_bounded(self) -> bool:
-        """Whether this behavior effect has explicit start/duration."""
-        return 'start' in self._data and 'duration' in self._data
+

@@ -53,8 +53,8 @@ def format_duration(ticks: int) -> str:
     seconds = int(abs_seconds) % 60
     fraction = abs_seconds - int(abs_seconds)
     if hours > 0:
-        return f"{sign}{hours}:{minutes:02d}:{seconds:02d}.{int(fraction * 100):02d}"
-    return f"{sign}{minutes}:{seconds:02d}.{int(fraction * 100):02d}"
+        return f"{sign}{hours}:{minutes:02d}:{seconds:02d}.{round(fraction * 100):02d}"
+    return f"{sign}{minutes}:{seconds:02d}.{round(fraction * 100):02d}"
 
 
 def parse_scalar(value: int | float | str | Fraction) -> Fraction:
@@ -101,7 +101,12 @@ def speed_to_scalar(speed: float) -> Fraction:
 
     Returns:
         Rational scalar for Camtasia JSON.
+
+    Raises:
+        ValueError: If speed is zero.
     """
+    if speed == 0:
+        raise ValueError('Speed cannot be zero')
     return Fraction(1, 1) / Fraction(speed).limit_denominator(10_000)
 
 
@@ -113,5 +118,10 @@ def scalar_to_speed(scalar: Fraction) -> float:
 
     Returns:
         Speed multiplier (e.g. 2.0 for 2x playback).
+
+    Raises:
+        ValueError: If scalar is zero.
     """
+    if scalar == 0:
+        raise ValueError('Scalar cannot be zero')
     return float(Fraction(1, 1) / scalar)

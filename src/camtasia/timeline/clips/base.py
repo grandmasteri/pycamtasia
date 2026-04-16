@@ -580,7 +580,7 @@ class BaseClip:
         tracks = self._data.setdefault('animationTracks', {})
         return tracks.setdefault('visual', [])  # type: ignore[no-any-return]
 
-    def _add_opacity_track(self, keyframes: list[dict[str, Any]]) -> None:
+    def _add_opacity_track(self, keyframes: list[dict[str, Any]], *, default_value: float = 0.0) -> None:
         """Add opacity animation via parameters.opacity and animationTracks.visual.
 
         Follows the Camtasia v10 pattern observed in real projects:
@@ -680,11 +680,11 @@ class BaseClip:
             self._add_opacity_track([
                 fade_in_kf,
                 {'time': end - ticks, 'value': 0.0, 'endTime': end, 'duration': ticks},
-            ])
+            ], default_value=1.0)
         else:  # pragma: no cover
             self._add_opacity_track([
                 {'time': end - ticks, 'value': 0.0, 'endTime': end, 'duration': ticks},
-            ])
+            ], default_value=1.0)
         return self
 
     def fade(

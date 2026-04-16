@@ -106,6 +106,11 @@ def test_validate_clean_after_operations(operations):
     from camtasia import load_project
 
     proj = _isolated_project()
+    proj._data.setdefault('sourceBin', []).append({
+        'id': 1, 'src': './media/test.wav', 'rect': [0, 0, 0, 0],
+        'lastMod': '20260101T000000',
+        'sourceTracks': [{'range': [0, 48000], 'type': 2, 'editRate': 48000, 'sampleRate': 48000, 'bitDepth': 16, 'numChannels': 1}],
+    })
     track = proj.timeline.add_track('Test')
     clip_ids: list[int] = []
 
