@@ -914,10 +914,13 @@ class Project:
         # "key": value  ->  "key" : value
         # Only on lines that don't contain escaped quotes (to avoid
         # corrupting JSON-inside-string values like textAttributes).
+        # Only match the key-value separator colon, not colons inside string values.
         lines = text.split('\n')
         for i, line in enumerate(lines):
             if '\\"' not in line:
-                lines[i] = re.sub(r'"\s*:', '" :', line)
+                # Match "key": pattern — the colon must follow a closing quote
+                # that is preceded by a non-quote char (end of key name)
+                lines[i] = re.sub(r'(^\s*"[^"]+")(\s*):', r'\1 :', line)
         text = '\n'.join(lines)
 
         # Step 3: Collapse scalar arrays to single lines

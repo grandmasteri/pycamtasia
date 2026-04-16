@@ -1726,19 +1726,10 @@ class Track:
         right_data['id'] = next_id
         next_id += 1
 
-        # Re-ID internal tracks for Group clips
-        if right_data.get('_type') == 'Group':
-            for track in right_data.get('tracks', []):
-                for media in track.get('medias', []):
-                    media['id'] = next_id
-                    next_id += 1
-                    # Handle UnifiedMedia with nested video/audio
-                    if 'video' in media:
-                        media['video']['id'] = next_id
-                        next_id += 1
-                    if 'audio' in media:
-                        media['audio']['id'] = next_id
-                        next_id += 1
+        # Re-ID nested clips for all container types (Group, StitchedMedia, UnifiedMedia)
+        from camtasia.timeline.timeline import _remap_clip_ids_recursive
+        id_counter = [next_id]
+        _remap_clip_ids_recursive(right_data, id_counter)
 
         # Insert right half after left half
         medias.insert(left_idx + 1, right_data)
