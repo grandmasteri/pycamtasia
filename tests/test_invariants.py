@@ -13,6 +13,16 @@ RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 TICK = 705_600_000  # ~23.5 s at 30 fps editRate
 
 
+
+def _isolated_project():
+    """Load template into an isolated temp copy (safe for parallel execution)."""
+    import shutil, tempfile
+    from camtasia.project import load_project
+    tmp = tempfile.mkdtemp()
+    dst = Path(tmp) / 'test.cmproj'
+    shutil.copytree(RESOURCES / 'new.cmproj', dst)
+    return load_project(dst)
+
 def _make_track():
     data = {'trackIndex': 0, 'medias': [], 'transitions': []}
     return Track({'ident': 'test'}, data), data
@@ -91,7 +101,7 @@ def test_validate_clean_after_operations(operations):
     """Project.validate() should find no errors after any operation sequence."""
     from camtasia import load_project
 
-    proj = load_project(RESOURCES / 'new.cmproj')
+    proj = _isolated_project()
     track = proj.timeline.add_track('Test')
     clip_ids: list[int] = []
 
@@ -689,7 +699,7 @@ def test_remove_internal_clip_reduces_count(num_clips):
 def test_clone_track_preserves_clip_count(num_clips):
     """Cloning a track should preserve the number of clips."""
     from camtasia import load_project
-    proj = load_project(RESOURCES / 'new.cmproj')
+    proj = _isolated_project()
     track = proj.timeline.add_track('Source')
     for i in range(num_clips):
         track.add_clip('AMFile', 1, i * TICK, TICK)
@@ -707,7 +717,7 @@ def test_clone_track_preserves_clip_count(num_clips):
 def test_strip_all_effects_zeroes_count(num_clips):
     """After strip_all_effects, no clip should have effects."""
     from camtasia import load_project
-    proj = load_project(RESOURCES / 'new.cmproj')
+    proj = _isolated_project()
     track = proj.timeline.add_track('Test')
     for i in range(num_clips):
         clip = track.add_clip('VMFile', 1, i * TICK, TICK)
@@ -728,7 +738,7 @@ def test_strip_all_effects_zeroes_count(num_clips):
 def test_normalize_audio_equalizes_gain(target_gain):
     """After normalize_audio, all audio clips should have the target gain."""
     from camtasia import load_project
-    proj = load_project(RESOURCES / 'new.cmproj')
+    proj = _isolated_project()
     track = proj.timeline.add_track('Audio')
     for i in range(3):
         clip = track.add_audio(1, start_seconds=float(i), duration_seconds=1.0)
@@ -750,7 +760,7 @@ def test_normalize_audio_equalizes_gain(target_gain):
 def test_replace_all_media_changes_all(num_clips):
     """replace_all_media should change all clips with the old source ID."""
     from camtasia import load_project
-    proj = load_project(RESOURCES / 'new.cmproj')
+    proj = _isolated_project()
     track = proj.timeline.add_track('Test')
     for i in range(num_clips):
         track.add_clip('VMFile', 42, i * TICK, TICK)

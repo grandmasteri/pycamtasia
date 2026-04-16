@@ -8,12 +8,22 @@ from pathlib import Path
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 
 
+
+def _isolated_project():
+    """Load template into an isolated temp copy (safe for parallel execution)."""
+    import shutil, tempfile
+    from camtasia.project import load_project
+    tmp = tempfile.mkdtemp()
+    dst = Path(tmp) / 'test.cmproj'
+    shutil.copytree(RESOURCES / 'new.cmproj', dst)
+    return load_project(dst)
+
 @pytest.fixture
 def project_with_clips():
     """Load the new.cmproj template and add a video + image clip."""
     from camtasia.project import load_project
 
-    proj = load_project(RESOURCES / 'new.cmproj')
+    proj = _isolated_project()
     track = proj.timeline.get_or_create_track('TestTrack')
     # Add a source bin entry for a fake video
     proj._data.setdefault('sourceBin', []).append({
@@ -89,7 +99,7 @@ class TestApplyTemplateEffects:
 
     def test_empty_project(self):
         from camtasia.project import load_project
-        proj = load_project(RESOURCES / 'new.cmproj')
+        proj = _isolated_project()
         count = proj.apply_template_effects({'VMFile': ['add_drop_shadow']})
         assert count == 0
 
@@ -111,7 +121,7 @@ class TestStripAllEffects:
 
     def test_strips_empty_project(self):
         from camtasia.project import load_project
-        proj = load_project(RESOURCES / 'new.cmproj')
+        proj = _isolated_project()
         assert proj.strip_all_effects() == 0
 
     def test_roundtrip_apply_then_strip(self, project_with_clips):

@@ -210,3 +210,8 @@ class GenericBehaviorEffect:
     def __repr__(self) -> str:
         """Return a developer-friendly string representation."""
         return f"GenericBehaviorEffect(name={self.effect_name!r}, preset={self.preset_name!r})"
+
+    @property
+    def is_time_bounded(self) -> bool:
+        """Whether this behavior effect has explicit start/duration."""
+        return self._data.get('start', 0) > 0 or self._data.get('duration', 0) > 0

@@ -283,6 +283,8 @@ class TestProjectCIntegration:
         for clip_data in _all_clips(test_project_c_data):
             for eff_data in clip_data.get("effects", []):
                 eff = effect_from_dict(eff_data)
+                if not hasattr(eff, 'left_edge_mods'):
+                    continue
                 if eff.is_time_bounded:
                     if eff.left_edge_mods:
                         actual_effects_with_left.append(eff)

@@ -11,8 +11,18 @@ FIXTURES = Path(__file__).parent / 'fixtures'
 EMPTY_WAV = FIXTURES / 'empty.wav'
 
 
+
+def _isolated_project():
+    """Load template into an isolated temp copy (safe for parallel execution)."""
+    import shutil, tempfile
+    from camtasia.project import load_project
+    tmp = tempfile.mkdtemp()
+    dst = Path(tmp) / 'test.cmproj'
+    shutil.copytree(RESOURCES / 'new.cmproj', dst)
+    return load_project(dst)
+
 def _make_project():
-    return load_project(RESOURCES / 'new.cmproj')
+    return _isolated_project()
 
 
 def test_returns_base_clip():

@@ -1426,7 +1426,21 @@ class BaseClip:
         dur = ticks_to_seconds(self.duration)
 
         if fade_in > 0 or fade_out > 0:
-            self.fade(fade_in, fade_out)
+            from camtasia.timing import seconds_to_ticks
+            dur_ticks = self.duration
+            keyframes: list[dict] = []
+            if fade_in > 0:
+                fi_ticks = seconds_to_ticks(fade_in)
+                keyframes.append({'endTime': fi_ticks, 'time': 0, 'value': 1.0, 'duration': fi_ticks})
+            if fade_out > 0:
+                fo_ticks = seconds_to_ticks(fade_out)
+                fo_start = dur_ticks - fo_ticks
+                keyframes.append({'endTime': dur_ticks, 'time': fo_start, 'value': 0.0, 'duration': fo_ticks})
+            self._data.setdefault('parameters', {})['opacity'] = {
+                'type': 'double',
+                'defaultValue': 0.0 if fade_in > 0 else 1.0,
+                'keyframes': keyframes,
+            }
 
         if scale_from is not None and scale_to is not None:
             self.set_scale_keyframes([(0.0, scale_from), (dur, scale_to)])

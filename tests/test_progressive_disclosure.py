@@ -12,8 +12,18 @@ from camtasia.project import load_project
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 
 
+
+def _isolated_project():
+    """Load template into an isolated temp copy (safe for parallel execution)."""
+    import shutil, tempfile
+    from camtasia.project import load_project
+    tmp = tempfile.mkdtemp()
+    dst = Path(tmp) / 'test.cmproj'
+    shutil.copytree(RESOURCES / 'new.cmproj', dst)
+    return load_project(dst)
+
 def _make_project():
-    return load_project(RESOURCES / 'new.cmproj')
+    return _isolated_project()
 
 
 def _make_minimal_png(path: Path) -> None:

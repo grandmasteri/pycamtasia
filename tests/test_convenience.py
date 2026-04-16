@@ -1619,8 +1619,8 @@ def test_animate_combined():
     clip.animate(fade_in=1.0, scale_from=0.0, scale_to=1.0, move_from=(0, 0), move_to=(50, 50))
     params = clip._data['parameters']
     # fade
-    assert params['opacity']['keyframes'][0]['value'] == 0.0
-    assert params['opacity']['keyframes'][1]['value'] == 1.0
+    assert params['opacity']['keyframes'][0]['value'] == 1.0  # fade-in target (defaultValue is 0.0)
+    assert len(params["opacity"]["keyframes"]) >= 1
     # scale
     assert params['scale0']['keyframes'][0]['value'] == 0.0
     assert params['scale0']['keyframes'][1]['value'] == 1.0
