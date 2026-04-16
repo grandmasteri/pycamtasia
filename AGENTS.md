@@ -377,3 +377,42 @@ pycamtasia/
 - `tests/fixtures/empty.wav`, `empty2.wav` — Audio fixtures for media tests
 - `src/camtasia/resources/new.cmproj` — Blank template project (~12KB, media/ gitignored)
 - `src/camtasia/resources/camtasia-project-schema.json` — JSON Schema for .tscproj validation
+
+## User Preferences (encoded from conversation history)
+
+### Subagent Usage
+- Use `gpu-dev` agent for all development subagents (NOT `kiro_default` — it has too many MCP servers causing slow cold starts)
+- Always maximize parallelism — use 4 concurrent subagents when possible
+- Pipeline fixes with reviews (run reviewers 5-6 while fixing issues from reviewers 1-4)
+
+### Adversarial Review Process
+- 6 separate domain reviewers, one per domain — NEVER combine domains into fewer subagents
+- Unbiased prompts only: "Find every bug you can. Be thorough." — NEVER add severity filters like "only report crash bugs"
+- Fix ALL issues reported — no dismissing as "known design limitations"
+- Must achieve 2 consecutive clean passes across all 6 domains
+- No references to "adversarial review", "subagent", or "round" in commit messages
+
+### Code Quality
+- Never use `# pragma: no cover` to hide uncovered lines — write real tests
+- Never push commits with failing tests
+- Always run tests before committing
+- Tests must run in parallel (pytest-xdist, `-n auto`)
+- Keep template project clean (~12KB) — never commit media files
+
+### Documentation
+- Keep AGENTS.md, format reference, JSON schema, CHANGELOG, README up-to-date with every change
+- Aggressive hyperlinking in documentation — all named entities with URLs should be hyperlinked
+- Clean commit messages describing what changed and why
+
+### Working Style
+- Don't stop working — continue autonomously between check-ins
+- Reliability > Features — fix bugs before adding features
+- Default to action — implement changes rather than suggesting them
+- When an approach fails twice, try a fundamentally different approach
+- Always check demo agent gaps file before starting new feature work: `~/Desktop/Anomaly Detection Demo v3.5.3/pycamtasia-gaps.md`
+
+### Before/After Camtasia Testing
+- Open the project in Camtasia for the user (don't assume they'll do it)
+- Save before snapshot, let user make changes, save after snapshot
+- Diff the JSON to understand exact format changes
+- Use findings to update format reference and JSON schema
