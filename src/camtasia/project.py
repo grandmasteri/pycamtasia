@@ -1942,6 +1942,36 @@ class Project:
         """
         return self.apply_to_all_groups(lambda group: group.mute())
 
+    def group_clips_across_tracks(
+        self,
+        clip_ids: list[int],
+        target_track_name: str,
+        group_name: str = '',
+    ) -> Group:
+        """Group clips from multiple tracks into a single Group clip.
+
+        Convenience wrapper around
+        :meth:`Timeline.group_clips_across_tracks` that accepts a track
+        name instead of an index.
+
+        Args:
+            clip_ids: IDs of clips to group (can be on different tracks).
+            target_track_name: Name of the track to place the Group on.
+            group_name: Display name for the Group.
+
+        Returns:
+            The newly created Group clip.
+
+        Raises:
+            KeyError: If the target track name is not found.
+        """
+        target = self.timeline.find_track_by_name(target_track_name)
+        if target is None:
+            raise KeyError(f'Target track not found: {target_track_name}')
+        return self.timeline.group_clips_across_tracks(
+            clip_ids, target.index, group_name,
+        )
+
     def add_subtitle_track(
         self,
         subtitle_entries: list[tuple[float, float, str]],

@@ -804,6 +804,110 @@ class Timeline:
         )
         return total_clip_duration / timeline_duration
 
+    def group_clips_across_tracks(
+        self,
+        clip_ids: list[int],
+        target_track_index: int,
+        group_name: str = '',
+    ) -> Group:
+        """Group clips from multiple tracks into a single Group clip.
+
+        Clips are removed from their original tracks and placed inside
+        a new Group on the target track. Each source track becomes an
+        internal track in the Group. Empty source tracks are preserved.
+
+        Args:
+            clip_ids: IDs of clips to group (can be on different tracks).
+            target_track_index: Index of the track to place the Group on.
+            group_name: Display name for the Group.
+
+        Returns:
+            The newly created Group clip.
+        """
+        import copy
+        from camtasia.timeline.clips.group import Group
+
+        clip_id_set = set(clip_ids)
+
+        # Collect clips from all tracks, grouped by source track
+        clips_by_track: dict[int, list[dict]] = {}
+        for track in self.tracks:
+            for media in track._data.get('medias', []):
+                if media.get('id') in clip_id_set:
+                    clips_by_track.setdefault(track.index, []).append(media)
+
+        # Validate all clips found
+        found_ids: set[int] = set()
+        for clips in clips_by_track.values():
+            for c in clips:
+                found_ids.add(c['id'])
+        missing = clip_id_set - found_ids
+        if missing:
+            raise KeyError(f'Clips not found: {sorted(missing)}')
+
+        # Compute Group bounds
+        all_clips_list = [c for clips in clips_by_track.values() for c in clips]
+        earliest_start = min(int(c.get('start', 0)) for c in all_clips_list)
+        latest_end = max(
+            int(c.get('start', 0)) + int(c.get('duration', 0))
+            for c in all_clips_list
+        )
+        group_duration = latest_end - earliest_start
+
+        # Build internal tracks (one per source track)
+        internal_tracks: list[dict] = []
+        id_counter = [self.next_clip_id()]
+        for track_idx in sorted(clips_by_track.keys()):
+            internal_medias: list[dict] = []
+            for clip_data in clips_by_track[track_idx]:
+                cloned = copy.deepcopy(clip_data)
+                cloned['start'] = int(cloned.get('start', 0)) - earliest_start
+                _remap_clip_ids_recursive(cloned, id_counter)
+                internal_medias.append(cloned)
+            internal_tracks.append({
+                'trackIndex': len(internal_tracks),
+                'medias': internal_medias,
+                'parameters': {},
+                'ident': '',
+                'audioMuted': False,
+                'videoHidden': False,
+                'magnetic': False,
+                'matte': 0,
+                'solo': False,
+            })
+
+        # Remove clips from their original tracks (preserve empty tracks)
+        for track in self.tracks:
+            medias = track._data.get('medias', [])
+            track._data['medias'] = [
+                m for m in medias if m.get('id') not in clip_id_set
+            ]
+            transitions = track._data.get('transitions', [])
+            track._data['transitions'] = [
+                t for t in transitions
+                if t.get('leftMedia') not in clip_id_set
+                and t.get('rightMedia') not in clip_id_set
+            ]
+
+        # Create the Group on the target track
+        target_track = self.tracks[target_track_index]
+        group = target_track.add_group(
+            start_seconds=ticks_to_seconds(earliest_start),
+            duration_seconds=ticks_to_seconds(group_duration),
+            internal_tracks=internal_tracks,
+            attributes={
+                'ident': group_name,
+                'widthAttr': float(self._data.get('width', 1920)),
+                'heightAttr': float(self._data.get('height', 1080)),
+                'maxDurationAttr': 0,
+                'gain': 1.0,
+                'mixToMono': False,
+                'assetProperties': [],
+            },
+        )
+
+        return group
+
 
 class _TrackAccessor:
     """Iterable/indexable accessor over timeline tracks."""
