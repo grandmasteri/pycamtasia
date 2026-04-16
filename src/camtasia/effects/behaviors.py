@@ -31,7 +31,7 @@ class BehaviorPhase:
     @property
     def name(self) -> str:
         """Behavior name (e.g. ``'reveal'``, ``'none'``)."""
-        return str(self._attrs["name"])
+        return str(self._attrs.get("name", ""))
 
     @name.setter
     def name(self, value: str) -> None:
@@ -41,7 +41,7 @@ class BehaviorPhase:
     @property
     def phase_type(self) -> int:
         """Animation granularity: 0 = whole-object, 1 = per-character."""
-        return int(self._attrs["type"])
+        return int(self._attrs.get("type", 0))
 
     @property
     def character_order(self) -> int:

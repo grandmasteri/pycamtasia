@@ -50,6 +50,8 @@ camtasia = ["resources/**"]
 testpaths = ["tests"]
 addopts = "-n auto -m 'not integration'"
 timeout = 10
+tmp_path_retention_policy = "none"
+tmp_path_retention_count = 0
 markers = [
     "integration: Camtasia integration tests (slow, requires Camtasia app)",
 ]
