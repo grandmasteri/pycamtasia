@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 from camtasia.timeline.clips import BaseClip
 from camtasia.timeline.markers import Marker, MarkerList
 from camtasia.timeline.track import Track
+from camtasia.timeline.track import _GROUP_DEFAULT_PARAMETERS, _GROUP_DEFAULT_METADATA
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 from camtasia.types import TimelineSummary
 
@@ -536,10 +537,16 @@ class Timeline:
             List of (track, clip) tuples.
         """
         results = []
-        for track in self.tracks:
-            for clip in track.clips:
-                if clip.clip_type == clip_type:
-                    results.append((track, clip))
+        for clip in self.all_clips():
+            if clip.clip_type == clip_type:
+                # Find which track owns this clip
+                for track in self.tracks:
+                    if any(c.id == clip.id for c in track.clips):
+                        results.append((track, clip))
+                        break
+                else:
+                    # Nested clip — pair with first track as fallback
+                    results.append((self.tracks[0] if self.tracks else None, clip))  # type: ignore[arg-type]
         return results
 
     @property
@@ -923,9 +930,10 @@ class Timeline:
                 'clipSpeedAttribute': {'type': 'bool', 'value': False},
                 'colorAttribute': {'type': 'color', 'value': [0, 0, 0, 0]},
                 'effectApplied': 'none',
+                'isOpen': {'type': 'bool', 'value': False},
             },
             'animationTracks': {},
-            'parameters': {},
+            'parameters': {**_GROUP_DEFAULT_PARAMETERS},
             'effects': [],
             'attributes': {
                 'ident': group_name,

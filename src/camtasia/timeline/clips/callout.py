@@ -186,6 +186,7 @@ class Callout(BaseClip):
             existing = d.get(key)
             if isinstance(existing, dict):
                 existing['defaultValue'] = val
+                existing.pop('keyframes', None)
             else:
                 d[key] = val
 
@@ -214,6 +215,7 @@ class Callout(BaseClip):
             existing = d.get(key)
             if isinstance(existing, dict):
                 existing['defaultValue'] = val
+                existing.pop('keyframes', None)
             else:
                 d[key] = val
 

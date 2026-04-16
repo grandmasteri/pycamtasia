@@ -1,9 +1,20 @@
 from __future__ import annotations
+
+import sys
+if sys.version_info >= (3, 11):  # pragma: no cover
+    from typing import Self
+else:  # pragma: no cover
+    from typing_extensions import Self
+
 from camtasia.timeline.clips.base import BaseClip
 
 
 class PlaceholderMedia(BaseClip):
     """A placeholder clip for missing or to-be-added media."""
+
+    def set_source(self, source_id: int) -> Self:
+        """Not supported on PlaceholderMedia."""
+        raise TypeError('Cannot set_source on PlaceholderMedia; replace the clip instead')
 
     @property
     def subtitle(self) -> str:

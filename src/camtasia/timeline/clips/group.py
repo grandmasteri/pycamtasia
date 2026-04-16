@@ -487,9 +487,11 @@ class Group(BaseClip):
             }
             new_medias.append(clip)
             if canvas_width is not None:
-                clip['parameters']['width'] = canvas_width
+                source_w = video_params.get('width', canvas_width)
+                clip['parameters']['scale0'] = canvas_width / source_w if source_w else 1.0
             if canvas_height is not None:
-                clip['parameters']['height'] = canvas_height
+                source_h = video_params.get('height', canvas_height)
+                clip['parameters']['scale1'] = canvas_height / source_h if source_h else 1.0
             cursor_ticks += dur_ticks
             cid += 1
 

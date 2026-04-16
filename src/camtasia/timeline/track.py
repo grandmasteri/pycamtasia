@@ -29,6 +29,18 @@ _VALID_CLIP_TYPES = frozenset({
     'ScreenVMFile', 'ScreenIMFile', 'StitchedMedia', 'UnifiedMedia',
 })
 
+_GROUP_DEFAULT_PARAMETERS = {
+    'geometryCrop0': 0.0, 'geometryCrop1': 0.0,
+    'geometryCrop2': 0.0, 'geometryCrop3': 0.0,
+    'volume': 1.0,
+}
+_GROUP_DEFAULT_METADATA = {
+    'clipSpeedAttribute': {'type': 'bool', 'value': False},
+    'colorAttribute': {'type': 'color', 'value': [0, 0, 0, 0]},
+    'effectApplied': 'none',
+    'isOpen': {'type': 'bool', 'value': False},
+}
+
 
 class Track:
     """A track on the timeline.
@@ -720,30 +732,17 @@ class Track:
         tpl = copy.deepcopy(LOWER_THIRD_TEMPLATE)
 
         # --- Assign fresh sequential IDs ---
-        base_id = self._next_clip_id()
-        # Map old IDs to new ones: outer=83, text_group=84, subtitle=85,
-        # title=86, shape=87, line=88
-        old_ids = [83, 84, 85, 86, 87, 88]
-        id_map = {old: base_id + i for i, old in enumerate(old_ids)}
+        from camtasia.timeline.timeline import _remap_clip_ids_with_map
+        id_counter = [self._next_clip_id()]
+        id_map: dict[int, int] = {}
+        _remap_clip_ids_with_map(tpl, id_counter, id_map)
 
-        tpl['id'] = id_map[83]
-
-        # Walk inner tracks and reassign IDs
-        for track in tpl['tracks']:
-            for media in track.get('medias', []):
-                media['id'] = id_map[media['id']]
-                # Recurse into nested group tracks (text group)
-                for inner_track in media.get('tracks', []):
-                    for inner_media in inner_track.get('medias', []):
-                        inner_media['id'] = id_map[inner_media['id']]
-
-        # Update assetProperties object references
+        # Update assetProperties object references using the id_map
         for ap in tpl.get('attributes', {}).get('assetProperties', []):
-            ap['objects'] = [id_map[o] for o in ap['objects']]
-        # Inner text group assetProperties
+            ap['objects'] = [id_map.get(o, o) for o in ap['objects']]
         text_group = tpl['tracks'][0]['medias'][0]
         for ap in text_group.get('attributes', {}).get('assetProperties', []):
-            ap['objects'] = [id_map[o] for o in ap['objects']]
+            ap['objects'] = [id_map.get(o, o) for o in ap['objects']]
 
         # --- Set timing ---
         start_ticks = seconds_to_ticks(start_seconds)
@@ -834,6 +833,8 @@ class Track:
                 'widthAttr': 0.0, 'heightAttr': 0.0,
                 'maxDurationAttr': 0, 'assetProperties': [],
             }),
+            parameters={**_GROUP_DEFAULT_PARAMETERS, **kwargs.pop('parameters', {})},
+            metadata={**_GROUP_DEFAULT_METADATA, **kwargs.pop('metadata', {})},
             **kwargs,
         )
         return clip  # type: ignore[return-value]
@@ -897,9 +898,10 @@ class Track:
                 'clipSpeedAttribute': {'type': 'bool', 'value': False},
                 'colorAttribute': {'type': 'color', 'value': [0, 0, 0, 0]},
                 'effectApplied': 'none',
+                'isOpen': {'type': 'bool', 'value': False},
             },
             'animationTracks': {},
-            'parameters': {},
+            'parameters': {**_GROUP_DEFAULT_PARAMETERS},
             'effects': [],
             'attributes': {
                 'ident': '', 'gain': 1.0, 'mixToMono': False,

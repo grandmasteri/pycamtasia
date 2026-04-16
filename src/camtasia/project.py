@@ -1486,6 +1486,7 @@ class Project:
         fade_in_seconds: float = 0.5,
         fade_out_seconds: float = 0.0,
         track_name_prefix: str = 'Prog',
+        replace_previous: bool = False,
     ) -> list[BaseClip]:
         """Place images on separate tracks for progressive visual accumulation.
 
@@ -1500,6 +1501,7 @@ class Project:
             fade_in_seconds: Fade-in duration for each image.
             fade_out_seconds: Fade-out duration for the last image (0 = no fade).
             track_name_prefix: Prefix for auto-generated track names.
+            replace_previous: When True, fade out each previous clip as the next appears.
 
         Returns:
             List of placed image clips.
@@ -1523,6 +1525,10 @@ class Project:
             if fade_in_seconds > 0:
                 clip.fade_in(fade_in_seconds)
             placed_clips.append(clip)
+
+        if replace_previous and len(placed_clips) > 1:
+            for i in range(1, len(placed_clips)):
+                placed_clips[i - 1].fade_out(0.5)
 
         if fade_out_seconds > 0 and placed_clips:
             for placed_clip in placed_clips:

@@ -112,8 +112,8 @@ class TestCalloutStrokeColorAnimated:
         assert d['stroke-color-green']['defaultValue'] == 0.8
         assert d['stroke-color-blue']['defaultValue'] == 0.7
         assert d['stroke-color-opacity']['defaultValue'] == 0.6
-        # keyframes preserved
-        assert d['stroke-color-red']['keyframes'] == keyframes
+        # keyframes cleared when setting static color
+        assert 'keyframes' not in d['stroke-color-red']
 
 
 # ── 4. tile_layout.py — negative duration guard ─────────────────────────
@@ -290,7 +290,7 @@ class TestCalloutFillColorAnimatedSetter:
         callout.fill_color = (0.9, 0.8, 0.7, 0.6)
         # Animated dicts should have defaultValue updated
         assert data['def']['fill-color-red']['defaultValue'] == 0.9
-        assert data['def']['fill-color-red']['keyframes'] == [{'time': 0, 'value': 0.5}]  # preserved
+        assert 'keyframes' not in data['def']['fill-color-red']  # cleared when setting static color
         # Plain scalar should be replaced
         assert data['def']['fill-color-blue'] == 0.7
 

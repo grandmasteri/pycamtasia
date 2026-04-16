@@ -52,8 +52,8 @@ def test_canvas_dimensions_set_on_all_segments():
     media_track = data['tracks'][1]
     for clip in media_track['medias']:
         assert clip['_type'] == 'ScreenVMFile'
-        assert clip['parameters']['width'] == 1920
-        assert clip['parameters']['height'] == 1080
+        assert 'scale0' in clip['parameters']  # scale ratio, not bare width
+        assert 'scale1' in clip['parameters']  # scale ratio, not bare height
 
 
 def test_canvas_dimensions_not_set_when_omitted():
@@ -76,7 +76,7 @@ def test_canvas_width_only():
         canvas_width=1920,
     )
     clip = data['tracks'][1]['medias'][0]
-    assert clip['parameters']['width'] == 1920
+    assert 'scale0' in clip['parameters']  # scale ratio, not bare width
     assert clip['parameters']['height'] == 1389
 
 
@@ -90,7 +90,7 @@ def test_canvas_height_only():
     )
     clip = data['tracks'][1]['medias'][0]
     assert clip['parameters']['width'] == 2540
-    assert clip['parameters']['height'] == 1080
+    assert 'scale1' in clip['parameters']  # scale ratio, not bare height
 
 
 def test_retina_to_1080p_normalisation():
@@ -103,5 +103,5 @@ def test_retina_to_1080p_normalisation():
         canvas_height=1080.0,
     )
     for clip in data['tracks'][1]['medias']:
-        assert clip['parameters']['width'] == 1920.0
-        assert clip['parameters']['height'] == 1080.0
+        assert 'scale0' in clip['parameters']  # scale ratio, not bare width.0
+        assert 'scale1' in clip['parameters']  # scale ratio, not bare height.0

@@ -53,7 +53,11 @@ class BaseClip:
     @property
     def is_audio(self) -> bool:
         """Whether this clip is an audio clip."""
-        return self.clip_type == ClipType.AUDIO
+        if self.clip_type == ClipType.AUDIO:
+            return True
+        if self.clip_type == 'StitchedMedia':
+            return all(m.get('_type') == 'AMFile' for m in self._data.get('medias', []))
+        return False
 
     @property
     def is_video(self) -> bool:
