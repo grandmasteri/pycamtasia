@@ -1843,6 +1843,7 @@ class Track:
             for sub_key in ('video', 'audio'):
                 sub = right_data.get(sub_key)
                 if sub is not None:
+                    sub['start'] = right_data['start']
                     sub['duration'] = right_data['duration']
                     sub['mediaDuration'] = right_data['mediaDuration']
                     sub['mediaStart'] = right_data['mediaStart']
@@ -2231,6 +2232,7 @@ class Track:
                     sub = media_dict.get(sub_key)
                     if sub is not None:
                         sub['duration'] = media_dict['duration']
+                        sub['mediaDuration'] = media_dict.get('mediaDuration', media_dict['duration'])
                         sub['scalar'] = media_dict.get('scalar', 1)
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:

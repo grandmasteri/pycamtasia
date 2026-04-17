@@ -570,6 +570,7 @@ class BaseClip:
                 if sub is not None:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
+                    sub['scalar'] = self._data.get('scalar', 1)
         return self
 
     def set_time_range(self, start_seconds: float, duration_seconds: float) -> Self:
@@ -593,6 +594,7 @@ class BaseClip:
                     sub['start'] = self._data['start']
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
+                    sub['scalar'] = self._data.get('scalar', 1)
         return self
 
     def __eq__(self, other: object) -> bool:
