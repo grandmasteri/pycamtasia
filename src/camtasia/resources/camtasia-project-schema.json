@@ -1551,9 +1551,6 @@
         },
         {
           "$ref": "#/definitions/UnifiedMedia"
-        },
-        {
-          "$ref": "#/definitions/GenericBehaviorEffect"
         }
       ]
     },
@@ -1635,10 +1632,16 @@
                 "type": "object"
               },
               "leftMedia": {
-                "type": ["integer", "null"]
+                "type": [
+                  "integer",
+                  "null"
+                ]
               },
               "rightMedia": {
-                "type": ["integer", "null"]
+                "type": [
+                  "integer",
+                  "null"
+                ]
               }
             },
             "anyOf": [
@@ -1719,7 +1722,14 @@
           "type": "integer"
         },
         "editRate": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "trackRect": {
           "type": "array",
@@ -1984,4 +1994,3 @@
     }
   }
 }
-

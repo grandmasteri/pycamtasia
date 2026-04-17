@@ -15,7 +15,16 @@ def _format_timecode(seconds: float, fps: int = 30) -> str:
     h = int(seconds // 3600)
     m = int((seconds % 3600) // 60)
     s = int(seconds % 60)
-    f = int((seconds % 1) * fps)
+    f = round((seconds % 1) * fps)
+    if f >= fps:
+        f = 0
+        s += 1
+    if s >= 60:
+        s -= 60
+        m += 1
+    if m >= 60:
+        m -= 60
+        h += 1
     return f'{sign}{h:02d}:{m:02d}:{s:02d}:{f:02d}'
 
 
@@ -74,8 +83,8 @@ def export_edl(
             else:
                 edit_type = 'V' if clip.clip_type in video_types else 'A'
 
-            src_in_offset = ticks_to_seconds(int(Fraction(str(clip.media_start))))
-            media_dur = ticks_to_seconds(int(Fraction(str(clip.media_duration))))
+            src_in_offset = ticks_to_seconds(round(Fraction(str(clip.media_start))))
+            media_dur = ticks_to_seconds(round(Fraction(str(clip.media_duration))))
             src_in = _format_timecode(src_in_offset, fps)
             src_out = _format_timecode(src_in_offset + media_dur, fps)
             rec_in = _format_timecode(start, fps)

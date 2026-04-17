@@ -12,6 +12,7 @@ from camtasia.validation import (
 def _make_data(tracks, track_attributes=None):
     """Wrap tracks into the nested project data structure."""
     return {
+        'editRate': 705600000,
         'timeline': {
             'sceneTrack': {
                 'scenes': [{'csml': {'tracks': tracks}}],
