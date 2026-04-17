@@ -565,6 +565,7 @@ class Group(BaseClip):
                 if m.get('_type') in ('VMFile', 'ScreenVMFile'):
                     m['duration'] = total_tl
                     m['mediaDuration'] = total_tl
+                    m['scalar'] = 1
 
     def sync_internal_durations(self) -> Self:
         """Trim all internal clips to match the Group's duration.
