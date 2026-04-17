@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from camtasia.timeline.track import _propagate_start_to_unified
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -77,6 +78,7 @@ def merge_tracks(
             new_clip = copy.deepcopy(clip_data)
             _remap_clip_ids(new_clip, id_counter, id_map)
             new_clip['start'] = new_clip.get('start', 0) + offset_ticks
+            _propagate_start_to_unified(new_clip)
             new_track._data.setdefault('medias', []).append(new_clip)
 
         count += 1
