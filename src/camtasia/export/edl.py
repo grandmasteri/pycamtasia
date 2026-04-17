@@ -99,7 +99,7 @@ def export_edl(
             )
             event_num += 1
 
-            if is_unified:
+            if is_unified and 'audio' in clip._data:
                 audio_data = clip._data.get('audio', {})
                 audio_ms = ticks_to_seconds(round(Fraction(str(audio_data.get('mediaStart', 0)))))
                 audio_md = ticks_to_seconds(round(Fraction(str(audio_data.get('mediaDuration', clip.duration)))))

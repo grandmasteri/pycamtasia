@@ -105,7 +105,8 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
             })
 
         elif track.track_type == 'Audio':
-            channels = track.channel_s or 1
+            raw_ch = track.channel_s or '1'
+            channels = int(str(raw_ch).split('/')[0].strip())
             sample_rate = track.sampling_rate or 44100
             dur_ms = track.duration or 0
             range_end = int(dur_ms / 1000 * int(sample_rate))

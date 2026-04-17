@@ -297,6 +297,14 @@ class Callout(BaseClip):
         font['name'] = name
         font['weight'] = weight
         font['size'] = size
+        for kf in self._data.get('def', {}).get('textAttributes', {}).get('keyframes', []):  # type: ignore[attr-defined]
+            for attr in kf.get('value', []):
+                if 'fontName' in attr:
+                    attr['fontName'] = name
+                if 'fontWeight' in attr:
+                    attr['fontWeight'] = weight
+                if 'fontSize' in attr:
+                    attr['fontSize'] = size
         return self
 
     def set_colors(
@@ -324,6 +332,12 @@ class Callout(BaseClip):
             font['color-red'] = font_color[0]
             font['color-green'] = font_color[1]
             font['color-blue'] = font_color[2]
+            for kf in self._data.get('def', {}).get('textAttributes', {}).get('keyframes', []):  # type: ignore[attr-defined]
+                for attr in kf.get('value', []):
+                    if 'fgColor' in attr:
+                        r, g, b = int(font_color[0]*255), int(font_color[1]*255), int(font_color[2]*255)
+                        a = int(font_color[3]*255) if len(font_color) > 3 else 255
+                        attr['fgColor'] = f'({r},{g},{b},{a})'
         return self
 
     def resize(self, width: float, height: float) -> Self:

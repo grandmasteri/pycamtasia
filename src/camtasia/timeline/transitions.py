@@ -345,4 +345,4 @@ class TransitionList:
 
     def clear(self) -> None:
         """Remove all transitions."""
-        self._data['transitions'] = []
+        self._data.setdefault('transitions', []).clear()

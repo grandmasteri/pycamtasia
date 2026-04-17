@@ -42,14 +42,16 @@ def _probe_media(path: Path) -> dict:
         result: dict = {}
         for track in info.tracks:
             if track.track_type == 'Video':
-                result['width'] = track.width
-                result['height'] = track.height
+                if track.width is not None:
+                    result['width'] = track.width
+                if track.height is not None:
+                    result['height'] = track.height
                 if track.duration:
                     result['duration_seconds'] = track.duration / 1000.0
                 if track.frame_rate:
                     result['frame_rate'] = float(track.frame_rate)
             elif track.track_type == 'Audio':
-                if track.duration:
+                if track.duration and 'duration_seconds' not in result:
                     result['duration_seconds'] = track.duration / 1000.0
                 if track.sampling_rate:
                     result['sample_rate'] = int(track.sampling_rate)
@@ -58,8 +60,10 @@ def _probe_media(path: Path) -> dict:
                 if track.bit_depth:
                     result['bit_depth'] = int(track.bit_depth)
             elif track.track_type == 'Image':
-                result['width'] = track.width
-                result['height'] = track.height
+                if track.width is not None:
+                    result['width'] = track.width
+                if track.height is not None:
+                    result['height'] = track.height
             elif track.track_type == 'General':
                 if 'duration_seconds' not in result and track.duration:
                     result['duration_seconds'] = track.duration / 1000.0
@@ -82,7 +86,7 @@ def _probe_media_ffprobe(path: Path) -> dict:
              '-of', 'csv=p=0', str(path)],
             capture_output=True, text=True, timeout=10,
         )
-        parts = out.stdout.strip().split(',')
+        parts = out.stdout.strip().split('\n')[0].split(',')
         if len(parts) >= 2 and parts[0] and parts[1]:
             result['width'] = int(parts[0])
             result['height'] = int(parts[1])
