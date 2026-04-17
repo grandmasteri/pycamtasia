@@ -564,7 +564,7 @@ class Group(BaseClip):
             if track is media_track:
                 continue
             for m in track.get('medias', []):
-                if m.get('_type') in ('VMFile', 'ScreenVMFile'):
+                if m.get('_type') in ('VMFile', 'ScreenVMFile', 'AMFile'):
                     m['duration'] = total_tl
                     m['mediaDuration'] = total_tl
                     m['scalar'] = 1

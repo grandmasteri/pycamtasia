@@ -156,7 +156,7 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
     # Mark all clips as speed-adjusted
     if factor != 1:
         def _mark_speed_changed(clip_data: dict[str, Any]) -> None:
-            if clip_data.get('_type') not in ('IMFile', 'ScreenIMFile', 'Callout'):
+            if clip_data.get('_type') not in ('IMFile', 'ScreenIMFile', 'Callout', 'Group', 'UnifiedMedia', 'StitchedMedia'):
                 clip_data.setdefault('metadata', {}).setdefault(
                     'clipSpeedAttribute', {'type': 'bool', 'value': False}
                 )['value'] = True
@@ -224,7 +224,7 @@ def set_audio_speed(
 
                 # Now overwrite this clip with the correct final state
                 clip["scalar"] = final_scalar
-                clip["duration"] = int(Fraction(final_duration) * Fraction(1) / target) if target != 1 else final_duration
+                clip["duration"] = round(float(Fraction(final_duration) * Fraction(1) / target)) if target != 1 else final_duration
                 clip["metadata"]["clipSpeedAttribute"]["value"] = final_speed_attr
                 clip["mediaDuration"] = final_duration
                 return factor
@@ -244,6 +244,6 @@ def rescale(project: 'Project', factor: float | Fraction) -> None:
 def normalize_audio_speed(project: 'Project', target_speed: float = 1.0) -> Fraction:
     """Rescale project so audio plays at target_speed.
 
-    Returns the original audio scalar.
+    Returns the stretch factor applied.
     """
     return set_audio_speed(project._data, target_speed)

@@ -71,6 +71,16 @@ def diff_projects(a: Project, b: Project) -> ProjectDiff:
         for cid in sorted(a_clips - b_clips):
             result.clips_removed.append((idx, cid))
 
+    # Clips on removed tracks
+    for idx in a_tracks - b_tracks:
+        for c in a.timeline.tracks[idx].clips:
+            result.clips_removed.append((idx, c.id))
+
+    # Clips on added tracks
+    for idx in b_tracks - a_tracks:
+        for c in b.timeline.tracks[idx].clips:
+            result.clips_added.append((idx, c.id))
+
     # Media differences
     a_media = {m.id for m in a.media_bin}
     b_media = {m.id for m in b.media_bin}
