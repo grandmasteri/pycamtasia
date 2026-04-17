@@ -150,7 +150,13 @@ class Callout(BaseClip):
     @width.setter
     def width(self, value: float) -> None:
         """Set the callout width."""
-        self._data.setdefault('def', {})['width'] = value  # type: ignore[typeddict-item]
+        d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
+        existing = d.get('width')
+        if isinstance(existing, dict):
+            existing['defaultValue'] = value
+            existing.pop('keyframes', None)
+        else:
+            d['width'] = value
 
     @property
     def height(self) -> float:
@@ -161,7 +167,13 @@ class Callout(BaseClip):
     @height.setter
     def height(self, value: float) -> None:
         """Set the callout height."""
-        self._data.setdefault('def', {})['height'] = value  # type: ignore[typeddict-item]
+        d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
+        existing = d.get('height')
+        if isinstance(existing, dict):
+            existing['defaultValue'] = value
+            existing.pop('keyframes', None)
+        else:
+            d['height'] = value
 
     @property
     def horizontal_alignment(self) -> str:
@@ -240,7 +252,13 @@ class Callout(BaseClip):
     @corner_radius.setter
     def corner_radius(self, value: float) -> None:
         """Set the corner radius for rounded shapes."""
-        self._data.setdefault('def', {})['corner-radius'] = value  # type: ignore[typeddict-item]
+        d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
+        existing = d.get('corner-radius')
+        if isinstance(existing, dict):
+            existing['defaultValue'] = value
+            existing.pop('keyframes', None)
+        else:
+            d['corner-radius'] = value
 
     @property
     def tail_position(self) -> tuple[float, float]:

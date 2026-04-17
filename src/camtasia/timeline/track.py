@@ -1218,6 +1218,7 @@ class Track:
                         if sub is not None:
                             sub['duration'] = m['duration']
                             sub['mediaDuration'] = m['mediaDuration']
+                            sub['scalar'] = m.get('scalar', 1)
                 return
         raise KeyError(f'No clip with id={clip_id}')
 

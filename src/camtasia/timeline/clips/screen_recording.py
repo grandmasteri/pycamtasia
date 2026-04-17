@@ -29,7 +29,7 @@ class ScreenVMFile(BaseClip):
     @property
     def cursor_scale(self) -> float:
         """Cursor enlargement factor."""
-        return self._get_param_value('cursorScale', 1.0)
+        return self._get_param_value('cursorScale', 5.0)
 
     @cursor_scale.setter
     def cursor_scale(self, value: float) -> None:

@@ -1381,13 +1381,8 @@ class BaseClip:
         """Add an opacity fade keyframe animation."""
         from camtasia.timing import seconds_to_ticks
         dur = seconds_to_ticks(duration_seconds) if duration_seconds else self.duration
-        self._data.setdefault('parameters', {})['opacity'] = {
-            'type': 'double',
-            'defaultValue': start_opacity,
-            'keyframes': [
-                {'endTime': dur, 'time': 0, 'value': end_opacity, 'duration': dur},
-            ],
-        }
+        kfs = [{'endTime': dur, 'time': 0, 'value': end_opacity, 'duration': dur}]
+        self._add_opacity_track(kfs, default_value=start_opacity)
         return self
 
     def set_position_keyframes(self, keyframes: list[tuple[float, float, float]]) -> Self:

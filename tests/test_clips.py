@@ -419,7 +419,7 @@ def test_screen_vmfile_cursor_scale_setter_mutates_dict() -> None:
 def test_screen_vmfile_cursor_scale_default() -> None:
     data = _base_clip_dict(_type="ScreenVMFile")
     clip = ScreenVMFile(data)
-    assert clip.cursor_scale == 1.0
+    assert clip.cursor_scale == 5.0
 
 
 def test_screen_vmfile_cursor_opacity_default() -> None:
