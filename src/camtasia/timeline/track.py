@@ -1849,7 +1849,7 @@ class Track:
 
         # Mutate left half
         left_data['duration'] = split_offset
-        left_data['mediaDuration'] = round(Fraction(split_offset) / scalar_val) if scalar_val != 0 else split_offset
+        left_data['mediaDuration'] = (lambda md: int(md) if md == int(md) else str(md))(Fraction(split_offset) / scalar_val) if scalar_val != 0 else split_offset
         if left_data.get('_type') in ('IMFile', 'ScreenIMFile'):
             left_data['mediaDuration'] = 1
         if left_data.get('_type') == 'UnifiedMedia':
@@ -1864,7 +1864,7 @@ class Track:
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
         right_data['mediaStart'] = round((Fraction(orig_media_start) + Fraction(split_offset) / _parse_scalar(orig_scalar)) if scalar_val != 0 else (orig_media_start + split_offset))
-        right_data['mediaDuration'] = round(Fraction(orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
+        right_data['mediaDuration'] = (lambda md: int(md) if md == int(md) else str(md))(Fraction(orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
         if right_data.get('_type') in ('IMFile', 'ScreenIMFile'):
             right_data['mediaDuration'] = 1
         if right_data.get('_type') == 'UnifiedMedia':
@@ -1961,7 +1961,7 @@ class Track:
         # Extend a to cover b
         a['duration'] = (b['start'] + b['duration']) - a['start']
         scalar_val = _parse_scalar(a.get('scalar', 1))
-        a['mediaDuration'] = round(Fraction(a['duration']) / scalar_val) if scalar_val != 0 else a['duration']
+        a['mediaDuration'] = (lambda md: int(md) if md == int(md) else str(md))(Fraction(a['duration']) / scalar_val) if scalar_val != 0 else a['duration']
         if a.get('_type') in ('IMFile', 'ScreenIMFile'):
             a['mediaDuration'] = 1
         _propagate_start_to_unified(a)
