@@ -223,12 +223,16 @@ class BaseClip:
     @media_start.setter
     def media_start(self, value: int | Fraction) -> None:
         """Set the media start."""
-        self._data['mediaStart'] = int(value) # type: ignore[typeddict-item]
+        if isinstance(value, Fraction):
+            stored = int(value) if value == int(value) else str(value)
+        else:
+            stored = value
+        self._data['mediaStart'] = stored # type: ignore[typeddict-item]
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
-                    sub['mediaStart'] = int(value)
+                    sub['mediaStart'] = stored
 
     @property
     def media_duration(self) -> int | float | str | Fraction:  # type: ignore[override]

@@ -1282,6 +1282,7 @@ class Track:
         running_position: int = 0
         for media_dict in sorted_medias:
             media_dict['start'] = running_position
+            _propagate_start_to_unified(media_dict)
             running_position += media_dict.get('duration', 0)
         self._data['medias'] = sorted_medias
         self._data['transitions'] = []
@@ -1429,11 +1430,14 @@ class Track:
         """
         medias = sorted(self._data.get('medias', []), key=lambda m: m.get('start', 0))
         result = []
-        for i in range(len(medias) - 1):
-            end = medias[i].get('start', 0) + medias[i].get('duration', 0)
-            next_start = medias[i + 1].get('start', 0)
-            if next_start < end:
-                result.append((medias[i]['id'], medias[i + 1]['id']))
+        for i, a in enumerate(medias):
+            a_end = a.get('start', 0) + a.get('duration', 0)
+            for j in range(i + 1, len(medias)):
+                b = medias[j]
+                if b.get('start', 0) < a_end:
+                    result.append((a['id'], b['id']))
+                else:
+                    break  # sorted, so no more overlaps for this clip
         return result
 
     def filter_clips(self, predicate) -> list[BaseClip]:
