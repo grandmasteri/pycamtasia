@@ -1590,7 +1590,7 @@ class Track:
         #   scalar = original_scalar / user_speed
         #   mediaStart[i+1] = mediaStart[i] + dur[i] * (original_scalar / scalar[i])
         #   VMFile scalar = 1 / original_scalar
-        cumulative_ms = Fraction(0)
+        cumulative_ms = Fraction(str(clip._data.get('mediaStart', 0)))
         for piece, (dur_s, speed) in zip(pieces, segments):
             seg_scalar = (
                 original_scalar / _Frac(speed).limit_denominator(100000)

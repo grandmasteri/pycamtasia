@@ -153,7 +153,7 @@ class DropShadow(Effect):
     @color.setter
     def color(self, rgba: tuple[float, float, float, float]) -> None:
         """Set the RGBA shadow color."""
-        _set_color_rgba(self.parameters, "color", rgba)
+        _set_color_rgba(self._data.setdefault('parameters', {}), "color", rgba)
 
 
 @register_effect("MotionBlur")

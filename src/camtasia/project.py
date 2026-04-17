@@ -464,8 +464,7 @@ class Project:
         """Total keyframes across all clips on all tracks."""
         return sum(
             clip.keyframe_count
-            for track in self.timeline.tracks
-            for clip in track.clips
+            for _, clip in self.all_clips
         )
 
     @property
@@ -619,7 +618,9 @@ class Project:
         if total_clips == 0:
             return 0.0
         total_duration: float = sum(
-            clip.duration_seconds for _, clip in self.all_clips
+            clip.duration_seconds
+            for track in self.timeline.tracks
+            for clip in track.clips
         )
         return total_duration / total_clips
 

@@ -1,6 +1,7 @@
 """Base clip class wrapping the underlying JSON dict."""
 from __future__ import annotations
 
+import copy
 from fractions import Fraction
 from collections.abc import Callable
 from typing import Any, TYPE_CHECKING
@@ -1379,7 +1380,7 @@ class BaseClip:
             dur = next_ticks - ticks
             kfs.append({'endTime': next_ticks, 'time': ticks, 'value': s, 'duration': dur})
         params['scale0'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': kfs}
-        params['scale1'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': list(kfs)}
+        params['scale1'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': copy.deepcopy(kfs)}
         return self
 
     def set_rotation_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:

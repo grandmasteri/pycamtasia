@@ -329,6 +329,12 @@ class MediaBin:
                 filename=filename,
             )
         else:
+            if media_type == MediaType.Image:
+                _bit_depth = 32
+                _edit_rate = 10000000
+            else:
+                _bit_depth = 24
+                _edit_rate = 30
             json_data = _visual_track_to_json(
                 next_media_id, rel_path, timestamp,
                 media_type=media_type,
@@ -336,6 +342,8 @@ class MediaBin:
                 height=height or 0,
                 duration=duration if duration is not None else 1,
                 filename=filename,
+                bit_depth=_bit_depth,
+                edit_rate=_edit_rate,
             )
 
         self._data.append(json_data)
@@ -506,6 +514,7 @@ def _visual_track_to_json(
     edit_rate: int = 30,
     sample_rate: int = 0,
     filename: str = "",
+    bit_depth: int = 0,
 ) -> dict[str, Any]:
     """Build a sourceBin entry for a video or image track."""
     media_rect = [0, 0, width, height]
@@ -522,7 +531,7 @@ def _visual_track_to_json(
                 "editRate": edit_rate,
                 "trackRect": media_rect,
                 "sampleRate": sample_rate if sample_rate else edit_rate,
-                "bitDepth": 0,
+                "bitDepth": bit_depth,
                 "numChannels": 0,
                 "integratedLUFS": 100.0,
                 "peakLevel": -1.0,
