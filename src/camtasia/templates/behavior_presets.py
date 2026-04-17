@@ -10,11 +10,12 @@ _DIRECTION_PARAM = {
     'uiHints': {'userInterfaceType': 2, 'unitType': 0},
     'keyframes': [_DIRECTION_KF],
 }
+_DIRECTION_KF_OUT = {'endTime': 0, 'time': 0, 'value': 2, 'duration': 0}
 _DIRECTION_PARAM_OUT = {
     'type': 'int',
     'valueBounds': {'minValue': 0, 'maxValue': 3, 'defaultValue': 2},
     'uiHints': {'userInterfaceType': 2, 'unitType': 0},
-    'keyframes': [_DIRECTION_KF],
+    'keyframes': [_DIRECTION_KF_OUT],
 }
 
 # "None" phase templates
@@ -105,7 +106,7 @@ PRESETS = {
         'start': 0,
         'in': {
             'attributes': {
-                'name': 'grow', 'type': 1, 'characterOrder': 6,
+                'name': 'hinge', 'type': 1, 'characterOrder': 6,
                 'offsetBetweenCharacters': 35280000,
                 'suggestedDurationPerCharacter': 705600000,
                 'overlapProportion': 0, 'movement': 0,

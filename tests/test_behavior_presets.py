@@ -50,7 +50,7 @@ def test_popup_preset_structure():
     assert REQUIRED_FIELDS <= set(effect.keys())
     assert effect['_type'] == 'GenericBehaviorEffect'
     assert effect['effectName'] == 'popUp'
-    assert effect['in']['attributes']['name'] == 'grow'
+    assert effect['in']['attributes']['name'] == 'hinge'
     assert effect['metadata']['presetName'] == 'PopUp'
 
 
