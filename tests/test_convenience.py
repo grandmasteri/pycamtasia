@@ -1446,8 +1446,8 @@ def test_set_position_keyframes():
     result = clip.set_position_keyframes([(0.0, 100, 200), (2.0, 300, 400)])
     assert result is clip  # fluent return
     params = clip._data['parameters']
-    assert params['translation0']['defaultValue'] == 100
-    assert params['translation1']['defaultValue'] == 200
+    assert params['translation0']['defaultValue'] == 300
+    assert params['translation1']['defaultValue'] == 400
     assert len(params['translation0']['keyframes']) == 2
     assert len(params['translation1']['keyframes']) == 2
     kf_x = params['translation0']['keyframes'][1]
@@ -1469,8 +1469,8 @@ def test_set_scale_keyframes():
     result = clip.set_scale_keyframes([(0.0, 1.0), (3.0, 2.5)])
     assert result is clip
     params = clip._data['parameters']
-    assert params['scale0']['defaultValue'] == 1.0
-    assert params['scale1']['defaultValue'] == 1.0
+    assert params['scale0']['defaultValue'] == 2.5
+    assert params['scale1']['defaultValue'] == 2.5
     assert len(params['scale0']['keyframes']) == 2
     kf = params['scale0']['keyframes'][1]
     assert kf['value'] == 2.5
@@ -1515,7 +1515,7 @@ def test_set_rotation_keyframes():
     params = clip._data['parameters']
     rot = params['rotation2']
     assert rot['type'] == 'double'
-    assert rot['defaultValue'] == pytest.approx(math.radians(0))
+    assert rot['defaultValue'] == pytest.approx(math.radians(180))
     assert len(rot['keyframes']) == 3
     assert rot['keyframes'][1]['value'] == pytest.approx(math.radians(90))
     assert rot['keyframes'][1]['time'] == t(2.0)

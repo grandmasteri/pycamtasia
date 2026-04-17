@@ -1661,7 +1661,6 @@ class Track:
                     for sub_key in ('video', 'audio'):
                         sub = m.get(sub_key)
                         if sub is not None:
-                            sub['start'] = m['start']
                             sub['duration'] = m['duration']
                             sub['mediaDuration'] = m['mediaDuration']
                             sub['mediaStart'] = m['mediaStart']
@@ -1877,6 +1876,8 @@ class Track:
         if a is None or b is None:
             missing = clip_id_a if a is None else clip_id_b
             raise KeyError(f'No clip with id={missing}')
+        if a['start'] > b['start']:
+            a, b = b, a
         if a['start'] + a['duration'] != b['start']:
             raise ValueError('Clips are not adjacent')
         if a.get('src') != b.get('src'):

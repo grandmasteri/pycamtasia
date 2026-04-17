@@ -60,6 +60,8 @@ class RGBA:
         return cls(_clamp(red), _clamp(green), _clamp(blue), _clamp(alpha))
 
     def __init__(self, red: int, green: int, blue: int, alpha: int) -> None:
+        if not all(isinstance(c, int) for c in (red, green, blue, alpha)):
+            raise TypeError('RGBA channels must be integers')
         if not (self.MINIMUM_CHANNEL <= red <= self.MAXIMUM_CHANNEL):
             raise ValueError(
                 f"RGBA red channel {red} out of range {self.MINIMUM_CHANNEL} "

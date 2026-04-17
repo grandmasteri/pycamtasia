@@ -128,7 +128,8 @@ class BaseClip:
         from camtasia.timing import parse_scalar
         scalar = parse_scalar(self._data.get('scalar', 1))
         if scalar != 0:
-            self._data['mediaDuration'] = round(Fraction(value) / scalar)
+            md = Fraction(value) / scalar
+            self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub = self._data.get(sub_key)
@@ -533,7 +534,8 @@ class BaseClip:
         self._data['duration'] = seconds_to_ticks(duration_seconds)
         scalar = parse_scalar(self._data.get('scalar', 1))
         if scalar != 0:
-            self._data['mediaDuration'] = round(Fraction(self._data['duration']) / scalar)
+            md = Fraction(self._data['duration']) / scalar
+            self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub = self._data.get(sub_key)
@@ -552,7 +554,8 @@ class BaseClip:
         self._data['duration'] = seconds_to_ticks(duration_seconds)
         scalar = parse_scalar(self._data.get('scalar', 1))
         if scalar != 0:
-            self._data['mediaDuration'] = round(Fraction(self._data['duration']) / scalar)
+            md = Fraction(self._data['duration']) / scalar
+            self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub = self._data.get(sub_key)
@@ -1403,8 +1406,8 @@ class BaseClip:
             dur = next_ticks - ticks
             x_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': x, 'duration': dur})
             y_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': y, 'duration': dur})
-        params['translation0'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': x_kfs}
-        params['translation1'] = {'type': 'double', 'defaultValue': keyframes[0][2], 'keyframes': y_kfs}
+        params['translation0'] = {'type': 'double', 'defaultValue': keyframes[-1][1], 'keyframes': x_kfs}
+        params['translation1'] = {'type': 'double', 'defaultValue': keyframes[-1][2], 'keyframes': y_kfs}
         return self
 
     def set_scale_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
@@ -1421,8 +1424,8 @@ class BaseClip:
             next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
             dur = next_ticks - ticks
             kfs.append({'endTime': next_ticks, 'time': ticks, 'value': s, 'duration': dur})
-        params['scale0'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': kfs}
-        params['scale1'] = {'type': 'double', 'defaultValue': keyframes[0][1], 'keyframes': copy.deepcopy(kfs)}
+        params['scale0'] = {'type': 'double', 'defaultValue': keyframes[-1][1], 'keyframes': kfs}
+        params['scale1'] = {'type': 'double', 'defaultValue': keyframes[-1][1], 'keyframes': copy.deepcopy(kfs)}
         return self
 
     def set_rotation_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
@@ -1440,7 +1443,7 @@ class BaseClip:
             next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
             dur = next_ticks - ticks
             kfs.append({'endTime': next_ticks, 'time': ticks, 'value': math.radians(deg), 'duration': dur})
-        params['rotation2'] = {'type': 'double', 'defaultValue': kfs[0]['value'], 'keyframes': kfs}
+        params['rotation2'] = {'type': 'double', 'defaultValue': kfs[-1]['value'], 'keyframes': kfs}
         return self
 
     def set_crop_keyframes(self, keyframes: list[tuple[float, float, float, float, float]]) -> Self:
@@ -1459,7 +1462,7 @@ class BaseClip:
                 next_ticks = seconds_to_ticks(keyframes[ki + 1][0]) if ki + 1 < len(keyframes) else ticks
                 dur = next_ticks - ticks
                 kfs.append({'endTime': next_ticks, 'time': ticks, 'value': kf[i + 1], 'duration': dur})
-            params[name] = {'type': 'double', 'defaultValue': kfs[0]['value'], 'keyframes': kfs}
+            params[name] = {'type': 'double', 'defaultValue': kfs[-1]['value'], 'keyframes': kfs}
         return self
 
     def set_volume_fade(self, start_volume: float = 1.0, end_volume: float = 0.0, duration_seconds: float | None = None) -> Self:
