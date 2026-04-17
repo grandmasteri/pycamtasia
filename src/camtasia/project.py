@@ -904,6 +904,13 @@ class Project:
                 b_start = medias[i + 1].get('start', 0)
                 if a_end > b_start:
                     medias[i]['duration'] -= (a_end - b_start)
+                    # Recalculate mediaDuration to maintain invariant
+                    from camtasia.timing import parse_scalar as _ps
+                    s = _ps(medias[i].get('scalar', 1))
+                    if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile'):
+                        from fractions import Fraction as _F
+                        md = _F(medias[i]['duration']) / s
+                        medias[i]['mediaDuration'] = int(md) if md == int(md) else str(md)
                     fixes_applied['overlaps_fixed'] += 1
         return fixes_applied
 
