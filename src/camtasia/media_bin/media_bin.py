@@ -512,7 +512,7 @@ def _visual_track_to_json(
     height: int,
     duration: int,
     edit_rate: int = 30,
-    sample_rate: int = 0,
+    sample_rate: int | None = None,
     filename: str = "",
     bit_depth: int = 0,
 ) -> dict[str, Any]:

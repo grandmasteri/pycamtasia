@@ -384,6 +384,8 @@ class BaseClip:
     @property
     def is_silent(self) -> bool:
         """Whether this clip has zero volume (gain == 0 or volume == 0)."""
+        if self._data.get('_type') == 'UnifiedMedia':
+            return self._data.get('audio', {}).get('attributes', {}).get('gain', 1.0) == 0.0
         return self.gain == 0.0 or self.volume == 0.0
 
     @property
@@ -511,6 +513,11 @@ class BaseClip:
         """
         from camtasia.timing import seconds_to_ticks
         self._data['start'] = seconds_to_ticks(start_seconds)
+        if self._data.get('_type') == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = self._data.get(sub_key)
+                if sub is not None:
+                    sub['start'] = self._data['start']
         return self
 
     def set_duration_seconds(self, duration_seconds: float) -> Self:
@@ -1575,8 +1582,8 @@ class BaseClip:
 
     def copy_timing_from(self, source_clip: BaseClip) -> Self:
         """Copy start time and duration from another clip."""
-        self._data['start'] = source_clip.start
-        self._data['duration'] = source_clip.duration
+        self.start = source_clip.start
+        self.duration = source_clip.duration
         return self
 
     def matches_type(self, clip_type: str | ClipType) -> bool:
@@ -1590,7 +1597,7 @@ class BaseClip:
     def snap_to_seconds(self, target_start_seconds: float) -> Self:
         """Move this clip to start at the given time in seconds."""
         from camtasia.timing import seconds_to_ticks
-        self._data['start'] = seconds_to_ticks(target_start_seconds)
+        self.start = seconds_to_ticks(target_start_seconds)
         return self
 
     def is_longer_than(self, threshold_seconds: float) -> bool:

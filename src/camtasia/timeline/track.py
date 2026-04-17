@@ -1210,6 +1210,8 @@ class Track:
                 m['duration'] = new_dur
                 scalar_val = _parse_scalar(m.get('scalar', 1))
                 m['mediaDuration'] = round(Fraction(new_dur) / scalar_val) if scalar_val != 0 else new_dur
+                if m.get('_type') in ('IMFile', 'ScreenIMFile'):
+                    m['mediaDuration'] = 1
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1647,6 +1649,8 @@ class Track:
                     raise ValueError(f'Trim would result in zero or negative duration for clip {clip_id}')
                 scalar_val = _parse_scalar(m.get('scalar', 1))
                 m['mediaDuration'] = round(Fraction(m['duration']) / scalar_val) if scalar_val != 0 else m['duration']
+                if m.get('_type') in ('IMFile', 'ScreenIMFile'):
+                    m['mediaDuration'] = 1
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1773,12 +1777,16 @@ class Track:
         # Mutate left half
         left_data['duration'] = split_offset
         left_data['mediaDuration'] = round(Fraction(split_offset) / scalar_val) if scalar_val != 0 else split_offset
+        if left_data.get('_type') in ('IMFile', 'ScreenIMFile'):
+            left_data['mediaDuration'] = 1
 
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
         right_data['mediaStart'] = int((Fraction(orig_media_start) + Fraction(split_offset) / _parse_scalar(orig_scalar)) if scalar_val != 0 else (orig_media_start + split_offset))
         right_data['mediaDuration'] = round(Fraction(orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
+        if right_data.get('_type') in ('IMFile', 'ScreenIMFile'):
+            right_data['mediaDuration'] = 1
 
         # Re-ID the right half and all nested clips
         from camtasia.timeline.timeline import _remap_clip_ids_recursive
@@ -1851,6 +1859,8 @@ class Track:
         a['duration'] = (b['start'] + b['duration']) - a['start']
         scalar_val = _parse_scalar(a.get('scalar', 1))
         a['mediaDuration'] = round(Fraction(a['duration']) / scalar_val) if scalar_val != 0 else a['duration']
+        if a.get('_type') in ('IMFile', 'ScreenIMFile'):
+            a['mediaDuration'] = 1
         # Remove b (cascade-deletes transitions)
         self.remove_clip(clip_id_b)
         return clip_from_dict(a)

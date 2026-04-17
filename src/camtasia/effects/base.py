@@ -51,12 +51,12 @@ class Effect:
     @property
     def metadata(self) -> dict:
         """Top-level metadata dict for this effect."""
-        return self._data.setdefault('metadata', {})
+        return self._data.get('metadata', {})
 
     @property
     def parameters(self) -> dict[str, Any]:
         """Effect parameters dict."""
-        return self._data.setdefault("parameters", {})
+        return self._data.get("parameters", {})
 
     def get_parameter(self, name: str) -> Any:
         """Get a parameter's default value by name.
