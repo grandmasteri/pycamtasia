@@ -197,6 +197,7 @@ def _check_group_required_fields(data: dict) -> list[ValidationIssue]:
         version = 0.0
     if version >= 10.0:
         required_meta = required_meta | {'colorAttribute'}
+    check_meta = version >= 8.0
 
     def _check_medias(medias: list, path: str) -> None:
         for media in medias:
@@ -209,13 +210,14 @@ def _check_group_required_fields(data: dict) -> list[ValidationIssue]:
                         'warning',
                         f'{path} group id={mid} missing parameters: {sorted(missing_p)}',
                     ))
-                meta = set(media.get('metadata', {}).keys())
-                missing_m = required_meta - meta
-                if missing_m:
-                    issues.append(ValidationIssue(
-                        'warning',
-                        f'{path} group id={mid} missing metadata: {sorted(missing_m)}',
-                    ))
+                if check_meta:
+                    meta = set(media.get('metadata', {}).keys())
+                    missing_m = required_meta - meta
+                    if missing_m:
+                        issues.append(ValidationIssue(
+                            'warning',
+                            f'{path} group id={mid} missing metadata: {sorted(missing_m)}',
+                        ))
                 for inner_track in media.get('tracks', []):
                     _check_medias(inner_track.get('medias', []),
                                   f'{path}/group{mid}')

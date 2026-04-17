@@ -137,6 +137,7 @@ class Track:
     def audio_muted(self, value: bool) -> None:
         """Set whether the track's audio is muted."""
         self._attributes['audioMuted'] = value
+        self._data['audioMuted'] = value
 
     @property
     def video_hidden(self) -> bool:
@@ -147,6 +148,7 @@ class Track:
     def video_hidden(self, value: bool) -> None:
         """Set whether the track's video is hidden."""
         self._attributes['videoHidden'] = value
+        self._data['videoHidden'] = value
 
     @property
     def magnetic(self) -> bool:
@@ -157,6 +159,7 @@ class Track:
     def magnetic(self, value: bool) -> None:
         """Set whether magnetic clip snapping is enabled."""
         self._attributes['magnetic'] = value
+        self._data['magnetic'] = value
 
     @property
     def solo(self) -> bool:
@@ -167,6 +170,7 @@ class Track:
     def solo(self, value: bool) -> None:
         """Set whether the track is soloed."""
         self._attributes['solo'] = value
+        self._data['solo'] = value
 
     def mute(self) -> None:
         """Mute this track's audio."""
@@ -1160,15 +1164,15 @@ class Track:
         """
         if source_clip.source_id is None:
             raise ValueError('source_clip has no source ID (source_id is None)')
-        media_offset_seconds: float = at_seconds - source_clip.start_seconds
-        if media_offset_seconds < 0:
+        if at_seconds < source_clip.start_seconds:
             raise ValueError(
                 f'at_seconds ({at_seconds}) is before source_clip start '
                 f'({source_clip.start_seconds}), resulting in negative offset'
             )
         freeze_start_ticks: int = seconds_to_ticks(at_seconds)
         freeze_duration_ticks: int = seconds_to_ticks(freeze_duration_seconds)
-        media_offset_ticks: int = seconds_to_ticks(media_offset_seconds)
+        timeline_offset_ticks: int = freeze_start_ticks - source_clip.start
+        media_offset_ticks: int = source_clip.media_start + round(Fraction(timeline_offset_ticks) / _parse_scalar(source_clip.scalar))
         freeze_clip: BaseClip = self.add_clip(
             'IMFile',
             source_clip.source_id,
