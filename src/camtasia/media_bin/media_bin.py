@@ -303,7 +303,7 @@ class MediaBin:
             media_type = _get_media_type(track)
             width = width or track.get("width")
             height = height or track.get("height")
-            sample_rate = sample_rate or track.get("sampling_rate")
+            sample_rate = sample_rate or track.get("sampling_rate") or track.get("frame_rate")
             bit_depth = bit_depth or track.get("bit_depth", 0)
             num_channels = num_channels or track.get("channel_s")
             if duration is None:
