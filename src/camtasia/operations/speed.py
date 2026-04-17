@@ -31,9 +31,19 @@ def _scale_tick(value: int | float | str, factor: Fraction) -> int | str:
 
 
 def _scale_clip_timing(clip: dict[str, Any], factor: Fraction) -> None:
-    """Scale start and duration of a clip on the timeline."""
+    """Scale start, duration, and mediaDuration of a clip on the timeline."""
     clip["start"] = _scale_tick(clip["start"], factor)
     clip["duration"] = _scale_tick(clip["duration"], factor)
+    # Scale mediaDuration for regular clips (StitchedMedia/Group handle their own)
+    if clip.get("_type") not in ("StitchedMedia", "Group", "UnifiedMedia"):
+        if "mediaDuration" in clip:
+            clip["mediaDuration"] = _scale_tick(clip["mediaDuration"], factor)
+    # Scale effect start/duration times
+    for effect in clip.get("effects", []):
+        if "start" in effect:
+            effect["start"] = _scale_tick(effect["start"], factor)
+        if "duration" in effect:
+            effect["duration"] = _scale_tick(effect["duration"], factor)
 
 
 def _adjust_scalar(clip: dict[str, Any], factor: Fraction) -> None:
