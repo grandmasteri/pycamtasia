@@ -337,7 +337,13 @@ class BaseClip:
         """Set the opacity."""
         if not 0.0 <= value <= 1.0:
             raise ValueError(f'opacity must be 0.0-1.0, got {value}')
-        self._data.setdefault('parameters', {})['opacity'] = value
+        params = self._data.setdefault('parameters', {})
+        existing = params.get('opacity')
+        if isinstance(existing, dict):
+            existing['defaultValue'] = value
+            existing.pop('keyframes', None)
+        else:
+            params['opacity'] = value
 
     @property
     def volume(self) -> float:
@@ -351,7 +357,13 @@ class BaseClip:
         """Set the volume."""
         if value < 0.0:
             raise ValueError(f'volume must be >= 0.0, got {value}')
-        self._data.setdefault('parameters', {})['volume'] = value
+        params = self._data.setdefault('parameters', {})
+        existing = params.get('volume')
+        if isinstance(existing, dict):
+            existing['defaultValue'] = value
+            existing.pop('keyframes', None)
+        else:
+            params['volume'] = value
 
     @property
     def is_silent(self) -> bool:
@@ -1522,7 +1534,7 @@ class BaseClip:
         parameters: dict[str, Any] = self._data.get('parameters', {})
         for parameter_name, parameter_value in parameters.items():
             if isinstance(parameter_value, dict) and 'keyframes' in parameter_value:
-                parameters[parameter_name] = parameter_value.get('defaultValue', 0)
+                parameter_value.pop('keyframes')
         return self
 
     def copy_timing_from(self, source_clip: BaseClip) -> Self:

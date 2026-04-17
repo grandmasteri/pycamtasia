@@ -140,9 +140,12 @@ class SourceEffect(Effect):
         self.set_parameter("Speed", value)
 
     @property
-    def source_file_type(self) -> str:
+    def source_file_type(self) -> str | None:
         """Source file type identifier for the shader."""
-        return str(self.get_parameter("sourceFileType"))
+        try:
+            return str(self.get_parameter("sourceFileType"))
+        except KeyError:
+            return None
 
     def set_shader_colors(self, *colors: tuple[int, int, int]) -> None:
         """Set shader colours from 0-255 RGB tuples.

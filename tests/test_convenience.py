@@ -2491,8 +2491,8 @@ def test_clear_all_keyframes():
     clip = list(track.clips)[0]
     result = clip.clear_all_keyframes()
     assert result is clip
-    assert media['parameters']['scale0'] == 1.0
-    assert media['parameters']['rotation'] == 0
+    assert media['parameters']['scale0'] == {'type': 'double', 'defaultValue': 1.0}
+    assert media['parameters']['rotation'] == {'type': 'double', 'defaultValue': 0}
     assert media['parameters']['opacity'] == 0.5
 
 

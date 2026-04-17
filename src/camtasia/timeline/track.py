@@ -980,10 +980,10 @@ class Track:
             The newly created Group clip.
         """
         dur_ticks = seconds_to_ticks(duration_seconds)
-        next_id = self._next_clip_id()
+        id_counter = [self._next_clip_id()]
 
         bg_media = {
-            'id': next_id + 1,
+            'id': id_counter[0],
             '_type': 'VMFile',
             'src': background_source_id,
             'trackNumber': 0,
@@ -998,12 +998,13 @@ class Track:
             'metadata': {},
             'animationTracks': {},
         }
+        id_counter[0] += 1
 
         unified_media = {
-            'id': next_id + 2,
+            'id': id_counter[0],
             '_type': 'UnifiedMedia',
             'video': {
-                'id': next_id + 3,
+                'id': id_counter[0] + 1,
                 '_type': 'ScreenVMFile',
                 'src': source_id,
                 'trackNumber': 0,
@@ -1018,7 +1019,7 @@ class Track:
                 'animationTracks': {},
             },
             'audio': {
-                'id': next_id + 4,
+                'id': id_counter[0] + 2,
                 '_type': 'AMFile',
                 'src': source_id,
                 'trackNumber': audio_track_number,
@@ -1043,6 +1044,7 @@ class Track:
             'mediaDuration': dur_ticks,
             'scalar': 1,
         }
+        id_counter[0] += 3
 
         internal_tracks = [
             {'trackIndex': 0, 'medias': [bg_media]},
@@ -1057,6 +1059,7 @@ class Track:
                 'widthAttr': 1920.0, 'heightAttr': 1080.0,
                 'maxDurationAttr': 0, 'assetProperties': [],
             },
+            id=id_counter[0],
         )
 
     def add_transition(
