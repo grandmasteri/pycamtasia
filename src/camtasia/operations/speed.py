@@ -35,7 +35,7 @@ def _scale_clip_timing(clip: dict[str, Any], factor: Fraction) -> None:
     clip["start"] = _scale_tick(clip["start"], factor)
     clip["duration"] = _scale_tick(clip["duration"], factor)
     # Scale mediaDuration for regular clips (StitchedMedia/Group handle their own)
-    if clip.get("_type") not in ("StitchedMedia", "Group", "UnifiedMedia"):
+    if clip.get("_type") not in ("StitchedMedia", "Group", "UnifiedMedia", "IMFile", "ScreenIMFile"):
         if "mediaDuration" in clip:
             clip["mediaDuration"] = _scale_tick(clip["mediaDuration"], factor)
     # Scale effect start/duration times
@@ -102,8 +102,6 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
     elif ctype == "UnifiedMedia":
         if 'mediaDuration' in clip:
             clip['mediaDuration'] = _scale_tick(clip['mediaDuration'], factor)
-        if 'mediaStart' in clip:
-            clip['mediaStart'] = _scale_tick(clip.get('mediaStart', 0), factor)
         for child_key in ("video", "audio"):
             child = clip.get(child_key)
             if child:
@@ -227,6 +225,7 @@ def set_audio_speed(
                 clip["scalar"] = final_scalar
                 clip["duration"] = int(Fraction(clip["mediaDuration"]) * Fraction(1) / target) if target != 1 else clip["mediaDuration"]
                 clip["metadata"]["clipSpeedAttribute"]["value"] = final_speed_attr
+                clip["mediaDuration"] = final_duration
                 return factor
 
     raise ValueError("No speed-changed audio clips found")

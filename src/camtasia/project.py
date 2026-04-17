@@ -2346,13 +2346,13 @@ class Project:
         """Set all audio clips to the same gain level. Returns count adjusted."""
         count: int = 0
         for _, clip in self.all_clips:
-            if clip.is_audio or clip.clip_type in ('AMFile', 'UnifiedMedia'):
-                if clip.clip_type == 'UnifiedMedia':
-                    audio = clip._data.get('audio')
-                    if audio is not None:
-                        audio.setdefault('attributes', {})['gain'] = target_gain
-                else:
-                    clip.gain = target_gain
+            if clip.clip_type == 'UnifiedMedia':
+                audio = clip._data.get('audio')
+                if audio is not None:
+                    audio.setdefault('attributes', {})['gain'] = target_gain
+                    count += 1
+            elif clip.clip_type == 'AMFile' and clip.is_audio:
+                clip.gain = target_gain
                 count += 1
         return count
 

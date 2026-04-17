@@ -1057,6 +1057,13 @@ class Timeline:
                                 'duration': trans_ticks,
                                 'leftMedia': prev_id,
                                 'rightMedia': clip_id,
+                                'attributes': {
+                                    'bypass': False,
+                                    'reverse': False,
+                                    'trivial': False,
+                                    'useAudioPreRoll': True,
+                                    'useVisualPreRoll': True,
+                                },
                             })
                         cursor += m.get('duration', 0)
                         prev_id = clip_id

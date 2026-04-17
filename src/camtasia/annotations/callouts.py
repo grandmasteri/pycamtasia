@@ -121,10 +121,13 @@ def arrow(
     *,
     tail: tuple[float, float] = (0, 0),
     head: tuple[float, float] = (100, 0),
-    color: tuple[float, float, float] = (1.0, 0.0, 0.0),
+    color: tuple[float, float, float] | None = None,
+    stroke_color: Color = Color(1.0, 0.0, 0.0),
     width: float = 3.0,
 ) -> dict:
     """Create an arrow annotation dict."""
+    if color is not None:
+        stroke_color = Color(color[0], color[1], color[2])
     return {
         'kind': 'remix',
         'shape': 'arrow',
@@ -133,9 +136,10 @@ def arrow(
         'tail-y': tail[1],
         'head-x': head[0],
         'head-y': head[1],
-        'stroke-color-red': {'type': 'double', 'defaultValue': color[0], 'interp': 'linr'},
-        'stroke-color-green': {'type': 'double', 'defaultValue': color[1], 'interp': 'linr'},
-        'stroke-color-blue': {'type': 'double', 'defaultValue': color[2], 'interp': 'linr'},
+        'stroke-color-red': {'type': 'double', 'defaultValue': stroke_color.red, 'interp': 'linr'},
+        'stroke-color-green': {'type': 'double', 'defaultValue': stroke_color.green, 'interp': 'linr'},
+        'stroke-color-blue': {'type': 'double', 'defaultValue': stroke_color.blue, 'interp': 'linr'},
+        'stroke-color-opacity': stroke_color.opacity,
         'stroke-width': {'type': 'double', 'defaultValue': width, 'interp': 'linr'},
     }
 

@@ -55,12 +55,12 @@ def match_marker_to_transcript(
     Returns:
         Start timestamp (seconds) of the best match, or None.
     """
-    label_lower = label.lower().split()
+    label_lower = [re.sub(r'[^\w\s]', '', w) for w in label.lower().split()]
     if not label_lower or not words:
         return None
 
     # Build running text for substring search
-    texts = [re.sub(r"[^\w\s]", "", w.text.lower()).strip() for w in words]
+    texts = [t for t in (re.sub(r'[^\w\s]', '', w.text.lower()).strip() for w in words) if t]
     full = " ".join(texts)
     target = " ".join(label_lower)
 

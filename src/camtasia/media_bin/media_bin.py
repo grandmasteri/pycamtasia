@@ -93,8 +93,6 @@ class Media:
                         return None # pragma: no cover
                     return (range_val[1] - range_val[0]) / edit_rate  # type: ignore[no-any-return]
         for st in self._data.get('sourceTracks', []):
-            if st.get('type') == 1:  # image
-                return 0.0
             if st.get('type') == 2:  # audio track
                 range_val = st.get('range', [0, 0])
                 edit_rate = float(Fraction(str(st.get('editRate', 1))))
@@ -102,6 +100,8 @@ class Media:
                     if range_val[1] >= _INT64_MAX:
                         return None # pragma: no cover
                     return (range_val[1] - range_val[0]) / edit_rate  # type: ignore[no-any-return]
+            if st.get('type') == 1:  # image
+                return 0.0
         return None
 
     @property
@@ -496,11 +496,15 @@ def _compute_audio_duration(track: dict[str, Any], sample_rate: int | None) -> i
 
 def _get_media_type(track: dict[str, Any]) -> MediaType:
     """Map a pymediainfo ``kind_of_stream`` value to :class:`MediaType`."""
-    return {
+    mapping = {
         "Image": MediaType.Image,
         "Video": MediaType.Video,
         "Audio": MediaType.Audio,
-    }[track["kind_of_stream"]]
+    }
+    kind = track.get('kind_of_stream', '')
+    if kind not in mapping:
+        raise ValueError(f'Unsupported media stream type: {kind}')
+    return mapping[kind]
 
 
 def _visual_track_to_json(
