@@ -308,6 +308,19 @@ def _check_edit_rate(data: dict[str, Any]) -> list[ValidationIssue]:
     return issues
 
 
+def _check_source_bin_ids(data: dict[str, Any]) -> list[ValidationIssue]:
+    """Check for duplicate sourceBin entry IDs."""
+    issues: list[ValidationIssue] = []
+    seen: dict[int, str] = {}
+    for entry in data.get('sourceBin', []):
+        eid = entry.get('id')
+        if eid is not None:
+            if eid in seen:
+                issues.append(ValidationIssue('error', f'Duplicate sourceBin ID {eid}'))
+            seen[eid] = entry.get('src', '')
+    return issues
+
+
 def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     """Run all structural validation checks on project data."""
     issues: list[ValidationIssue] = []
@@ -320,6 +333,7 @@ def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     issues.extend(_check_group_required_fields(data))
     issues.extend(_check_clip_timing(data))
     issues.extend(_check_edit_rate(data))
+    issues.extend(_check_source_bin_ids(data))
     issues.extend(_check_timing_consistency(data))
     return issues
 

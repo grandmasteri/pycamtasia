@@ -93,6 +93,8 @@ class Media:
                         return None # pragma: no cover
                     return (range_val[1] - range_val[0]) / edit_rate  # type: ignore[no-any-return]
         for st in self._data.get('sourceTracks', []):
+            if st.get('type') == 1:  # image
+                return 0.0
             if st.get('type') == 2:  # audio track
                 range_val = st.get('range', [0, 0])
                 edit_rate = float(Fraction(str(st.get('editRate', 1))))
@@ -108,7 +110,7 @@ class Media:
         return self._data.get('sourceTracks', [])  # type: ignore[no-any-return]
 
     @property
-    def video_edit_rate(self) -> int | None:
+    def video_edit_rate(self) -> int | str | None:
         """Edit rate of the first video source track, or None."""
         for st in self.source_tracks:
             if st.get('type') == 0:
