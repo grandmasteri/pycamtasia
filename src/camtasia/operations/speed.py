@@ -93,6 +93,8 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
     elif ctype == "Group":
         if "mediaDuration" in clip:
             clip["mediaDuration"] = _scale_tick(clip["mediaDuration"], factor)
+        if "mediaStart" in clip:
+            clip["mediaStart"] = _scale_tick(clip.get("mediaStart", 0), factor)
         for track in clip.get("tracks", []):
             for inner in track.get("medias", []):
                 _process_clip(inner, factor)
@@ -143,6 +145,11 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
                 overlap = a_end - b_start
                 if medias[i]['duration'] > overlap:
                     medias[i]['duration'] -= overlap
+                    # Recalculate mediaDuration
+                    s = _frac(medias[i].get('scalar', 1))
+                    if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile'):
+                        md = _frac(medias[i]['duration']) / s
+                        medias[i]['mediaDuration'] = int(md) if md == int(md) else f'{md.numerator}/{md.denominator}'
 
     # Mark all clips as speed-adjusted
     if factor != 1:
