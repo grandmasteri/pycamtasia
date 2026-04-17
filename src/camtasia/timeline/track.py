@@ -26,7 +26,7 @@ def _parse_scalar(value: Any) -> Fraction:
 
 _VALID_CLIP_TYPES = frozenset({
     'AMFile', 'VMFile', 'IMFile', 'Callout', 'Group',
-    'ScreenVMFile', 'ScreenIMFile', 'StitchedMedia', 'UnifiedMedia',
+    'ScreenVMFile', 'ScreenIMFile', 'StitchedMedia', 'UnifiedMedia', 'PlaceholderMedia',
 })
 
 _GROUP_DEFAULT_PARAMETERS = {
@@ -1037,6 +1037,8 @@ class Track:
             internal_tracks=internal_tracks,
             attributes={
                 'ident': '', 'gain': 1.0, 'mixToMono': False,
+                'widthAttr': 1920.0, 'heightAttr': 1080.0,
+                'maxDurationAttr': 0, 'assetProperties': [],
             },
         )
 
