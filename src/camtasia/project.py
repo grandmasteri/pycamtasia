@@ -833,13 +833,22 @@ class Project:
 
             # Zero-range audio
             if media.type == MediaType.Audio:
-                r = raw['sourceTracks'][0]['range']
+                try:
+                    r = raw['sourceTracks'][0]['range']
+                except (KeyError, IndexError):
+                    issues.append(ValidationIssue('error', f'Media {media.id}: missing sourceTracks or range'))
+                    continue
                 if r == [0, 0]:
                     issues.append(ValidationIssue('error', f'Zero-range audio source: {media.source}', media.id))
 
             # Zero-dimension image
             if media.type == MediaType.Image:
-                if raw['rect'] == [0, 0, 0, 0]:
+                try:
+                    rect = raw['rect']
+                except KeyError:
+                    issues.append(ValidationIssue('error', f'Media {media.id}: missing rect'))
+                    continue
+                if rect == [0, 0, 0, 0]:
                     issues.append(ValidationIssue('error', f'Zero-dimension image source: {media.source}', media.id))
 
             # Missing source file
@@ -950,17 +959,18 @@ class Project:
         text = json.dumps(save_data, indent=2, ensure_ascii=False,
                           allow_nan=True)
         # Replace -Infinity/Infinity/NaN with the original extreme values
-        # Only replace when they appear as bare JSON values (after : or , or [)
-        # not inside quoted strings
-        def _replace_special(m):
+        # Use a regex that skips quoted strings to avoid corrupting filenames
+        def _replace_special(m: re.Match[str]) -> str:
+            if m.group(1) is not None:
+                return str(m.group(0))  # inside a quoted string, leave as-is
             token = m.group(0)
             if token == '-Infinity':
-                return '-1.79769313486232e+308'  # pragma: no cover
+                return '-1.79769313486232e+308'
             elif token == 'Infinity':
-                return '1.79769313486232e+308'  # pragma: no cover
+                return '1.79769313486232e+308'
             else:
-                return '0.0'  # pragma: no cover
-        text = re.sub(r'(?:(?<=: )|(?<=, )|(?<=\[ )|(?<=\[))-?Infinity\b|(?:(?<=: )|(?<=, )|(?<=\[ )|(?<=\[))NaN\b', _replace_special, text)
+                return '0.0'
+        text = re.sub(r'("(?:[^"\\]|\\.)*")|-?Infinity\b|NaN\b', _replace_special, text)
 
         # Step 2: Add space before colon (NSJSONSerialization style)
         # "key": value  ->  "key" : value

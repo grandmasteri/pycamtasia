@@ -283,7 +283,7 @@ class Callout(BaseClip):
     def set_font(
         self,
         name: str,
-        weight: str = 'Regular',
+        weight: str | int = 'Regular',
         size: float = 64.0,
     ) -> Self:
         """Update the callout's font properties.
@@ -305,7 +305,7 @@ class Callout(BaseClip):
                 if 'fontName' in attr:
                     attr['fontName'] = name
                 if 'fontWeight' in attr:
-                    attr['fontWeight'] = _WEIGHT_MAP.get(weight, 400)
+                    attr['fontWeight'] = weight if isinstance(weight, int) else _WEIGHT_MAP.get(weight, 400)
                 if 'fontSize' in attr:
                     attr['fontSize'] = size
         return self
