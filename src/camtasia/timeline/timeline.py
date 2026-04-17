@@ -768,10 +768,15 @@ class Timeline:
         """
         offset = seconds_to_ticks(seconds)
         for track in self.tracks:
+            clamped = False
             for m in track._data.get('medias', []):
                 new_start = m.get('start', 0) + offset
+                if new_start < 0:
+                    clamped = True
                 m['start'] = max(0, new_start)
                 _propagate_start_to_unified(m)
+            if clamped:
+                track._data['transitions'] = []
 
     def apply_to_all_clips(self, fn) -> int:
         """Apply a function to every clip on every track. Returns count."""
