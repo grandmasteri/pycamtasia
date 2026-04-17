@@ -66,9 +66,13 @@ def export_edl(
 
             # Source name from media bin if available
             source = 'AX'
-            if clip.source_id is not None:
+            if clip.clip_type == 'UnifiedMedia':
+                src_id = clip._data.get('video', {}).get('src')
+            else:
+                src_id = clip.source_id
+            if src_id is not None:
                 try:
-                    media = project.media_bin[clip.source_id]
+                    media = project.media_bin[src_id]
                     source = media.identity
                 except KeyError:
                     pass

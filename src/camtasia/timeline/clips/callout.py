@@ -102,7 +102,11 @@ class Callout(BaseClip):
     @text.setter
     def text(self, value: str) -> None:
         """Set the callout text content."""
-        self._data.setdefault('def', {})['text'] = value  # type: ignore[typeddict-item]
+        d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
+        d['text'] = value
+        for kf in d.get('textAttributes', {}).get('keyframes', []):
+            for attr in kf.get('value', []):
+                attr['rangeEnd'] = len(value)
 
     @property
     def font(self) -> dict[str, Any]:

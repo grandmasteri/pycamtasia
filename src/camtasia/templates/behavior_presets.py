@@ -22,14 +22,14 @@ _DIRECTION_PARAM_OUT = {
 _NONE_CENTER = {
     'attributes': {
         'name': 'none', 'type': 1, 'characterOrder': 6,
-        'offsetBetweenCharacters': 0, 'secondsPerLoop': 1,
+        'offsetBetweenCharacters': 49392000, 'secondsPerLoop': 1,
         'numberOfLoops': -1, 'delayBetweenLoops': 0,
     }
 }
 _NONE_OUT = {
     'attributes': {
         'name': 'none', 'type': 1, 'characterOrder': 6,
-        'offsetBetweenCharacters': 0, 'suggestedDurationPerCharacter': 0,
+        'offsetBetweenCharacters': 49392000, 'suggestedDurationPerCharacter': 0,
         'overlapProportion': 0, 'movement': -1,
         'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
     }
@@ -133,7 +133,7 @@ PRESETS = {
         'center': {
             'attributes': {
                 'name': 'tremble', 'type': 0, 'characterOrder': 0,
-                'offsetBetweenCharacters': 0, 'secondsPerLoop': '4/5',
+                'offsetBetweenCharacters': 49392000, 'secondsPerLoop': '4/5',
                 'numberOfLoops': -1, 'delayBetweenLoops': 0,
             },
             'parameters': {
@@ -179,7 +179,7 @@ PRESETS = {
         'center': {
             'attributes': {
                 'name': 'pulsate', 'type': 1, 'characterOrder': 6,
-                'offsetBetweenCharacters': 0, 'secondsPerLoop': 1,
+                'offsetBetweenCharacters': 49392000, 'secondsPerLoop': 1,
                 'numberOfLoops': -1, 'delayBetweenLoops': 0,
             },
             'parameters': {
@@ -202,7 +202,7 @@ PRESETS = {
         'in': {
             'attributes': {
                 'name': 'shifting', 'type': 0, 'characterOrder': 6,
-                'offsetBetweenCharacters': 0,
+                'offsetBetweenCharacters': 49392000,
                 'suggestedDurationPerCharacter': 705600000,
                 'overlapProportion': 0, 'movement': 0,
                 'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,

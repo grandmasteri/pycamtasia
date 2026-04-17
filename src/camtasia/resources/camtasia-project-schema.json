@@ -188,7 +188,8 @@
       "required": [
         "effectName",
         "category",
-        "parameters"
+        "parameters",
+        "bypassed"
       ],
       "properties": {
         "effectName": {

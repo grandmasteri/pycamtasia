@@ -91,7 +91,6 @@ class TimelineBuilder:
         *,
         track_name: str = 'Titles',
         duration: float = 5.0,
-        subtitle: str = '',
     ) -> BaseClip:
         """Add a title card at the cursor position.
 

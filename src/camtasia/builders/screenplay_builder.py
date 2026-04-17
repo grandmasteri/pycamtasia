@@ -101,18 +101,22 @@ def build_from_screenplay(
 
 def _find_audio_file(audio_dir: Path, vo_id: str) -> Path | None:
     """Try to find an audio file matching a VO ID."""
-    # Try exact match: VO-1.1.wav
-    exact = audio_dir / f'{vo_id}.wav'
-    if exact.exists():
-        return exact
+    _EXTENSIONS = ('.wav', '.mp3', '.m4a', '.aac', '.flac')
+    # Try exact match: VO-1.1.wav, .mp3, etc.
+    for ext in _EXTENSIONS:
+        exact = audio_dir / f'{vo_id}{ext}'
+        if exact.exists():
+            return exact
     # Try numbered prefix using full VO ID: e.g. VO-1.1 -> 01-01-*.wav
     parts = [p for p in vo_id.split('.') if p]
     if len(parts) >= 2:
         prefix = f'{int(parts[0]):02d}-{int(parts[1]):02d}-'
-        for f in sorted(audio_dir.glob(f'{prefix}*.wav')):
-            return f
+        for ext in _EXTENSIONS:
+            for f in sorted(audio_dir.glob(f'{prefix}*{ext}')):
+                return f
     elif parts: # pragma: no cover
         prefix = f'{int(parts[0]):02d}-' # pragma: no cover
-        for f in sorted(audio_dir.glob(f'{prefix}*.wav')): # pragma: no cover
-            return f # pragma: no cover
+        for ext in _EXTENSIONS: # pragma: no cover
+            for f in sorted(audio_dir.glob(f'{prefix}*{ext}')): # pragma: no cover
+                return f # pragma: no cover
     return None

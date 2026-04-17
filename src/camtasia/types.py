@@ -76,6 +76,7 @@ class BehaviorPreset(str, Enum):
     """Known behavior animation presets."""
     REVEAL = 'reveal'
     SLIDING = 'sliding'
+    FADING = 'fading'
     FADE = 'fade'
     FLY_IN = 'flyIn'
     POP_UP = 'popUp'
@@ -89,6 +90,7 @@ class BehaviorInnerName(str, Enum):
     FADE_IN = 'fadeIn'
     REVEAL = 'reveal'
     SLIDING = 'sliding'
+    FADING = 'fading'
     FLY_IN = 'flyIn'
     GROW = 'grow'
     HINGE = 'hinge'

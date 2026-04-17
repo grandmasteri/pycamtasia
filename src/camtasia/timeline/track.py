@@ -1600,8 +1600,8 @@ class Track:
                     if imedia.get('_type') == 'VMFile':
                         imedia['scalar'] = str(vmfile_scalar)
 
-            advance = seconds_to_ticks(dur_s) * float(original_scalar / seg_scalar)
-            cumulative_ms += advance
+            advance = seconds_to_ticks(dur_s) * (Fraction(original_scalar) / Fraction(seg_scalar))
+            cumulative_ms += Fraction(advance)
 
         return pieces
 
@@ -1770,7 +1770,7 @@ class Track:
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
-        right_data['mediaStart'] = int((Fraction(orig_media_start) + Fraction(split_offset) / Fraction(orig_scalar)) if orig_scalar != 0 else (orig_media_start + split_offset))
+        right_data['mediaStart'] = int((Fraction(orig_media_start) + Fraction(split_offset) / _parse_scalar(orig_scalar)) if orig_scalar != 0 else (orig_media_start + split_offset))
         right_data['mediaDuration'] = int((orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
 
         # Re-ID the right half and all nested clips
@@ -1833,6 +1833,8 @@ class Track:
         if a is None or b is None:
             missing = clip_id_a if a is None else clip_id_b
             raise KeyError(f'No clip with id={missing}')
+        if a['start'] + a['duration'] != b['start']:
+            raise ValueError('Clips are not adjacent')
         if _parse_scalar(a.get('scalar', 1)) != _parse_scalar(b.get('scalar', 1)):
             raise ValueError('Cannot merge clips with different scalars')
         # Extend a to cover b
@@ -2062,6 +2064,9 @@ class Track:
         for media_dict in self._data.get('medias', []):
             if media_dict.get('start', 0) >= at_ticks:
                 media_dict['start'] = media_dict.get('start', 0) + gap_ticks
+        for t in self._data.get('transitions', []):
+            if t.get('start', 0) >= at_ticks:
+                t['start'] = t.get('start', 0) + gap_ticks
 
     def remove_gap_at(self, at_seconds: float) -> None:
         """Remove a gap at the specified time by pulling subsequent clips backward.
@@ -2099,6 +2104,7 @@ class Track:
         for media_dict in self._data.get('medias', []):
             new_start: int = max(0, media_dict.get('start', 0) + offset_ticks)
             media_dict['start'] = new_start
+        self._data['transitions'] = []
 
     def scale_all_durations(self, factor: float) -> None:
         """Scale all clip durations and start times by a factor (e.g., 2.0 = double length)."""

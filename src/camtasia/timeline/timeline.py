@@ -550,17 +550,31 @@ class Timeline:
         Returns:
             List of (track, clip) tuples.
         """
+        # Build clip_id → track lookup (one pass). Top-level clip IDs map
+        # directly; nested IDs (inside Groups/StitchedMedia/UnifiedMedia)
+        # inherit the track of their top-level parent.
+        clip_id_to_track: dict[int, Track] = {}
+
+        def _register_ids(media_data: dict, track: Track) -> None:
+            if 'id' in media_data:
+                clip_id_to_track[media_data['id']] = track
+            for key in ('video', 'audio'):
+                if key in media_data and isinstance(media_data[key], dict):
+                    _register_ids(media_data[key], track)
+            for inner_track in media_data.get('tracks', []):
+                for inner_media in inner_track.get('medias', []):
+                    _register_ids(inner_media, track)
+            for sub in media_data.get('medias', []):
+                _register_ids(sub, track)
+
+        for track in self.tracks:
+            for media in track._data.get('medias', []):
+                _register_ids(media, track)
+
         results = []
         for clip in self.all_clips():
             if clip.clip_type == clip_type:
-                # Find which track owns this clip
-                for track in self.tracks:
-                    if any(c.id == clip.id for c in track.clips):
-                        results.append((track, clip))
-                        break
-                else:
-                    # Nested clip — no owning top-level track
-                    results.append((None, clip))  # type: ignore[arg-type]
+                results.append((clip_id_to_track.get(clip.id), clip))
         return results
 
     @property
@@ -751,6 +765,9 @@ class Timeline:
             for m in track._data.get('medias', []):
                 new_start = m.get('start', 0) + offset
                 m['start'] = max(0, new_start)
+            for t in track._data.get('transitions', []):
+                new_start = t.get('start', 0) + offset
+                t['start'] = max(0, new_start)
 
     def apply_to_all_clips(self, fn) -> int:
         """Apply a function to every clip on every track. Returns count."""
