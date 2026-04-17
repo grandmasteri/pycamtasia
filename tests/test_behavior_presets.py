@@ -62,10 +62,10 @@ def test_unknown_preset_raises():
 def test_preset_duration_calculated():
     clip_dur = 30 * 60 * 5880000
     reveal = get_behavior_preset('reveal', clip_dur)
-    assert reveal['duration'] == clip_dur - reveal['start']
+    assert reveal['duration'] == clip_dur
 
     sliding = get_behavior_preset('sliding', clip_dur)
-    assert sliding['duration'] == clip_dur - sliding['start']
+    assert sliding['duration'] == clip_dur
 
     fade = get_behavior_preset('fade', clip_dur)
-    assert fade['duration'] == clip_dur - fade['start']
+    assert fade['duration'] == clip_dur

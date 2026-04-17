@@ -100,7 +100,7 @@ class Media:
                     if range_val[1] >= _INT64_MAX:
                         return None # pragma: no cover
                     return (range_val[1] - range_val[0]) / edit_rate  # type: ignore[no-any-return]
-            if st.get('type') == 1:  # image
+            elif st.get('type') == 1:  # image
                 return 0.0
         return None
 

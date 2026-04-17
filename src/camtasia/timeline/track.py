@@ -1623,7 +1623,7 @@ class Track:
         md = clip._data.get('mediaDuration', clip.duration)
         md_frac = Fraction(str(md))
         source_dur = ticks_to_seconds(int(md_frac))
-        original_scalar = md_frac / Fraction(clip.duration)
+        original_scalar = Fraction(clip.duration) / md_frac
         vmfile_scalar = (_Frac(1) / original_scalar).limit_denominator(100000)
 
         # Split right-to-left at segment boundaries

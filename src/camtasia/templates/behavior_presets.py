@@ -248,7 +248,7 @@ def get_behavior_preset(preset_name: str, duration_ticks: int) -> dict:
         'effectName': template['effectName'],
         'bypassed': False,
         'start': min(template['start'], duration_ticks),
-        'duration': max(0, duration_ticks - min(template['start'], duration_ticks)),
+        'duration': duration_ticks,
         'in': template['in'],
         'center': template['center'],
         'out': template['out'],

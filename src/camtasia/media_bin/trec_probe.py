@@ -77,6 +77,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
             h = track.height or 0
             if w > width:
                 width = w
+            if h > height:
                 height = h
 
             codec = (track.codec_id or '').lower()
