@@ -107,13 +107,13 @@ class TrackMediaEffects():
         del self._effects[index]
 
     def __setitem__(self, index: int, effect: LegacyEffect) -> None:
+        old_effect = self[index]
         effect_schema = EffectSchema()
         effect_data = effect_schema.dump(effect)
-        self._effects.insert(index, effect_data)
-        for key in effect.metadata:
-            del self._metadata[key]
+        for key in old_effect.metadata:
+            self._metadata.pop(key, None)
+        self._effects[index] = effect_data
         self._metadata.update(effect.metadata)
-        del self._effects[index + 1]
 
     def __len__(self) -> int:
         return len(self._effects)
@@ -144,7 +144,7 @@ class _Markers:
             yield Marker(name=m['value'],
                          time=self._track_media.start + (marker_offset - self._track_media.media_start))
 
-    def add(self, name: str, offset: int, duplicates_okay: bool = False) -> None:
+    def add(self, name: str, offset: int, duplicates_okay: bool = False) -> Marker:
         """Add a Marker to a TrackMedia.
 
         Note that `offset` is interpreted as relative to the start of the timeline, not the
@@ -180,3 +180,4 @@ class _Markers:
              'endTime': marker_offset,
              'duration': 0
              })
+        return Marker(name=name, time=offset)

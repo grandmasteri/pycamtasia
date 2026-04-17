@@ -1707,7 +1707,6 @@ class Track:
                     orig_media_start_frac = Fraction(str(m.get('mediaStart', 0)))
                     ms = Fraction(orig_media_start_frac) + (Fraction(trim_start) / scalar_val if scalar_val != 0 else Fraction(trim_start))
                     m['mediaStart'] = int(ms) if ms == int(ms) else str(ms)
-                    _propagate_start_to_unified(m)
                 if trim_end > 0:
                     m['duration'] = m.get('duration', 0) - trim_end
                 if m.get('duration', 0) <= 0:
@@ -1715,6 +1714,7 @@ class Track:
                     m['duration'] = orig_duration
                     m['mediaStart'] = orig_media_start
                     raise ValueError(f'Trim would result in zero or negative duration for clip {clip_id}')
+                _propagate_start_to_unified(m)
                 scalar_val = _parse_scalar(m.get('scalar', 1))
                 if scalar_val != 0:
                     md = Fraction(m['duration']) / scalar_val

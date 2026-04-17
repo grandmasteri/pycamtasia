@@ -60,7 +60,13 @@ def match_marker_to_transcript(
         return None
 
     # Build running text for substring search
-    texts = [t for t in (re.sub(r'[^\w\s]', '', w.text.lower()).strip() for w in words) if t]
+    texts = []
+    text_to_word_idx = []
+    for wi, w in enumerate(words):
+        cleaned = re.sub(r'[^\w\s]', '', w.text.lower()).strip()
+        if cleaned:
+            texts.append(cleaned)
+            text_to_word_idx.append(wi)
     full = " ".join(texts)
     target = " ".join(label_lower)
 
@@ -68,7 +74,7 @@ def match_marker_to_transcript(
     if idx != -1:
         # Count words before the match to find the word index
         word_idx = full[:idx].count(" ")
-        return words[min(word_idx, len(words) - 1)].start
+        return words[text_to_word_idx[min(word_idx, len(text_to_word_idx) - 1)]].start
 
     # Fallback: match first word of label
     first = label_lower[0]
