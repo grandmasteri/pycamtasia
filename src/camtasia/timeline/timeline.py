@@ -1059,6 +1059,8 @@ class Timeline:
                 else:
                     continue
                 break
+            else:
+                raise KeyError(f'Clip {clip_id} not found on any track')
 
 
 class _TrackAccessor:

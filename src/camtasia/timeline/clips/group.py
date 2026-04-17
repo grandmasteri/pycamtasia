@@ -15,7 +15,7 @@ else:  # pragma: no cover
     from typing_extensions import Self
 from typing import Any, Iterator, NoReturn
 
-from camtasia.timing import EDIT_RATE, seconds_to_ticks, ticks_to_seconds
+from camtasia.timing import EDIT_RATE, parse_scalar as _parse_scalar, seconds_to_ticks, ticks_to_seconds
 from camtasia.types import ClipType
 
 from .base import BaseClip
@@ -566,4 +566,11 @@ class Group(BaseClip):
             for m in track.get('medias', []):
                 if m.get('duration', 0) > group_dur:
                     m['duration'] = group_dur
+                    if m.get('_type') in ('IMFile', 'ScreenIMFile'):
+                        m['mediaDuration'] = 1
+                    else:
+                        scalar = _parse_scalar(m.get('scalar', 1))
+                        if scalar != 0:
+                            md = Fraction(m['duration']) / scalar
+                            m['mediaDuration'] = int(md) if md == int(md) else str(md)
         return self

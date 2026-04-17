@@ -1167,7 +1167,10 @@ class Track:
         for src_id in source_ids:
             clip = self.add_image(src_id, offset, duration_per_image_seconds)
             clips.append(clip)
-            offset += duration_per_image_seconds
+            if transition_seconds > 0:
+                offset += duration_per_image_seconds - transition_seconds
+            else:
+                offset += duration_per_image_seconds
 
         if transition_seconds > 0 and len(clips) > 1:
             for i in range(len(clips) - 1):
@@ -1706,8 +1709,9 @@ class Track:
                 if m.get('duration', 0) <= 0:
                     raise ValueError(f'Trim would result in zero or negative duration for clip {clip_id}')
                 scalar_val = _parse_scalar(m.get('scalar', 1))
-                md = Fraction(m['duration']) / scalar_val
-                m['mediaDuration'] = int(md) if md == int(md) else str(md)
+                if scalar_val != 0:
+                    md = Fraction(m['duration']) / scalar_val
+                    m['mediaDuration'] = int(md) if md == int(md) else str(md)
                 if m.get('_type') in ('IMFile', 'ScreenIMFile'):
                     m['mediaDuration'] = 1
                 if m.get('_type') == 'UnifiedMedia':
@@ -2325,10 +2329,14 @@ class _PerMediaMarkers:
         )
         start = self._data.get('start', 0)
         media_start = int(Fraction(str(self._data.get('mediaStart', 0))))
+        scalar = _parse_scalar(self._data.get('scalar', 1))
         for kf in keyframes:
+            media_offset = kf['time'] - media_start
+            if media_offset < 0:
+                continue  # marker in trimmed-away portion
             yield Marker(
                 name=kf['value'],
-                time=start + (kf['time'] - media_start),
+                time=start + int(Fraction(media_offset) * scalar),
             )
 
     def __len__(self) -> int:
