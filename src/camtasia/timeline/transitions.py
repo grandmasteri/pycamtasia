@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
-from camtasia.timing import EDIT_RATE
+from camtasia.timing import EDIT_RATE, seconds_to_ticks
 from camtasia.types import TransitionType, _TransitionData
 
 
@@ -192,7 +192,7 @@ class TransitionList:
         duration_seconds: float = 0.5,
     ) -> Transition:
         """Add a dissolve (fade) transition between two clips."""
-        ticks = int(duration_seconds * EDIT_RATE)
+        ticks = seconds_to_ticks(duration_seconds)
         return self.add(TransitionType.FADE, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_fade_to_white(
@@ -207,7 +207,7 @@ class TransitionList:
             The transition name 'FadeThroughColor' is not in the JSON schema
             (built from sample projects) and may not work in all Camtasia versions.
         """
-        ticks = int(duration_seconds * EDIT_RATE)
+        ticks = seconds_to_ticks(duration_seconds)
         t = self.add('FadeThroughColor', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
         t._data['attributes']['Color-red'] = 1.0
         t._data['attributes']['Color-green'] = 1.0
@@ -240,7 +240,7 @@ class TransitionList:
         }
         if direction not in name_map:
             raise ValueError(f'Invalid direction {direction!r}. Use: {sorted(name_map)}')
-        ticks = int(duration_seconds * EDIT_RATE)
+        ticks = seconds_to_ticks(duration_seconds)
         return self.add(name_map[direction], self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_wipe(
@@ -269,7 +269,7 @@ class TransitionList:
         }
         if direction not in name_map:
             raise ValueError(f'Invalid direction {direction!r}. Use: {sorted(name_map)}')
-        ticks = int(duration_seconds * EDIT_RATE)
+        ticks = seconds_to_ticks(duration_seconds)
         return self.add(name_map[direction], self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_card_flip(
@@ -279,7 +279,7 @@ class TransitionList:
         duration_seconds: float = 0.5,
     ) -> Transition:
         """Add a card-flip transition."""
-        ticks = int(duration_seconds * EDIT_RATE)
+        ticks = seconds_to_ticks(duration_seconds)
         return self.add(TransitionType.CARD_FLIP, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_glitch(
@@ -289,7 +289,7 @@ class TransitionList:
         duration_seconds: float = 0.5,
     ) -> Transition:
         """Add a glitch transition."""
-        ticks = int(duration_seconds * EDIT_RATE)
+        ticks = seconds_to_ticks(duration_seconds)
         return self.add('Glitch3', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_linear_blur(
@@ -299,7 +299,7 @@ class TransitionList:
         duration_seconds: float = 0.5,
     ) -> Transition:
         """Add a linear-blur transition."""
-        ticks = int(duration_seconds * EDIT_RATE)
+        ticks = seconds_to_ticks(duration_seconds)
         return self.add(TransitionType.LINEAR_BLUR, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_stretch(
@@ -309,7 +309,7 @@ class TransitionList:
         duration_seconds: float = 0.5,
     ) -> Transition:
         """Add a stretch transition."""
-        ticks = int(duration_seconds * EDIT_RATE)
+        ticks = seconds_to_ticks(duration_seconds)
         return self.add(TransitionType.STRETCH, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_paint_arcs(
@@ -319,7 +319,7 @@ class TransitionList:
         duration_seconds: float = 0.5,
     ) -> Transition:
         """Add a paint-arcs transition."""
-        ticks = int(duration_seconds * EDIT_RATE)
+        ticks = seconds_to_ticks(duration_seconds)
         return self.add(TransitionType.PAINT_ARCS, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def add_spherical_spin(
@@ -329,7 +329,7 @@ class TransitionList:
         duration_seconds: float = 0.5,
     ) -> Transition:
         """Add a spherical-spin transition."""
-        ticks = int(duration_seconds * EDIT_RATE)
+        ticks = seconds_to_ticks(duration_seconds)
         return self.add(TransitionType.SPHERICAL_SPIN, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
     def remove(self, index: int) -> None:

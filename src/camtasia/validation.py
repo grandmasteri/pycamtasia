@@ -252,6 +252,10 @@ def _check_clip_timing(data: dict) -> list[ValidationIssue]:
                               f'{path}/group{mid}')
             _check_medias(media.get('medias', []),
                           f'{path}/stitched{mid}')
+            for key in ('video', 'audio'):
+                sub = media.get(key)
+                if sub is not None:
+                    _check_medias([sub], f'{path}/{key}')
 
     tracks = _get_tracks(data)
     for ti, track in enumerate(tracks):

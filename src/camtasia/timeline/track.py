@@ -1587,7 +1587,7 @@ class Track:
         #   scalar = original_scalar / user_speed
         #   mediaStart[i+1] = mediaStart[i] + dur[i] * (original_scalar / scalar[i])
         #   VMFile scalar = 1 / original_scalar
-        cumulative_ms = 0.0
+        cumulative_ms = Fraction(0)
         for piece, (dur_s, speed) in zip(pieces, segments):
             seg_scalar = (
                 original_scalar / _Frac(speed).limit_denominator(100000)
@@ -1846,7 +1846,7 @@ class Track:
         # Extend a to cover b
         a['duration'] = (b['start'] + b['duration']) - a['start']
         scalar_val = _parse_scalar(a.get('scalar', 1))
-        a['mediaDuration'] = int(a['duration'] / scalar_val) if scalar_val != 0 else a['duration']
+        a['mediaDuration'] = round(Fraction(a['duration']) / scalar_val) if scalar_val != 0 else a['duration']
         # Remove b (cascade-deletes transitions)
         self.remove_clip(clip_id_b)
         return clip_from_dict(a)
@@ -2114,13 +2114,16 @@ class Track:
 
     def scale_all_durations(self, factor: float) -> None:
         """Scale all clip durations and start times by a factor (e.g., 2.0 = double length)."""
+        from camtasia.timing import scalar_to_string
         if factor <= 0:
             raise ValueError(f'factor must be > 0, got {factor}')
         for media_dict in self._data.get('medias', []):
-            media_dict['duration'] = int(media_dict.get('duration', 0) * factor)
-            new_scalar = Fraction(str(media_dict.get('scalar', 1))) * Fraction(factor).limit_denominator(10000)
-            media_dict['scalar'] = int(new_scalar) if new_scalar == int(new_scalar) else str(new_scalar)
             media_dict['start'] = int(media_dict.get('start', 0) * factor)
+            media_dict['duration'] = int(media_dict.get('duration', 0) * factor)
+            media_duration = Fraction(str(media_dict.get('mediaDuration', media_dict['duration'])))
+            if media_duration != 0:
+                new_scalar = Fraction(media_dict['duration']) / media_duration
+                media_dict['scalar'] = scalar_to_string(new_scalar)
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""
