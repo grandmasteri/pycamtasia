@@ -110,6 +110,11 @@ class BaseClip:
     def start(self, value: int) -> None:
         """Set the start."""
         self._data['start'] = value
+        if self._data.get('_type') == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = self._data.get(sub_key)
+                if sub is not None:
+                    sub['start'] = self._data['start']
 
     @property
     def duration(self) -> int:
@@ -124,6 +129,12 @@ class BaseClip:
         scalar = parse_scalar(self._data.get('scalar', 1))
         if scalar != 0:
             self._data['mediaDuration'] = round(Fraction(value) / scalar)
+        if self._data.get('_type') == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = self._data.get(sub_key)
+                if sub is not None:
+                    sub['duration'] = self._data['duration']
+                    sub['mediaDuration'] = self._data['mediaDuration']
 
     @property
     def end_seconds(self) -> float:
@@ -516,6 +527,12 @@ class BaseClip:
         scalar = parse_scalar(self._data.get('scalar', 1))
         if scalar != 0:
             self._data['mediaDuration'] = round(Fraction(self._data['duration']) / scalar)
+        if self._data.get('_type') == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = self._data.get(sub_key)
+                if sub is not None:
+                    sub['duration'] = self._data['duration']
+                    sub['mediaDuration'] = self._data['mediaDuration']
         return self
 
     def set_time_range(self, start_seconds: float, duration_seconds: float) -> Self:
@@ -529,6 +546,13 @@ class BaseClip:
         scalar = parse_scalar(self._data.get('scalar', 1))
         if scalar != 0:
             self._data['mediaDuration'] = round(Fraction(self._data['duration']) / scalar)
+        if self._data.get('_type') == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = self._data.get(sub_key)
+                if sub is not None:
+                    sub['start'] = self._data['start']
+                    sub['duration'] = self._data['duration']
+                    sub['mediaDuration'] = self._data['mediaDuration']
         return self
 
     def __eq__(self, other: object) -> bool:

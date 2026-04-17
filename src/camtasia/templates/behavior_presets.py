@@ -22,7 +22,7 @@ _DIRECTION_PARAM_OUT = {
 _NONE_CENTER = {
     'attributes': {
         'name': 'none', 'type': 1, 'characterOrder': 6,
-        'offsetBetweenCharacters': 49392000, 'secondsPerLoop': 1,
+        'offsetBetweenCharacters': 0, 'secondsPerLoop': 1,
         'numberOfLoops': -1, 'delayBetweenLoops': 0,
     }
 }

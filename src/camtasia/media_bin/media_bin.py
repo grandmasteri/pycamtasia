@@ -530,7 +530,7 @@ def _visual_track_to_json(
                 "type": media_type.value,
                 "editRate": edit_rate,
                 "trackRect": media_rect,
-                "sampleRate": sample_rate if sample_rate else edit_rate,
+                "sampleRate": sample_rate if sample_rate is not None else edit_rate,
                 "bitDepth": bit_depth,
                 "numChannels": 0,
                 "integratedLUFS": 100.0,
