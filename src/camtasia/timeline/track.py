@@ -1975,6 +1975,7 @@ class Track:
             if m.get('id') == clip_id:
                 new_clip_data['id'] = self._next_clip_id()
                 new_clip_data['start'] = m['start']
+                _propagate_start_to_unified(new_clip_data)
                 medias[i] = new_clip_data
                 transitions = self._data.get('transitions', [])
                 self._data['transitions'] = [

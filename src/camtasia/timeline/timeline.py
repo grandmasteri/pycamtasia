@@ -932,6 +932,7 @@ class Timeline:
             for clip_data in clips_by_track[track_idx]:
                 cloned = copy.deepcopy(clip_data)
                 cloned['start'] = int(cloned.get('start', 0)) - earliest_start
+                _propagate_start_to_unified(cloned)
                 _id_map: dict[int, int] = {}
                 _remap_clip_ids_with_map(cloned, id_counter, _id_map)
                 internal_medias.append(cloned)
