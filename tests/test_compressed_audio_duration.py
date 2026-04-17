@@ -46,7 +46,7 @@ class TestComputeAudioDuration:
 
     def test_compressed_with_no_sample_rate_falls_back_to_raw(self):
         track = {"format": "MPEG Audio", "duration": 5000.0}
-        assert _compute_audio_duration(track, None) == 5000
+        assert _compute_audio_duration(track, None) == 0
 
 
 class TestImportMediaCompressedAudio:

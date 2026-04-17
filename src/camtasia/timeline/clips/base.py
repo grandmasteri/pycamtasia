@@ -1509,6 +1509,7 @@ class BaseClip:
                 fo_ticks = seconds_to_ticks(fade_out)
                 fo_start = dur_ticks - fo_ticks
                 keyframes.append({'endTime': dur_ticks, 'time': fo_start, 'value': 0.0, 'duration': fo_ticks})
+            self._clear_opacity()
             self._add_opacity_track(keyframes, default_value=0.0 if fade_in > 0 else 1.0)
 
         if scale_from is not None and scale_to is not None:

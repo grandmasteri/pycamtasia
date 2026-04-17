@@ -1212,6 +1212,12 @@ class Track:
                 m['mediaDuration'] = round(Fraction(new_dur) / scalar_val) if scalar_val != 0 else new_dur
                 if m.get('_type') in ('IMFile', 'ScreenIMFile'):
                     m['mediaDuration'] = 1
+                if m.get('_type') == 'UnifiedMedia':
+                    for sub_key in ('video', 'audio'):
+                        sub = m.get(sub_key)
+                        if sub is not None:
+                            sub['duration'] = m['duration']
+                            sub['mediaDuration'] = m['mediaDuration']
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1779,6 +1785,12 @@ class Track:
         left_data['mediaDuration'] = round(Fraction(split_offset) / scalar_val) if scalar_val != 0 else split_offset
         if left_data.get('_type') in ('IMFile', 'ScreenIMFile'):
             left_data['mediaDuration'] = 1
+        if left_data.get('_type') == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = left_data.get(sub_key)
+                if sub is not None:
+                    sub['duration'] = left_data['duration']
+                    sub['mediaDuration'] = left_data['mediaDuration']
 
         # Mutate right half
         right_data['start'] = orig_start + split_offset
@@ -1787,6 +1799,12 @@ class Track:
         right_data['mediaDuration'] = round(Fraction(orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
         if right_data.get('_type') in ('IMFile', 'ScreenIMFile'):
             right_data['mediaDuration'] = 1
+        if right_data.get('_type') == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = right_data.get(sub_key)
+                if sub is not None:
+                    sub['duration'] = right_data['duration']
+                    sub['mediaDuration'] = right_data['mediaDuration']
 
         # Re-ID the right half and all nested clips
         from camtasia.timeline.timeline import _remap_clip_ids_recursive
@@ -1853,6 +1871,8 @@ class Track:
             raise ValueError('Clips are not adjacent')
         if a.get('src') != b.get('src'):
             raise ValueError('Clips reference different sources')
+        if a.get('_type') != b.get('_type'):
+            raise ValueError('Clips have different types')
         if _parse_scalar(a.get('scalar', 1)) != _parse_scalar(b.get('scalar', 1)):
             raise ValueError('Cannot merge clips with different scalars')
         # Extend a to cover b
