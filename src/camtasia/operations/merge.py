@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from camtasia.project import Project
 
 
-def _remap_clip_ids(clip_data: dict, id_counter: list[int], id_map: dict[int, int]) -> None:
+def _remap_clip_ids(clip_data: dict, id_counter: list[int], id_map: dict[int, int], src_map: dict[int, int]) -> None:
     """Recursively remap all id and src fields in a clip and its children."""
     old_id = clip_data.get('id')
     if old_id is not None:
@@ -17,16 +17,16 @@ def _remap_clip_ids(clip_data: dict, id_counter: list[int], id_map: dict[int, in
         id_counter[0] += 1
         clip_data['id'] = new_id
         id_map[old_id] = new_id
-    if 'src' in clip_data and clip_data['src'] in id_map:
-        clip_data['src'] = id_map[clip_data['src']]
+    if 'src' in clip_data and clip_data['src'] in src_map:
+        clip_data['src'] = src_map[clip_data['src']]
     for key in ('video', 'audio'):
         if key in clip_data:
-            _remap_clip_ids(clip_data[key], id_counter, id_map)
+            _remap_clip_ids(clip_data[key], id_counter, id_map, src_map)
     for track in clip_data.get('tracks', []):
         for media in track.get('medias', []):
-            _remap_clip_ids(media, id_counter, id_map)
+            _remap_clip_ids(media, id_counter, id_map, src_map)
     for media in clip_data.get('medias', []):
-        _remap_clip_ids(media, id_counter, id_map)
+        _remap_clip_ids(media, id_counter, id_map, src_map)
 
 
 def merge_tracks(
@@ -53,17 +53,17 @@ def merge_tracks(
     offset_ticks = seconds_to_ticks(offset_seconds)
 
     # Build media ID mapping (source ID -> target ID)
-    id_map: dict[int, int] = {}
+    src_id_map: dict[int, int] = {}
     for media in source.media_bin:
         existing = target.find_media_by_name(media.identity)
         if existing:
-            id_map[media.id] = existing.id
+            src_id_map[media.id] = existing.id
         else:
             new_id = target.media_bin.next_id()
             entry = copy.deepcopy(media._data)
             entry['id'] = new_id
             target._data['sourceBin'].append(entry)
-            id_map[media.id] = new_id
+            src_id_map[media.id] = new_id
 
     # Copy non-empty tracks
     count = 0
@@ -76,7 +76,8 @@ def merge_tracks(
 
         for clip_data in track._data.get('medias', []):
             new_clip = copy.deepcopy(clip_data)
-            _remap_clip_ids(new_clip, id_counter, id_map)
+            clip_id_map: dict[int, int] = {}
+            _remap_clip_ids(new_clip, id_counter, clip_id_map, src_id_map)
             new_clip['start'] = new_clip.get('start', 0) + offset_ticks
             _propagate_start_to_unified(new_clip)
             new_track._data.setdefault('medias', []).append(new_clip)

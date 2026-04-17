@@ -781,7 +781,7 @@ class Track:
         dur_ticks = seconds_to_ticks(duration_seconds)
         tpl['start'] = start_ticks
         tpl['duration'] = dur_ticks
-        tpl['mediaDuration'] = float(dur_ticks)
+        tpl['mediaDuration'] = dur_ticks
 
         # --- Replace text ---
         # Title is clip id_map[86] on tracks[0].medias[0].tracks[1].medias[0]
@@ -1679,14 +1679,16 @@ class Track:
                     m['duration'] = m.get('duration', 0) - trim_start
                     scalar_val = _parse_scalar(m.get('scalar', 1))
                     orig_media_start = Fraction(str(m.get('mediaStart', 0)))
-                    m['mediaStart'] = round(Fraction(orig_media_start) + (Fraction(trim_start) / scalar_val if scalar_val != 0 else Fraction(trim_start)))
+                    ms = Fraction(orig_media_start) + (Fraction(trim_start) / scalar_val if scalar_val != 0 else Fraction(trim_start))
+                    m['mediaStart'] = int(ms) if ms == int(ms) else str(ms)
                     _propagate_start_to_unified(m)
                 if trim_end > 0:
                     m['duration'] = m.get('duration', 0) - trim_end
                 if m.get('duration', 0) <= 0:
                     raise ValueError(f'Trim would result in zero or negative duration for clip {clip_id}')
                 scalar_val = _parse_scalar(m.get('scalar', 1))
-                m['mediaDuration'] = round(Fraction(m['duration']) / scalar_val) if scalar_val != 0 else m['duration']
+                md = Fraction(m['duration']) / scalar_val
+                m['mediaDuration'] = int(md) if md == int(md) else str(md)
                 if m.get('_type') in ('IMFile', 'ScreenIMFile'):
                     m['mediaDuration'] = 1
                 if m.get('_type') == 'UnifiedMedia':
