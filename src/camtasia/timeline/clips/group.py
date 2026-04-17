@@ -588,4 +588,6 @@ class Group(BaseClip):
                         if scalar != 0:
                             md = Fraction(m['duration']) / scalar
                             m['mediaDuration'] = int(md) if md == int(md) else str(md)
+                    from camtasia.timeline.track import _propagate_start_to_unified as _psu
+                    _psu(m)
         return self

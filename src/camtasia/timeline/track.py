@@ -375,7 +375,7 @@ class Track:
             'start': start,
             'duration': duration,
             'mediaStart': kwargs.pop('media_start', 0),
-            'mediaDuration': kwargs.pop('media_duration', round(Fraction(duration) / scalar_val) if scalar_val != 0 else duration),
+            'mediaDuration': kwargs.pop('media_duration', (lambda md: int(md) if md == int(md) else str(md))(Fraction(duration) / scalar_val) if scalar_val != 0 else duration),
             'scalar': scalar,
             'metadata': {
                 'audiateLinkedSession': '',
@@ -2330,11 +2330,15 @@ class _PerMediaMarkers:
         )
         start = self._data.get('start', 0)
         media_start = int(Fraction(str(self._data.get('mediaStart', 0))))
+        media_dur_raw = self._data.get('mediaDuration', self._data.get('duration', 0))
+        media_dur = int(Fraction(str(media_dur_raw))) if media_dur_raw else 0
         scalar = _parse_scalar(self._data.get('scalar', 1))
         for kf in keyframes:
             media_offset = kf['time'] - media_start
             if media_offset < 0:
-                continue  # marker in trimmed-away portion
+                continue  # marker before clip's visible start
+            if media_dur > 0 and media_offset >= media_dur:
+                continue  # marker beyond clip's visible end
             yield Marker(
                 name=kf['value'],
                 time=start + int(Fraction(media_offset) * scalar),
