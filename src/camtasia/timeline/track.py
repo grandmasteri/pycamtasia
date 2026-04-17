@@ -1807,6 +1807,7 @@ class Track:
                 if sub is not None:
                     sub['duration'] = left_data['duration']
                     sub['mediaDuration'] = left_data['mediaDuration']
+                    sub['scalar'] = left_data.get('scalar', 1)
 
         # Mutate right half
         right_data['start'] = orig_start + split_offset
@@ -1822,6 +1823,7 @@ class Track:
                     sub['duration'] = right_data['duration']
                     sub['mediaDuration'] = right_data['mediaDuration']
                     sub['mediaStart'] = right_data['mediaStart']
+                    sub['scalar'] = right_data.get('scalar', 1)
 
         # Re-ID the right half and all nested clips
         from camtasia.timeline.timeline import _remap_clip_ids_recursive
@@ -2192,6 +2194,12 @@ class Track:
             if media_dict.get('_type') in ('IMFile', 'ScreenIMFile'):
                 media_dict['mediaDuration'] = 1
                 media_dict['scalar'] = 1
+            if media_dict.get('_type') == 'UnifiedMedia':
+                for sub_key in ('video', 'audio'):
+                    sub = media_dict.get(sub_key)
+                    if sub is not None:
+                        sub['duration'] = media_dict['duration']
+                        sub['scalar'] = media_dict.get('scalar', 1)
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""
