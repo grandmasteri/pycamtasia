@@ -64,7 +64,7 @@ class TestNormalizeGain:
 
     def test_normalize_gain_custom(self):
         clip = _make_amfile()
-        result = clip.normalize_gain(target_db=-16.0)
+        result = clip.normalize_gain()
         assert clip._data.get('attributes', {}).get('loudnessNormalization', False) is True
         assert result is clip
 

@@ -293,6 +293,7 @@ class MediaBin:
             )
 
         # Try pymediainfo if explicit metadata not provided
+        _detected_fps: float | None = None
         if media_type is None:
             track = _parse_with_pymediainfo(file_path)
             if track is None:
@@ -313,6 +314,7 @@ class MediaBin:
                     duration = _compute_audio_duration(track, sample_rate)
                 else:
                     fps = float(track.get('frame_rate', track.get('sampling_rate', 30)) or 30)
+                    _detected_fps = fps
                     duration = round(float(track.get('duration', 1000)) / 1000.0 * fps)
 
         # Copy file into project media directory
@@ -340,7 +342,7 @@ class MediaBin:
                 _edit_rate = 10000000
             else:
                 _bit_depth = 24
-                _edit_rate = 30
+                _edit_rate = round(_detected_fps) if _detected_fps else 30
             json_data = _visual_track_to_json(
                 next_media_id, rel_path, timestamp,
                 media_type=media_type,

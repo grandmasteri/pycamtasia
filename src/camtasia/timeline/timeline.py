@@ -704,12 +704,30 @@ class Timeline:
         all_ids: dict[int, str] = {}
         for track in self.tracks:
             for clip in track.clips:
+                loc = f'track {track.index} ({track.name})'
                 if clip.id in all_ids:
-                    issues.append(
-                        f'Duplicate clip ID {clip.id} '
-                        f'(also on {all_ids[clip.id]})'
-                    )
-                all_ids[clip.id] = f'track {track.index} ({track.name})'
+                    issues.append(f'Duplicate clip ID {clip.id} (also on {all_ids[clip.id]})')
+                all_ids[clip.id] = loc
+                # Recurse into nested clips
+                for nested in clip._data.get('tracks', []):
+                    for m in nested.get('medias', []):
+                        nid = m.get('id')
+                        if nid is not None:
+                            if nid in all_ids:
+                                issues.append(f'Duplicate clip ID {nid} (also on {all_ids[nid]})')
+                            all_ids[nid] = f'{loc}/nested'
+                for key in ('video', 'audio'):
+                    sub = clip._data.get(key)
+                    if sub and isinstance(sub, dict) and 'id' in sub:
+                        if sub['id'] in all_ids:
+                            issues.append(f'Duplicate clip ID {sub["id"]} (also on {all_ids[sub["id"]]})')
+                        all_ids[sub['id']] = f'{loc}/{key}'
+                for m in clip._data.get('medias', []):
+                    mid = m.get('id')
+                    if mid is not None:
+                        if mid in all_ids:
+                            issues.append(f'Duplicate clip ID {mid} (also on {all_ids[mid]})')
+                        all_ids[mid] = f'{loc}/stitched'
 
         # Check 3: No stale transition references (per-track clip IDs)
         for track in self.tracks:

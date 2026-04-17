@@ -61,14 +61,11 @@ class AMFile(BaseClip):
         """Whether the clip's gain is zero."""
         return self.gain == 0.0
 
-    def normalize_gain(self, target_db: float = -23.0) -> Self:
-        """Set loudness normalization target.
+    def normalize_gain(self) -> Self:
+        """Enable loudness normalization on this clip.
 
-        Camtasia uses LUFS for loudness normalization.
-        Common targets: -23 LUFS (EBU R128), -16 LUFS (podcast).
-
-        Args:
-            target_db: Target loudness in LUFS (default -23.0).
+        Camtasia uses LUFS for loudness normalization.  The target level
+        is a project-level setting, not a per-clip value.
 
         Returns:
             self for chaining.
