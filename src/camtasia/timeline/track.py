@@ -1175,7 +1175,10 @@ class Track:
         freeze_start_ticks: int = seconds_to_ticks(at_seconds)
         freeze_duration_ticks: int = seconds_to_ticks(freeze_duration_seconds)
         timeline_offset_ticks: int = freeze_start_ticks - source_clip.start
-        media_offset_ticks: int = int(source_clip.media_start) + round(Fraction(timeline_offset_ticks) / _parse_scalar(source_clip.scalar))
+        scalar = _parse_scalar(source_clip.scalar)
+        if scalar == 0:
+            raise ValueError('Cannot freeze frame on a clip with zero scalar')
+        media_offset_ticks: int = int(source_clip.media_start) + round(Fraction(timeline_offset_ticks) / scalar)
         freeze_clip: BaseClip = self.add_clip(
             'IMFile',
             source_clip.source_id,
@@ -1889,12 +1892,8 @@ class Track:
         if _parse_scalar(a.get('scalar', 1)) != _parse_scalar(b.get('scalar', 1)):
             raise ValueError('Cannot merge clips with different scalars')
         if a.get('src') is not None:
-            expected_media_start = a.get('mediaStart', 0) + a.get('mediaDuration', 0)
-            actual_media_start = b.get('mediaStart', 0)
-            if isinstance(expected_media_start, str):
-                expected_media_start = int(Fraction(expected_media_start))
-            if isinstance(actual_media_start, str):
-                actual_media_start = int(Fraction(actual_media_start))
+            expected_media_start = int(Fraction(str(a.get('mediaStart', 0)))) + int(Fraction(str(a.get('mediaDuration', 0))))
+            actual_media_start = int(Fraction(str(b.get('mediaStart', 0))))
             if expected_media_start != actual_media_start:
                 raise ValueError('Clips are not contiguous in source media')
         # Extend a to cover b
@@ -2184,6 +2183,9 @@ class Track:
             if media_duration != 0:
                 new_scalar = Fraction(media_dict['duration']) / media_duration
                 media_dict['scalar'] = scalar_to_string(new_scalar)
+            if media_dict.get('_type') in ('IMFile', 'ScreenIMFile'):
+                media_dict['mediaDuration'] = 1
+                media_dict['scalar'] = 1
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""

@@ -825,12 +825,8 @@ class Timeline:
         for track in self.tracks:
             for media_dict in track._data.get('medias', []):
                 clip_start: int = media_dict.get('start', 0)
-                if clip_start >= position_ticks:
+                if clip_start >= position_ticks + gap_ticks:
                     media_dict['start'] = max(0, clip_start - gap_ticks)
-
-    # ------------------------------------------------------------------
-    # Internals
-    # ------------------------------------------------------------------
 
     @property
     def _track_list(self) -> list[dict[str, Any]]:
