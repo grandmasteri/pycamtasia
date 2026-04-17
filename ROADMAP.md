@@ -127,11 +127,78 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 ## High-Level API Improvement Ideas (from demo production)
 
-- [ ] VideoProductionBuilder
-- [ ] ScreenRecordingSync
-- [ ] import_media() format validation and auto-conversion
-- [ ] ProgressiveDisclosure helper (verify existing support)
-- [ ] Project.clean_inherited_state()
-- [ ] MarkerList.clear() and MarkerList.replace()
-- [ ] Project.remove_orphaned_media()
-- [ ] Recap/tile layout helper
+- [x] VideoProductionBuilder
+- [x] ScreenRecordingSync
+- [x] import_media() format validation and auto-conversion
+- [x] ProgressiveDisclosure helper
+- [x] Project.clean_inherited_state()
+- [x] MarkerList.clear() and MarkerList.replace()
+- [x] Project.remove_orphaned_media()
+- [x] Recap/tile layout helper
+
+## Feature Gaps (discovered during adversarial review & integration testing)
+
+### Clip API
+- [ ] `BaseClip.unmute()` — no way to reverse `mute()` without raw dict access
+- [ ] `BaseClip.remove_all_effects()` should redirect to children for UnifiedMedia
+- [ ] `UnifiedMedia` effect read properties (`has_effects`, `effect_count`, `effect_names`) read from wrapper instead of children — should redirect or warn
+- [ ] `Callout.text` setter should update `textAttributes` `rangeEnd` to match new text length
+- [ ] `BaseClip.add_keyframe()` should create corresponding `animationTracks.visual` entries (currently only `fade_in`/`fade_out`/`fade` do this)
+- [ ] `set_position_keyframes` / `set_scale_keyframes` / `set_rotation_keyframes` should also create `animationTracks.visual` entries
+- [ ] `add_progressive_disclosure(replace_previous=True)` option for non-accumulating sequences
+
+### Track API
+- [ ] `clip_after()` uses `>=` (at-or-after) — consider renaming or adding `clip_strictly_after()`
+- [ ] `insert_gap()` and `shift_all_clips()` don't clear/adjust transitions that may become invalid
+- [ ] `merge_adjacent_clips()` doesn't verify clips are actually adjacent before merging
+- [ ] `set_segment_speeds()` uses float accumulation for `mediaStart` — should use Fraction
+- [ ] `split_clip()` uses raw `Fraction(orig_scalar)` instead of `_parse_scalar()` — inconsistent precision
+
+### Timeline API
+- [ ] `clips_of_type()` is O(n²) and misattributes nested clips to `None` track
+- [ ] `shift_all()` doesn't shift transition or effect `start` times
+- [ ] `insert_gap()` / `remove_gap()` don't adjust transitions or markers
+- [ ] `flatten_to_track()` drops transitions silently — should document or warn
+- [ ] `build_section_timeline()` helper — place all sections on one track with transitions
+
+### Validation
+- [ ] Validate that `timeline.id` exists and is unique
+- [ ] Validate `GenericBehaviorEffect` structure (required `in`/`center`/`out` phases)
+- [ ] Validate overlapping clips on same track (Camtasia tracks are single-occupancy)
+- [ ] Flag explicit `null` in transition `leftMedia`/`rightMedia` (format says omit, not null)
+
+### Effects
+- [ ] Typed wrapper classes for `LutEffect`, `Emphasize`, `Spotlight`, `ColorAdjustment`, `BlendModeEffect`, `MediaMatte`
+- [ ] `BlurRegion` is exported but not registered — either register or remove from `__all__`
+- [ ] `DropShadow.enabled` / `CursorShadow.enabled` should document that setting them doesn't affect keyframes
+
+### Export
+- [ ] EDL exporter doesn't recurse into Groups/StitchedMedia — nested clips invisible
+- [ ] CSV/report exporters same issue — only top-level clips exported
+- [ ] EDL `UnifiedMedia` source is always `AX` — should use video sub-clip's source
+- [ ] SRT exporter writes empty file silently when no markers — should warn
+- [ ] `timeline_json` export doesn't include effects, transitions, or metadata
+
+### Builders
+- [ ] `timeline_builder.add_title()` ignores `subtitle` parameter (dead code)
+- [ ] `tile_layout` scale doesn't account for image dimensions vs cell size
+- [ ] `screenplay_builder._find_audio_file()` only searches `.wav` — should support `.mp3`, `.m4a`
+
+### Schema
+- [ ] Schema `effect.effectName` enum includes behavior names — weakens `oneOf` discriminator
+- [ ] Schema `effect` definition doesn't require `bypassed` (format reference says required)
+- [ ] Non-schema transition names: `FadeThroughColor`, `SlideUp`, `SlideDown`, `WipeLeft/Right/Up/Down` — document as unsupported or remove methods
+
+### Behavior Presets
+- [ ] Preset values don't fully match real TechSmith samples (ongoing refinement)
+- [ ] `reveal` preset has `start: 1411200000` (~2s) — may not be the right default
+- [ ] `BehaviorInnerName` enum missing `'fading'` phase name
+- [ ] `pulsating` center phase `offsetBetweenCharacters` should be `49392000` (not `0`)
+
+### Infrastructure
+- [ ] `media_bin.import_media()` directory naming can collide on rapid successive imports
+- [ ] `media_bin._visual_track_to_json()` uses `sampleRate=0` for video (should be frame rate)
+- [ ] `media_bin._visual_track_to_json()` / `_audio_track_to_json()` omit `tag` field
+- [ ] `scalar_to_string()` name implies string return but returns `int` for scalar=1
+- [ ] `parse_scalar()` `limit_denominator(10_000)` is arbitrary — document the tradeoff
+- [ ] `history.py` `clear()`+`update()` pattern invalidates nested object references — add warning in docstring
