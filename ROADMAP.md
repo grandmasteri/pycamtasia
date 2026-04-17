@@ -202,3 +202,32 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [ ] `scalar_to_string()` name implies string return but returns `int` for scalar=1
 - [ ] `parse_scalar()` `limit_denominator(10_000)` is arbitrary — document the tradeoff
 - [ ] `history.py` `clear()`+`update()` pattern invalidates nested object references — add warning in docstring
+
+### Known Design Decisions (not bugs — documented to avoid re-reporting)
+- `UnifiedMedia` caches video/audio child clips without invalidation — works because dict references are shared; only breaks if someone replaces the entire sub-dict (not a real-world pattern)
+- `BaseClip.clone()` sets `id=-1` sentinel — caller must reassign before saving; no auto-enforcement by design
+- `BaseClip.__eq__` uses `id` comparison — cloned clips with `id=-1` compare equal; known tradeoff for simplicity
+- `BaseClip.gain` reads `attributes.gain` which only applies to AMFile — returns 1.0 default for other clip types; `is_silent` checks both `gain` and `volume` as a workaround
+- `BaseClip.mute()` sets `attributes.gain=0` for non-Group/non-StitchedMedia/non-UnifiedMedia clips — only effective for AMFile; VMFile/Callout/IMFile don't use `attributes.gain`
+- `GroupTrack.add_clip()` auto-ID is only locally unique — warning emitted; caller should pass `next_id` for global uniqueness
+- `set_speed()` propagates `mediaStart` from wrapper to UnifiedMedia sub-clips — correct when they're in sync (the normal case); would be wrong if sub-clips had independent mediaStart (not observed in real projects)
+- `Callout.text` setter updates all `rangeEnd` values to new text length — correct for single-range text; destroys multi-range per-character formatting (a known limitation)
+- `fade_out()`/`fade()`/`set_opacity_fade()` use clip `duration` for keyframe timing — correct for normal-speed clips; may be wrong for speed-changed clips where keyframes should use `mediaDuration`
+- `duplicate_clip` uses ad-hoc `_remap_ids` instead of `_remap_clip_ids_with_map` — works for current nesting depths but less robust than the timeline-level remapper
+- `Effect.__eq__` uses identity (`is`) not value equality — intentional for mutation tracking
+- `GenericBehaviorEffect.parameters` returns `{}` — intentional since behavior params live in phases, not at top level
+- `GenericBehaviorEffect.get_parameter()`/`set_parameter()` raise `NotImplementedError` — intentional LSP violation; use phase accessors instead
+- `BehaviorPhase` objects created fresh on each property access — no caching; mutations propagate via shared dict reference
+- `_flatten_parameters` uses negative-condition list — fragile but correct for all known parameter shapes
+- `save()` warns on validation errors but doesn't prevent saving — by design; `compact()` raises on errors
+- `all_clips()` creates ephemeral wrappers for StitchedMedia/UnifiedMedia sub-clips — mutations propagate via shared dict; identity comparisons fail
+- `clips_in_range()` only checks top-level clips — by design; use `all_clips()` for nested
+- `add_gradient_background()` uses `time.time()` in source path — non-deterministic but functional
+- Non-schema transition names (`FadeThroughColor`, `SlideUp/Down`, `Wipe*`) — documented with warnings in docstrings; kept for forward-compatibility
+- `add_border()`/`add_colorize()` use effect names not in schema — may be valid in newer Camtasia versions
+- `group_clips_across_tracks()` emits v10-style typed metadata regardless of project version — works for v10+; may cause silent repair on v6/v8
+- `scale_all_durations()` recalculates scalar from new duration/old mediaDuration — changes playback speed as side effect; documented behavior
+- `_check_timing_consistency` uses 1% tolerance — generous for large durations but avoids false positives on rational arithmetic rounding
+- `EffectName` enum missing behavior effect names — behavior effects use `GenericBehaviorEffect._type` dispatch, not the enum
+- `_BehaviorEffectData` TypedDict can't declare `in`/`center`/`out` keys — Python keyword limitation
+- `RGBA.__eq__` uses `type(self)` not `isinstance` — prevents subclass equality; intentional strictness
