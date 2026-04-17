@@ -1992,7 +1992,8 @@
         },
         "legacyAttenuateAudioMix": {
           "type": "boolean"
-        }
+        },
+        "zoomNPan": {"type": "array", "items": {"type": "object"}}
       },
       "additionalProperties": false
     }

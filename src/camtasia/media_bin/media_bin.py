@@ -344,6 +344,7 @@ class MediaBin:
                 filename=filename,
                 bit_depth=_bit_depth,
                 edit_rate=_edit_rate,
+                sample_rate=0 if media_type == MediaType.Image else None,
             )
 
         self._data.append(json_data)

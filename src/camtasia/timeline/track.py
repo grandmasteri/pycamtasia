@@ -1657,6 +1657,15 @@ class Track:
                 m['mediaDuration'] = round(Fraction(m['duration']) / scalar_val) if scalar_val != 0 else m['duration']
                 if m.get('_type') in ('IMFile', 'ScreenIMFile'):
                     m['mediaDuration'] = 1
+                if m.get('_type') == 'UnifiedMedia':
+                    for sub_key in ('video', 'audio'):
+                        sub = m.get(sub_key)
+                        if sub is not None:
+                            sub['start'] = m['start']
+                            sub['duration'] = m['duration']
+                            sub['mediaDuration'] = m['mediaDuration']
+                            sub['mediaStart'] = m['mediaStart']
+                            sub['scalar'] = m.get('scalar', 1)
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1805,6 +1814,7 @@ class Track:
                 if sub is not None:
                     sub['duration'] = right_data['duration']
                     sub['mediaDuration'] = right_data['mediaDuration']
+                    sub['mediaStart'] = right_data['mediaStart']
 
         # Re-ID the right half and all nested clips
         from camtasia.timeline.timeline import _remap_clip_ids_recursive
