@@ -149,8 +149,12 @@ class Timeline:
 
         Scans every track — including nested group tracks and
         UnifiedMedia sub-clips — for the maximum clip ID and returns
-        ``max + 1``.  Also accounts for the timeline's own ID and
-        sourceBin entry IDs to avoid collisions.
+        ``max + 1``.  Also accounts for the timeline's own ID.
+
+        Note:
+            This does **not** include sourceBin entry IDs because the
+            Timeline object only has access to the ``timeline`` sub-dict.
+            Use ``Project.next_available_id`` for global uniqueness.
         """
         from camtasia.timeline.track import _max_clip_id
         max_id = _max_clip_id(self._track_list)
@@ -765,9 +769,6 @@ class Timeline:
             for m in track._data.get('medias', []):
                 new_start = m.get('start', 0) + offset
                 m['start'] = max(0, new_start)
-            for t in track._data.get('transitions', []):
-                new_start = t.get('start', 0) + offset
-                t['start'] = max(0, new_start)
 
     def apply_to_all_clips(self, fn) -> int:
         """Apply a function to every clip on every track. Returns count."""

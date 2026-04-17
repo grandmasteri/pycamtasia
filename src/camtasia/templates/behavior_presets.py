@@ -29,7 +29,7 @@ _NONE_CENTER = {
 _NONE_OUT = {
     'attributes': {
         'name': 'none', 'type': 1, 'characterOrder': 6,
-        'offsetBetweenCharacters': 49392000, 'suggestedDurationPerCharacter': 0,
+        'offsetBetweenCharacters': 0, 'suggestedDurationPerCharacter': 0,
         'overlapProportion': 0, 'movement': -1,
         'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
     }
@@ -109,8 +109,8 @@ PRESETS = {
                 'name': 'hinge', 'type': 1, 'characterOrder': 6,
                 'offsetBetweenCharacters': 35280000,
                 'suggestedDurationPerCharacter': 705600000,
-                'overlapProportion': 0, 'movement': 0,
-                'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
+                'overlapProportion': '1/3', 'movement': 30,
+                'springDamping': 9.3, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
             },
         },
         'center': _NONE_CENTER,
