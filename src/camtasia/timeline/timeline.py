@@ -1066,6 +1066,8 @@ class Timeline:
                                 },
                             })
                         cursor += m.get('duration', 0)
+                        if transition_name and prev_id is not None:
+                            cursor -= trans_ticks
                         prev_id = clip_id
                         break
                 else:

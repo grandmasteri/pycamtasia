@@ -483,7 +483,7 @@ class Group(BaseClip):
 
         for src_start, src_end, tl_dur in segments:
             src_dur = src_end - src_start
-            scalar = Fraction(tl_dur).limit_denominator(100000) / Fraction(src_dur).limit_denominator(100000)
+            scalar = (Fraction(tl_dur) / Fraction(src_dur)).limit_denominator(100000)
 
             start_ticks = cursor_ticks
             dur_ticks = seconds_to_ticks(tl_dur)

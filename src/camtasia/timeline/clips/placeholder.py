@@ -6,13 +6,15 @@ if sys.version_info >= (3, 11):  # pragma: no cover
 else:  # pragma: no cover
     from typing_extensions import Self
 
+from typing import NoReturn
+
 from camtasia.timeline.clips.base import BaseClip
 
 
 class PlaceholderMedia(BaseClip):
     """A placeholder clip for missing or to-be-added media."""
 
-    def set_source(self, source_id: int) -> Self:
+    def set_source(self, source_id: int) -> NoReturn:
         """Not supported on PlaceholderMedia."""
         raise TypeError('Cannot set_source on PlaceholderMedia; replace the clip instead')
 

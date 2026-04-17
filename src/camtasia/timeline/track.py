@@ -1174,7 +1174,8 @@ class Track:
 
         if transition_seconds > 0 and len(clips) > 1:
             for i in range(len(clips) - 1):
-                self.transitions.add_fade_through_black(
+                self.transitions.add(
+                    transition_name,
                     clips[i].id, clips[i + 1].id,
                     seconds_to_ticks(transition_seconds),
                 )

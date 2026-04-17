@@ -1570,8 +1570,7 @@ class Project:
                 # Only fade the last clip (others already faded by replace_previous block)
                 placed_clips[-1].fade_out(fade_out_seconds)
             else:
-                for placed_clip in placed_clips:
-                    placed_clip.fade_out(fade_out_seconds)
+                placed_clips[-1].fade_out(fade_out_seconds)
 
         return placed_clips
 
