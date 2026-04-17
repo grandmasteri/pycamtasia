@@ -232,12 +232,12 @@ def _check_clip_timing(data: dict) -> list[ValidationIssue]:
     """Check for clips with negative start or zero/negative duration."""
     issues: list[ValidationIssue] = []
 
-    def _check_medias(medias: list, path: str) -> None:
+    def _check_medias(medias: list, path: str, nested: bool = False) -> None:
         for media in medias:
             mid = media.get('id')
             start = media.get('start', 0)
             duration = media.get('duration')
-            if start < 0:
+            if not nested and start < 0:
                 issues.append(ValidationIssue(
                     'warning',
                     f'{path} clip id={mid} has negative start={start}',
@@ -249,13 +249,13 @@ def _check_clip_timing(data: dict) -> list[ValidationIssue]:
                 ))
             for inner_track in media.get('tracks', []):
                 _check_medias(inner_track.get('medias', []),
-                              f'{path}/group{mid}')
+                              f'{path}/group{mid}', nested=True)
             _check_medias(media.get('medias', []),
-                          f'{path}/stitched{mid}')
+                          f'{path}/stitched{mid}', nested=True)
             for key in ('video', 'audio'):
                 sub = media.get(key)
                 if sub is not None:
-                    _check_medias([sub], f'{path}/{key}')
+                    _check_medias([sub], f'{path}/{key}{media.get("id", "")}', nested=True)
 
     tracks = _get_tracks(data)
     for ti, track in enumerate(tracks):
