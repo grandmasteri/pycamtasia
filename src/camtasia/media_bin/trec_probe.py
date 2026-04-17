@@ -67,7 +67,8 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
                 # Convert 'UTC 2026-04-10 09:41:03' to '20260410T094103'
                 parts = tagged.replace('UTC ', '').strip()
                 try:
-                    dt = datetime.datetime.strptime(parts, '%Y-%m-%d %H:%M:%S')
+                    date_str = parts.split('.')[0]  # remove fractional seconds
+                    dt = datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
                     last_mod = dt.strftime('%Y%m%dT%H%M%S')
                 except ValueError:
                     last_mod = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime('%Y%m%dT%H%M%S')
@@ -89,7 +90,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
 
             dur_ms = track.duration or 0
             edit_rate = round(float(fps))
-            range_end = int(dur_ms / 1000 * edit_rate)
+            range_end = int(dur_ms / 1000 * float(fps))
 
             source_tracks.append({
                 'range': [0, range_end],

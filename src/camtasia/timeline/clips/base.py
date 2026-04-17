@@ -216,7 +216,7 @@ class BaseClip:
 
         May be a rational fraction string for speed-changed clips.
         """
-        raw = self._data['mediaStart'] # type: ignore[typeddict-item]
+        raw = self._data.get('mediaStart', 0) # type: ignore[typeddict-item]
         if isinstance(raw, str):
             return Fraction(raw)
         return raw

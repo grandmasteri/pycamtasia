@@ -638,7 +638,7 @@ class Track:
         start_seconds: float,
         duration_seconds: float,
         font_name: str = 'Arial',
-        font_weight: str = 'Normal',
+        font_weight: str = 'Regular',
         font_size: float = 96.0,
         **kwargs: Any,
     ) -> Callout:
