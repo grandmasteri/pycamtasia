@@ -222,6 +222,11 @@ class BaseClip:
     def media_start(self, value: int | Fraction) -> None:
         """Set the media start."""
         self._data['mediaStart'] = value # type: ignore[typeddict-item]
+        if self._data.get('_type') == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = self._data.get(sub_key)
+                if sub is not None:
+                    sub['mediaStart'] = value
 
     @property
     def media_duration(self) -> int | float | str | Fraction:  # type: ignore[override]
@@ -252,6 +257,16 @@ class BaseClip:
         """Set the scalar."""
         f = Fraction(value)
         self._data['scalar'] = 1 if f == 1 else str(f)
+        # Recalculate mediaDuration to maintain invariant
+        if f != 0:
+            md = Fraction(self._data.get('duration', 0)) / f
+            self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
+        if self._data.get('_type') == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = self._data.get(sub_key)
+                if sub is not None:
+                    sub['scalar'] = self._data['scalar']
+                    sub['mediaDuration'] = self._data['mediaDuration']
 
     def set_speed(self, speed: float) -> Self:
         """Set playback speed multiplier.
