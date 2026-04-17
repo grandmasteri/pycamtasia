@@ -385,6 +385,7 @@ class Group(BaseClip):
         canvas_height: float | None = None,
         source_width: float | None = None,
         source_height: float | None = None,
+        source_bin: list[dict] | None = None,
     ) -> None:
         """Replace the internal track's media with per-segment StitchedMedia clips.
 
@@ -455,6 +456,18 @@ class Group(BaseClip):
         # scalar and clipSpeedAttribute for speed-changed segments.
         new_medias = []
         cursor_ticks: int = 0
+
+        # Auto-resolve source dimensions from sourceBin if not provided
+        if (canvas_width is not None or canvas_height is not None) and source_width is None and source_height is None and source_bin is not None:
+            for entry in source_bin:
+                if entry.get('id') == src:
+                    for st in entry.get('sourceTracks', []):
+                        rect = st.get('trackRect', [0, 0, 0, 0])
+                        if rect[2] > 0 and rect[3] > 0:
+                            source_width = float(rect[2])
+                            source_height = float(rect[3])
+                            break
+                    break
 
         if next_id is None:
             max_id = 0

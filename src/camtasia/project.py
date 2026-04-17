@@ -885,10 +885,10 @@ class Project:
         return '\n'.join(report_lines)
 
     def repair(self) -> dict[str, int]:
-        """Remove stale transitions that reference non-existent clips. Returns counts of fixes applied."""
-        fixes_applied: dict[str, int] = {'stale_transitions_removed': 0}
-        # Fix stale transitions
+        """Remove stale transitions and fix clip overlaps. Returns counts of fixes applied."""
+        fixes_applied: dict[str, int] = {'stale_transitions_removed': 0, 'overlaps_fixed': 0}
         for track in self.timeline.tracks:
+            # Fix stale transitions
             clip_ids = {c.id for c in track.clips}
             original_count = len(track._data.get('transitions', []))
             track._data['transitions'] = [
@@ -897,6 +897,14 @@ class Project:
                 and (t.get('rightMedia') is None or t.get('rightMedia') in clip_ids)
             ]
             fixes_applied['stale_transitions_removed'] += original_count - len(track._data.get('transitions', []))
+            # Fix 1-tick overlaps (from rounding after speed/rescale operations)
+            medias = sorted(track._data.get('medias', []), key=lambda m: m.get('start', 0))
+            for i in range(len(medias) - 1):
+                a_end = medias[i].get('start', 0) + medias[i].get('duration', 0)
+                b_start = medias[i + 1].get('start', 0)
+                if a_end > b_start:
+                    medias[i]['duration'] -= (a_end - b_start)
+                    fixes_applied['overlaps_fixed'] += 1
         return fixes_applied
 
     def save(self) -> None:
@@ -2308,10 +2316,13 @@ class Project:
         Scales all clip starts, durations, mediaDurations, transitions,
         and timeline markers proportionally.  A factor of 1.03 makes the
         project 3 % longer; 0.97 makes it 3 % shorter.
+
+        Automatically repairs any 1-tick overlaps caused by rounding.
         """
         from fractions import Fraction
         from camtasia.operations.speed import rescale_project
         rescale_project(self._data, Fraction(factor).limit_denominator(100000))
+        self.repair()
 
     def normalize_audio(self, target_gain: float = 1.0) -> int:
         """Set all audio clips to the same gain level. Returns count adjusted."""

@@ -127,6 +127,15 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
         if "endTime" in kf:
             kf["endTime"] = int(round(float(Fraction(kf["endTime"]) * factor)))
 
+    # Post-rescale: fix 1-tick overlaps caused by independent rounding
+    for track in scene["tracks"]:
+        medias = sorted(track.get("medias", []), key=lambda m: m.get("start", 0))
+        for i in range(len(medias) - 1):
+            a_end = medias[i].get("start", 0) + medias[i].get("duration", 0)
+            b_start = medias[i + 1].get("start", 0)
+            if a_end > b_start:  # overlap
+                medias[i]["duration"] -= (a_end - b_start)  # shrink first clip
+
     # Mark all clips as speed-adjusted
     if factor != 1:
         def _mark_speed_changed(clip_data: dict[str, Any]) -> None:
