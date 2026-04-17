@@ -2273,6 +2273,8 @@ class Track:
                         sub['duration'] = media_dict['duration']
                         sub['mediaDuration'] = media_dict.get('mediaDuration', media_dict['duration'])
                         sub['scalar'] = media_dict.get('scalar', 1)
+        for t in self._data.get('transitions', []):
+            t['duration'] = int(t.get('duration', 0) * factor)
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""

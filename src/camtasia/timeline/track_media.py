@@ -103,7 +103,7 @@ class TrackMediaEffects():
     def __delitem__(self, index: int) -> None:
         effect = self[index]
         for key in effect.metadata:
-            del self._metadata[key]
+            self._metadata.pop(key, None)
         del self._effects[index]
 
     def __setitem__(self, index: int, effect: LegacyEffect) -> None:

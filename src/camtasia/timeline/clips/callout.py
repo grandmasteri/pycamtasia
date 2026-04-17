@@ -333,6 +333,7 @@ class Callout(BaseClip):
             font['color-red'] = font_color[0]
             font['color-green'] = font_color[1]
             font['color-blue'] = font_color[2]
+            font['color-opacity'] = font_color[3] if len(font_color) > 3 else 1.0
             for kf in self._data.get('def', {}).get('textAttributes', {}).get('keyframes', []):  # type: ignore[attr-defined]
                 for attr in kf.get('value', []):
                     if 'fgColor' in attr:
