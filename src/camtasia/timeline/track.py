@@ -58,10 +58,12 @@ class Track:
         attributes: dict[str, Any],
         data: dict[str, Any],
         _all_tracks: list[dict[str, Any]] | None = None,
+        _timeline_id: int = 0,
     ) -> None:
         self._attributes = attributes
         self._data = data
         self._all_tracks = _all_tracks
+        self._timeline_id = _timeline_id
 
     # ------------------------------------------------------------------
     # Identity / display properties
@@ -893,10 +895,15 @@ class Track:
         group_duration: int = latest_end - earliest_start
 
         # Build internal track with clips adjusted to group-relative timing
+        # Remap internal clip IDs to avoid collisions with the Group's own ID
+        from camtasia.timeline.timeline import _remap_clip_ids_with_map
+        id_counter = [self._next_clip_id()]
         internal_medias: list[dict[str, Any]] = []
         for clip_data in clips_to_group:
             cloned: dict[str, Any] = copy.deepcopy(clip_data)
             cloned['start'] = int(cloned.get('start', 0)) - earliest_start
+            _id_map: dict[int, int] = {}
+            _remap_clip_ids_with_map(cloned, id_counter, _id_map)
             internal_medias.append(cloned)
 
         # Remove original clips from this track
@@ -905,7 +912,7 @@ class Track:
 
         # Build the Group dict directly to avoid ticks→seconds→ticks roundtrip
         group_record: dict[str, Any] = {
-            'id': self._next_clip_id(),
+            'id': id_counter[0],
             '_type': 'Group',
             'start': earliest_start,
             'duration': group_duration,
@@ -1871,7 +1878,7 @@ class Track:
         this track when ``_all_tracks`` is not available.
         """
         sources = self._all_tracks if self._all_tracks is not None else [self._data]
-        return _max_clip_id(sources) + 1
+        return max(_max_clip_id(sources), self._timeline_id) + 1
 
     def summary(self) -> str:
         """Human-readable track summary."""

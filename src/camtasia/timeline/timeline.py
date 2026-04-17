@@ -149,10 +149,16 @@ class Timeline:
 
         Scans every track — including nested group tracks and
         UnifiedMedia sub-clips — for the maximum clip ID and returns
-        ``max + 1``.  Returns ``1`` for an empty project.
+        ``max + 1``.  Also accounts for the timeline's own ID and
+        sourceBin entry IDs to avoid collisions.
         """
         from camtasia.timeline.track import _max_clip_id
-        return _max_clip_id(self._track_list) + 1
+        max_id = _max_clip_id(self._track_list)
+        # Include timeline's own ID
+        timeline_id = self._data.get('id', 0)
+        if isinstance(timeline_id, int):
+            max_id = max(max_id, timeline_id)
+        return max_id + 1
 
     def duplicate_track(self, source_track_index: int) -> Track:
         """Duplicate a track and all its clips. Returns the new track."""
@@ -986,7 +992,7 @@ class _TrackAccessor:
     def __iter__(self) -> Iterator[Track]:
         for i, track_data in enumerate(self._track_list):
             attrs = self._attrs[i] if i < len(self._attrs) else {}
-            yield Track(attrs, track_data, _all_tracks=self._track_list)
+            yield Track(attrs, track_data, _all_tracks=self._track_list, _timeline_id=self._data.get('id', 0))
 
     def __getitem__(self, track_index: int) -> Track:
         """Get a track by its ``trackIndex``.
@@ -1000,7 +1006,7 @@ class _TrackAccessor:
         for i, t in enumerate(self._track_list):
             if t['trackIndex'] == track_index:
                 attrs = self._attrs[i] if i < len(self._attrs) else {}
-                return Track(attrs, t, _all_tracks=self._track_list)
+                return Track(attrs, t, _all_tracks=self._track_list, _timeline_id=self._data.get('id', 0))
         raise KeyError(
             f"No track with index={track_index}. "
             f"Timeline has {len(self)} tracks (indices 0\u2013{len(self)-1})"

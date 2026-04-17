@@ -137,7 +137,7 @@ def test_validate_detects_invalid_clip_reference(project):
 
     actual_issues = project.validate()
     expected_issues = [
-        ValidationIssue('error', 'track[0] clip id=1 src=999 not found in sourceBin', source_id=None),
+        ValidationIssue('error', 'track[0] clip id=2 src=999 not found in sourceBin', source_id=None),
     ]
     assert actual_issues == expected_issues
 
