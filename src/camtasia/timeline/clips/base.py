@@ -120,6 +120,10 @@ class BaseClip:
     def duration(self, value: int) -> None:
         """Set the duration."""
         self._data['duration'] = value
+        from camtasia.timing import parse_scalar
+        scalar = parse_scalar(self._data.get('scalar', 1))
+        if scalar != 0:
+            self._data['mediaDuration'] = round(Fraction(value) / scalar)
 
     @property
     def end_seconds(self) -> float:
@@ -507,8 +511,11 @@ class BaseClip:
         Returns:
             Self for method chaining.
         """
-        from camtasia.timing import seconds_to_ticks
+        from camtasia.timing import seconds_to_ticks, parse_scalar
         self._data['duration'] = seconds_to_ticks(duration_seconds)
+        scalar = parse_scalar(self._data.get('scalar', 1))
+        if scalar != 0:
+            self._data['mediaDuration'] = round(Fraction(self._data['duration']) / scalar)
         return self
 
     def set_time_range(self, start_seconds: float, duration_seconds: float) -> Self:
@@ -516,8 +523,12 @@ class BaseClip:
 
         Returns self for chaining.
         """
+        from camtasia.timing import parse_scalar
         self._data['start'] = seconds_to_ticks(start_seconds)
         self._data['duration'] = seconds_to_ticks(duration_seconds)
+        scalar = parse_scalar(self._data.get('scalar', 1))
+        if scalar != 0:
+            self._data['mediaDuration'] = round(Fraction(self._data['duration']) / scalar)
         return self
 
     def __eq__(self, other: object) -> bool:

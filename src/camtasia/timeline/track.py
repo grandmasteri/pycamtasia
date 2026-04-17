@@ -1640,7 +1640,7 @@ class Track:
                     m['duration'] = m.get('duration', 0) - trim_start
                     scalar_val = _parse_scalar(m.get('scalar', 1))
                     orig_media_start = Fraction(str(m.get('mediaStart', 0)))
-                    m['mediaStart'] = int(Fraction(orig_media_start) + (Fraction(trim_start) / Fraction(m.get('scalar', 1)) if scalar_val != 0 else Fraction(trim_start)))
+                    m['mediaStart'] = int(Fraction(orig_media_start) + (Fraction(trim_start) / scalar_val if scalar_val != 0 else Fraction(trim_start)))
                 if trim_end > 0:
                     m['duration'] = m.get('duration', 0) - trim_end
                 if m.get('duration', 0) <= 0:

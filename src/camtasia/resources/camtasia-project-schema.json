@@ -349,6 +349,7 @@
                   "enum": [
                     "fadeIn",
                     "fadeOut",
+                    "fading",
                     "flyIn",
                     "flyOut",
                     "grow",
@@ -377,6 +378,7 @@
                   "enum": [
                     "fadeIn",
                     "fadeOut",
+                    "fading",
                     "flyIn",
                     "flyOut",
                     "grow",
@@ -405,6 +407,7 @@
                   "enum": [
                     "fadeIn",
                     "fadeOut",
+                    "fading",
                     "flyIn",
                     "flyOut",
                     "grow",

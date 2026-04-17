@@ -384,7 +384,7 @@ def _detect_codec(file_path: Path) -> str | None:
         result = subprocess.run(
             [
                 "ffprobe", "-v", "quiet",
-                "-select_streams", "a:0",
+                "-select_streams", "v:0",
                 "-show_entries", "stream=codec_name",
                 "-of", "json",
                 str(file_path),
@@ -395,11 +395,11 @@ def _detect_codec(file_path: Path) -> str | None:
         streams = data.get("streams", [])
         if streams:
             return streams[0].get("codec_name") # type: ignore[no-any-return]
-        # Retry with video stream
+        # Retry with audio stream
         result = subprocess.run(
             [
                 "ffprobe", "-v", "quiet",
-                "-select_streams", "v:0",
+                "-select_streams", "a:0",
                 "-show_entries", "stream=codec_name",
                 "-of", "json",
                 str(file_path),
