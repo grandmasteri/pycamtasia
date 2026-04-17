@@ -1879,6 +1879,7 @@ class Track:
             raise KeyError(f'No clip with id={missing}')
         if a['start'] > b['start']:
             a, b = b, a
+            clip_id_a, clip_id_b = clip_id_b, clip_id_a
         if a['start'] + a['duration'] != b['start']:
             raise ValueError('Clips are not adjacent')
         if a.get('src') != b.get('src'):
