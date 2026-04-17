@@ -778,7 +778,7 @@ class Timeline:
             for m in track._data.get('medias', []):
                 new_start = m.get('start', 0) + offset
                 m['start'] = max(0, new_start)
-            _propagate_start_to_unified(m)
+                _propagate_start_to_unified(m)
 
     def apply_to_all_clips(self, fn) -> int:
         """Apply a function to every clip on every track. Returns count."""
@@ -838,7 +838,7 @@ class Timeline:
                 clip_start: int = media_dict.get('start', 0)
                 if clip_start >= position_ticks + gap_ticks:
                     media_dict['start'] = max(0, clip_start - gap_ticks)
-                _propagate_start_to_unified(media_dict)
+                    _propagate_start_to_unified(media_dict)
 
     @property
     def _track_list(self) -> list[dict[str, Any]]:

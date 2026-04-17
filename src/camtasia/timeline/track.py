@@ -1726,6 +1726,7 @@ class Track:
         _remap_ids(new_data, new_id)
 
         new_data['start'] = source['start'] + source.get('duration', 0) + seconds_to_ticks(offset_seconds)
+        _propagate_start_to_unified(new_data)
 
         self._data.setdefault('medias', []).append(new_data)
         return clip_from_dict(new_data)
@@ -1869,6 +1870,8 @@ class Track:
             missing = clip_id_a if a is None else clip_id_b
             raise KeyError(f'No clip with id={missing}')
         a['start'], b['start'] = b['start'], a['start']
+        _propagate_start_to_unified(a)
+        _propagate_start_to_unified(b)
         self._data['transitions'] = []
 
     def merge_adjacent_clips(self, clip_id_a: int, clip_id_b: int) -> BaseClip:
@@ -2094,6 +2097,7 @@ class Track:
         for media_dict in medias:
             current_start: int = int(media_dict.get('start', 0))
             media_dict['start'] = current_start - earliest_start
+            _propagate_start_to_unified(media_dict)
 
     def align_clips_to_start(self) -> None:
         """Move all clips so they start sequentially from time 0 with no gaps."""
@@ -2104,6 +2108,7 @@ class Track:
         running_position: int = 0
         for media_dict in sorted_medias:
             media_dict['start'] = running_position
+            _propagate_start_to_unified(media_dict)
             running_position += media_dict.get('duration', 0)
         self._data['medias'] = sorted_medias
         self._data['transitions'] = []  # transitions invalidated
@@ -2174,6 +2179,7 @@ class Track:
         for media_dict in self._data.get('medias', []):
             if media_dict.get('start', 0) >= gap_end:
                 media_dict['start'] = media_dict.get('start', 0) - gap_ticks
+                _propagate_start_to_unified(media_dict)
 
     def shift_all_clips(self, offset_seconds: float) -> None:
         """Shift all clips on this track by the given offset.
