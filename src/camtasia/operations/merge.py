@@ -15,6 +15,7 @@ def _remap_clip_ids(clip_data: dict, id_counter: list[int], id_map: dict[int, in
         new_id = id_counter[0]
         id_counter[0] += 1
         clip_data['id'] = new_id
+        id_map[old_id] = new_id
     if 'src' in clip_data and clip_data['src'] in id_map:
         clip_data['src'] = id_map[clip_data['src']]
     for key in ('video', 'audio'):

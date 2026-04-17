@@ -106,6 +106,8 @@ class GroupTrack:
             'animationTracks': {},
             **extra_fields,
         }
+        if clip_type in ('IMFile', 'ScreenIMFile'):
+            clip_data['mediaDuration'] = 1
         if source_id is not None:
             clip_data['src'] = source_id
         self._data.setdefault('medias', []).append(clip_data)

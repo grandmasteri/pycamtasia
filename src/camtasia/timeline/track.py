@@ -1676,7 +1676,7 @@ class Track:
                     m['duration'] = m.get('duration', 0) - trim_start
                     scalar_val = _parse_scalar(m.get('scalar', 1))
                     orig_media_start = Fraction(str(m.get('mediaStart', 0)))
-                    m['mediaStart'] = int(Fraction(orig_media_start) + (Fraction(trim_start) / scalar_val if scalar_val != 0 else Fraction(trim_start)))
+                    m['mediaStart'] = round(Fraction(orig_media_start) + (Fraction(trim_start) / scalar_val if scalar_val != 0 else Fraction(trim_start)))
                     _propagate_start_to_unified(m)
                 if trim_end > 0:
                     m['duration'] = m.get('duration', 0) - trim_end
@@ -1835,7 +1835,7 @@ class Track:
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
-        right_data['mediaStart'] = int((Fraction(orig_media_start) + Fraction(split_offset) / _parse_scalar(orig_scalar)) if scalar_val != 0 else (orig_media_start + split_offset))
+        right_data['mediaStart'] = round((Fraction(orig_media_start) + Fraction(split_offset) / _parse_scalar(orig_scalar)) if scalar_val != 0 else (orig_media_start + split_offset))
         right_data['mediaDuration'] = round(Fraction(orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
         if right_data.get('_type') in ('IMFile', 'ScreenIMFile'):
             right_data['mediaDuration'] = 1

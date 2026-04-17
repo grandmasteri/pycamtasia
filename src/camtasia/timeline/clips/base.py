@@ -138,6 +138,7 @@ class BaseClip:
                 if sub is not None:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
+                    sub['scalar'] = self._data.get('scalar', 1)
 
     @property
     def end_seconds(self) -> float:
