@@ -30,6 +30,8 @@ _VALID_CLIP_TYPES = frozenset({
 })
 
 _GROUP_DEFAULT_PARAMETERS = {
+    'translation0': 0.0, 'translation1': 0.0,
+    'scale0': 1.0, 'scale1': 1.0,
     'geometryCrop0': 0.0, 'geometryCrop1': 0.0,
     'geometryCrop2': 0.0, 'geometryCrop3': 0.0,
     'volume': 1.0,
