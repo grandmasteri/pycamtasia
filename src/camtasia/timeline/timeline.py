@@ -69,6 +69,15 @@ def _remap_clip_ids_with_map(clip_data: dict, id_counter: list[int], id_map: dic
         ]
 
 
+
+def _propagate_start_to_unified(media_dict: dict) -> None:
+    """Propagate start to UnifiedMedia video/audio sub-clips."""
+    if media_dict.get('_type') == 'UnifiedMedia':
+        for sub_key in ('video', 'audio'):
+            sub = media_dict.get(sub_key)
+            if sub is not None:
+                sub['start'] = media_dict['start']
+
 class Timeline:
     """Represents the timeline of a Camtasia project.
 
@@ -769,6 +778,7 @@ class Timeline:
             for m in track._data.get('medias', []):
                 new_start = m.get('start', 0) + offset
                 m['start'] = max(0, new_start)
+            _propagate_start_to_unified(m)
 
     def apply_to_all_clips(self, fn) -> int:
         """Apply a function to every clip on every track. Returns count."""
@@ -816,6 +826,7 @@ class Timeline:
                 clip_start: int = media_dict.get('start', 0)
                 if clip_start >= position_ticks:
                     media_dict['start'] = clip_start + gap_ticks
+                    _propagate_start_to_unified(media_dict)
 
     def remove_gap(self, position_seconds: float, gap_duration_seconds: float) -> None:
         """Remove a gap at a position across ALL tracks, pulling subsequent clips back."""
@@ -827,6 +838,7 @@ class Timeline:
                 clip_start: int = media_dict.get('start', 0)
                 if clip_start >= position_ticks + gap_ticks:
                     media_dict['start'] = max(0, clip_start - gap_ticks)
+                _propagate_start_to_unified(media_dict)
 
     @property
     def _track_list(self) -> list[dict[str, Any]]:

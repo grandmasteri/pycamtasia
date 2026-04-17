@@ -1,5 +1,7 @@
 from __future__ import annotations
-from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+from camtasia.timing import seconds_to_ticks
+
+from camtasia.timeline.track import _propagate_start_to_unified, ticks_to_seconds
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from camtasia.timeline.track import Track
@@ -20,6 +22,7 @@ def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
     cursor = 0
     for m in medias:
         m['start'] = cursor
+        _propagate_start_to_unified(m)
         cursor += m.get('duration', 0) + gap_ticks
 
 
@@ -33,6 +36,7 @@ def ripple_insert(track: Track, position_seconds: float, duration_seconds: float
     for m in track._data.get('medias', []):
         if m.get('start', 0) >= pos_ticks:
             m['start'] += shift_ticks
+            _propagate_start_to_unified(m)
 
 
 def ripple_delete(track: Track, clip_id: int) -> None:
@@ -62,6 +66,7 @@ def ripple_delete(track: Track, clip_id: int) -> None:
     for m in medias:
         if m.get('start', 0) >= target_start + gap:
             m['start'] -= gap
+        _propagate_start_to_unified(m)
 
 
 def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:
@@ -79,3 +84,4 @@ def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:
     for m in track._data.get('medias', []):
         start = m.get('start', 0)
         m['start'] = max(0, int(round(start / grid_ticks) * grid_ticks))
+        _propagate_start_to_unified(m)

@@ -42,6 +42,15 @@ _GROUP_DEFAULT_METADATA = {
 }
 
 
+def _propagate_start_to_unified(media_dict: dict[str, Any]) -> None:
+    """Propagate start to UnifiedMedia video/audio sub-clips."""
+    if media_dict.get('_type') == 'UnifiedMedia':
+        for sub_key in ('video', 'audio'):
+            sub = media_dict.get(sub_key)
+            if sub is not None:
+                sub['start'] = media_dict['start']  # type: ignore[index]
+
+
 class Track:
     """A track on the timeline.
 
@@ -1249,6 +1258,7 @@ class Track:
         for cid in clip_ids:
             m = by_id[cid]
             m['start'] = pos
+            _propagate_start_to_unified(m)
             pos += m['duration']
         self._data['medias'] = [by_id[cid] for cid in clip_ids]
         self._data['transitions'] = []
@@ -1730,6 +1740,7 @@ class Track:
         for m in self._data.get('medias', []):
             if m.get('id') == clip_id:
                 m['start'] = seconds_to_ticks(new_start_seconds)
+                _propagate_start_to_unified(m)
                 # Remove transitions referencing the moved clip
                 transitions = self._data.get('transitions', [])
                 self._data['transitions'] = [
@@ -2118,6 +2129,7 @@ class Track:
         running_position: int = 0
         for media_dict in sorted_medias:
             media_dict['start'] = running_position
+            _propagate_start_to_unified(media_dict)
             running_position += media_dict.get('duration', 0) + gap_ticks
         self._data['medias'] = sorted_medias
         self._data['transitions'] = []
@@ -2133,6 +2145,7 @@ class Track:
         for media_dict in self._data.get('medias', []):
             if media_dict.get('start', 0) >= at_ticks:
                 media_dict['start'] = media_dict.get('start', 0) + gap_ticks
+                _propagate_start_to_unified(media_dict)
         for t in self._data.get('transitions', []):
             if 'start' in t and t['start'] >= at_ticks:
                 t['start'] += gap_ticks
@@ -2176,6 +2189,7 @@ class Track:
             if new_start < 0:
                 clamped = True
             media_dict['start'] = max(0, new_start)
+            _propagate_start_to_unified(media_dict)
         if clamped:
             self._data['transitions'] = []
 
@@ -2186,6 +2200,7 @@ class Track:
             raise ValueError(f'factor must be > 0, got {factor}')
         for media_dict in self._data.get('medias', []):
             media_dict['start'] = int(media_dict.get('start', 0) * factor)
+            _propagate_start_to_unified(media_dict)
             media_dict['duration'] = int(media_dict.get('duration', 0) * factor)
             media_duration = Fraction(str(media_dict.get('mediaDuration', media_dict['duration'])))
             if media_duration != 0:
