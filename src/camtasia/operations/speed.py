@@ -134,7 +134,9 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
             a_end = medias[i].get("start", 0) + medias[i].get("duration", 0)
             b_start = medias[i + 1].get("start", 0)
             if a_end > b_start:  # overlap
-                medias[i]["duration"] -= (a_end - b_start)  # shrink first clip
+                overlap = a_end - b_start
+                if medias[i]['duration'] > overlap:
+                    medias[i]['duration'] -= overlap
 
     # Mark all clips as speed-adjusted
     if factor != 1:

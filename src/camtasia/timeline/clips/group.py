@@ -183,6 +183,8 @@ class Group(BaseClip):
             for clip in group_track.clips:
                 cloned_data: dict[str, Any] = copy.deepcopy(dict(clip._data))
                 cloned_data['start'] = cloned_data.get('start', 0) + group_start
+                from camtasia.timeline.track import _propagate_start_to_unified
+                _propagate_start_to_unified(cloned_data)
                 from camtasia.timeline.clips import clip_from_dict
                 extracted_clips.append(clip_from_dict(cloned_data))
         return extracted_clips

@@ -1964,6 +1964,7 @@ class Track:
         a['mediaDuration'] = round(Fraction(a['duration']) / scalar_val) if scalar_val != 0 else a['duration']
         if a.get('_type') in ('IMFile', 'ScreenIMFile'):
             a['mediaDuration'] = 1
+        _propagate_start_to_unified(a)
         # Remove b (cascade-deletes transitions)
         self.remove_clip(clip_id_b)
         return clip_from_dict(a)
@@ -2340,12 +2341,7 @@ class _PerMediaMarkers:
             )
 
     def __len__(self) -> int:
-        return len(
-            self._data
-            .get('parameters', {})
-            .get('toc', {})
-            .get('keyframes', [])
-        )
+        return sum(1 for _ in self)
 
 
 def _max_clip_id(tracks: list[dict[str, Any]]) -> int:
