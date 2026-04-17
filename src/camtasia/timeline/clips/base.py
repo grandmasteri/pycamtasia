@@ -740,6 +740,8 @@ class BaseClip:
         opacity = self._data.get('parameters', {}).get('opacity')
         if opacity is None:
             return None
+        if not isinstance(opacity, dict):
+            return None
         kfs = opacity.get('keyframes')
         if not kfs:
             return None
@@ -1417,7 +1419,7 @@ class BaseClip:
     def set_opacity_fade(self, start_opacity: float = 1.0, end_opacity: float = 0.0, duration_seconds: float | None = None) -> Self:
         """Add an opacity fade keyframe animation."""
         from camtasia.timing import seconds_to_ticks
-        dur = seconds_to_ticks(duration_seconds) if duration_seconds else self.duration
+        dur = seconds_to_ticks(duration_seconds) if duration_seconds is not None else self.duration
         kfs = [{'endTime': dur, 'time': 0, 'value': end_opacity, 'duration': dur}]
         self._add_opacity_track(kfs, default_value=start_opacity)
         return self
@@ -1500,7 +1502,7 @@ class BaseClip:
     def set_volume_fade(self, start_volume: float = 1.0, end_volume: float = 0.0, duration_seconds: float | None = None) -> Self:
         """Add a volume fade keyframe animation."""
         from camtasia.timing import seconds_to_ticks
-        dur = seconds_to_ticks(duration_seconds) if duration_seconds else self.duration
+        dur = seconds_to_ticks(duration_seconds) if duration_seconds is not None else self.duration
         self._data.setdefault('parameters', {})['volume'] = {
             'type': 'double',
             'defaultValue': start_volume,

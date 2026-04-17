@@ -245,12 +245,12 @@ class ChromaKeyEffect(VisualEffect):
 
     def _metadata(self) -> dict[str, object]:
         return {
-            COLOR_KEY: self.DEFAULT_COLOR.as_tuple(),
-            DEFRINGE_KEY: self.DEFAULT_DEFRINGE,
-            INVERT_EFFECT_KEY: int(self.DEFAULT_INVERTED),
-            SOFTNESS_KEY: self.DEFAULT_SOFTNESS,
-            TOLERANCE_KEY: self.DEFAULT_TOLERANCE,
-            COMPENSATION_KEY: self.DEFAULT_COMPENSATION,
+            COLOR_KEY: self._hue.as_tuple(),
+            DEFRINGE_KEY: self._defringe,
+            INVERT_EFFECT_KEY: int(self._inverted),
+            SOFTNESS_KEY: self._softness,
+            TOLERANCE_KEY: self._tolerance,
+            COMPENSATION_KEY: self._compensation,
         }
 
     def _key(self) -> tuple:

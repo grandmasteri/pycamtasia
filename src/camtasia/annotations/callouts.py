@@ -109,7 +109,7 @@ def square(text,
                 {
                     "endTime": 0,
                     "time": 0,
-                    "value": None,
+                    "value": [],
                     "duration": 0
                 }
             ]

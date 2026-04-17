@@ -225,7 +225,7 @@ def set_audio_speed(
 
                 # Now overwrite this clip with the correct final state
                 clip["scalar"] = final_scalar
-                clip["duration"] = clip["mediaDuration"]
+                clip["duration"] = int(Fraction(clip["mediaDuration"]) * Fraction(1) / target) if target != 1 else clip["mediaDuration"]
                 clip["metadata"]["clipSpeedAttribute"]["value"] = final_speed_attr
                 return factor
 

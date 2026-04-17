@@ -448,7 +448,7 @@ class Group(BaseClip):
             video_params = copy.deepcopy(video.get('parameters', {}))
             video_effects = copy.deepcopy(video.get('effects', []))
         else:
-            src = template_media.get('src', 0)
+            src = template_media.get('medias', [{}])[0].get('src', template_media.get('src', 0))
             ident = template_media.get('attributes', {}).get('ident', '')
             video_params = {}
             video_effects = []

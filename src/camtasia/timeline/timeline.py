@@ -719,7 +719,7 @@ class Timeline:
                         f'Track {track.index}: transition leftMedia={trans.left_media_id} '
                         f'not found in clips'
                     )
-                if trans.right_media_id and trans.right_media_id not in track_clip_ids:
+                if trans.right_media_id is not None and trans.right_media_id not in track_clip_ids:
                     issues.append(
                         f'Track {track.index}: transition rightMedia={trans.right_media_id} '
                         f'not found in clips'

@@ -79,19 +79,20 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
                 height = h
 
             codec = (track.codec_id or '').lower()
-            tag = 1 if 'tsc' in codec else 2
+            tag = 1 if 'tsc' in codec else 0
 
             fps = track.frame_rate or 30.0
             frac = Fraction(float(fps)).limit_denominator(1000)
             sample_rate = f'{frac.numerator}/{frac.denominator}' if frac.denominator != 1 else int(fps)
 
             dur_ms = track.duration or 0
-            range_end = int(dur_ms / 1000 * 44100)
+            edit_rate = round(float(fps))
+            range_end = int(dur_ms / 1000 * edit_rate)
 
             source_tracks.append({
                 'range': [0, range_end],
                 'type': 0,
-                'editRate': 44100,
+                'editRate': edit_rate,
                 'trackRect': [0, 0, w, h],
                 'sampleRate': sample_rate,
                 'bitDepth': 24,
@@ -109,7 +110,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
             dur_ms = track.duration or 0
             range_end = int(dur_ms / 1000 * int(sample_rate))
 
-            tag = 3 if channels == 1 else 4
+            tag = 0
 
             source_tracks.append({
                 'range': [0, range_end],

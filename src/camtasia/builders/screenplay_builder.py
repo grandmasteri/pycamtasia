@@ -104,6 +104,11 @@ def _find_audio_file(audio_dir: Path, vo_id: str) -> Path | None:
     _EXTENSIONS = ('.wav', '.mp3', '.m4a', '.aac', '.flac')
     # Try exact match: VO-1.1.wav, .mp3, etc.
     for ext in _EXTENSIONS:
+        exact = audio_dir / f'VO-{vo_id}{ext}'
+        if exact.exists():
+            return exact
+    # Fallback: try without VO- prefix
+    for ext in _EXTENSIONS:
         exact = audio_dir / f'{vo_id}{ext}'
         if exact.exists():
             return exact
