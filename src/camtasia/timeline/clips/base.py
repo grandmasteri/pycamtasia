@@ -305,6 +305,7 @@ class BaseClip:
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['scalar'] = self._data['scalar']
                     sub['mediaStart'] = self._data.get('mediaStart', 0)
+                    sub.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': True}
         return self
 
     @property

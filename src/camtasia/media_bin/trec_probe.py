@@ -86,7 +86,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
 
             fps = track.frame_rate or 30.0
             frac = Fraction(float(fps)).limit_denominator(1000)
-            sample_rate = f'{frac.numerator}/{frac.denominator}' if frac.denominator != 1 else int(fps)
+            sample_rate = f'{frac.numerator}/{frac.denominator}' if frac.denominator != 1 else int(float(fps))
 
             dur_ms = track.duration or 0
             edit_rate = round(float(fps))

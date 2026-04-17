@@ -702,13 +702,14 @@ class Timeline:
 
         # Check 2: No duplicate clip IDs across all tracks (recursive)
         all_ids: dict[int, str] = {}
-        for clip in self.all_clips():
-            if clip.id in all_ids:
-                issues.append(
-                    f'Duplicate clip ID {clip.id} '
-                    f'(also on {all_ids[clip.id]})'
-                )
-            all_ids[clip.id] = 'timeline'
+        for track in self.tracks:
+            for clip in track.clips:
+                if clip.id in all_ids:
+                    issues.append(
+                        f'Duplicate clip ID {clip.id} '
+                        f'(also on {all_ids[clip.id]})'
+                    )
+                all_ids[clip.id] = f'track {track.index} ({track.name})'
 
         # Check 3: No stale transition references (per-track clip IDs)
         for track in self.tracks:
