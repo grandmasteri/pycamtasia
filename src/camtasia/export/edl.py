@@ -102,8 +102,8 @@ def export_edl(
 
             if is_unified:
                 audio_data = clip._data.get('audio', {})
-                audio_ms = ticks_to_seconds(int(Fraction(str(audio_data.get('mediaStart', 0)))))
-                audio_md = ticks_to_seconds(int(Fraction(str(audio_data.get('mediaDuration', clip.duration)))))
+                audio_ms = ticks_to_seconds(round(Fraction(str(audio_data.get('mediaStart', 0)))))
+                audio_md = ticks_to_seconds(round(Fraction(str(audio_data.get('mediaDuration', clip.duration)))))
                 audio_src_in = _format_timecode(audio_ms, fps)
                 audio_src_out = _format_timecode(audio_ms + audio_md, fps)
                 lines.append(

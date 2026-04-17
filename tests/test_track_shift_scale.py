@@ -64,7 +64,7 @@ class TestScaleAllDurations:
         track.scale_all_durations(2.0)
 
         assert track._data['medias'][0]['duration'] == int(orig_dur * 2)
-        assert track._data['medias'][0]['mediaDuration'] == int(orig_mdur * 2)
+        assert track._data['medias'][0]['mediaDuration'] == orig_mdur
 
     def test_halves_durations(self):
         track = _make_track()

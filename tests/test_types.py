@@ -109,7 +109,7 @@ class TestBehaviorPresetValues:
             assert BehaviorPreset[name].value == value
 
     def test_behavior_preset_count(self):
-        assert len(BehaviorPreset) == 8
+        assert len(BehaviorPreset) == 7
 
     def test_str_enum_comparison(self):
         assert BehaviorPreset.REVEAL == 'reveal'

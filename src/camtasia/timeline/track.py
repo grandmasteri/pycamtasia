@@ -1557,7 +1557,7 @@ class Track:
 
         total_dur = ticks_to_seconds(clip.duration)
         md = clip._data.get('mediaDuration', clip.duration)
-        source_dur = ticks_to_seconds(int(md))
+        source_dur = ticks_to_seconds(int(Fraction(str(md))))
         original_scalar = _Frac(source_dur / total_dur).limit_denominator(100000)
         vmfile_scalar = (_Frac(1) / original_scalar).limit_denominator(100000)
 
@@ -1643,7 +1643,7 @@ class Track:
                 if m.get('duration', 0) <= 0:
                     raise ValueError(f'Trim would result in zero or negative duration for clip {clip_id}')
                 scalar_val = _parse_scalar(m.get('scalar', 1))
-                m['mediaDuration'] = int(m['duration'] / scalar_val) if scalar_val != 0 else m['duration']
+                m['mediaDuration'] = round(Fraction(m['duration']) / scalar_val) if scalar_val != 0 else m['duration']
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1769,13 +1769,13 @@ class Track:
 
         # Mutate left half
         left_data['duration'] = split_offset
-        left_data['mediaDuration'] = int(split_offset / scalar_val) if scalar_val != 0 else split_offset
+        left_data['mediaDuration'] = round(Fraction(split_offset) / scalar_val) if scalar_val != 0 else split_offset
 
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
         right_data['mediaStart'] = int((Fraction(orig_media_start) + Fraction(split_offset) / _parse_scalar(orig_scalar)) if orig_scalar != 0 else (orig_media_start + split_offset))
-        right_data['mediaDuration'] = int((orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
+        right_data['mediaDuration'] = round(Fraction(orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
 
         # Re-ID the right half and all nested clips
         from camtasia.timeline.timeline import _remap_clip_ids_recursive
@@ -1839,6 +1839,8 @@ class Track:
             raise KeyError(f'No clip with id={missing}')
         if a['start'] + a['duration'] != b['start']:
             raise ValueError('Clips are not adjacent')
+        if a.get('src') != b.get('src'):
+            raise ValueError('Clips reference different sources')
         if _parse_scalar(a.get('scalar', 1)) != _parse_scalar(b.get('scalar', 1)):
             raise ValueError('Cannot merge clips with different scalars')
         # Extend a to cover b
@@ -2116,7 +2118,8 @@ class Track:
             raise ValueError(f'factor must be > 0, got {factor}')
         for media_dict in self._data.get('medias', []):
             media_dict['duration'] = int(media_dict.get('duration', 0) * factor)
-            media_dict['mediaDuration'] = int(Fraction(str(media_dict.get('mediaDuration', 0))) * Fraction(factor).limit_denominator(10000))
+            new_scalar = Fraction(str(media_dict.get('scalar', 1))) * Fraction(factor).limit_denominator(10000)
+            media_dict['scalar'] = int(new_scalar) if new_scalar == int(new_scalar) else str(new_scalar)
             media_dict['start'] = int(media_dict.get('start', 0) * factor)
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
