@@ -306,8 +306,14 @@ class MediaBin:
             sample_rate = sample_rate or track.get("sampling_rate") or track.get("frame_rate")
             bit_depth = bit_depth or track.get("bit_depth", 0)
             num_channels = num_channels or track.get("channel_s")
+            if num_channels is not None:
+                num_channels = int(str(num_channels).split('/')[0].strip())
             if duration is None:
-                duration = _compute_audio_duration(track, sample_rate) if media_type == MediaType.Audio else int(track.get("duration", 1))
+                if media_type == MediaType.Audio:
+                    duration = _compute_audio_duration(track, sample_rate)
+                else:
+                    fps = float(track.get('frame_rate', track.get('sampling_rate', 30)) or 30)
+                    duration = round(float(track.get('duration', 1000)) / 1000.0 * fps)
 
         # Copy file into project media directory
         timestamp = datetime.datetime.now()

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from numbers import Real
 
+import marshmallow
 from marshmallow import Schema, fields, post_load
 from marshmallow_oneofschema import OneOfSchema
 
@@ -307,6 +308,9 @@ class ChromaKeyEffectParametersSchema(Schema):
 
 class ChromaKeyEffectSchema(Schema):
     """Marshmallow schema for serializing and deserializing a ChromaKeyEffect."""
+
+    class Meta:
+        unknown = marshmallow.EXCLUDE
 
     category = fields.Str(data_key="category")
     bypassed = fields.Boolean(dump_default=False)

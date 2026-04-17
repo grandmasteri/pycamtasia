@@ -1,5 +1,7 @@
 """Probe .trec files using pymediainfo to extract stream metadata."""
 from __future__ import annotations
+import datetime
+import os
 from fractions import Fraction
 from pathlib import Path
 from typing import Any
@@ -56,7 +58,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
     source_tracks = []
     width = 0
     height = 0
-    last_mod = ''
+    last_mod = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime('%Y%m%dT%H%M%S')
 
     for track in mi.tracks:
         if track.track_type == 'General':
@@ -65,11 +67,10 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
                 # Convert 'UTC 2026-04-10 09:41:03' to '20260410T094103'
                 parts = tagged.replace('UTC ', '').strip()
                 try:
-                    from datetime import datetime
-                    dt = datetime.strptime(parts, '%Y-%m-%d %H:%M:%S')
+                    dt = datetime.datetime.strptime(parts, '%Y-%m-%d %H:%M:%S')
                     last_mod = dt.strftime('%Y%m%dT%H%M%S')
                 except ValueError:
-                    last_mod = ''
+                    last_mod = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime('%Y%m%dT%H%M%S')
 
         elif track.track_type == 'Video':
             w = track.width or 0

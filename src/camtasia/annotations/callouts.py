@@ -139,7 +139,7 @@ def arrow(
         'stroke-color-red': {'type': 'double', 'defaultValue': stroke_color.red, 'interp': 'linr'},
         'stroke-color-green': {'type': 'double', 'defaultValue': stroke_color.green, 'interp': 'linr'},
         'stroke-color-blue': {'type': 'double', 'defaultValue': stroke_color.blue, 'interp': 'linr'},
-        'stroke-color-opacity': stroke_color.opacity,
+        'stroke-color-opacity': {'type': 'double', 'defaultValue': stroke_color.opacity, 'interp': 'linr'},
         'stroke-width': {'type': 'double', 'defaultValue': width, 'interp': 'linr'},
     }
 
