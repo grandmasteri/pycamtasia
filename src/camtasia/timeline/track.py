@@ -506,6 +506,10 @@ class Track:
         self.remove_clip(clip_id)
         moved_data: dict[str, Any] = copy.deepcopy(clip_data)
         moved_data['id'] = target_track._next_clip_id()
+        from camtasia.timeline.timeline import _remap_clip_ids_with_map
+        id_counter = [moved_data['id'] + 1]
+        id_map: dict[int, int] = {}
+        _remap_clip_ids_with_map(moved_data, id_counter, id_map)
         target_track._data.setdefault('medias', []).append(moved_data)
         return clip_from_dict(moved_data)
 
@@ -1609,7 +1613,7 @@ class Track:
             ).limit_denominator(100000)
             piece.scalar = seg_scalar
             piece.duration = seconds_to_ticks(dur_s)
-            piece._data['mediaStart'] = int(cumulative_ms)
+            piece._data['mediaStart'] = round(cumulative_ms)
             piece._data.setdefault('metadata', {})['clipSpeedAttribute'] = {
                 'type': 'bool', 'value': True,
             }
@@ -1889,6 +1893,8 @@ class Track:
             raise ValueError('Clips reference different sources')
         if a.get('_type') != b.get('_type'):
             raise ValueError('Clips have different types')
+        if a.get('trackNumber') != b.get('trackNumber'):
+            raise ValueError('Clips reference different source tracks')
         if _parse_scalar(a.get('scalar', 1)) != _parse_scalar(b.get('scalar', 1)):
             raise ValueError('Cannot merge clips with different scalars')
         if a.get('src') is not None:
