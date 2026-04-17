@@ -13,7 +13,7 @@ if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover
     from typing_extensions import Self
-from typing import Any, Iterator
+from typing import Any, Iterator, NoReturn
 
 from camtasia.timing import EDIT_RATE, seconds_to_ticks, ticks_to_seconds
 from camtasia.types import ClipType
@@ -131,7 +131,7 @@ class Group(BaseClip):
         data: The raw clip dict.
     """
 
-    def set_source(self, source_id: int) -> None:
+    def set_source(self, source_id: int) -> NoReturn:
         raise TypeError('Group clips do not have a source ID')
 
     @property

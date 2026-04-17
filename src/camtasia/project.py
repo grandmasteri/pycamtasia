@@ -740,9 +740,10 @@ class Project:
                     old_id = clip.id
                     cloned = copy.deepcopy(clip._data)
                     cloned['start'] = cloned.get('start', 0) + seconds_to_ticks(cursor_seconds)
-                    _remap_clip_ids_with_map(cloned, id_counter, clip_id_map)
+                    cloned_dict: dict[Any, Any] = cloned  # type: ignore[assignment]
+                    _remap_clip_ids_with_map(cloned_dict, id_counter, clip_id_map)
                     clip_id_map[old_id] = cloned['id']
-                    _remap_src_recursive(cloned, src_id_map)
+                    _remap_src_recursive(cloned_dict, src_id_map)
                     new_track._data.setdefault('medias', []).append(cloned)
                 # Copy transitions with remapped clip IDs
                 for trans in track._data.get('transitions', []):

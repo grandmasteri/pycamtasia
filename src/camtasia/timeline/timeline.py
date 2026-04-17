@@ -582,17 +582,17 @@ class Timeline:
         return results
 
     @property
-    def audio_clips(self) -> list[tuple[Track, BaseClip]]:
+    def audio_clips(self) -> list[tuple[Track | None, BaseClip]]:
         """All audio clips across all tracks."""
         return self.clips_of_type('AMFile')
 
     @property
-    def image_clips(self) -> list[tuple[Track, BaseClip]]:
+    def image_clips(self) -> list[tuple[Track | None, BaseClip]]:
         """All image clips across all tracks."""
         return self.clips_of_type('IMFile')
 
     @property
-    def video_clips(self) -> list[tuple[Track, BaseClip]]:
+    def video_clips(self) -> list[tuple[Track | None, BaseClip]]:
         """All video clips across all tracks."""
         return self.clips_of_type('VMFile')
 

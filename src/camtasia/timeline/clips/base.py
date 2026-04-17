@@ -112,7 +112,7 @@ class BaseClip:
         self._data['start'] = value
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
-                sub = self._data.get(sub_key)
+                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['start'] = self._data['start']
 
@@ -132,7 +132,7 @@ class BaseClip:
             self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
-                sub = self._data.get(sub_key)
+                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
@@ -187,7 +187,7 @@ class BaseClip:
         if self._data.get('_type') in ('Group', 'StitchedMedia'):
             return self.volume == 0.0
         if self._data.get('_type') == 'UnifiedMedia':
-            return self._data.get('audio', {}).get('attributes', {}).get('gain', 1.0) == 0.0
+            return bool(self._data.get('audio', {}).get('attributes', {}).get('gain', 1.0) == 0.0)
         return self.gain == 0.0
 
     def mute(self) -> Self:
@@ -224,7 +224,7 @@ class BaseClip:
         self._data['mediaStart'] = value # type: ignore[typeddict-item]
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
-                sub = self._data.get(sub_key)
+                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['mediaStart'] = value
 
@@ -263,7 +263,7 @@ class BaseClip:
             self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
-                sub = self._data.get(sub_key)
+                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['scalar'] = self._data['scalar']
                     sub['mediaDuration'] = self._data['mediaDuration']
@@ -283,7 +283,7 @@ class BaseClip:
         self._data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': True}
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
-                sub = self._data.get(sub_key)
+                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
@@ -401,7 +401,7 @@ class BaseClip:
     def is_silent(self) -> bool:
         """Whether this clip has zero volume (gain == 0 or volume == 0)."""
         if self._data.get('_type') == 'UnifiedMedia':
-            return self._data.get('audio', {}).get('attributes', {}).get('gain', 1.0) == 0.0
+            return bool(self._data.get('audio', {}).get('attributes', {}).get('gain', 1.0) == 0.0)
         return self.gain == 0.0 or self.volume == 0.0
 
     @property
@@ -531,7 +531,7 @@ class BaseClip:
         self._data['start'] = seconds_to_ticks(start_seconds)
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
-                sub = self._data.get(sub_key)
+                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['start'] = self._data['start']
         return self
@@ -553,7 +553,7 @@ class BaseClip:
             self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
-                sub = self._data.get(sub_key)
+                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
@@ -573,7 +573,7 @@ class BaseClip:
             self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
-                sub = self._data.get(sub_key)
+                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['start'] = self._data['start']
                     sub['duration'] = self._data['duration']

@@ -1,7 +1,7 @@
 """Callout (text overlay) clip."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NoReturn
 import sys
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -89,7 +89,7 @@ class Callout(BaseClip):
         data: The raw clip dict.
     """
 
-    def set_source(self, source_id: int) -> None:
+    def set_source(self, source_id: int) -> NoReturn:
         raise TypeError('Callout clips do not have a source ID')
 
     @property

@@ -1175,7 +1175,7 @@ class Track:
         freeze_start_ticks: int = seconds_to_ticks(at_seconds)
         freeze_duration_ticks: int = seconds_to_ticks(freeze_duration_seconds)
         timeline_offset_ticks: int = freeze_start_ticks - source_clip.start
-        media_offset_ticks: int = source_clip.media_start + round(Fraction(timeline_offset_ticks) / _parse_scalar(source_clip.scalar))
+        media_offset_ticks: int = int(source_clip.media_start) + round(Fraction(timeline_offset_ticks) / _parse_scalar(source_clip.scalar))
         freeze_clip: BaseClip = self.add_clip(
             'IMFile',
             source_clip.source_id,

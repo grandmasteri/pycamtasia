@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import sys
-from typing import Any
+from typing import Any, NoReturn
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover
     from typing_extensions import Self
 
+from camtasia.effects.base import Effect
+from camtasia.effects.visual import Glow
 from camtasia.timeline.clips.base import BaseClip
 
 
@@ -71,16 +73,32 @@ class UnifiedMedia(BaseClip):
     def add_effect(self, effect_data: dict[str, Any]) -> Any:
         raise TypeError(_EFFECT_MSG)
 
-    def add_drop_shadow(self, **kwargs: Any) -> Any:
+    def add_drop_shadow(
+        self,
+        offset: float = 5,
+        blur: float = 10,
+        opacity: float = 0.5,
+        angle: float = 5.5,
+        color: tuple[float, float, float] = (0, 0, 0),
+        enabled: int = 1,
+    ) -> NoReturn:
         raise TypeError(_EFFECT_MSG)
 
-    def add_round_corners(self, **kwargs: Any) -> Any:
+    def add_round_corners(self, radius: float = 12.0) -> NoReturn:
         raise TypeError(_EFFECT_MSG)
 
-    def add_glow(self, **kwargs: Any) -> Any:
+    def add_glow(self, radius: float = 35.0, intensity: float = 0.35) -> NoReturn:
         raise TypeError(_EFFECT_MSG)
 
-    def add_glow_timed(self, **kwargs: Any) -> Any:
+    def add_glow_timed(
+        self,
+        start_seconds: float = 0.0,
+        duration_seconds: float = 0.0,
+        radius: float = 35.0,
+        intensity: float = 0.35,
+        fade_in_seconds: float = 0.4,
+        fade_out_seconds: float = 1.0,
+    ) -> NoReturn:
         raise TypeError(_EFFECT_MSG)
 
     def copy_effects_from(self, source: Any) -> Self:

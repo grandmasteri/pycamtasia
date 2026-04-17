@@ -1,7 +1,7 @@
 """Stitched (spliced) media clip."""
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import Any, NoReturn, TYPE_CHECKING
 
 from .base import BaseClip
 
@@ -39,7 +39,7 @@ class StitchedMedia(BaseClip):
         """Number of nested clip segments."""
         return len(self._data.get('medias', []))
 
-    def set_source(self, source_id: int) -> None:
+    def set_source(self, source_id: int) -> NoReturn:
         raise TypeError('StitchedMedia clips do not have a top-level source ID')
 
     @property

@@ -226,8 +226,8 @@ class MediaBin:
             Returns ``1`` if no IDs exist.
         """
         if self._project is not None:
-            return self._project.next_available_id
-        return max((rec["id"] for rec in self._data), default=0) + 1
+            return int(self._project.next_available_id)
+        return int(max((rec["id"] for rec in self._data), default=0) + 1)
 
     def add_media_entry(self, entry: dict[str, Any]) -> Media:
         """Directly append a pre-built sourceBin dict.

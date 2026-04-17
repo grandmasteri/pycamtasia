@@ -1,6 +1,7 @@
 """Behavior effect preset templates from real Camtasia projects."""
 from __future__ import annotations
 import copy
+from typing import Any
 
 # Direction keyframe template (shared by all presets with direction params)
 _DIRECTION_KF = {'endTime': 0, 'time': 0, 'value': 0, 'duration': 0}
@@ -241,7 +242,7 @@ def get_behavior_preset(preset_name: str, duration_ticks: int) -> dict:
             f"Unknown behavior preset '{preset_name}'. "
             f"Available: {sorted(PRESETS)}"
         )
-    template = copy.deepcopy(PRESETS[preset_name])
+    template: dict[str, Any] = copy.deepcopy(PRESETS[preset_name])
     effect = {
         '_type': 'GenericBehaviorEffect',
         'effectName': template['effectName'],

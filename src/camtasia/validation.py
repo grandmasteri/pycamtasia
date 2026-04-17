@@ -44,7 +44,8 @@ def _get_tracks(data: dict) -> list:
     scenes = data.get('timeline', {}).get('sceneTrack', {}).get('scenes', [{}])
     if not scenes:
         return []
-    return scenes[0].get('csml', {}).get('tracks', [])
+    result: list = scenes[0].get('csml', {}).get('tracks', [])
+    return result
 
 
 def _check_duplicate_clip_ids(data: dict) -> list[ValidationIssue]:
