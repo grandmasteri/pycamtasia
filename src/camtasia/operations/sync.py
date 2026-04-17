@@ -55,7 +55,7 @@ def match_marker_to_transcript(
     Returns:
         Start timestamp (seconds) of the best match, or None.
     """
-    label_lower = [re.sub(r'[^\w\s]', '', w) for w in label.lower().split()]
+    label_lower = [w for w in (re.sub(r'[^\w\s]', '', w) for w in label.lower().split()) if w]
     if not label_lower or not words:
         return None
 

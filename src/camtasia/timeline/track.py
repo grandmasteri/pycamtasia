@@ -488,7 +488,11 @@ class Track:
         self.remove_clip(clip_id)
         placed_clips: list[BaseClip] = []
         for clip in extracted_clips:
-            clip._data['id'] = self._next_clip_id()
+            from camtasia.timeline.timeline import _remap_clip_ids_with_map
+            old_id = clip._data.get('id', -1)
+            id_counter = [self._next_clip_id()]
+            id_map: dict[int, int] = {}
+            _remap_clip_ids_with_map(cast(dict[str, Any], clip._data), id_counter, id_map)
             self._data.setdefault('medias', []).append(clip._data)
             placed_clips.append(clip)
         return placed_clips

@@ -137,14 +137,14 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
 
     # Post-rescale: fix 1-tick overlaps caused by independent rounding
     for track in scene["tracks"]:
-        medias = sorted(track.get("medias", []), key=lambda m: m.get("start", 0))
+        medias = sorted(track.get("medias", []), key=lambda m: int(_frac(m.get("start", 0))))
         for i in range(len(medias) - 1):
             a_end = int(_frac(medias[i].get("start", 0))) + int(_frac(medias[i].get("duration", 0)))
             b_start = int(_frac(medias[i + 1].get("start", 0)))
             if a_end > b_start:  # overlap
                 overlap = a_end - b_start
-                if medias[i]['duration'] > overlap:
-                    medias[i]['duration'] = int(_frac(medias[i]['duration']) - overlap)
+                if int(_frac(medias[i]['duration'])) > overlap:
+                    medias[i]['duration'] = int(_frac(medias[i]['duration'])) - overlap
                     # Recalculate mediaDuration
                     s = _frac(medias[i].get('scalar', 1))
                     if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group', 'UnifiedMedia'):
