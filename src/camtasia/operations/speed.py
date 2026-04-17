@@ -69,6 +69,12 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
 
     if _has_speed_change(clip):
         _adjust_scalar(clip, factor)
+        # Recalculate mediaDuration from new duration/scalar to maintain invariant
+        if ctype not in ("StitchedMedia", "Group", "UnifiedMedia"):
+            new_scalar = _frac(clip.get("scalar", 1))
+            if new_scalar != 0:
+                md = _frac(clip["duration"]) / new_scalar
+                clip["mediaDuration"] = int(md) if md == int(md) else f"{md.numerator}/{md.denominator}"
 
     if ctype == "StitchedMedia":
         clip["mediaStart"] = _scale_tick(clip.get("mediaStart", 0), factor)
