@@ -1539,7 +1539,7 @@ class Project:
 
         if replace_previous and len(placed_clips) > 1:
             for i in range(1, len(placed_clips)):
-                placed_clips[i - 1].fade_out(0.5)
+                placed_clips[i - 1].fade_out(fade_out_seconds)
 
         if fade_out_seconds > 0 and placed_clips:
             for placed_clip in placed_clips:

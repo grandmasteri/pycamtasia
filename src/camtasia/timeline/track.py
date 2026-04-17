@@ -935,6 +935,7 @@ class Track:
         for clip_data in clips_to_group:
             cloned: dict[str, Any] = copy.deepcopy(clip_data)
             cloned['start'] = int(cloned.get('start', 0)) - earliest_start
+            _propagate_start_to_unified(cloned)
             _id_map: dict[int, int] = {}
             _remap_clip_ids_with_map(cloned, id_counter, _id_map)
             internal_medias.append(cloned)
@@ -1610,8 +1611,9 @@ class Track:
 
         total_dur = ticks_to_seconds(clip.duration)
         md = clip._data.get('mediaDuration', clip.duration)
-        source_dur = ticks_to_seconds(int(Fraction(str(md))))
-        original_scalar = Fraction(int(Fraction(str(md)))) / Fraction(clip.duration)
+        md_frac = Fraction(str(md))
+        source_dur = ticks_to_seconds(int(md_frac))
+        original_scalar = md_frac / Fraction(clip.duration)
         vmfile_scalar = (_Frac(1) / original_scalar).limit_denominator(100000)
 
         # Split right-to-left at segment boundaries
