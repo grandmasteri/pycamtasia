@@ -159,8 +159,8 @@ class TestRescaleProject:
         rescale_project(project, Fraction(2))
 
         actual_clip = project["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]
-        # old scalar = 51/101, new = old / factor = 51/202
-        expected_scalar = Fraction(51, 101) / Fraction(2)
+        # old scalar = 51/101, new = old * factor = 102/101
+        expected_scalar = Fraction(51, 101) * Fraction(2)
         assert parse_scalar(actual_clip["scalar"]) == expected_scalar
 
     def test_scales_stitched_media(self):

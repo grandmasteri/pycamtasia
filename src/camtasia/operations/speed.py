@@ -47,9 +47,9 @@ def _scale_clip_timing(clip: dict[str, Any], factor: Fraction) -> None:
 
 
 def _adjust_scalar(clip: dict[str, Any], factor: Fraction) -> None:
-    """For speed-changed clips, adjust scalar: new = old / factor."""
+    """For speed-changed clips, adjust scalar: new = old * factor."""
     old = parse_scalar(clip.get("scalar", 1))
-    new = old / factor
+    new = old * factor
     clip["scalar"] = scalar_to_string(new)
 
 
