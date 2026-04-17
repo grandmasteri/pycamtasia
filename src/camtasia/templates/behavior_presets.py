@@ -10,7 +10,7 @@ _DIRECTION_PARAM = {
     'uiHints': {'userInterfaceType': 2, 'unitType': 0},
     'keyframes': [_DIRECTION_KF],
 }
-_DIRECTION_KF_OUT = {'endTime': 0, 'time': 0, 'value': 2, 'duration': 0}
+_DIRECTION_KF_OUT = {'endTime': 0, 'time': 0, 'value': 0, 'duration': 0}
 _DIRECTION_PARAM_OUT = {
     'type': 'int',
     'valueBounds': {'minValue': 0, 'maxValue': 3, 'defaultValue': 2},

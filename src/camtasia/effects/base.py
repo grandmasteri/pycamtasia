@@ -160,5 +160,5 @@ def effect_from_dict(data: dict[str, Any]) -> Effect:
     if data.get('_type') == 'GenericBehaviorEffect':
         from camtasia.effects.behaviors import GenericBehaviorEffect
         return GenericBehaviorEffect(data)
-    cls = _EFFECT_REGISTRY.get(data["effectName"], Effect)
+    cls = _EFFECT_REGISTRY.get(data.get("effectName", ""), Effect)
     return cls(data)
