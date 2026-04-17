@@ -85,3 +85,4 @@ def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:
         start = m.get('start', 0)
         m['start'] = max(0, int(round(start / grid_ticks) * grid_ticks))
         _propagate_start_to_unified(m)
+    track._data['transitions'] = []

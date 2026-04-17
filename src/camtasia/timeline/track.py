@@ -518,7 +518,9 @@ class Track:
         from camtasia.timeline.timeline import _remap_clip_ids_with_map
         id_counter = [moved_data['id'] + 1]
         id_map: dict[int, int] = {}
+        assigned_id = moved_data['id']
         _remap_clip_ids_with_map(moved_data, id_counter, id_map)
+        moved_data['id'] = assigned_id  # restore — don't double-remap the top level
         target_track._data.setdefault('medias', []).append(moved_data)
         return clip_from_dict(moved_data)
 
@@ -1225,7 +1227,11 @@ class Track:
                     raise ValueError(f'Extension would result in non-positive duration for clip {clip_id}')
                 m['duration'] = new_dur
                 scalar_val = _parse_scalar(m.get('scalar', 1))
-                m['mediaDuration'] = round(Fraction(new_dur) / scalar_val) if scalar_val != 0 else new_dur
+                if scalar_val != 0:
+                    md = Fraction(new_dur) / scalar_val
+                    m['mediaDuration'] = int(md) if md == int(md) else str(md)
+                else:
+                    m['mediaDuration'] = new_dur
                 if m.get('_type') in ('IMFile', 'ScreenIMFile'):
                     m['mediaDuration'] = 1
                 if m.get('_type') == 'UnifiedMedia':

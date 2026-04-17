@@ -161,14 +161,25 @@ def set_audio_speed(
                 factor = target_scalar / current
 
                 # Reset this clip directly: scalar=1, duration=mediaDuration
-                clip["scalar"] = scalar_to_string(Fraction(1) / target)
+                # Save desired final state, rescale everything, then apply
+                # to avoid double-scaling this clip.
+                final_scalar: Any
+                final_duration = clip["mediaDuration"]
+                final_speed_attr: bool
                 if target == 1:
-                    clip["scalar"] = 1
-                    clip["duration"] = clip["mediaDuration"]
-                    clip["metadata"]["clipSpeedAttribute"]["value"] = False
+                    final_scalar = 1
+                    final_speed_attr = False
+                else:
+                    final_scalar = scalar_to_string(Fraction(1) / target)
+                    final_speed_attr = True
 
-                # Rescale everything else
+                # Rescale everything (including this clip)
                 rescale_project(project_data, factor)
+
+                # Now overwrite this clip with the correct final state
+                clip["scalar"] = final_scalar
+                clip["duration"] = clip["mediaDuration"]
+                clip["metadata"]["clipSpeedAttribute"]["value"] = final_speed_attr
                 return factor
 
     raise ValueError("No speed-changed audio clips found")
