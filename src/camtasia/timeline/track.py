@@ -674,7 +674,7 @@ class Track:
         clip = self.add_callout(
             builder.text, start_seconds, duration_seconds,
             font_name=builder._font_name,
-            font_weight=builder._font_weight,  # type: ignore[arg-type]
+            font_weight='Bold' if builder._font_weight >= 700 else 'Regular',
             font_size=builder._font_size,
         )
         clip.move_to(builder._x, builder._y)
@@ -782,6 +782,17 @@ class Track:
         tpl['start'] = start_ticks
         tpl['duration'] = dur_ticks
         tpl['mediaDuration'] = dur_ticks
+
+        # Propagate duration to internal track clips
+        for inner_track in tpl.get('tracks', []):
+            for media in inner_track.get('medias', []):
+                media['duration'] = dur_ticks
+                media['mediaDuration'] = dur_ticks
+                # Recurse into nested Group tracks (e.g. text group)
+                for nested_track in media.get('tracks', []):
+                    for nested_media in nested_track.get('medias', []):
+                        nested_media['duration'] = dur_ticks
+                        nested_media['mediaDuration'] = dur_ticks
 
         # --- Replace text ---
         # Title is clip id_map[86] on tracks[0].medias[0].tracks[1].medias[0]
@@ -1931,8 +1942,8 @@ class Track:
         if _parse_scalar(a.get('scalar', 1)) != _parse_scalar(b.get('scalar', 1)):
             raise ValueError('Cannot merge clips with different scalars')
         if a.get('src') is not None:
-            expected_media_start = int(Fraction(str(a.get('mediaStart', 0)))) + int(Fraction(str(a.get('mediaDuration', 0))))
-            actual_media_start = int(Fraction(str(b.get('mediaStart', 0))))
+            expected_media_start = Fraction(str(a.get('mediaStart', 0))) + Fraction(str(a.get('mediaDuration', 0)))
+            actual_media_start = Fraction(str(b.get('mediaStart', 0)))
             if expected_media_start != actual_media_start:
                 raise ValueError('Clips are not contiguous in source media')
         # Extend a to cover b
