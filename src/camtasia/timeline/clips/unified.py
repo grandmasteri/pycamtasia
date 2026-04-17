@@ -66,7 +66,7 @@ class UnifiedMedia(BaseClip):
         """Source bin ID from the video child."""
         return self._data.get('video', {}).get('src')
 
-    def set_source(self, source_id: int) -> Self:
+    def set_source(self, source_id: int) -> NoReturn:
         """Not supported on UnifiedMedia."""
         raise TypeError('Cannot set_source on UnifiedMedia; set it on .video or .audio instead')
 

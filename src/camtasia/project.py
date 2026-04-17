@@ -2314,18 +2314,20 @@ class Project:
         translate_x: float = (0.5 - center_x) * (scale - 1) * self.width
         translate_y: float = (0.5 - center_y) * (scale - 1) * self.height
 
+        ease = min(0.3, duration_seconds / 2)
+
         clip.set_scale_keyframes([
             (0.0, 1.0),
             (start_seconds, 1.0),
-            (start_seconds + 0.3, scale),
-            (start_seconds + duration_seconds - 0.3, scale),
+            (start_seconds + ease, scale),
+            (start_seconds + duration_seconds - ease, scale),
             (start_seconds + duration_seconds, 1.0),
         ])
         clip.set_position_keyframes([
             (0.0, 0.0, 0.0),
             (start_seconds, 0.0, 0.0),
-            (start_seconds + 0.3, translate_x, translate_y),
-            (start_seconds + duration_seconds - 0.3, translate_x, translate_y),
+            (start_seconds + ease, translate_x, translate_y),
+            (start_seconds + duration_seconds - ease, translate_x, translate_y),
             (start_seconds + duration_seconds, 0.0, 0.0),
         ])
         return clip

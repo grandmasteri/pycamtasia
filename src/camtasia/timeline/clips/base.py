@@ -860,7 +860,13 @@ class BaseClip:
         """
         if not 0.0 <= opacity <= 1.0:
             raise ValueError(f'Opacity must be 0.0-1.0, got {opacity}')
-        self._data.setdefault('parameters', {})['opacity'] = opacity
+        params = self._data.setdefault('parameters', {})
+        existing = params.get('opacity')
+        if isinstance(existing, dict):
+            existing['defaultValue'] = opacity
+            existing.pop('keyframes', None)
+        else:
+            params['opacity'] = opacity
         return self
 
     def clear_animations(self) -> Self:

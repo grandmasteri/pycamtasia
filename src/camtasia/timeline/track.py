@@ -1697,17 +1697,23 @@ class Track:
 
         for m in self._data.get('medias', []):
             if m.get('id') == clip_id:
+                orig_start = m.get('start', 0)
+                orig_duration = m.get('duration', 0)
+                orig_media_start = m.get('mediaStart', 0)
                 if trim_start > 0:
                     m['start'] = m.get('start', 0) + trim_start
                     m['duration'] = m.get('duration', 0) - trim_start
                     scalar_val = _parse_scalar(m.get('scalar', 1))
-                    orig_media_start = Fraction(str(m.get('mediaStart', 0)))
-                    ms = Fraction(orig_media_start) + (Fraction(trim_start) / scalar_val if scalar_val != 0 else Fraction(trim_start))
+                    orig_media_start_frac = Fraction(str(m.get('mediaStart', 0)))
+                    ms = Fraction(orig_media_start_frac) + (Fraction(trim_start) / scalar_val if scalar_val != 0 else Fraction(trim_start))
                     m['mediaStart'] = int(ms) if ms == int(ms) else str(ms)
                     _propagate_start_to_unified(m)
                 if trim_end > 0:
                     m['duration'] = m.get('duration', 0) - trim_end
                 if m.get('duration', 0) <= 0:
+                    m['start'] = orig_start
+                    m['duration'] = orig_duration
+                    m['mediaStart'] = orig_media_start
                     raise ValueError(f'Trim would result in zero or negative duration for clip {clip_id}')
                 scalar_val = _parse_scalar(m.get('scalar', 1))
                 if scalar_val != 0:

@@ -311,7 +311,7 @@ class Callout(BaseClip):
         self,
         fill: tuple[float, float, float, float] | None = None,
         stroke: tuple[float, float, float, float] | None = None,
-        font_color: tuple[float, float, float] | None = None,
+        font_color: tuple[float, ...] | None = None,
     ) -> Self:
         """Set fill, stroke, and/or font RGBA colors.
 

@@ -36,7 +36,7 @@ def rgba(argument: str) -> tuple[int, int, int, int]:
 def rgb(argument: str) -> tuple[int, int, int]:
     """Parse a hex color string into an RGB tuple, raising if alpha is not 0xFF."""
     channels = hex_rgb(argument)
-    if channels[3] != 255:
+    if len(channels) == 4 and channels[3] != 255:
         raise ValueError("Alpha argument not 0xFF for RGB color")
     return channels[:3]
 
