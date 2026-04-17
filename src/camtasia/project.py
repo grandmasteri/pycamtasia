@@ -1986,10 +1986,12 @@ class Project:
             duration_seconds=timeline_duration,
         )
         clip.volume = volume
-        if fade_in_seconds > 0:
-            clip.set_volume_fade(start_volume=0.0, end_volume=volume, duration_seconds=fade_in_seconds)
-        if fade_out_seconds > 0:
-            clip.set_volume_fade(start_volume=volume, end_volume=0.0, duration_seconds=fade_out_seconds)
+        if fade_in_seconds > 0 and fade_out_seconds > 0:
+            clip.fade(fade_in_seconds=fade_in_seconds, fade_out_seconds=fade_out_seconds)
+        elif fade_in_seconds > 0:
+            clip.fade_in(fade_in_seconds)
+        elif fade_out_seconds > 0:
+            clip.fade_out(fade_out_seconds)
         return clip
 
     def apply_to_all_groups(self, operation: Callable[[Group], Any]) -> int:

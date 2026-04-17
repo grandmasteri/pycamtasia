@@ -102,6 +102,8 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
     elif ctype == "UnifiedMedia":
         if 'mediaDuration' in clip:
             clip['mediaDuration'] = _scale_tick(clip['mediaDuration'], factor)
+        if 'mediaStart' in clip:
+            clip['mediaStart'] = _scale_tick(clip.get('mediaStart', 0), factor)
         for child_key in ("video", "audio"):
             child = clip.get(child_key)
             if child:

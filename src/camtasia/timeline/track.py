@@ -2140,6 +2140,7 @@ class Track:
             current_start: int = int(media_dict.get('start', 0))
             media_dict['start'] = current_start - earliest_start
             _propagate_start_to_unified(media_dict)
+        self._data['transitions'] = []
 
     def align_clips_to_start(self) -> None:
         """Move all clips so they start sequentially from time 0 with no gaps."""
@@ -2222,6 +2223,7 @@ class Track:
             if media_dict.get('start', 0) >= gap_end:
                 media_dict['start'] = media_dict.get('start', 0) - gap_ticks
                 _propagate_start_to_unified(media_dict)
+        self._data['transitions'] = []
 
     def shift_all_clips(self, offset_seconds: float) -> None:
         """Shift all clips on this track by the given offset.
