@@ -2074,8 +2074,8 @@ class Track:
             if media_dict.get('start', 0) >= at_ticks:
                 media_dict['start'] = media_dict.get('start', 0) + gap_ticks
         for t in self._data.get('transitions', []):
-            if t.get('start', 0) >= at_ticks:
-                t['start'] = t.get('start', 0) + gap_ticks
+            if 'start' in t and t['start'] >= at_ticks:
+                t['start'] += gap_ticks
 
     def remove_gap_at(self, at_seconds: float) -> None:
         """Remove a gap at the specified time by pulling subsequent clips backward.
