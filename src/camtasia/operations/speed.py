@@ -156,9 +156,10 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
     # Mark all clips as speed-adjusted
     if factor != 1:
         def _mark_speed_changed(clip_data: dict[str, Any]) -> None:
-            clip_data.setdefault('metadata', {}).setdefault(
-                'clipSpeedAttribute', {'type': 'bool', 'value': False}
-            )['value'] = True
+            if clip_data.get('_type') not in ('IMFile', 'ScreenIMFile', 'Callout'):
+                clip_data.setdefault('metadata', {}).setdefault(
+                    'clipSpeedAttribute', {'type': 'bool', 'value': False}
+                )['value'] = True
             for key in ('video', 'audio'):
                 child = clip_data.get(key)
                 if child and isinstance(child, dict):
@@ -223,7 +224,7 @@ def set_audio_speed(
 
                 # Now overwrite this clip with the correct final state
                 clip["scalar"] = final_scalar
-                clip["duration"] = int(Fraction(clip["mediaDuration"]) * Fraction(1) / target) if target != 1 else clip["mediaDuration"]
+                clip["duration"] = int(Fraction(final_duration) * Fraction(1) / target) if target != 1 else final_duration
                 clip["metadata"]["clipSpeedAttribute"]["value"] = final_speed_attr
                 clip["mediaDuration"] = final_duration
                 return factor

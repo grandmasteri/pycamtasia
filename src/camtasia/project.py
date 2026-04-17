@@ -986,7 +986,7 @@ class Project:
         # Step 4: Expand empty objects to multi-line with proper indentation
         def _expand_empty(m: re.Match) -> str:
             indent = m.group(1)
-            return str('{\n' + indent + '  ' + '}')
+            return str('{\n' + indent + '}')
         text = re.sub(r'\{\}(?=\n(\s*))', _expand_empty, text)
 
         # Step 5: Add trailing space after commas at end of lines

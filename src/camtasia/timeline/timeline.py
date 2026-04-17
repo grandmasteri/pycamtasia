@@ -1220,7 +1220,9 @@ class _TrackAccessor:
         index_to_pos = {t['trackIndex']: i for i, t in enumerate(tracks)}
         new_tracks = [tracks[index_to_pos[idx]] for idx in order]
         tracks[:] = new_tracks
-        if attrs and len(attrs) >= len(tracks):
+        while len(attrs) < len(tracks):
+            attrs.append({})
+        if attrs:
             new_attrs = [attrs[index_to_pos[idx]] for idx in order]
             attrs[:] = new_attrs
         for j, t in enumerate(tracks):

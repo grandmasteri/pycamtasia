@@ -447,11 +447,13 @@ class Group(BaseClip):
             ident = video['attributes'].get('ident', '')
             video_params = copy.deepcopy(video.get('parameters', {}))
             video_effects = copy.deepcopy(video.get('effects', []))
+            track_number = video.get('trackNumber', 0)
         else:
             src = template_media.get('medias', [{}])[0].get('src', template_media.get('src', 0))
             ident = template_media.get('attributes', {}).get('ident', '')
             video_params = {}
             video_effects = []
+            track_number = template_media.get('trackNumber', 0)
 
         # Build clips for each segment.
         # Following v2 Track 1 pattern: use bare ScreenVMFile clips with
@@ -492,7 +494,7 @@ class Group(BaseClip):
                 'id': cid,
                 '_type': 'ScreenVMFile',
                 'src': src,
-                'trackNumber': 0,
+                'trackNumber': track_number,
                 'attributes': {'ident': ident},
                 'parameters': copy.deepcopy(video_params),
                 'effects': copy.deepcopy(video_effects),
