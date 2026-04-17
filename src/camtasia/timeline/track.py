@@ -355,7 +355,7 @@ class Track:
             'start': start,
             'duration': duration,
             'mediaStart': kwargs.pop('media_start', 0),
-            'mediaDuration': kwargs.pop('media_duration', int(Fraction(duration) / scalar_val) if scalar_val != 0 else duration),
+            'mediaDuration': kwargs.pop('media_duration', round(Fraction(duration) / scalar_val) if scalar_val != 0 else duration),
             'scalar': scalar,
             'metadata': {
                 'audiateLinkedSession': '',
@@ -1189,7 +1189,7 @@ class Track:
                     raise ValueError(f'Extension would result in non-positive duration for clip {clip_id}')
                 m['duration'] = new_dur
                 scalar_val = _parse_scalar(m.get('scalar', 1))
-                m['mediaDuration'] = int(Fraction(new_dur) / scalar_val) if scalar_val != 0 else new_dur
+                m['mediaDuration'] = round(Fraction(new_dur) / scalar_val) if scalar_val != 0 else new_dur
                 return
         raise KeyError(f'No clip with id={clip_id}')
 

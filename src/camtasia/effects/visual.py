@@ -108,7 +108,7 @@ class DropShadow(Effect):
 
     @property
     def enabled(self) -> int:  # type: ignore[no-any-return]
-        return self.get_parameter('enabled') # type: ignore[no-any-return]
+        return int(self.get_parameter('enabled')) # type: ignore[no-any-return]
 
     @enabled.setter
     def enabled(self, value: int) -> None:
