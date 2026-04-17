@@ -12,6 +12,8 @@ from camtasia.types import BehaviorPreset, CalloutShape
 
 from .base import BaseClip
 
+_WEIGHT_MAP = {'Thin': 100, 'Light': 300, 'Regular': 400, 'Medium': 500, 'Bold': 700, 'Black': 900}
+
 
 class CalloutBuilder:
     """Fluent builder for creating styled Callout clips.
@@ -303,7 +305,7 @@ class Callout(BaseClip):
                 if 'fontName' in attr:
                     attr['fontName'] = name
                 if 'fontWeight' in attr:
-                    attr['fontWeight'] = weight
+                    attr['fontWeight'] = _WEIGHT_MAP.get(weight, 400)
                 if 'fontSize' in attr:
                     attr['fontSize'] = size
         return self
@@ -337,8 +339,8 @@ class Callout(BaseClip):
             for kf in self._data.get('def', {}).get('textAttributes', {}).get('keyframes', []):  # type: ignore[attr-defined]
                 for attr in kf.get('value', []):
                     if 'fgColor' in attr:
-                        r, g, b = int(font_color[0]*255), int(font_color[1]*255), int(font_color[2]*255)
-                        a = int(font_color[3]*255) if len(font_color) > 3 else 255
+                        r, g, b = round(font_color[0]*255), round(font_color[1]*255), round(font_color[2]*255)
+                        a = round(font_color[3]*255) if len(font_color) > 3 else 255
                         attr['fgColor'] = f'({r},{g},{b},{a})'
         return self
 

@@ -2147,7 +2147,6 @@ class Track:
             current_start: int = int(media_dict.get('start', 0))
             media_dict['start'] = current_start - earliest_start
             _propagate_start_to_unified(media_dict)
-        self._data['transitions'] = []
 
     def align_clips_to_start(self) -> None:
         """Move all clips so they start sequentially from time 0 with no gaps."""
