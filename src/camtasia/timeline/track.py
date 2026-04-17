@@ -933,8 +933,8 @@ class Track:
             '_type': 'Group',
             'start': earliest_start,
             'duration': group_duration,
-            'mediaStart': 0.0,
-            'mediaDuration': float(group_duration),
+            'mediaStart': 0,
+            'mediaDuration': group_duration,
             'scalar': 1,
             'metadata': {
                 'audiateLinkedSession': '',
@@ -1667,6 +1667,7 @@ class Track:
                     scalar_val = _parse_scalar(m.get('scalar', 1))
                     orig_media_start = Fraction(str(m.get('mediaStart', 0)))
                     m['mediaStart'] = int(Fraction(orig_media_start) + (Fraction(trim_start) / scalar_val if scalar_val != 0 else Fraction(trim_start)))
+                    _propagate_start_to_unified(m)
                 if trim_end > 0:
                     m['duration'] = m.get('duration', 0) - trim_end
                 if m.get('duration', 0) <= 0:

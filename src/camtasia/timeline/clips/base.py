@@ -130,6 +130,8 @@ class BaseClip:
         if scalar != 0:
             md = Fraction(value) / scalar
             self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
+        if self._data.get('_type') in ('IMFile', 'ScreenIMFile'):
+            self._data['mediaDuration'] = 1
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
@@ -221,12 +223,12 @@ class BaseClip:
     @media_start.setter
     def media_start(self, value: int | Fraction) -> None:
         """Set the media start."""
-        self._data['mediaStart'] = value # type: ignore[typeddict-item]
+        self._data['mediaStart'] = int(value) # type: ignore[typeddict-item]
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
-                    sub['mediaStart'] = value
+                    sub['mediaStart'] = int(value)
 
     @property
     def media_duration(self) -> int | float | str | Fraction:  # type: ignore[override]
@@ -261,6 +263,8 @@ class BaseClip:
         if f != 0:
             md = Fraction(self._data.get('duration', 0)) / f
             self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
+        if self._data.get('_type') in ('IMFile', 'ScreenIMFile'):
+            self._data['mediaDuration'] = 1
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
@@ -280,6 +284,8 @@ class BaseClip:
         self._data['scalar'] = 1 if speed == 1.0 else str(scalar_fraction)
         md = Fraction(self.duration) / scalar_fraction
         self._data['mediaDuration'] = int(md) if md == int(md) else str(md)  # type: ignore[typeddict-item]
+        if self._data.get('_type') in ('IMFile', 'ScreenIMFile'):
+            self._data['mediaDuration'] = 1
         self._data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': True}
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
@@ -551,6 +557,8 @@ class BaseClip:
         if scalar != 0:
             md = Fraction(self._data['duration']) / scalar
             self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
+        if self._data.get('_type') in ('IMFile', 'ScreenIMFile'):
+            self._data['mediaDuration'] = 1
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
@@ -571,6 +579,8 @@ class BaseClip:
         if scalar != 0:
             md = Fraction(self._data['duration']) / scalar
             self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
+        if self._data.get('_type') in ('IMFile', 'ScreenIMFile'):
+            self._data['mediaDuration'] = 1
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
