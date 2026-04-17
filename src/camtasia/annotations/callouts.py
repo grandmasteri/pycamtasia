@@ -32,6 +32,7 @@ def text(text,
             "color-blue": font_color.blue,
             "color-green": font_color.green,
             "color-red": font_color.red,
+            "color-opacity": font_color.opacity,
             "size": font_size,
             "tracking": 0.0,
             "name": font_name,
@@ -43,7 +44,7 @@ def text(text,
                 {
                     "endTime": 0,
                     "time": 0,
-                    "value": None,
+                    "value": [],
                     "duration": 0
                 }
             ]

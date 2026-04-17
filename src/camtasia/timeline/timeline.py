@@ -714,7 +714,7 @@ class Timeline:
         for track in self.tracks:
             track_clip_ids = {c.id for c in track.clips}
             for trans in track.transitions:
-                if trans.left_media_id and trans.left_media_id not in track_clip_ids:
+                if trans.left_media_id is not None and trans.left_media_id not in track_clip_ids:
                     issues.append(
                         f'Track {track.index}: transition leftMedia={trans.left_media_id} '
                         f'not found in clips'

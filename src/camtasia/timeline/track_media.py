@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from fractions import Fraction
 from typing import Any, Iterator
 
 from camtasia.effects import Effect as LegacyEffect, EffectSchema
@@ -165,8 +166,9 @@ class _Markers:
             ValueError: If a marker at `offset` already exists.
         """
 
-        if any(m.time == offset for m in self):
-            raise ValueError(f'A marker already exists at offset {offset}')
+        if not duplicates_okay:
+            if any(m.time == offset for m in self):
+                raise ValueError(f'A marker already exists at offset {offset}')
 
         marker_offset = offset + self._track_media.media_start - self._track_media.start
 

@@ -45,4 +45,4 @@ class StrokeStyle(Enum):
     Dash = 'dash'
     Dot = 'dot'
     DashDot = 'dashdot'
-    DashDotDot = 'dashdotot'
+    DashDotDot = 'dashdotdot'

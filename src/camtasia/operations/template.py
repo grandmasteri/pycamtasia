@@ -115,5 +115,6 @@ def duplicate_project(
         for track in proj.timeline.tracks:
             track.clear()
         proj._data['sourceBin'] = []
+        proj.save()
 
     return proj

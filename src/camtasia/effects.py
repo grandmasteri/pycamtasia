@@ -309,6 +309,7 @@ class ChromaKeyEffectSchema(Schema):
     """Marshmallow schema for serializing and deserializing a ChromaKeyEffect."""
 
     category = fields.Str(data_key="category")
+    bypassed = fields.Boolean(dump_default=False)
     parameters = fields.Nested(ChromaKeyEffectParametersSchema)
 
     @post_load

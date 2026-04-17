@@ -77,7 +77,7 @@ class Transcript:
                     return word
                 remaining = text_words[1:]
                 if i + len(remaining) < len(self._words) and all(
-                    self._words[i + 1 + j].text.lower() == remaining[j]
+                    _normalize(self._words[i + 1 + j].text.lower()) == _normalize(remaining[j])
                     for j in range(len(remaining))
                 ):
                     return word

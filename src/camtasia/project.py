@@ -740,6 +740,8 @@ class Project:
                     old_id = clip.id
                     cloned = copy.deepcopy(clip._data)
                     cloned['start'] = cloned.get('start', 0) + seconds_to_ticks(cursor_seconds)
+                    from camtasia.timeline.track import _propagate_start_to_unified
+                    _propagate_start_to_unified(cloned)  # type: ignore[arg-type]
                     cloned_dict: dict[Any, Any] = cloned  # type: ignore[assignment]
                     _remap_clip_ids_with_map(cloned_dict, id_counter, clip_id_map)
                     clip_id_map[old_id] = cloned['id']
@@ -904,6 +906,11 @@ class Project:
                 b_start = medias[i + 1].get('start', 0)
                 if a_end > b_start:
                     medias[i]['duration'] -= (a_end - b_start)
+                    if medias[i]['duration'] <= 0:
+                        medias.pop(i)
+                        fixes_applied.setdefault('zero_duration_removed', 0)
+                        fixes_applied['zero_duration_removed'] += 1
+                        continue
                     # Recalculate mediaDuration to maintain invariant
                     from camtasia.timing import parse_scalar as _ps
                     s = _ps(medias[i].get('scalar', 1))
@@ -1554,7 +1561,7 @@ class Project:
                 clip.fade_in(fade_in_seconds)
             placed_clips.append(clip)
 
-        if replace_previous and len(placed_clips) > 1:
+        if replace_previous and len(placed_clips) > 1 and fade_out_seconds > 0:
             for i in range(1, len(placed_clips)):
                 placed_clips[i - 1].fade_out(fade_out_seconds)
 
