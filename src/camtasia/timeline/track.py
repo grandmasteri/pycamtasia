@@ -43,12 +43,15 @@ _GROUP_DEFAULT_METADATA = {
 
 
 def _propagate_start_to_unified(media_dict: dict[str, Any]) -> None:
-    """Propagate start to UnifiedMedia video/audio sub-clips."""
+    """Propagate ALL timing fields to UnifiedMedia video/audio sub-clips."""
     if media_dict.get('_type') == 'UnifiedMedia':
         for sub_key in ('video', 'audio'):
             sub = media_dict.get(sub_key)
             if sub is not None:
                 sub['start'] = media_dict['start']  # type: ignore[index]
+                for field in ('duration', 'mediaDuration', 'mediaStart', 'scalar'):
+                    if field in media_dict:
+                        sub[field] = media_dict[field]  # type: ignore[index]
 
 
 class Track:
