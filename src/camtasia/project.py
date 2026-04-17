@@ -911,6 +911,8 @@ class Project:
                         from fractions import Fraction as _F
                         md = _F(medias[i]['duration']) / s
                         medias[i]['mediaDuration'] = int(md) if md == int(md) else str(md)
+                    from camtasia.timeline.track import _propagate_start_to_unified
+                    _propagate_start_to_unified(medias[i])
                     fixes_applied['overlaps_fixed'] += 1
         return fixes_applied
 
@@ -1985,9 +1987,9 @@ class Project:
         )
         clip.volume = volume
         if fade_in_seconds > 0:
-            clip.fade_in(fade_in_seconds)
+            clip.set_volume_fade(start_volume=0.0, end_volume=volume, duration_seconds=fade_in_seconds)
         if fade_out_seconds > 0:
-            clip.fade_out(fade_out_seconds)
+            clip.set_volume_fade(start_volume=volume, end_volume=0.0, duration_seconds=fade_out_seconds)
         return clip
 
     def apply_to_all_groups(self, operation: Callable[[Group], Any]) -> int:
