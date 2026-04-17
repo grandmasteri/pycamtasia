@@ -374,8 +374,13 @@ class Callout(BaseClip):
             Self for chaining.
         """
         d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
-        d['width'] = width
-        d['height'] = height
+        for key, value in [('width', width), ('height', height)]:
+            existing = d.get(key)
+            if isinstance(existing, dict):
+                existing['defaultValue'] = value
+                existing.pop('keyframes', None)
+            else:
+                d[key] = value
         d['resize-behavior'] = 'resizeText'
         return self
 

@@ -165,7 +165,7 @@ PRESETS = {
             'parameters': {'direction': _DIRECTION_PARAM_OUT},
         },
         'metadata': {
-            'default-behavior-center-style': 'fading',
+            'default-behavior-center-style': 'tremble',
             'default-behavior-out-direction': {'type': 'int', 'value': 2},
             'presetName': 'Sliding',
         },

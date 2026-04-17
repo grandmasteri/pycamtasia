@@ -1887,6 +1887,15 @@ class Track:
             raise ValueError('Clips have different types')
         if _parse_scalar(a.get('scalar', 1)) != _parse_scalar(b.get('scalar', 1)):
             raise ValueError('Cannot merge clips with different scalars')
+        if a.get('src') is not None:
+            expected_media_start = a.get('mediaStart', 0) + a.get('mediaDuration', 0)
+            actual_media_start = b.get('mediaStart', 0)
+            if isinstance(expected_media_start, str):
+                expected_media_start = int(Fraction(expected_media_start))
+            if isinstance(actual_media_start, str):
+                actual_media_start = int(Fraction(actual_media_start))
+            if expected_media_start != actual_media_start:
+                raise ValueError('Clips are not contiguous in source media')
         # Extend a to cover b
         a['duration'] = (b['start'] + b['duration']) - a['start']
         scalar_val = _parse_scalar(a.get('scalar', 1))
@@ -2153,10 +2162,14 @@ class Track:
         """
         from camtasia.timing import seconds_to_ticks
         offset_ticks: int = seconds_to_ticks(offset_seconds)
+        clamped = False
         for media_dict in self._data.get('medias', []):
-            new_start: int = max(0, media_dict.get('start', 0) + offset_ticks)
-            media_dict['start'] = new_start
-        self._data['transitions'] = []
+            new_start = media_dict.get('start', 0) + offset_ticks
+            if new_start < 0:
+                clamped = True
+            media_dict['start'] = max(0, new_start)
+        if clamped:
+            self._data['transitions'] = []
 
     def scale_all_durations(self, factor: float) -> None:
         """Scale all clip durations and start times by a factor (e.g., 2.0 = double length)."""

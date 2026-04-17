@@ -455,7 +455,7 @@ def test_merge_adjacent_preserves_total_duration(num_clips):
     ids = []
     total_dur = 0
     for i in range(num_clips):
-        clip = track.add_clip('AMFile', 1, i * TICK, TICK)
+        clip = track.add_clip('AMFile', 1, i * TICK, TICK, media_start=i * TICK)
         ids.append(clip.id)
         total_dur += TICK
     # Merge first two
