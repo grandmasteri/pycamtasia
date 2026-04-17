@@ -383,6 +383,8 @@ class Group(BaseClip):
         next_id: int | None = None,
         canvas_width: float | None = None,
         canvas_height: float | None = None,
+        source_width: float | None = None,
+        source_height: float | None = None,
     ) -> None:
         """Replace the internal track's media with per-segment StitchedMedia clips.
 
@@ -486,11 +488,11 @@ class Group(BaseClip):
             }
             new_medias.append(clip)
             if canvas_width is not None:
-                source_w = self._data.get('attributes', {}).get('widthAttr', canvas_width)
+                source_w = source_width if source_width is not None else self._data.get('attributes', {}).get('widthAttr', canvas_width)
                 sv = canvas_width / source_w if source_w else 1.0
                 clip['parameters']['scale0'] = {'type': 'double', 'defaultValue': sv, 'interp': 'eioe'}
             if canvas_height is not None:
-                source_h = self._data.get('attributes', {}).get('heightAttr', canvas_height)
+                source_h = source_height if source_height is not None else self._data.get('attributes', {}).get('heightAttr', canvas_height)
                 sv2 = canvas_height / source_h if source_h else 1.0
                 clip['parameters']['scale1'] = {'type': 'double', 'defaultValue': sv2, 'interp': 'eioe'}
             cursor_ticks += dur_ticks

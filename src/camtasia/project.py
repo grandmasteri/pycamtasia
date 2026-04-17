@@ -2298,6 +2298,17 @@ class Project:
         return clip
 
 
+    def rescale_timeline(self, factor: float) -> None:
+        """Uniformly scale the entire project timeline by *factor*.
+
+        Scales all clip starts, durations, mediaDurations, transitions,
+        and timeline markers proportionally.  A factor of 1.03 makes the
+        project 3 % longer; 0.97 makes it 3 % shorter.
+        """
+        from fractions import Fraction
+        from camtasia.operations.speed import rescale_project
+        rescale_project(self._data, Fraction(factor).limit_denominator(100000))
+
     def normalize_audio(self, target_gain: float = 1.0) -> int:
         """Set all audio clips to the same gain level. Returns count adjusted."""
         count: int = 0
