@@ -54,9 +54,12 @@ class CalloutBuilder:
         stroke: tuple[int, int, int, int] | None = None,
     ) -> CalloutBuilder:
         """Set colors as RGBA 0-255 tuples."""
-        self._fill_color = fill
-        self._font_color = font
-        self._stroke_color = stroke
+        if fill is not None:
+            self._fill_color = fill
+        if font is not None:
+            self._font_color = font
+        if stroke is not None:
+            self._stroke_color = stroke
         return self
 
     def position(self, x: float, y: float) -> CalloutBuilder:

@@ -1777,7 +1777,7 @@ class Track:
         # Mutate right half
         right_data['start'] = orig_start + split_offset
         right_data['duration'] = orig_duration - split_offset
-        right_data['mediaStart'] = int((Fraction(orig_media_start) + Fraction(split_offset) / _parse_scalar(orig_scalar)) if orig_scalar != 0 else (orig_media_start + split_offset))
+        right_data['mediaStart'] = int((Fraction(orig_media_start) + Fraction(split_offset) / _parse_scalar(orig_scalar)) if scalar_val != 0 else (orig_media_start + split_offset))
         right_data['mediaDuration'] = round(Fraction(orig_duration - split_offset) / scalar_val) if scalar_val != 0 else (orig_duration - split_offset)
 
         # Re-ID the right half and all nested clips
@@ -1813,6 +1813,7 @@ class Track:
             missing = clip_id_a if a is None else clip_id_b
             raise KeyError(f'No clip with id={missing}')
         a['start'], b['start'] = b['start'], a['start']
+        self._data['transitions'] = []
 
     def merge_adjacent_clips(self, clip_id_a: int, clip_id_b: int) -> BaseClip:
         """Merge two adjacent clips into one by extending the first.

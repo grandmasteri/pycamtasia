@@ -473,9 +473,6 @@ def _parse_with_pymediainfo(file_path: Path) -> dict[str, Any] | None:
     return media_info.tracks[1].to_data()  # type: ignore[no-any-return]
 
 
-_COMPRESSED_AUDIO_FORMATS = frozenset({"MPEG Audio", "AAC", "Vorbis", "Opus"})
-
-
 def _compute_audio_duration(track: dict[str, Any], sample_rate: int | None) -> int:
     """Return the audio duration as a sample count suitable for ``range``.
 

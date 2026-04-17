@@ -31,7 +31,7 @@ class Effect:
     @property
     def name(self) -> str:
         """Effect name identifier."""
-        return self._data["effectName"]
+        return self._data.get("effectName", "")
 
     @property
     def bypassed(self) -> bool:

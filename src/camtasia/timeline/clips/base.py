@@ -1582,6 +1582,10 @@ class BaseClip:
         import copy
         cloned_data: dict[str, Any] = copy.deepcopy(dict(self._data))
         cloned_data['id'] = target_track._next_clip_id()
+        from camtasia.timeline.timeline import _remap_clip_ids_with_map
+        id_counter = [cloned_data['id']]
+        id_map: dict[int, int] = {}
+        _remap_clip_ids_with_map(cloned_data, id_counter, id_map)
         target_track._data.setdefault('medias', []).append(cloned_data)
         from camtasia.timeline.clips import clip_from_dict
         return clip_from_dict(cloned_data)

@@ -780,7 +780,7 @@ class Timeline:
     def reverse_track_order(self) -> None:
         """Reverse the order of all tracks."""
         tracks = self._data['sceneTrack']['scenes'][0]['csml']['tracks']
-        attrs = self._data.get('trackAttributes', [])
+        attrs = self._data.setdefault('trackAttributes', [])
         while len(attrs) < len(tracks):
             attrs.append({})
         tracks.reverse()
