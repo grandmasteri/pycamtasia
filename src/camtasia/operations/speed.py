@@ -127,6 +127,13 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
         if "endTime" in kf:
             kf["endTime"] = int(round(float(Fraction(kf["endTime"]) * factor)))
 
+    # Mark all clips as speed-adjusted
+    if factor != 1:
+        tracks = scene["tracks"]
+        for track in tracks:
+            for media in track.get('medias', []):
+                media.setdefault('metadata', {}).setdefault('clipSpeedAttribute', {'type': 'bool', 'value': False})['value'] = True
+
 
 def set_audio_speed(
     project_data: dict[str, Any],

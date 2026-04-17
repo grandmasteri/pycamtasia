@@ -125,7 +125,7 @@ class TestGroupClipsAcrossTracks:
 
         required_keys = {
             'audioMuted', 'ident', 'magnetic', 'matte',
-            'medias', 'parameters', 'solo', 'trackIndex', 'videoHidden',
+            'medias', 'metadata', 'solo', 'trackIndex', 'videoHidden',
         }
         for gt in group.tracks:
             assert required_keys.issubset(gt._data.keys())

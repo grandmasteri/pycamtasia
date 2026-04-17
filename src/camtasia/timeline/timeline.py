@@ -939,7 +939,7 @@ class Timeline:
             internal_tracks.append({
                 'trackIndex': len(internal_tracks),
                 'medias': internal_medias,
-                'parameters': {},
+                'metadata': {},
                 'ident': '',
                 'audioMuted': False,
                 'videoHidden': False,
@@ -1000,6 +1000,75 @@ class Timeline:
         group = cast(Group, clip_from_dict(group_record))
 
         return group
+
+    def group_clips_in_range(
+        self,
+        start_seconds: float,
+        end_seconds: float,
+        target_track_index: int,
+        group_name: str = '',
+        width: int = 1920,
+        height: int = 1080,
+    ) -> 'Group':
+        """Group all clips overlapping [start, end) across all tracks into a single Group."""
+        from camtasia.timing import seconds_to_ticks
+        start_ticks = seconds_to_ticks(start_seconds)
+        end_ticks = seconds_to_ticks(end_seconds)
+        clip_ids: list[int] = []
+        for track in self.tracks:
+            for m in track._data.get('medias', []):
+                cs = m.get('start', 0)
+                ce = cs + m.get('duration', 0)
+                if cs < end_ticks and ce > start_ticks:
+                    clip_ids.append(m['id'])
+        if not clip_ids:
+            raise ValueError(f'No clips found in range [{start_seconds}, {end_seconds})')
+        return self.group_clips_across_tracks(clip_ids, target_track_index, group_name, width, height)
+
+    def build_section_timeline(
+        self,
+        sections: list[tuple[int, str | None]],
+        target_track_index: int,
+        transition_duration_seconds: float = 1.0,
+    ) -> None:
+        """Place clips/groups sequentially on a track with transitions.
+
+        Args:
+            sections: List of (clip_id, transition_name) tuples. transition_name
+                is applied BEFORE this clip (None = no transition).
+            target_track_index: Track to place clips on.
+            transition_duration_seconds: Duration of each transition.
+        """
+        from camtasia.timing import seconds_to_ticks
+        target_track = self.tracks[target_track_index]
+        trans_ticks = seconds_to_ticks(transition_duration_seconds)
+        cursor = 0
+        prev_id: int | None = None
+        for clip_id, transition_name in sections:
+            # Find and move clip to target track at cursor position
+            for track in self.tracks:
+                for m in track._data.get('medias', []):
+                    if m.get('id') == clip_id:
+                        if track.index != target_track_index:
+                            # Move to target track
+                            track._data['medias'].remove(m)
+                            target_track._data.setdefault('medias', []).append(m)
+                        m['start'] = cursor
+                        _propagate_start_to_unified(m)
+                        # Add transition
+                        if transition_name and prev_id is not None:
+                            target_track._data.setdefault('transitions', []).append({
+                                'name': transition_name,
+                                'duration': trans_ticks,
+                                'leftMedia': prev_id,
+                                'rightMedia': clip_id,
+                            })
+                        cursor += m.get('duration', 0)
+                        prev_id = clip_id
+                        break
+                else:
+                    continue
+                break
 
 
 class _TrackAccessor:

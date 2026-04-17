@@ -407,7 +407,21 @@ class Group(BaseClip):
                 canvas (e.g. 1920 for a Retina recording).
             canvas_height: Optional height to set on each created
                 ScreenVMFile clip.
+
+        Warning:
+            Camtasia may throw a "Collision exception" when loading
+            projects with more than ~8 ScreenVMFile segments inside a
+            Group.  If you need more segments, consider merging adjacent
+            segments with similar speeds to stay under the limit.
         """
+        if len(segments) > 8:
+            import warnings
+            warnings.warn(
+                f'{len(segments)} segments requested; Camtasia may fail to '
+                f'load Groups with >8 internal ScreenVMFile clips. '
+                f'Consider merging adjacent segments.',
+                UserWarning, stacklevel=2,
+            )
         # Find the internal track containing UnifiedMedia or existing media
         media_track = None
         template_media = None
@@ -536,3 +550,20 @@ class Group(BaseClip):
                 if m.get('_type') in ('VMFile', 'ScreenVMFile'):
                     m['duration'] = total_tl
                     m['mediaDuration'] = total_tl
+
+    def sync_internal_durations(self) -> Self:
+        """Trim all internal clips to match the Group's duration.
+
+        Call this after trimming a Group's duration so that internal
+        clips don't extend beyond the visible portion.  This ensures
+        fade-out animations placed at the Group's end are visible.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        group_dur = self._data.get('duration', 0)
+        for track in self._data.get('tracks', []):
+            for m in track.get('medias', []):
+                if m.get('duration', 0) > group_dur:
+                    m['duration'] = group_dur
+        return self

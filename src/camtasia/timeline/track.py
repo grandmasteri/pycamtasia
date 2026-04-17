@@ -1079,8 +1079,12 @@ class Track:
         id_counter[0] += 3
 
         internal_tracks = [
-            {'trackIndex': 0, 'medias': [bg_media]},
-            {'trackIndex': 1, 'medias': [unified_media]},
+            {'trackIndex': 0, 'medias': [bg_media], 'metadata': {},
+             'ident': '', 'audioMuted': False, 'videoHidden': False,
+             'magnetic': False, 'matte': 0, 'solo': False},
+            {'trackIndex': 1, 'medias': [unified_media], 'metadata': {},
+             'ident': '', 'audioMuted': False, 'videoHidden': False,
+             'magnetic': False, 'matte': 0, 'solo': False},
         ]
 
         return self.add_group(
