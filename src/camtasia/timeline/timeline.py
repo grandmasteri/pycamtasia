@@ -12,6 +12,7 @@ from camtasia.timeline.clips import BaseClip
 from camtasia.timeline.markers import Marker, MarkerList
 from camtasia.timeline.track import Track
 from camtasia.timeline.track import _GROUP_DEFAULT_PARAMETERS, _GROUP_DEFAULT_METADATA
+from camtasia.timeline.track import _propagate_start_to_unified
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 from camtasia.types import TimelineSummary
 
@@ -69,17 +70,6 @@ def _remap_clip_ids_with_map(clip_data: dict, id_counter: list[int], id_map: dic
         ]
 
 
-
-def _propagate_start_to_unified(media_dict: dict) -> None:
-    """Propagate ALL timing fields to UnifiedMedia video/audio sub-clips."""
-    if media_dict.get('_type') == 'UnifiedMedia':
-        for sub_key in ('video', 'audio'):
-            sub = media_dict.get(sub_key)
-            if sub is not None:
-                sub['start'] = media_dict['start']
-                for field in ('duration', 'mediaDuration', 'mediaStart', 'scalar'):
-                    if field in media_dict:
-                        sub[field] = media_dict[field]
 
 class Timeline:
     """Represents the timeline of a Camtasia project.

@@ -129,10 +129,22 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
 
     # Mark all clips as speed-adjusted
     if factor != 1:
-        tracks = scene["tracks"]
-        for track in tracks:
+        def _mark_speed_changed(clip_data: dict[str, Any]) -> None:
+            clip_data.setdefault('metadata', {}).setdefault(
+                'clipSpeedAttribute', {'type': 'bool', 'value': False}
+            )['value'] = True
+            for key in ('video', 'audio'):
+                child = clip_data.get(key)
+                if child and isinstance(child, dict):
+                    _mark_speed_changed(child)
+            for t in clip_data.get('tracks', []):
+                for m in t.get('medias', []):
+                    _mark_speed_changed(m)
+            for m in clip_data.get('medias', []):
+                _mark_speed_changed(m)
+        for track in scene["tracks"]:
             for media in track.get('medias', []):
-                media.setdefault('metadata', {}).setdefault('clipSpeedAttribute', {'type': 'bool', 'value': False})['value'] = True
+                _mark_speed_changed(media)
 
 
 def set_audio_speed(

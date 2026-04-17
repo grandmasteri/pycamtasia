@@ -48,6 +48,11 @@ def _walk_clips(tracks: list[dict[str, Any]]) -> Iterator[dict[str, Any]]:
                 yield from (m for m in clip.get("medias", []))
             elif clip.get("_type") == "Group":
                 yield from _walk_clips(clip.get("tracks", []))
+            elif clip.get("_type") == "UnifiedMedia":
+                for key in ("video", "audio"):
+                    child = clip.get(key)
+                    if child and isinstance(child, dict):
+                        yield child
 
 
 def replace_media_source(
