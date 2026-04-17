@@ -23,6 +23,8 @@ def _remap_clip_ids(clip_data: dict, id_counter: list[int], id_map: dict[int, in
     for track in clip_data.get('tracks', []):
         for media in track.get('medias', []):
             _remap_clip_ids(media, id_counter, id_map)
+    for media in clip_data.get('medias', []):
+        _remap_clip_ids(media, id_counter, id_map)
 
 
 def merge_tracks(

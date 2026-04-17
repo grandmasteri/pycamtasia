@@ -38,9 +38,6 @@ def _scale_clip_timing(clip: dict[str, Any], factor: Fraction) -> None:
     if clip.get("_type") not in ("StitchedMedia", "Group", "UnifiedMedia"):
         if "mediaDuration" in clip:
             clip["mediaDuration"] = _scale_tick(clip["mediaDuration"], factor)
-    if clip.get('_type') not in ('StitchedMedia', 'Group', 'UnifiedMedia'):
-        if 'mediaStart' in clip:
-            clip['mediaStart'] = _scale_tick(clip['mediaStart'], factor)
     # Scale effect start/duration times
     for effect in clip.get("effects", []):
         if "start" in effect:
@@ -97,8 +94,6 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
     elif ctype == "UnifiedMedia":
         if 'mediaDuration' in clip:
             clip['mediaDuration'] = _scale_tick(clip['mediaDuration'], factor)
-        if 'mediaStart' in clip:
-            clip['mediaStart'] = _scale_tick(clip.get('mediaStart', 0), factor)
         for child_key in ("video", "audio"):
             child = clip.get(child_key)
             if child:
