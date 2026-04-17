@@ -155,9 +155,11 @@ class TestLowerThirdScale:
 
         actual_scale0 = clip._data["parameters"]["scale0"]
         actual_scale1 = clip._data["parameters"]["scale1"]
-        expected_scale = 0.923
-        assert actual_scale0 == expected_scale
-        assert actual_scale1 == expected_scale
+        assert isinstance(actual_scale0, dict)
+        assert actual_scale0["defaultValue"] == 0.923
+        assert actual_scale0["type"] == "double"
+        assert isinstance(actual_scale1, dict)
+        assert actual_scale1["defaultValue"] == 0.923
 
     def test_scale_none_no_params(self):
         track = _make_track()

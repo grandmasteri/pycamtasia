@@ -802,8 +802,14 @@ class Track:
 
         # --- scale override ---
         if scale is not None:
-            tpl['parameters']['scale0'] = scale
-            tpl['parameters']['scale1'] = scale
+            for key in ('scale0', 'scale1'):
+                existing = tpl['parameters'].get(key)
+                if isinstance(existing, dict):
+                    existing['defaultValue'] = scale
+                else:
+                    tpl['parameters'][key] = {
+                        'type': 'double', 'defaultValue': scale, 'interp': 'eioe',
+                    }
 
         # --- template_ident override ---
         tpl['attributes']['ident'] = template_ident

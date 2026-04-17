@@ -485,10 +485,12 @@ class Group(BaseClip):
             new_medias.append(clip)
             if canvas_width is not None:
                 source_w = self._data.get('attributes', {}).get('widthAttr', canvas_width)
-                clip['parameters']['scale0'] = canvas_width / source_w if source_w else 1.0
+                sv = canvas_width / source_w if source_w else 1.0
+                clip['parameters']['scale0'] = {'type': 'double', 'defaultValue': sv, 'interp': 'eioe'}
             if canvas_height is not None:
                 source_h = self._data.get('attributes', {}).get('heightAttr', canvas_height)
-                clip['parameters']['scale1'] = canvas_height / source_h if source_h else 1.0
+                sv2 = canvas_height / source_h if source_h else 1.0
+                clip['parameters']['scale1'] = {'type': 'double', 'defaultValue': sv2, 'interp': 'eioe'}
             cursor_ticks += dur_ticks
             cid += 1
 
