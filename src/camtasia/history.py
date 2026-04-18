@@ -192,6 +192,8 @@ class ChangeHistory:
             ]
         restored_history._undo_stack = _restore_stack(raw_data.get('undo_stack', []))
         restored_history._redo_stack = _restore_stack(raw_data.get('redo_stack', []))
+        restored_history._undo_stack = restored_history._undo_stack[-restored_history._max_history_depth:]
+        restored_history._redo_stack = restored_history._redo_stack[-restored_history._max_history_depth:]
         return restored_history
 
 

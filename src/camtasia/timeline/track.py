@@ -1891,9 +1891,14 @@ class Track:
                     sub['scalar'] = right_data.get('scalar', 1)
 
         # Re-ID the right half and all nested clips
-        from camtasia.timeline.timeline import _remap_clip_ids_recursive
+        from camtasia.timeline.timeline import _remap_clip_ids_with_map
         id_counter = [self._next_clip_id()]
-        _remap_clip_ids_recursive(right_data, id_counter)
+        id_map: dict[int, int] = {}
+        _remap_clip_ids_with_map(right_data, id_counter, id_map)
+        for key, new_id in id_map.items():
+            for obj in right_data.get('assetProperties', {}).get('objects', []):
+                if obj.get('id') == key:
+                    obj['id'] = new_id
 
         # Insert right half after left half
         medias.insert(left_idx + 1, right_data)

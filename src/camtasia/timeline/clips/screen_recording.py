@@ -1,7 +1,7 @@
 """Screen recording clips (ScreenVMFile, ScreenIMFile)."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NoReturn
 
 from .base import BaseClip
 
@@ -129,6 +129,9 @@ class ScreenIMFile(BaseClip):
     def cursor_image_path(self) -> str | None:
         """Cursor image path identifier."""
         return self.parameters.get('cursorImagePath')
+
+    def set_source(self, source_id: int) -> NoReturn:
+        raise TypeError('Cannot change source on cursor overlay clips')
 
     @property
     def cursor_location_keyframes(self) -> list[dict[str, Any]]:
