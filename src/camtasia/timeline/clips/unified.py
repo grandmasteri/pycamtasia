@@ -104,6 +104,9 @@ class UnifiedMedia(BaseClip):
     def copy_effects_from(self, source: Any) -> NoReturn:
         raise TypeError(_EFFECT_MSG)
 
+    def duplicate_effects_to(self, target: 'BaseClip') -> NoReturn:
+        raise TypeError('Cannot duplicate effects from UnifiedMedia wrapper; access .video or .audio effects directly')
+
     def mute_audio(self) -> Self:
         """Set audio gain to zero."""
         if self.has_audio:

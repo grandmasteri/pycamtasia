@@ -71,10 +71,12 @@ def match_marker_to_transcript(
     target = " ".join(label_lower)
 
     idx = full.find(target)
-    if idx != -1:
-        # Verify word boundary
-        if (idx > 0 and full[idx-1] != ' ') or (idx + len(target) < len(full) and full[idx + len(target)] != ' '):
-            idx = -1  # reject non-word-boundary match
+    while idx != -1:
+        at_start = idx == 0 or full[idx - 1] == ' '
+        at_end = idx + len(target) >= len(full) or full[idx + len(target)] == ' '
+        if at_start and at_end:
+            break
+        idx = full.find(target, idx + 1)
     if idx != -1:
         # Count words before the match to find the word index
         word_idx = full[:idx].count(" ")
