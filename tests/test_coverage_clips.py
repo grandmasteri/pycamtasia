@@ -56,11 +56,12 @@ def _callout_data(**overrides):
             'width': 200, 'height': 100,
             'textAttributes': {
                 'keyframes': [{
-                    'value': [{
-                        'rangeStart': 0, 'rangeEnd': 5,
-                        'fontName': 'Arial', 'fontWeight': 400, 'fontSize': 24,
-                        'fgColor': '(0,0,0,255)',
-                    }]
+                    'value': [
+                        {'name': 'fontName', 'value': 'Arial', 'rangeEnd': 5, 'rangeStart': 0, 'valueType': 'string'},
+                        {'name': 'fontWeight', 'value': 400, 'rangeEnd': 5, 'rangeStart': 0, 'valueType': 'int'},
+                        {'name': 'fontSize', 'value': 24, 'rangeEnd': 5, 'rangeStart': 0, 'valueType': 'double'},
+                        {'name': 'fgColor', 'value': '(0,0,0,255)', 'rangeEnd': 5, 'rangeStart': 0, 'valueType': 'color'},
+                    ]
                 }]
             },
         },
@@ -239,10 +240,10 @@ class TestCalloutSetFontWithIntWeight:
         d = _callout_data()
         c = Callout(d)
         c.set_font('Montserrat', weight=700, size=48)
-        kf = d['def']['textAttributes']['keyframes'][0]['value'][0]
-        assert kf['fontName'] == 'Montserrat'
-        assert kf['fontWeight'] == 700
-        assert kf['fontSize'] == 48
+        attrs = {a['name']: a['value'] for a in d['def']['textAttributes']['keyframes'][0]['value']}
+        assert attrs['fontName'] == 'Montserrat'
+        assert attrs['fontWeight'] == 700
+        assert attrs['fontSize'] == 48
 
     def test_set_font_string_weight(self):
         """set_font with string weight maps to numeric."""
@@ -250,8 +251,8 @@ class TestCalloutSetFontWithIntWeight:
         d = _callout_data()
         c = Callout(d)
         c.set_font('Roboto', weight='Bold', size=36)
-        kf = d['def']['textAttributes']['keyframes'][0]['value'][0]
-        assert kf['fontWeight'] == 700
+        attrs = {a['name']: a['value'] for a in d['def']['textAttributes']['keyframes'][0]['value']}
+        assert attrs['fontWeight'] == 700
 
 
 class TestCalloutSetColorsWithFgColor:
@@ -261,8 +262,8 @@ class TestCalloutSetColorsWithFgColor:
         d = _callout_data()
         c = Callout(d)
         c.set_colors(font_color=(0.0, 1.0, 0.0))
-        kf = d['def']['textAttributes']['keyframes'][0]['value'][0]
-        assert kf['fgColor'] == '(0,255,0,255)'
+        attrs = {a['name']: a['value'] for a in d['def']['textAttributes']['keyframes'][0]['value']}
+        assert attrs['fgColor'] == '(0,255,0,255)'
 
     def test_set_colors_with_alpha(self):
         """set_colors with 4-component font_color."""
@@ -270,8 +271,8 @@ class TestCalloutSetColorsWithFgColor:
         d = _callout_data()
         c = Callout(d)
         c.set_colors(font_color=(1.0, 0.0, 0.0, 0.5))
-        kf = d['def']['textAttributes']['keyframes'][0]['value'][0]
-        assert '128' in kf['fgColor'] or '127' in kf['fgColor']
+        attrs = {a['name']: a['value'] for a in d['def']['textAttributes']['keyframes'][0]['value']}
+        assert '128' in attrs['fgColor'] or '127' in attrs['fgColor']
 
 
 class TestCalloutDefinitionProperty:
