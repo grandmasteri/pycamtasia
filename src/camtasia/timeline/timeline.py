@@ -1059,41 +1059,45 @@ class Timeline:
         cursor = 0
         prev_id: int | None = None
         for clip_id, transition_name in sections:
-            # Find and move clip to target track at cursor position
+            # Find clip across all tracks
+            found_track = None
+            found_media = None
             for track in self.tracks:
                 for m in track._data.get('medias', []):
                     if m.get('id') == clip_id:
-                        if track.index != target_track_index:
-                            # Move to target track
-                            track._data['medias'].remove(m)
-                            target_track._data.setdefault('medias', []).append(m)
-                        m['start'] = cursor
-                        _propagate_start_to_unified(m)
-                        # Add transition
-                        if transition_name and prev_id is not None:
-                            target_track._data.setdefault('transitions', []).append({
-                                'name': transition_name,
-                                'duration': trans_ticks,
-                                'leftMedia': prev_id,
-                                'rightMedia': clip_id,
-                                'attributes': {
-                                    'bypass': False,
-                                    'reverse': False,
-                                    'trivial': False,
-                                    'useAudioPreRoll': True,
-                                    'useVisualPreRoll': True,
-                                },
-                            })
-                        cursor += m.get('duration', 0)
-                        if transition_name and prev_id is not None:
-                            cursor -= trans_ticks
-                        prev_id = clip_id
+                        found_track = track
+                        found_media = m
                         break
-                else:
-                    continue
-                break
+                if found_media is not None:
+                    break
             else:
                 raise KeyError(f'Clip {clip_id} not found on any track')
+            assert found_track is not None and found_media is not None
+            # Move clip to target track (after iteration is complete)
+            if found_track.index != target_track_index:
+                found_track._data['medias'].remove(found_media)
+                target_track._data.setdefault('medias', []).append(found_media)
+            found_media['start'] = cursor
+            _propagate_start_to_unified(found_media)
+            # Add transition
+            if transition_name and prev_id is not None:
+                target_track._data.setdefault('transitions', []).append({
+                    'name': transition_name,
+                    'duration': trans_ticks,
+                    'leftMedia': prev_id,
+                    'rightMedia': clip_id,
+                    'attributes': {
+                        'bypass': False,
+                        'reverse': False,
+                        'trivial': False,
+                        'useAudioPreRoll': True,
+                        'useVisualPreRoll': True,
+                    },
+                })
+            cursor += found_media.get('duration', 0)
+            if transition_name and prev_id is not None:
+                cursor -= trans_ticks
+            prev_id = clip_id
 
 
 class _TrackAccessor:

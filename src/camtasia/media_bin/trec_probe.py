@@ -90,7 +90,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
 
             dur_ms = track.duration or 0
             edit_rate = round(float(fps))
-            range_end = int(dur_ms / 1000 * float(fps))
+            range_end = int(dur_ms / 1000 * edit_rate)
 
             source_tracks.append({
                 'range': [0, range_end],
