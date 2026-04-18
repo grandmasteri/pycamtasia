@@ -608,10 +608,10 @@ class TestTestProjectBIntegration:
         })
         actual_fill = actual_callout.fill_color
         assert isinstance(actual_fill, tuple)
-        assert isinstance(actual_fill, tuple) and actual_fill[3] is not None  # 4-element RGBA tuple
+        assert len(actual_fill) == 4
         actual_stroke = actual_callout.stroke_color
         assert isinstance(actual_stroke, tuple)
-        assert isinstance(actual_stroke, tuple) and actual_stroke[3] is not None  # 4-element RGBA tuple
+        assert len(actual_stroke) == 4
 
     def test_text_rectangle_has_corner_radius(self, test_project_b_data):
         actual_callouts = _collect_all(

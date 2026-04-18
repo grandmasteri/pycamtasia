@@ -1665,6 +1665,7 @@ class Track:
             piece.scalar = seg_scalar
             piece.duration = seconds_to_ticks(dur_s)
             piece._data['mediaStart'] = round(cumulative_ms)
+            _propagate_start_to_unified(piece._data)  # type: ignore[arg-type]
             piece._data.setdefault('metadata', {})['clipSpeedAttribute'] = {
                 'type': 'bool', 'value': True,
             }

@@ -441,7 +441,7 @@ def test_volume_stays_non_negative(value):
     data = {'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': TICK, 'parameters': {}}
     clip = BaseClip(data)
     clip.volume = value
-    assert clip.volume >= 0.0
+    assert clip.volume == value
 
 
 # ------------------------------------------------------------------

@@ -220,10 +220,6 @@ class TestAddImageSequence:
         clip_data = placed_clips[0]._data
         # Fade creates opacity keyframes in animationTracks
         anim_tracks = clip_data.get('animationTracks', {})
-        has_opacity: bool = any(
-            'opacity' in str(v).lower()
-            for v in anim_tracks.values()
-        ) or 'visual' in anim_tracks
         assert 'visual' in anim_tracks and len(anim_tracks.get('visual', [])) > 0
 
     def test_no_fade_when_zero(self):
@@ -234,9 +230,7 @@ class TestAddImageSequence:
         clip_data = placed_clips[0]._data
         anim_tracks = clip_data.get('animationTracks', {})
         # No opacity keyframes should be added
-        visual = anim_tracks.get('visual', {})
-        opacity_kfs = visual.get('opacity', {}).get('keyframes', []) if isinstance(visual, dict) else []
-        assert len(opacity_kfs) == 0
+        assert anim_tracks.get('visual', []) == []
 
     def test_empty_list_returns_empty(self):
         proj = _make_project()
