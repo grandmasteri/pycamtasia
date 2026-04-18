@@ -13,6 +13,7 @@ from camtasia.types import BehaviorPreset, CalloutShape
 from .base import BaseClip
 
 _WEIGHT_MAP = {'Thin': 100, 'Light': 300, 'Regular': 400, 'Medium': 500, 'Bold': 700, 'Black': 900}
+_WEIGHT_REVERSE = {v: k for k, v in _WEIGHT_MAP.items()}
 
 
 class CalloutBuilder:
@@ -298,7 +299,10 @@ class Callout(BaseClip):
         """
         font = self._data.setdefault('def', {}).setdefault('font', {})  # type: ignore[typeddict-item]
         font['name'] = name
-        font['weight'] = weight
+        if isinstance(weight, int):
+            font['weight'] = _WEIGHT_REVERSE.get(weight, 'Regular')
+        else:
+            font['weight'] = weight
         font['size'] = size
         for kf in self._data.get('def', {}).get('textAttributes', {}).get('keyframes', []):  # type: ignore[attr-defined]
             for attr in kf.get('value', []):

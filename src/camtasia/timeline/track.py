@@ -1166,6 +1166,8 @@ class Track:
         Returns:
             List of created IMFile clips.
         """
+        if transition_seconds >= duration_per_image_seconds:
+            raise ValueError(f'transition_seconds ({transition_seconds}) must be less than duration_per_image_seconds ({duration_per_image_seconds})')
         clips: list[IMFile] = []
         offset = start_seconds
         for src_id in source_ids:

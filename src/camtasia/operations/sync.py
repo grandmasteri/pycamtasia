@@ -72,6 +72,10 @@ def match_marker_to_transcript(
 
     idx = full.find(target)
     if idx != -1:
+        # Verify word boundary
+        if (idx > 0 and full[idx-1] != ' ') or (idx + len(target) < len(full) and full[idx + len(target)] != ' '):
+            idx = -1  # reject non-word-boundary match
+    if idx != -1:
         # Count words before the match to find the word index
         word_idx = full[:idx].count(" ")
         return words[text_to_word_idx[min(word_idx, len(text_to_word_idx) - 1)]].start

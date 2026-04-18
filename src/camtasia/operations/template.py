@@ -115,6 +115,9 @@ def duplicate_project(
         for track in proj.timeline.tracks:
             track.clear()
         proj._data['sourceBin'] = []
+        toc = proj._data.get('timeline', {}).get('parameters', {}).get('toc', {})
+        if 'keyframes' in toc:
+            toc['keyframes'] = []
         proj.save()
 
     return proj
