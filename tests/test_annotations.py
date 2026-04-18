@@ -59,10 +59,10 @@ def test_keystroke_callout_text():
     assert result['text'] == 'Ctrl+C'
     assert result['font']['name'] == 'Montserrat'
     assert result['font']['weight'] == 'Bold'
-    assert result['font']['size']['defaultValue'] == 24.0
+    assert result['font']['size'] == 24.0
 
 
 def test_keystroke_callout_custom_font_size():
     result = keystroke_callout('Cmd+Shift+S', font_size=36.0)
     assert result['text'] == 'Cmd+Shift+S'
-    assert result['font']['size']['defaultValue'] == 36.0
+    assert result['font']['size'] == 36.0

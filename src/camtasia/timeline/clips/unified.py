@@ -70,7 +70,7 @@ class UnifiedMedia(BaseClip):
         """Not supported on UnifiedMedia."""
         raise TypeError('Cannot set_source on UnifiedMedia; set it on .video or .audio instead')
 
-    def add_effect(self, effect_data: dict[str, Any]) -> Any:
+    def add_effect(self, effect_data: dict[str, Any]) -> NoReturn:
         raise TypeError(_EFFECT_MSG)
 
     def add_drop_shadow(
@@ -101,7 +101,7 @@ class UnifiedMedia(BaseClip):
     ) -> NoReturn:
         raise TypeError(_EFFECT_MSG)
 
-    def copy_effects_from(self, source: Any) -> Self:
+    def copy_effects_from(self, source: Any) -> NoReturn:
         raise TypeError(_EFFECT_MSG)
 
     def mute_audio(self) -> Self:

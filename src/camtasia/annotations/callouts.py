@@ -186,6 +186,6 @@ def keystroke_callout(
         'font': {
             'name': 'Montserrat',
             'weight': 'Bold',
-            'size': {'type': 'double', 'defaultValue': font_size, 'interp': 'linr'},
+            'size': font_size,
         },
     }

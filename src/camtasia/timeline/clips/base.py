@@ -1356,12 +1356,10 @@ class BaseClip:
             kf_entry['interp'] = interp
 
         existing = params.get(parameter)
-        if isinstance(existing, dict) and 'keyframes' in existing:
-            existing['keyframes'].append(kf_entry)
-        else:  # pragma: no cover
-            default_val = existing if isinstance(existing, (int, float)) else (
-                existing.get('defaultValue', 0.0) if isinstance(existing, dict) else 0.0
-            )
+        if isinstance(existing, dict):
+            existing.setdefault('keyframes', []).append(kf_entry)
+        else:
+            default_val = existing if isinstance(existing, (int, float)) else 0.0
             params[parameter] = {
                 'type': 'double',
                 'defaultValue': default_val,
