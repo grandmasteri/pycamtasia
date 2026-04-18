@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from camtasia.timeline.track import Track
+from fractions import Fraction
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 
 
@@ -67,7 +68,7 @@ def test_vmfile_scalar_compensated():
         for t in p._data.get('tracks', []):
             for m in t.get('medias', []):
                 if m['_type'] == 'VMFile':
-                    assert m['scalar'] != 1  # should be 1/original_scalar
+                    assert Fraction(str(m['scalar'])) != Fraction(1)  # should be 1/original_scalar
 
 
 def test_media_start_accumulates():

@@ -106,7 +106,6 @@ class TestReplaceAllMedia:
         proj = _make_project(tmp_path, clips)
         count = proj.replace_all_media(10, 99)
         assert count == 2
-        assert proj.find_clips_by_source(99) == proj.find_clips_by_source(99)
         assert len(proj.find_clips_by_source(10)) == 0
         assert len(proj.find_clips_by_source(99)) == 2
 
