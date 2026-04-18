@@ -112,16 +112,16 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
             channels = int(str(raw_ch).split('/')[0].strip())
             sample_rate = track.sampling_rate or 44100
             dur_ms = track.duration or 0
-            range_end = int(dur_ms / 1000 * int(sample_rate))
+            range_end = int(dur_ms / 1000 * int(float(sample_rate)))
 
             tag = 0
 
             source_tracks.append({
                 'range': [0, range_end],
                 'type': 2,
-                'editRate': int(sample_rate),
+                'editRate': int(float(sample_rate)),
                 'trackRect': [0, 0, 0, 0],
-                'sampleRate': int(sample_rate),
+                'sampleRate': int(float(sample_rate)),
                 'bitDepth': 16,
                 'numChannels': channels,
                 'integratedLUFS': 100.0,

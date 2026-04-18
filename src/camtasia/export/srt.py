@@ -8,10 +8,13 @@ if TYPE_CHECKING:
 def _format_srt_time(seconds: float) -> str:
     """Format seconds as SRT timecode HH:MM:SS,mmm."""
     seconds = max(0.0, seconds)
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = int(seconds % 60)
-    ms = int((seconds % 1) * 1000)
+    total_ms = round(seconds * 1000)
+    h = total_ms // 3600000
+    total_ms %= 3600000
+    m = total_ms // 60000
+    total_ms %= 60000
+    s = total_ms // 1000
+    ms = total_ms % 1000
     return f'{h:02d}:{m:02d}:{s:02d},{ms:03d}'
 
 

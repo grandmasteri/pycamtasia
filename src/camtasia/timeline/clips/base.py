@@ -801,6 +801,7 @@ class BaseClip:
         """
         ticks = seconds_to_ticks(duration_seconds)
         end = int(Fraction(str(self._data.get('duration', self._data.get('mediaDuration', 0)))))
+        ticks = min(ticks, end)
         existing = self._get_existing_opacity_keyframes()
         if existing and existing[0]['value'] == 1.0:
             # Fade-in already exists — merge
@@ -838,12 +839,14 @@ class BaseClip:
         kfs: list[dict[str, Any]] = []
         if fade_in_seconds > 0:
             in_ticks = seconds_to_ticks(fade_in_seconds)
+            in_ticks = min(in_ticks, end)
             kfs.append({
                 'time': 0, 'value': 1.0,
                 'endTime': in_ticks, 'duration': in_ticks,
             })
         if fade_out_seconds > 0:
             out_ticks = seconds_to_ticks(fade_out_seconds)
+            out_ticks = min(out_ticks, end)
             kfs.append({
                 'time': end - out_ticks, 'value': 0.0,
                 'endTime': end, 'duration': out_ticks,
