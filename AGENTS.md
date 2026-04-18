@@ -412,6 +412,7 @@ pycamtasia/
 - Update AGENTS.md and ROADMAP.md Known Design Decisions with every round of changes
 - Aggressive hyperlinking in documentation — all named entities with URLs should be hyperlinked
 - Clean commit messages describing what changed and why
+- NEVER reference adversarial review, subagents, round numbers, or domain numbers in commit messages
 
 ### Working Style
 - Don't stop working — continue autonomously between check-ins
