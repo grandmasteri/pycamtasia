@@ -1099,7 +1099,6 @@ class Track:
                 'widthAttr': 1920.0, 'heightAttr': 1080.0,
                 'maxDurationAttr': 0, 'assetProperties': [],
             },
-            id=id_counter[0],
         )
 
     def add_transition(

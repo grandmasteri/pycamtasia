@@ -10,9 +10,9 @@ def test_arrow_default_values():
     assert result['tail-y'] == 0
     assert result['head-x'] == 100
     assert result['head-y'] == 0
-    assert result['stroke-color-red']['defaultValue'] == 1.0
-    assert result['stroke-color-green']['defaultValue'] == 0.0
-    assert result['stroke-color-blue']['defaultValue'] == 0.0
+    assert result['stroke-color-red'] == 1.0
+    assert result['stroke-color-green'] == 0.0
+    assert result['stroke-color-blue'] == 0.0
     assert result['stroke-width']['defaultValue'] == 3.0
 
 
@@ -22,9 +22,9 @@ def test_arrow_custom_values():
     assert result['tail-y'] == 20
     assert result['head-x'] == 300
     assert result['head-y'] == 400
-    assert result['stroke-color-red']['defaultValue'] == 0.0
-    assert result['stroke-color-green']['defaultValue'] == 1.0
-    assert result['stroke-color-blue']['defaultValue'] == 0.5
+    assert result['stroke-color-red'] == 0.0
+    assert result['stroke-color-green'] == 1.0
+    assert result['stroke-color-blue'] == 0.5
     assert result['stroke-width']['defaultValue'] == 5.0
 
 

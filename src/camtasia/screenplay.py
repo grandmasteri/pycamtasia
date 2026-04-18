@@ -64,7 +64,7 @@ class Screenplay:
         return [i for s in self.sections for i in s.images]
 
 
-_VO_RE = re.compile(r'\[VO-([\d.]+)\].*?(?::\*\*|\*\*:)\s*"([^"]*)"')
+_VO_RE = re.compile(r'\[VO-([\d.]+)\].*?(?::\*\*|\*\*:)\s*"(.+?)"')
 _PAUSE_RE = re.compile(r'PAUSE[:\s]+(\d+(?:\.\d+)?)\s*second')
 _TRANSITION_RE = re.compile(r'TRANSITION:\s*(.+)')
 _IMAGE_RE = re.compile(r'!\[([^\]]*)\]\(([^)]+)\)')

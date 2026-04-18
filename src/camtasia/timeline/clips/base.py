@@ -296,12 +296,12 @@ class BaseClip:
         if speed <= 0:
             raise ValueError(f'speed must be > 0, got {speed}')
         scalar_fraction = Fraction(1) / Fraction(speed).limit_denominator(100000)
-        self._data['scalar'] = 1 if speed == 1.0 else str(scalar_fraction)
+        self._data['scalar'] = 1 if scalar_fraction == 1 else str(scalar_fraction)
         md = Fraction(self.duration) / scalar_fraction
         self._data['mediaDuration'] = int(md) if md == int(md) else str(md)  # type: ignore[typeddict-item]
         if self._data.get('_type') in ('IMFile', 'ScreenIMFile'):
             self._data['mediaDuration'] = 1
-        self._data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': True}
+        self._data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
@@ -310,7 +310,7 @@ class BaseClip:
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['scalar'] = self._data['scalar']
                     sub['mediaStart'] = self._data.get('mediaStart', 0)
-                    sub.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': True}
+                    sub.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
         return self
 
     @property

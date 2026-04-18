@@ -136,10 +136,10 @@ def arrow(
         'tail-y': tail[1],
         'head-x': head[0],
         'head-y': head[1],
-        'stroke-color-red': {'type': 'double', 'defaultValue': stroke_color.red, 'interp': 'linr'},
-        'stroke-color-green': {'type': 'double', 'defaultValue': stroke_color.green, 'interp': 'linr'},
-        'stroke-color-blue': {'type': 'double', 'defaultValue': stroke_color.blue, 'interp': 'linr'},
-        'stroke-color-opacity': {'type': 'double', 'defaultValue': stroke_color.opacity, 'interp': 'linr'},
+        'stroke-color-red': stroke_color.red,
+        'stroke-color-green': stroke_color.green,
+        'stroke-color-blue': stroke_color.blue,
+        'stroke-color-opacity': stroke_color.opacity,
         'stroke-width': {'type': 'double', 'defaultValue': width, 'interp': 'linr'},
     }
 
