@@ -127,7 +127,7 @@ class TestRepairZeroDuration:
         ]
         result = proj.repair()
         # First clip duration 1 - overlap 1 = 0, should be removed
-        assert result.get('zero_duration_removed', 0) >= 1 or result.get('overlaps_fixed', 0) >= 0
+        assert result.get('zero_duration_removed', 0) >= 1
 
 
 # operations/diff.py:77,82 — clips on removed/added tracks

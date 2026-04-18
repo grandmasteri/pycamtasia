@@ -117,4 +117,4 @@ class TestFormatDurationCsOverflow:
         # Use ticks that produce exactly X.995 seconds
         ticks = round(59.995 * EDIT_RATE)
         result = format_duration(ticks)
-        assert '1:00.00' in result or '0:60.00' not in result
+        assert '0:60.00' not in result

@@ -78,14 +78,14 @@ class CaptionAttributes:
     
     @property
     def alignment(self) -> int:
-        """Get the caption text alignment (0=left, 1=center, 2=right)."""
+        """Get the caption text alignment (0=center, 1=left, 2=right)."""
         return int(self._data.get('alignment', 0))
     
     @alignment.setter
     def alignment(self, value: int) -> None:
-        """Set the caption text alignment (0=left, 1=center, 2=right)."""
+        """Set the caption text alignment (0=center, 1=left, 2=right)."""
         if value not in (0, 1, 2):
-            raise ValueError(f'alignment must be 0 (left), 1 (center), or 2 (right), got {value}')
+            raise ValueError(f'alignment must be 0 (center), 1 (left), or 2 (right), got {value}')
         self._data['alignment'] = value
     
     @property

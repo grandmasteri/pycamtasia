@@ -255,7 +255,7 @@ class TestUngroupClip:
         placed_ids: set[int] = {c.id for c in placed_clips}
         assert len(placed_ids) == 2  # all unique
         # Original internal IDs (50, 51) should not survive
-        assert 50 not in placed_ids or 51 not in placed_ids or len(placed_ids) == 2
+        assert 50 not in placed_ids and 51 not in placed_ids
 
     def test_ungroup_adjusts_start_times(self) -> None:
         """Internal clips get start times offset by the Group's position."""

@@ -50,7 +50,7 @@ class TestClipsOfTypeNestedIds:
         results = tl.clips_of_type('VMFile')
         # inner_media (id=10) and sub-media (id=20) should be found
         found_ids = {clip.id for _, clip in results}
-        assert 10 in found_ids or 20 in found_ids
+        assert 10 in found_ids
 
 
 # timeline.py:717,723,729 — validate_structure duplicate ID detection

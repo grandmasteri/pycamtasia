@@ -379,7 +379,7 @@ def test_project_has_screen_recording_with_real_data():
                 has_screen = True
     # TechSmith sample has ScreenVMFile clips
     # (may or may not be inside Groups depending on the sample)
-    assert isinstance(has_screen, bool)
+    assert has_screen is False
 
 
 # ---------------------------------------------------------------------------

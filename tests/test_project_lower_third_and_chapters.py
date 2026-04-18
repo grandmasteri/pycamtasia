@@ -103,7 +103,7 @@ class TestAddLowerThird:
         proj = _create_project(tmp_path)
         clip = proj.add_lower_third("Title")
         # Fades add effects/parameters to the clip data
-        assert clip._data.get("effects") or clip._data.get("parameters")
+        assert clip._data.get('animationTracks', {}).get('visual') is not None or any('opacity' in str(p) for p in clip._data.get('parameters', {}))
 
     def test_no_fade_when_zero(self, tmp_path: Path):
         proj = _create_project(tmp_path)

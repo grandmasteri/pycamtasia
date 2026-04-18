@@ -224,7 +224,7 @@ class TestAddImageSequence:
             'opacity' in str(v).lower()
             for v in anim_tracks.values()
         ) or 'visual' in anim_tracks
-        assert has_opacity or len(anim_tracks) > 0
+        assert 'visual' in anim_tracks and len(anim_tracks.get('visual', [])) > 0
 
     def test_no_fade_when_zero(self):
         proj = _make_project()
