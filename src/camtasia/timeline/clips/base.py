@@ -246,12 +246,17 @@ class BaseClip:
     @media_duration.setter
     def media_duration(self, value: int | Fraction) -> None:
         """Set the media duration."""
-        self._data['mediaDuration'] = value # type: ignore[typeddict-item]
+        from fractions import Fraction as _F
+        if isinstance(value, _F):
+            stored = int(value) if value == int(value) else str(value)
+        else:
+            stored = value
+        self._data['mediaDuration'] = stored # type: ignore[typeddict-item]
         if self._data.get('_type') == 'UnifiedMedia':
             for sub_key in ('video', 'audio'):
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
-                    sub['mediaDuration'] = value
+                    sub['mediaDuration'] = stored
 
     @property
     def scalar(self) -> Fraction:
