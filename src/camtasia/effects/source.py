@@ -167,5 +167,6 @@ class SourceEffect(Effect):
             self.set_parameter(f'{prefix}-alpha', 1.0)
         params = self._data.get('parameters', {})
         for i in range(len(colors), 4):
+            prefix = self._color_key_prefix(i)
             for ch in ('red', 'green', 'blue', 'alpha'):
-                params.pop(f'Color{i}-{ch}', None)
+                params.pop(f'{prefix}-{ch}', None)

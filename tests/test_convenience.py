@@ -166,7 +166,7 @@ def test_has_screen_recording_true():
     from unittest.mock import MagicMock
     group_media = {
         'id': 1, '_type': 'Group', 'start': 0, 'duration': 100,
-        'tracks': [{'trackIndex': 0, 'medias': [{'id': 2, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100}]}],
+        'tracks': [{'trackIndex': 0, 'medias': [{'id': 2, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100, 'video': {'_type': 'ScreenVMFile'}}]}],
         'attributes': {'ident': ''},
     }
     proj = MagicMock(spec=Project)

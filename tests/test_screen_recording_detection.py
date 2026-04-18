@@ -42,7 +42,7 @@ def _media_dict(**overrides):
 class TestIsScreenRecording:
     def test_unified_media_returns_true(self):
         data = _group_dict(tracks=[
-            {'medias': [{'_type': 'UnifiedMedia', 'src': 1}]},
+            {'medias': [{'_type': 'UnifiedMedia', 'src': 1, 'video': {'_type': 'ScreenVMFile'}}]},
         ])
         actual_result = Group(data).is_screen_recording
         assert actual_result is True

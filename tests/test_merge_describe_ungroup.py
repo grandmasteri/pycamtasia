@@ -184,6 +184,7 @@ class TestGroupDescribe:
     def test_describe_screen_recording_flag(self) -> None:
         """describe() includes screen recording indicator when applicable."""
         unified_clip: dict = _clip_data('UnifiedMedia', 10, 0.0, 5.0)
+        unified_clip['video'] = {'_type': 'ScreenVMFile'}
         group: Group = _make_group([[unified_clip]], ident='ScreenRec')
 
         description: str = group.describe()

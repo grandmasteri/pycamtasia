@@ -68,7 +68,7 @@ class BaseClip:
         if self.clip_type in (ClipType.VIDEO, ClipType.SCREEN_VIDEO, ClipType.UNIFIED_MEDIA):
             return True
         if self.clip_type == 'StitchedMedia':
-            return any(m.get('_type') in ('VMFile', 'ScreenVMFile', 'ScreenIMFile') for m in self._data.get('medias', []))
+            return any(m.get('_type') in ('VMFile', 'ScreenVMFile') for m in self._data.get('medias', []))
         return False
 
     @property
@@ -891,6 +891,9 @@ class BaseClip:
             ``self`` for chaining.
         """
         self._data.setdefault('animationTracks', {})['visual'] = []
+        op = self._data.get('parameters', {}).get('opacity')
+        if isinstance(op, dict):
+            op.pop('keyframes', None)
         return self
 
     # ------------------------------------------------------------------

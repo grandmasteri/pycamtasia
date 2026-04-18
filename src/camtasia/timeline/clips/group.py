@@ -214,7 +214,9 @@ class Group(BaseClip):
         """Return True if this group contains screen recording media."""
         for track in self._data.get('tracks', []):
             for media in track.get('medias', []):
-                if media.get('_type') in ('UnifiedMedia', 'ScreenVMFile'):
+                if media.get('_type') == 'ScreenVMFile':
+                    return True
+                if media.get('_type') == 'UnifiedMedia' and media.get('video', {}).get('_type') == 'ScreenVMFile':
                     return True
         return False
 
@@ -507,7 +509,7 @@ class Group(BaseClip):
                     'audiateLinkedSession': '',
                     'clipSpeedAttribute': {
                         'type': 'bool',
-                        'value': True,
+                        'value': scalar != 1,
                     },
                     'colorAttribute': {
                         'type': 'color',
