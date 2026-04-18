@@ -81,7 +81,7 @@ def _pauses_with_positions(chunk: str) -> list[PauseMarker]:
         pauses.append(PauseMarker(
             duration_seconds=float(p.group(1)),
             description=p.group(0),
-            after_vo_index=idx if idx >= 0 else None,
+            after_vo_index=max(0, idx),
         ))
     return pauses
 

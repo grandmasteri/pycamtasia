@@ -247,7 +247,7 @@ def get_behavior_preset(preset_name: str, duration_ticks: int) -> dict:
         '_type': 'GenericBehaviorEffect',
         'effectName': template['effectName'],
         'bypassed': False,
-        'start': min(template['start'], duration_ticks),
+        'start': min(template['start'], max(0, duration_ticks - 1)),
         'duration': duration_ticks,
         'in': template['in'],
         'center': template['center'],

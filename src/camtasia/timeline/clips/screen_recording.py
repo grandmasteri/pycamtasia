@@ -87,7 +87,7 @@ class ScreenVMFile(BaseClip):
             return {}
         params = e.get('parameters', {})
         return {
-            k: (v.get('defaultValue', v) if isinstance(v, dict) else v)
+            k: (v.get('defaultValue', 0.0) if isinstance(v, dict) else v)
             for k, v in params.items()
         }
 
@@ -99,7 +99,7 @@ class ScreenVMFile(BaseClip):
             return {}
         params = e.get('parameters', {})
         return {
-            k: (v.get('defaultValue', v) if isinstance(v, dict) else v)
+            k: (v.get('defaultValue', 0.0) if isinstance(v, dict) else v)
             for k, v in params.items()
         }
 
@@ -111,7 +111,7 @@ class ScreenVMFile(BaseClip):
             return {}
         params = e.get('parameters', {})
         return {
-            k: (v.get('defaultValue', v) if isinstance(v, dict) else v)
+            k: (v.get('defaultValue', 0.0) if isinstance(v, dict) else v)
             for k, v in params.items()
         }
 
