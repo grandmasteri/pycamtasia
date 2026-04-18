@@ -101,12 +101,19 @@ def export_edl(
 
             if is_unified and 'audio' in clip._data:
                 audio_data = clip._data.get('audio', {})
+                audio_src = source
+                audio_src_id = audio_data.get('src')
+                if audio_src_id is not None:
+                    for m in project.media_bin:
+                        if m.id == audio_src_id:
+                            audio_src = m.identity
+                            break
                 audio_ms = ticks_to_seconds(round(Fraction(str(audio_data.get('mediaStart', 0)))))
                 audio_md = ticks_to_seconds(round(Fraction(str(audio_data.get('mediaDuration', clip.duration)))))
                 audio_src_in = _format_timecode(audio_ms, fps)
                 audio_src_out = _format_timecode(audio_ms + audio_md, fps)
                 lines.append(
-                    f'{event_num:03d}  {source[:8]:<8s} A     C        '
+                    f'{event_num:03d}  {audio_src[:8]:<8s} A     C        '
                     f'{audio_src_in} {audio_src_out} {rec_in} {rec_out}'
                 )
                 event_num += 1
