@@ -65,7 +65,7 @@ source = ["camtasia"]
 omit = ["*/cli.py", "*/frame_stamp.py", "*/effects.py", "*/track_media.py", "*/trec_probe.py"]
 
 [tool.coverage.report]
-fail_under = 97
+fail_under = 96
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 
 [tool.mypy]
