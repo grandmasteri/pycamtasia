@@ -202,6 +202,79 @@ If a module is fully replaced by a newer implementation, delete the old one imme
 
 When adversarial reviewers report bugs, read the actual source code and verify the bug exists before applying a fix. Reviewers can hallucinate or misread code.
 
+## Code Style & Engineering Principles
+
+### Efficiency Principle
+
+When multiple approaches produce the same outcome, choose the most efficient one. Use shell commands for bulk operations instead of individual tool calls, prefer built-in OS operations over manual reconstruction. Don't do extra work when a simpler path exists.
+
+### Cognitive Load
+
+Code should minimize cognitive load — the average person holds ~4 chunks in working memory.
+
+- **Deep modules over shallow ones**: Prefer fewer modules with simple interfaces and complex internals. Don't split code into many small functions just to satisfy a line count rule — split when it genuinely reduces cognitive load.
+- **Complex conditionals → intermediate variables**: Extract named booleans for multi-part conditions.
+- **Early returns over nested ifs**: Handle preconditions first, then the happy path.
+- **A little copying is better than a little dependency**: Don't over-apply DRY across unrelated modules. Some duplication is healthier than a shared abstraction that constrains both.
+- **No unnecessary abstraction layers**: Add layers only when justified by a practical extension point, not for architectural aesthetics.
+- **Don't weaken source code to accommodate tests**: If a parameter should be required, keep it required — don't add `Optional` defaults just so tests can skip passing it.
+- **Familiarity ≠ simplicity**: Code that feels easy because you wrote it may be hard for newcomers.
+
+### Type Safety
+
+Prefer the strongest, most specific type available. Weak types push validation to runtime; strong types centralize it at construction time.
+
+- `Fraction` over `float` for tick arithmetic (exact rational math)
+- Enums over literal strings for fixed value sets
+- `X | None` over `Optional[X]` (PEP 604)
+- `dict[str, Any]`, `list[str]` over `Dict`, `List` from `typing` (PEP 585)
+- Parameterized generics (`list[str]`) over bare generics (`list`)
+
+### Structured Docstrings
+
+Functions with 3+ parameters, non-obvious return types, or explicit exception raising must have Google-style docstring sections (`Args:`, `Returns:`, `Raises:`). One-liner summaries are fine for simple, self-explanatory functions. Docstrings describe *what* and *contract* — not *why a standard pattern was chosen*.
+
+### Error Handling
+
+Two-tier approach:
+- **Tier 1 — Isolatable errors → partial success**: If an error can be isolated to a single clip, track, or operation, handle it gracefully and continue. Return as much correct information as possible.
+- **Tier 2 — Fundamental deviations → fail immediately**: If the system has fundamentally deviated from expectations (missing project file, corrupt JSON structure), fail with a clear error. Don't guess.
+
+## Testing Standards
+
+### Assertion Strength Tiers
+
+**Tier 1 — Full object comparison** (for tests verifying complete output shape): Build the complete expected object, single `actual == expected` assertion.
+
+**Tier 2 — Targeted property assertions** (for tests verifying a specific behavior): Assert the specific property precisely, don't build the entire expected object when most of it is irrelevant.
+
+### Key Assertion Rules
+
+- `assert len(x) == N` where N > 0 is always wrong — verify the content
+- `assert x == []` is preferred over `assert len(x) == 0`
+- `assert X in collection` repeated N times → use `assert set(collection) == {X, Y, ...}`
+- Use exact values, not `>=` or approximate comparisons
+
+### Descriptive Variable Naming
+
+Use names that convey role: `actual_result`, `expected_result`, `actual_clips`, `expected_duration`.
+
+### Parameterized Tests
+
+Use `@pytest.mark.parametrize` for multiple cases. Select valuable cases at boundaries and transitions — avoid redundant mid-range cases.
+
+### Test Organization
+
+- Name test classes by category (`TestScalarArithmetic`, `TestGroupOperations`), not meta-details (`TestCoverageGaps`, `TestRound95Fixes`)
+- Colocate related tests in the same class/file
+
+### Python Conventions
+
+- **Imports**: All imports at top of file (PEP 8). Function-level imports only for circular import avoidance or expensive/optional dependencies.
+- **Concise**: Avoid unnecessary verbosity; express logic in the most direct way possible.
+- **Idiomatic**: Follow PEP 8 conventions.
+- **No redundant information in data models**: Don't include fields derivable from other fields in the same model.
+
 ## Running Tests
 
 Tests run in **parallel** via `pytest-xdist` (`-n auto` in `pyproject.toml`). Each test uses an **isolated temporary copy** of the template project via `tempfile.TemporaryDirectory` / `tmp_path` — no test ever mutates the shared template fixtures.
