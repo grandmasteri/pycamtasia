@@ -82,7 +82,7 @@ class TestGradientBackgroundNonMatchingShader:
         project.add_gradient_background(duration_seconds=5.0)
         # Should have created a new shader, not reused the existing one
         shaders = [m for m in project.media_bin if str(m.source).endswith('.tscshadervid')]
-        assert len(shaders) >= 2
+        assert len(shaders) == 2
 
 
 class TestFourCornerGradientNonMatchingShader:

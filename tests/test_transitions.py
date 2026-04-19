@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
+from camtasia.project import Project
 from camtasia.timeline.transitions import EDIT_RATE, Transition, TransitionList
 from camtasia.timeline.timeline import Timeline
 from camtasia.timeline.track import Track
@@ -189,14 +192,12 @@ class TestDictMutationPassthrough:
 
 class TestTransitionMissingLeftMedia:
     def test_left_media_id_none_when_missing(self):
-        from camtasia.timeline.transitions import Transition
         t = Transition({'name': 'FadeThroughBlack', 'duration': 100, 'rightMedia': 1, 'attributes': {}})
         assert t.left_media_id is None
 
 
 class TestTransitionRepr:
     def test_repr_format(self):
-        from camtasia.timeline.transitions import Transition
         t = Transition({
             'name': 'FadeThroughBlack', 'duration': 352_800_000,
             'leftMedia': 1, 'rightMedia': 2, 'attributes': {},
@@ -268,7 +269,6 @@ def test_remove_all_transitions():
 
 
 def test_add_paint_arcs_transition():
-    from camtasia.timeline.track import Track
     data = {'trackIndex': 0, 'medias': [
         {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 705600000},
         {'id': 2, '_type': 'AMFile', 'start': 705600000, 'duration': 705600000},
@@ -280,7 +280,6 @@ def test_add_paint_arcs_transition():
 
 
 def test_add_spherical_spin_transition():
-    from camtasia.timeline.track import Track
     data = {'trackIndex': 0, 'medias': [
         {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 705600000},
         {'id': 2, '_type': 'AMFile', 'start': 705600000, 'duration': 705600000},
@@ -324,7 +323,6 @@ def test_total_transition_count():
     }
     timeline = Timeline(data['timeline'])
 
-    from camtasia.project import Project
     project = Project.__new__(Project)
     object.__setattr__(project, '_timeline', timeline)
     object.__setattr__(project, '_data', data)
@@ -346,7 +344,6 @@ def test_total_transition_duration_seconds_empty():
 
 def test_total_transition_duration_seconds_single():
     """total_transition_duration_seconds converts a single transition correctly."""
-    from camtasia.timing import EDIT_RATE
     duration_ticks: int = EDIT_RATE * 2  # 2 seconds
     data: dict = {'trackIndex': 0, 'medias': [], 'transitions': [{'duration': duration_ticks}]}
     attrs: dict = {'ident': 'T'}
@@ -356,7 +353,6 @@ def test_total_transition_duration_seconds_single():
 
 def test_total_transition_duration_seconds_multiple():
     """total_transition_duration_seconds sums multiple transitions."""
-    from camtasia.timing import EDIT_RATE
     transitions: list[dict] = [
         {'duration': EDIT_RATE},      # 1 second
         {'duration': EDIT_RATE * 3},   # 3 seconds

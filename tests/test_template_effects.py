@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from camtasia.operations.template import _walk_clips
+from camtasia.operations.template import _walk_clips, duplicate_project
 from camtasia.project import load_project
 
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
@@ -129,8 +129,6 @@ class TestWalkClipsEdgeCases:
         assert types >= {"UnifiedMedia", "VMFile", "AMFile"}
 
     def test_duplicate_project_clear_media_with_keyframes(self, tmp_path):
-        from camtasia.operations.template import duplicate_project
-
         src = RESOURCES / "new.cmproj"
         src_copy = tmp_path / "source.cmproj"
         shutil.copytree(src, src_copy)

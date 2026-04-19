@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from camtasia.timing import seconds_to_ticks
 
 
@@ -49,7 +51,6 @@ class TestStatistics:
         assert stats['effect_count'] == 2
 
     def test_media_count(self, project):
-        from pathlib import Path
         wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
         project.import_media(wav)
         assert project.statistics()['media_count'] == 1

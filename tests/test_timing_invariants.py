@@ -9,6 +9,7 @@ from fractions import Fraction
 
 import pytest
 
+from camtasia.timeline.clips import clip_from_dict
 from camtasia.timing import EDIT_RATE, parse_scalar, seconds_to_ticks
 
 
@@ -233,7 +234,6 @@ class TestUnifiedMediaInvariant:
         for inner_track in group._data.get('tracks', []):
             for media in inner_track.get('medias', []):
                 if media.get('_type') == 'UnifiedMedia':
-                    from camtasia.timeline.clips import clip_from_dict
                     return clip_from_dict(media)
         pytest.skip('No UnifiedMedia found in screen recording group')
 

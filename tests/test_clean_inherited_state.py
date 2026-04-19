@@ -158,7 +158,7 @@ class TestCleanInheritedState:
         project.timeline.markers.add("M", 0)
 
         initial_clip_count = len(track.clips)
-        assert initial_clip_count >= 2
+        assert initial_clip_count == 2
 
         project.clean_inherited_state(preserve_groups=True)
 

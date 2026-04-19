@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 FIXTURES = Path(__file__).parent / 'fixtures'
 EMPTY_WAV = FIXTURES / 'empty.wav'
 
@@ -47,7 +49,7 @@ def test_clip_starts_at_zero(project):
 def test_empty_project_uses_fallback_duration(project):
     assert project.duration_seconds == 0
     clip = project.add_background_music(EMPTY_WAV)
-    assert clip.duration_seconds > 0
+    assert clip.duration_seconds == pytest.approx(60.0)
 
 
 def test_string_path_accepted(project):

@@ -2,6 +2,7 @@ from __future__ import annotations
 """Tests for SourceEffect flat-scalar color handling and set_shader_colors."""
 from camtasia.effects.source import SourceEffect
 from camtasia.effects.visual import _color_rgba, _set_color_rgba
+from camtasia.timeline.clips.video import VMFile
 
 
 def _flat_source_effect():
@@ -58,7 +59,6 @@ def test_set_color_rgba_flat_scalars():
 
 
 def test_source_effect_on_vmfile():
-    from camtasia.timeline.clips.video import VMFile
     data = {"_type": "VMFile", "id": 1, "start": 0, "duration": 100,
             "mediaStart": 0, "mediaDuration": 100,
             "sourceEffect": {"effectName": "SourceEffect", "parameters": {}}}
@@ -68,7 +68,6 @@ def test_source_effect_on_vmfile():
 
 
 def test_source_effect_none_when_absent():
-    from camtasia.timeline.clips.video import VMFile
     data = {"_type": "VMFile", "id": 1, "start": 0, "duration": 100,
             "mediaStart": 0, "mediaDuration": 100}
     assert VMFile(data).source_effect is None

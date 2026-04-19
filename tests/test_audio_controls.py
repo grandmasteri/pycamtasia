@@ -19,7 +19,7 @@ class TestNormalizeAudio:
         clip = track.add_audio(900, start_seconds=0, duration_seconds=1.0)
         clip.gain = 0.5
         count = project.normalize_audio(target_gain=0.8)
-        assert count >= 1
+        assert count == 1
         assert clip.gain == 0.8
 
     def test_default_target_gain(self, project):

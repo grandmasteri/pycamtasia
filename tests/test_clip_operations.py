@@ -95,7 +95,6 @@ class TestDuplicateGroupClip:
                 'tracks': [{'medias': [{'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 100}]}],
             }],
         }
-        from camtasia.timeline.track import Track
         t = Track({'ident': 'test'}, data)
         actual_clip = t.duplicate_clip(1)
         # The nested clip should have a different ID than the original
@@ -164,7 +163,6 @@ class TestSwapClips:
         data = {'trackIndex': 0, 'medias': [
             {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100},
         ]}
-        from camtasia.timeline.track import Track
         t = Track({'ident': 'test'}, data)
         with pytest.raises(KeyError, match='999'):
             t.swap_clips(1, 999)

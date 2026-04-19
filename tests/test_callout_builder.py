@@ -112,7 +112,6 @@ class TestBuilderAlignment:
 
 class TestBuilderWithAllOptions:
     def test_add_callout_with_size_and_colors(self):
-        from camtasia.timeline.track import Track
         data = {'trackIndex': 0, 'medias': []}
         t = Track({'ident': 'test'}, data)
         builder = CalloutBuilder('styled')

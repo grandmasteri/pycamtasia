@@ -55,7 +55,7 @@ class TestMergeSkipsEmptyTracks:
         # Add one non-empty and leave existing empty tracks
         _populate_source(source)
         empty_count = sum(1 for t in source.timeline.tracks if len(t) == 0)
-        assert empty_count > 0  # source has empty tracks
+        assert empty_count == 2  # source has 2 empty default tracks
 
         initial = project.timeline.track_count
         copied = merge_tracks(source, project)

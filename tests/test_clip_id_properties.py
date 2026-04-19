@@ -94,7 +94,7 @@ class TestAllClipIds:
 
 class TestNextAvailableId:
     def test_empty_project(self, project) -> None:  # type: ignore[no-untyped-def]
-        assert project.next_available_id >= 1  # timeline itself has an ID
+        assert project.next_available_id == 2  # timeline itself has id=1
 
     def test_with_clips(self, project) -> None:  # type: ignore[no-untyped-def]
         track = project.timeline.add_track("Test")

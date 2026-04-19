@@ -82,9 +82,9 @@ class TestForEachTrack:
             assert track.audio_muted is True
 
     def test_returns_one_on_single_track_project(self, project):
-        # The conftest project has at least one track
+        # The conftest project has 2 default tracks
         count = project.for_each_track(lambda t: None)
-        assert count >= 1
+        assert count == 2
 
     def test_no_filter_applies_to_all(self, project):
         track = project.timeline.add_track('Test')

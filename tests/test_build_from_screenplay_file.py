@@ -6,6 +6,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
+from camtasia.project import load_project
 from camtasia.screenplay import Screenplay, ScreenplaySection, VOBlock
 
 
@@ -39,7 +40,7 @@ class TestBuildFromScreenplayFile:
             result = project.build_from_screenplay_file(screenplay_md, audio_dir)
 
         assert [c.clip_type for c in result['clips']] == ['AMFile', 'AMFile']
-        assert result['total_duration'] > 0
+        assert result['total_duration'] == 3.0
         assert result['sections'][0].title == 'Intro'
 
     def test_skips_missing_audio(self, project, tmp_path):
@@ -103,7 +104,6 @@ class TestBuildFromScreenplayFile:
             r1 = project.build_from_screenplay_file(screenplay_md, audio_dir, gap_seconds=0.0)
 
         # Reload project for a clean slate
-        from camtasia.project import load_project
         proj2 = load_project(project.file_path)
         with patch('camtasia.screenplay.parse_screenplay', return_value=sp):
             r2 = proj2.build_from_screenplay_file(screenplay_md, audio_dir, gap_seconds=2.0)

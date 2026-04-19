@@ -1,4 +1,6 @@
 """Tests for camtasia.types enums."""
+import camtasia.types as types_module
+from camtasia.timeline.clips.callout import Callout
 from camtasia.types import (
     ClipType, EffectName, BlendMode, MaskShape, CalloutShape,
     TransitionType, CalloutKind, BehaviorInnerName, BehaviorPreset,
@@ -177,8 +179,7 @@ class TestRGBADictRenamed:
         assert 'blue' in _RGBADict.__annotations__
 
     def test_no_public_rgba_in_types(self):
-        import camtasia.types as t
-        assert not hasattr(t, 'RGBA') or t.RGBA is t._RGBADict
+        assert not hasattr(types_module, 'RGBA') or types_module.RGBA is types_module._RGBADict
 
 
 class TestBlendModeValues:
@@ -229,15 +230,12 @@ class TestCalloutShapeEnumValues:
 
 class TestCalloutShapeSetter:
     def test_set_shape_with_enum(self):
-        from camtasia.timeline.clips.callout import Callout
-        from camtasia.types import CalloutShape
         data = {'_type': 'Callout', 'id': 1, 'start': 0, 'duration': 100, 'def': {'shape': 'rectangle'}}
         c = Callout(data)
         c.shape = CalloutShape.SHAPE_ELLIPSE
         assert data['def']['shape'] == 'shape-ellipse'
 
     def test_set_shape_with_string(self):
-        from camtasia.timeline.clips.callout import Callout
         data = {'_type': 'Callout', 'id': 1, 'start': 0, 'duration': 100, 'def': {'shape': 'rectangle'}}
         c = Callout(data)
         c.shape = 'triangle'

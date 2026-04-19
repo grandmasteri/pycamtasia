@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 from fractions import Fraction
+from pathlib import Path
 
 import pytest
 
@@ -62,7 +63,6 @@ class TestProjectLevel:
 class TestMediaBin:
     @pytest.fixture
     def media_bin(self, test_project_a_data):
-        from pathlib import Path
         return MediaBin(test_project_a_data['sourceBin'], Path('.'))
 
     def test_media_items(self, media_bin):

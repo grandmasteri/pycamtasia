@@ -7,8 +7,11 @@ Run with: pytest -m integration
 """
 from __future__ import annotations
 
+import struct
 import subprocess
 import time
+import uuid
+import zlib
 from pathlib import Path
 
 import pytest
@@ -35,7 +38,6 @@ def _validate_in_camtasia(project_path: str, timeout: int = 15) -> int:
     lock = Path(project_path) / '~project.tscproj'
     lock.unlink(missing_ok=True)
 
-    import uuid
     log = Path(f'/tmp/cam_test_{uuid.uuid4().hex[:8]}.log')
     with log.open('w') as log_fh:
         proc = subprocess.Popen(
@@ -57,7 +59,6 @@ def _validate_in_camtasia(project_path: str, timeout: int = 15) -> int:
 
 def _create_test_image(tmp_path: Path) -> Path:
     """Create a minimal 1x1 white PNG."""
-    import struct, zlib
     def _chunk(chunk_type, data):
         c = chunk_type + data
         return struct.pack('>I', len(data)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)

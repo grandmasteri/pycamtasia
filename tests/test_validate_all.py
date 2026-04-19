@@ -1,6 +1,7 @@
 """Tests for validate_all() and the supporting private checks."""
 from __future__ import annotations
 
+from camtasia import validate_all as va
 from camtasia.validation import (
     ValidationIssue,
     validate_all,
@@ -115,5 +116,4 @@ class TestValidateAll:
         assert all(isinstance(i, ValidationIssue) for i in issues)
 
     def test_importable_from_package(self):
-        from camtasia import validate_all as va
         assert callable(va)
