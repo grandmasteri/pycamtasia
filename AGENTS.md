@@ -1,5 +1,19 @@
 # AGENTS.md — pycamtasia
 
+## Meta: Keeping AGENTS.md Current
+
+This file is the single source of truth for how to develop this library. When the user states a preference, convention, or decision during conversation, it MUST be encoded here immediately — not just followed in the moment. Any agent reading this file should have the complete, up-to-date understanding of how to work on this codebase without needing conversation history.
+
+## Guiding Principle: Follow Top Python Libraries
+
+When making decisions about project structure, testing patterns, API design, tooling, or conventions, follow the best practices established by top professional Python libraries (pydantic, rich, httpx, fastapi, pandas). Don't invent novel patterns — use what the ecosystem has proven works. When in doubt, check how these libraries handle the same situation.
+
+Concrete implications:
+- Use pytest (the universal standard)
+- Flat `tests/` directory with one file per module/feature (appropriate for our size)
+- Test file naming mirrors source modules, not meta-reasons (`test_track.py`, not `test_coverage_gaps.py`)
+- Follow PEP 8, use type hints, use `pyproject.toml` for tool config where possible
+
 ## Project Overview
 
 pycamtasia is a Python library for reading, writing, and manipulating TechSmith Camtasia project files (`.cmproj`/`.tscproj`). It wraps the underlying JSON format with typed Python classes, enabling programmatic video assembly without the Camtasia GUI.
