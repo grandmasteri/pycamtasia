@@ -73,7 +73,7 @@ class TestRemoveOrphanedMedia:
                               'bitDepth': 0, 'numChannels': 0}],
         })
         count = project.remove_orphaned_media()
-        assert count >= 1
+        assert count == 1
         remaining_ids = [e['id'] for e in project._data['sourceBin']]
         assert 9999 not in remaining_ids
 
@@ -123,8 +123,8 @@ class TestCleanInheritedState:
 
     def test_clears_clips_and_markers(self, project):
         self._add_clip_and_marker(project)
-        assert project.clip_count > 0
-        assert len(project.timeline.markers) > 0
+        assert project.clip_count == 1
+        assert len(project.timeline.markers) == 1
 
         project.clean_inherited_state()
 

@@ -5,6 +5,7 @@ import pytest
 
 from camtasia.timeline.track import Track
 from fractions import Fraction
+from camtasia.timeline.clips.group import Group
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 
 
@@ -127,7 +128,6 @@ def test_set_internal_segment_speeds_clears_transitions():
             ]},
         ],
     }
-    from camtasia.timeline.clips.group import Group
     group = Group(clip_data)
     group.set_internal_segment_speeds([(0, 50, 50.0), (50, 100, 50.0)])
     media_track = clip_data['tracks'][1]

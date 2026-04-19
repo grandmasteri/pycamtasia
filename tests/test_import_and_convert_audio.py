@@ -1,6 +1,7 @@
 """Tests for Project.import_and_convert_audio and convert_audio_to_wav."""
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -24,7 +25,6 @@ class TestImportAndConvertAudio:
 
     def test_converts_non_pcm_audio(self, project):
         """Non-PCM audio (e.g. MP3) should be converted then imported."""
-        # ffprobe returns mp3 codec
         mock_probe = MagicMock(stdout='mp3\n', returncode=0)
         wav_path = Path('/tmp/voice.wav')
         with patch('subprocess.run', return_value=mock_probe), \
@@ -50,7 +50,6 @@ class TestImportAndConvertAudio:
 
     def test_converts_when_ffprobe_fails(self, project):
         """When ffprobe returns non-zero, should convert anyway."""
-        import subprocess
         with patch('subprocess.run', side_effect=subprocess.CalledProcessError(1, 'ffprobe')), \
              patch.object(project, 'convert_audio_to_wav', return_value=Path('/tmp/x.wav')) as mock_convert, \
              patch.object(project, 'import_media', return_value='imported'):

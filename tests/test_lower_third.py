@@ -1,8 +1,11 @@
 """Tests for the Right Angle Lower Third title template."""
 from __future__ import annotations
 
+import copy
 from typing import Any
+from unittest.mock import patch
 
+from camtasia.templates import lower_third
 from camtasia.timing import seconds_to_ticks
 from camtasia.timeline.track import Track
 from camtasia.timeline.clips.group import Group
@@ -185,9 +188,6 @@ class TestLowerThirdScaleOverrideWithDictParam:
     """Cover track.py line 862: scale override when existing param is a dict."""
 
     def test_scale_updates_existing_dict_param(self):
-        import copy
-        from unittest.mock import patch
-        from camtasia.templates import lower_third
         original = lower_third.LOWER_THIRD_TEMPLATE
         patched = copy.deepcopy(original)
         patched['parameters']['scale0'] = {'type': 'double', 'defaultValue': 1.0, 'interp': 'eioe'}

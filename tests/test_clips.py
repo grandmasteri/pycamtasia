@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import copy
+import math
 import warnings
 from fractions import Fraction
+from pathlib import Path
+from typing import Any
+from unittest.mock import PropertyMock, patch
 
 import pytest
 
+from camtasia.operations.speed import _adjust_scalar, rescale_project
+from camtasia.project import Project
 from camtasia.timeline.clips import (
     EDIT_RATE,
     AMFile,
@@ -19,6 +26,11 @@ from camtasia.timeline.clips import (
     VMFile,
     clip_from_dict,
 )
+from camtasia.timeline.clips.placeholder import PlaceholderMedia
+from camtasia.timeline.clips.unified import UnifiedMedia
+from camtasia.timeline.track import Track
+from camtasia.timing import seconds_to_ticks
+from camtasia.types import CalloutShape, ClipType, EffectName
 
 
 # ------------------------------------------------------------------
@@ -637,7 +649,6 @@ class TestCalloutSetSizeDictBranch:
 
 @pytest.fixture
 def um():
-    from camtasia.timeline.clips.unified import UnifiedMedia
     return UnifiedMedia({
         '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
         'video': {'_type': 'VMFile', 'id': 2, 'src': 1, 'start': 0, 'duration': 100,
@@ -685,9 +696,6 @@ def test_um_set_source_raises(um):
 # ------------------------------------------------------------------
 # Clip coverage: unified, group, callout, speed, placeholder, stitched
 # ------------------------------------------------------------------
-
-from camtasia.timing import seconds_to_ticks
-from camtasia.timeline.track import Track
 
 _S1 = seconds_to_ticks(1.0)
 _S5 = seconds_to_ticks(5.0)
@@ -755,43 +763,36 @@ def _cov_callout_data(**overrides):
 
 class TestUnifiedMediaEffectBlocking:
     def test_add_effect(self):
-        from camtasia.timeline.clips.unified import UnifiedMedia
         um = UnifiedMedia(_um_data())
         with pytest.raises(TypeError):
             um.add_effect({})
 
     def test_add_drop_shadow(self):
-        from camtasia.timeline.clips.unified import UnifiedMedia
         um = UnifiedMedia(_um_data())
         with pytest.raises(TypeError):
             um.add_drop_shadow()
 
     def test_add_round_corners(self):
-        from camtasia.timeline.clips.unified import UnifiedMedia
         um = UnifiedMedia(_um_data())
         with pytest.raises(TypeError):
             um.add_round_corners()
 
     def test_add_glow(self):
-        from camtasia.timeline.clips.unified import UnifiedMedia
         um = UnifiedMedia(_um_data())
         with pytest.raises(TypeError):
             um.add_glow()
 
     def test_add_glow_timed(self):
-        from camtasia.timeline.clips.unified import UnifiedMedia
         um = UnifiedMedia(_um_data())
         with pytest.raises(TypeError):
             um.add_glow_timed()
 
     def test_copy_effects_from(self):
-        from camtasia.timeline.clips.unified import UnifiedMedia
         um = UnifiedMedia(_um_data())
         with pytest.raises(TypeError):
             um.copy_effects_from(um)
 
     def test_set_source(self):
-        from camtasia.timeline.clips.unified import UnifiedMedia
         um = UnifiedMedia(_um_data())
         with pytest.raises(TypeError):
             um.set_source(1)
@@ -813,7 +814,6 @@ class TestGroupSyncInternalDurations:
         assert inner['mediaDuration'] == expected_md
 
     def test_sync_propagates_to_unified(self):
-        import copy
         inner = copy.deepcopy(_um_data())
         inner['duration'] = _S10 * 3
         inner['mediaDuration'] = _S10 * 3
@@ -825,20 +825,18 @@ class TestGroupSyncInternalDurations:
 
 class TestGroupUngroup:
     def test_ungroup_adjusts_start_and_propagates(self):
-        import copy
         inner_um = copy.deepcopy(_um_data())
         inner_um['start'] = 0
         data = _cov_group_data([inner_um])
         data['start'] = _S5
         g = Group(data)
         clips = g.ungroup()
-        assert len(clips) >= 1
+        assert len(clips) == 1
         assert clips[0].start == _S5
 
 
 class TestGroupSetInternalSegmentSpeedsCanvasWidthOnly:
     def test_canvas_width_only(self):
-        import copy
         inner = copy.deepcopy(_um_data())
         data = _cov_group_data([inner], duration=_S10)
         g = Group(data)
@@ -850,7 +848,6 @@ class TestGroupSetInternalSegmentSpeedsCanvasWidthOnly:
         assert clip['parameters']['scale0']['defaultValue'] == 1.0
 
     def test_canvas_height_only(self):
-        import copy
         inner = copy.deepcopy(_um_data())
         data = _cov_group_data([inner], duration=_S10)
         g = Group(data)
@@ -862,7 +859,6 @@ class TestGroupSetInternalSegmentSpeedsCanvasWidthOnly:
         assert clip['parameters']['scale1']['defaultValue'] == 1.0
 
     def test_source_bin_lookup_miss(self):
-        import copy
         inner = copy.deepcopy(_um_data())
         data = _cov_group_data([inner], duration=_S10)
         g = Group(data)
@@ -947,13 +943,11 @@ class TestCalloutDefinitionProperty:
 
 class TestAdjustScalar:
     def test_adjust_scalar_modifies_clip(self):
-        from camtasia.operations.speed import _adjust_scalar
         clip = {'scalar': '1/2', 'metadata': {}}
         _adjust_scalar(clip, Fraction(2))
         assert Fraction(clip['scalar']) == Fraction(1)
 
     def test_adjust_scalar_unity(self):
-        from camtasia.operations.speed import _adjust_scalar
         clip = {'scalar': 1}
         _adjust_scalar(clip, Fraction(3, 2))
         assert Fraction(clip['scalar']) == Fraction(3, 2)
@@ -961,7 +955,7 @@ class TestAdjustScalar:
 
 class TestMarkSpeedChangedExclusions:
     def test_imfile_excluded(self):
-        from camtasia.operations.speed import rescale_project
+
         data = {
             'timeline': {
                 'sceneTrack': {'scenes': [{'csml': {'tracks': [{
@@ -981,7 +975,7 @@ class TestMarkSpeedChangedExclusions:
         assert clip.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is not True
 
     def test_callout_excluded(self):
-        from camtasia.operations.speed import rescale_project
+
         data = {
             'timeline': {
                 'sceneTrack': {'scenes': [{'csml': {'tracks': [{
@@ -1002,7 +996,7 @@ class TestMarkSpeedChangedExclusions:
         assert clip.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is not True
 
     def test_mark_speed_recurses_into_unified_children(self):
-        from camtasia.operations.speed import rescale_project
+
         um = _um_data()
         um['metadata'] = {}
         um['video']['metadata'] = {}
@@ -1020,7 +1014,7 @@ class TestMarkSpeedChangedExclusions:
         assert vid.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
 
     def test_mark_speed_recurses_into_group_tracks(self):
-        from camtasia.operations.speed import rescale_project
+
         inner_vm = {
             '_type': 'VMFile', 'id': 10, 'src': 1,
             'start': 0, 'duration': _S5, 'mediaDuration': _S5,
@@ -1042,7 +1036,7 @@ class TestMarkSpeedChangedExclusions:
         assert inner.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
 
     def test_mark_speed_recurses_into_stitched_medias(self):
-        from camtasia.operations.speed import rescale_project
+
         stitched = {
             '_type': 'StitchedMedia', 'id': 20, 'start': 0, 'duration': _S5,
             'mediaDuration': _S5, 'mediaStart': 0, 'scalar': 1,
@@ -1069,8 +1063,6 @@ class TestMarkSpeedChangedExclusions:
 
 class TestOverlapFixWithUnified:
     def test_overlap_fix_propagates_to_unified(self):
-        import copy
-        from camtasia.operations.speed import rescale_project
         um1 = _um_data()
         um1['id'] = 1
         um1['start'] = 0
@@ -1098,7 +1090,6 @@ class TestOverlapFixWithUnified:
 
 class TestPlaceholderSetSource:
     def test_set_source_raises(self):
-        from camtasia.timeline.clips.placeholder import PlaceholderMedia
         p = PlaceholderMedia({
             '_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': _S5,
             'mediaDuration': 1, 'mediaStart': 0, 'scalar': 1,
@@ -1165,7 +1156,6 @@ class TestCalloutDimensionSettersWithDictValues:
 
 class TestUnifiedMediaDuplicateEffectsTo:
     def test_duplicate_effects_to_raises(self):
-        from camtasia.timeline.clips.unified import UnifiedMedia
         um = UnifiedMedia(_um_data())
         with pytest.raises(TypeError, match='Cannot duplicate effects from UnifiedMedia'):
             um.duplicate_effects_to(um)
@@ -1189,7 +1179,6 @@ def _make_track(medias=None, name='T'):
 # ---------------------------------------------------------------------------
 
 def test_clip_describe():
-    from camtasia.timeline.clips import clip_from_dict
     data = {
         'id': 42,
         '_type': 'VMFile',
@@ -1230,7 +1219,6 @@ def test_clip_describe():
     ('IMFile', 'is_callout', False),
 ])
 def test_clip_type_properties(type_str, prop, expected):
-    from camtasia.timeline.clips import clip_from_dict
     data = {'_type': type_str, 'id': 1, 'start': 0, 'duration': 100,
             'mediaSource': {}, 'parameters': {}, 'effects': [],
             'metadata': {}, 'animationTracks': {}}
@@ -1245,8 +1233,6 @@ def test_clip_type_properties(type_str, prop, expected):
 # ---------------------------------------------------------------------------
 
 def test_end_seconds():
-    from camtasia.timing import EDIT_RATE
-    from camtasia.timeline.clips.base import BaseClip
     start = EDIT_RATE * 2   # 2 seconds
     dur = EDIT_RATE * 3     # 3 seconds
     clip = BaseClip({'_type': 'AMFile', 'id': 1, 'start': start,
@@ -1261,8 +1247,6 @@ def test_end_seconds():
 # ---------------------------------------------------------------------------
 
 def test_time_range():
-    from camtasia.timeline.clips import clip_from_dict
-    from camtasia.timing import seconds_to_ticks
     data = {
         '_type': 'AMFile', 'id': 1,
         'start': seconds_to_ticks(2.0),
@@ -1282,7 +1266,6 @@ def test_time_range():
 # ---------------------------------------------------------------------------
 
 def test_clip_to_dict():
-    from camtasia.timeline.clips.base import BaseClip
     start = seconds_to_ticks(1.0)
     dur = seconds_to_ticks(2.0)
     clip = BaseClip({
@@ -1312,7 +1295,6 @@ def test_clip_to_dict():
 # ---------------------------------------------------------------------------
 
 def test_clip_is_at():
-    from camtasia.timeline.clips.base import BaseClip
     start = seconds_to_ticks(2.0)
     dur = seconds_to_ticks(3.0)
     clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': start, 'duration': dur})
@@ -1330,7 +1312,6 @@ def test_clip_is_at():
 # ---------------------------------------------------------------------------
 
 def test_stitched_min_media_start():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': 100,
                            'mediaStart': 0, 'mediaDuration': 100, 'minMediaStart': 42})
     assert clip.min_media_start == 42
@@ -1347,7 +1328,6 @@ def test_stitched_min_media_start():
 # ---------------------------------------------------------------------------
 
 def test_placeholder_subtitle():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100,
                            'metadata': {'placeHolderSubTitle': 'hello'}})
     assert clip.subtitle == 'hello'
@@ -1365,7 +1345,6 @@ def test_placeholder_subtitle():
 # ---------------------------------------------------------------------------
 
 def test_placeholder_width_height():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100,
                            'attributes': {'width': 1920.0, 'height': 1080.0}})
     assert clip.width == 1920.0
@@ -1383,7 +1362,6 @@ def test_placeholder_width_height():
 # ---------------------------------------------------------------------------
 
 def test_is_stitched():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': 100,
                            'mediaStart': 0, 'mediaDuration': 100})
     assert clip.is_stitched is True
@@ -1391,7 +1369,6 @@ def test_is_stitched():
 
 
 def test_is_placeholder():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100})
     assert clip.is_placeholder is True
     assert clip.is_stitched is False
@@ -1404,7 +1381,6 @@ def test_is_placeholder():
 # ---------------------------------------------------------------------------
 
 def test_clip_opacity_get_set():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 100})
     assert clip.opacity == 1.0  # default
     clip.opacity = 0.5
@@ -1416,7 +1392,6 @@ def test_clip_opacity_get_set():
 
 
 def test_clip_opacity_validation():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 100})
     with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
         clip.opacity = 1.5
@@ -1431,7 +1406,6 @@ def test_clip_opacity_validation():
 # ---------------------------------------------------------------------------
 
 def test_clip_volume_get_set():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100})
     assert clip.volume == 1.0  # default
     clip.volume = 2.0
@@ -1443,7 +1417,6 @@ def test_clip_volume_get_set():
 
 
 def test_clip_volume_validation():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100})
     with pytest.raises(ValueError, match='volume must be >= 0.0'):
         clip.volume = -0.5
@@ -1456,9 +1429,6 @@ def test_clip_volume_validation():
 # ---------------------------------------------------------------------------
 
 def test_set_canvas_size():
-    from camtasia.project import Project
-    from pathlib import Path
-    from unittest.mock import patch
     proj = Project.__new__(Project)
     proj._data = {
         'sourceBin': [],
@@ -1482,8 +1452,6 @@ def test_set_canvas_size():
 # ---------------------------------------------------------------------------
 
 def test_set_opacity_fade():
-    from camtasia.timeline.clips import clip_from_dict
-    from camtasia.timing import seconds_to_ticks
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 9000})
     result = clip.set_opacity_fade(1.0, 0.0, 3.0)
     assert result is clip  # returns self
@@ -1504,7 +1472,6 @@ def test_set_opacity_fade():
 # ---------------------------------------------------------------------------
 
 def test_set_volume_fade():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 9000})
     result = clip.set_volume_fade(1.0, 0.0, 3.0)
     assert result is clip
@@ -1571,7 +1538,6 @@ def test_set_scale_keyframes():
 # ---------------------------------------------------------------------------
 
 def test_set_rotation_keyframes():
-    import math
     t = seconds_to_ticks
     media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
     track = _make_track(medias=[media])
@@ -1625,7 +1591,6 @@ def test_set_crop_keyframes():
 # ---------------------------------------------------------------------------
 
 def test_animate_fade_in():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0), 'mediaDuration': seconds_to_ticks(10.0)})
     result = clip.animate(fade_in=2.0)
     assert result is clip
@@ -1635,7 +1600,6 @@ def test_animate_fade_in():
 
 
 def test_animate_scale():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
     clip.animate(scale_from=0.5, scale_to=1.5)
     params = clip._data['parameters']
@@ -1645,7 +1609,6 @@ def test_animate_scale():
 
 
 def test_animate_move():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
     clip.animate(move_from=(0, 0), move_to=(100, 200))
     params = clip._data['parameters']
@@ -1656,13 +1619,12 @@ def test_animate_move():
 
 
 def test_animate_combined():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
     clip.animate(fade_in=1.0, scale_from=0.0, scale_to=1.0, move_from=(0, 0), move_to=(50, 50))
     params = clip._data['parameters']
     # fade
     assert params['opacity']['keyframes'][0]['value'] == 1.0  # fade-in target (defaultValue is 0.0)
-    assert len(params["opacity"]["keyframes"]) >= 1
+    assert len(params["opacity"]["keyframes"]) == 1
     # scale
     assert params['scale0']['keyframes'][0]['value'] == 0.0
     assert params['scale0']['keyframes'][1]['value'] == 1.0
@@ -1672,7 +1634,6 @@ def test_animate_combined():
 
 
 def test_animate_chaining():
-    from camtasia.timeline.clips import clip_from_dict
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
     result = clip.animate(fade_in=1.0).animate(scale_from=1.0, scale_to=2.0)
     assert result is clip
@@ -1682,8 +1643,6 @@ def test_animate_chaining():
 
 
 def test_animate_fade_out():
-    from camtasia.timeline.clips import clip_from_dict
-    from camtasia.timing import seconds_to_ticks
     data = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(5.0), 'mediaDuration': seconds_to_ticks(5.0), 'parameters': {}}
     clip = clip_from_dict(data)
     clip.animate(fade_out=1.0)
@@ -1763,7 +1722,6 @@ def test_visible_clips():
 
 
 def test_new_callout_shapes():
-    from camtasia.types import CalloutShape
     assert CalloutShape.SHAPE_ELLIPSE.value == 'shape-ellipse'
     assert CalloutShape.SHAPE_TRIANGLE.value == 'shape-triangle'
     assert CalloutShape.TEXT.value == 'text'
@@ -1809,7 +1767,6 @@ def test_clip_at_index_out_of_range():
 # ---------------------------------------------------------------------------
 
 def test_source_id_replaces_source_path():
-    from camtasia.timeline.clips import clip_from_dict
     clip_with_src = clip_from_dict({
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'src': '/media/video.mp4',
@@ -1829,8 +1786,6 @@ def test_source_id_replaces_source_path():
 # ---------------------------------------------------------------------------
 
 def test_media_start_seconds():
-    from camtasia.timeline.clips import clip_from_dict
-    from camtasia.timing import EDIT_RATE
     media_start_ticks: int = EDIT_RATE * 5  # exactly 5 seconds
     clip = clip_from_dict({
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
@@ -1885,7 +1840,6 @@ def test_clip_after_none():
 
 def test_overlaps_with_true():
     """overlaps_with returns True for overlapping clips."""
-    from camtasia.timeline.clips import BaseClip
     clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3)})
     clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(2), 'duration': seconds_to_ticks(2)})
     assert clip_a.overlaps_with(clip_b) is True
@@ -1893,7 +1847,6 @@ def test_overlaps_with_true():
 
 def test_overlaps_with_false():
     """overlaps_with returns False for non-overlapping clips."""
-    from camtasia.timeline.clips import BaseClip
     clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2)})
     clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(3), 'duration': seconds_to_ticks(1)})
     assert clip_a.overlaps_with(clip_b) is False
@@ -1901,7 +1854,6 @@ def test_overlaps_with_false():
 
 def test_distance_to_gap():
     """distance_to returns positive seconds for a gap between clips."""
-    from camtasia.timeline.clips import BaseClip
     clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2)})
     clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(5), 'duration': seconds_to_ticks(1)})
     assert clip_a.distance_to(clip_b) == pytest.approx(3.0)
@@ -1909,7 +1861,6 @@ def test_distance_to_gap():
 
 def test_distance_to_overlap():
     """distance_to returns negative seconds for overlapping clips."""
-    from camtasia.timeline.clips import BaseClip
     clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3)})
     clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(2), 'duration': seconds_to_ticks(2)})
     assert clip_a.distance_to(clip_b) == pytest.approx(-1.0)
@@ -1923,9 +1874,6 @@ def test_distance_to_overlap():
 
 def test_duration_formatted():
     """duration_formatted returns MM:SS string."""
-    from unittest.mock import PropertyMock, patch
-    from camtasia.project import Project
-
     with patch.object(Project, 'duration_seconds', new_callable=PropertyMock, return_value=125.7):
         proj = object.__new__(Project)
         assert proj.duration_formatted == '2:05'
@@ -2032,7 +1980,6 @@ def test_is_at_origin():
 # ---------------------------------------------------------------------------
 
 def test_copy_timing_from():
-    from camtasia.timeline.clips.base import BaseClip
     source = BaseClip({'id': 1, '_type': 'VMFile', 'start': 1000, 'duration': 5000})
     target = BaseClip({'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 100})
     result = target.copy_timing_from(source)
@@ -2048,8 +1995,6 @@ def test_copy_timing_from():
 # ---------------------------------------------------------------------------
 
 def test_matches_type():
-    from camtasia.timeline.clips.base import BaseClip
-    from camtasia.types import ClipType
     clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100})
     assert clip.matches_type('VMFile') is True
     assert clip.matches_type(ClipType.VIDEO) is True
@@ -2064,8 +2009,6 @@ def test_matches_type():
 # ---------------------------------------------------------------------------
 
 def test_snap_to_seconds():
-    from camtasia.timeline.clips.base import BaseClip
-    from camtasia.timing import seconds_to_ticks
     clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2.0)})
     result = clip.snap_to_seconds(5.0)
     assert clip.start == seconds_to_ticks(5.0)
@@ -2079,8 +2022,6 @@ def test_snap_to_seconds():
 # ---------------------------------------------------------------------------
 
 def test_is_longer_than():
-    from camtasia.timeline.clips.base import BaseClip
-    from camtasia.timing import seconds_to_ticks
     clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3.0)})
     assert clip.is_longer_than(2.0) is True
     assert clip.is_longer_than(3.0) is False
@@ -2094,7 +2035,6 @@ def test_is_longer_than():
 # ---------------------------------------------------------------------------
 
 def test_is_shorter_than():
-    from camtasia.timeline.clips.base import BaseClip
     clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2.0)})
     assert clip.is_shorter_than(3.0) is True
     assert clip.is_shorter_than(2.0) is False
@@ -2108,7 +2048,6 @@ def test_is_shorter_than():
 # ---------------------------------------------------------------------------
 
 def test_set_source():
-    from camtasia.timeline.clips.base import BaseClip
     clip = BaseClip({'id': 1, 'src': 10, '_type': 'AMFile', 'start': 0, 'duration': 100})
     result = clip.set_source(42)
     assert clip.source_id == 42
@@ -2122,7 +2061,6 @@ def test_set_source():
 # ---------------------------------------------------------------------------
 
 def test_set_get_metadata():
-    from camtasia.timeline.clips.base import BaseClip
     clip = BaseClip({'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100})
     # get_metadata returns default when key missing
     assert clip.get_metadata('author') is None
@@ -2197,7 +2135,6 @@ def test_muted_clips():
 
 def test_set_start_seconds_updates_data():
     """set_start_seconds writes the correct tick value to _data['start']."""
-    from camtasia.timeline.clips.base import BaseClip
     clip_data: dict[str, Any] = {'id': 1, 'start': 0, 'duration': 100, 'type': 'VMFile', 'parameters': {}, 'effects': [], 'attributes': {'ident': ''}}
     clip: BaseClip = BaseClip(clip_data)
     result = clip.set_start_seconds(2.0)
@@ -2213,7 +2150,6 @@ def test_set_start_seconds_updates_data():
 
 def test_set_duration_seconds_updates_data():
     """set_duration_seconds writes the correct tick value to _data['duration']."""
-    from camtasia.timeline.clips.base import BaseClip
     clip_data: dict[str, Any] = {'id': 1, 'start': 0, 'duration': 100, 'type': 'VMFile', 'parameters': {}, 'effects': [], 'attributes': {'ident': ''}}
     clip: BaseClip = BaseClip(clip_data)
     result = clip.set_duration_seconds(5.0)
@@ -2233,7 +2169,6 @@ def test_is_effect_applied_true():
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'effects': [{'effectName': 'DropShadow'}],
     }
-    from camtasia.timeline.clips.base import BaseClip
     clip = BaseClip(clip_data)
     assert clip.is_effect_applied('DropShadow') is True
 
@@ -2244,7 +2179,6 @@ def test_is_effect_applied_false():
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'effects': [{'effectName': 'Glow'}],
     }
-    from camtasia.timeline.clips.base import BaseClip
     clip = BaseClip(clip_data)
     assert clip.is_effect_applied('DropShadow') is False
 
@@ -2252,19 +2186,16 @@ def test_is_effect_applied_false():
 def test_is_effect_applied_no_effects():
     """is_effect_applied returns False when clip has no effects list."""
     clip_data: dict = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
-    from camtasia.timeline.clips.base import BaseClip
     clip = BaseClip(clip_data)
     assert clip.is_effect_applied('DropShadow') is False
 
 
 def test_is_effect_applied_with_enum():
     """is_effect_applied works with EffectName enum values."""
-    from camtasia.types import EffectName
     clip_data: dict = {
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'effects': [{'effectName': 'DropShadow'}],
     }
-    from camtasia.timeline.clips.base import BaseClip
     clip = BaseClip(clip_data)
     assert clip.is_effect_applied(EffectName.DROP_SHADOW) is True
 
@@ -2281,7 +2212,6 @@ def test_clear_metadata_removes_all():
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'metadata': {'presetName': 'Intro', 'author': 'Test'},
     }
-    from camtasia.timeline.clips.base import BaseClip
     clip = BaseClip(clip_data)
     result = clip.clear_metadata()
     assert clip.metadata == {}
@@ -2294,7 +2224,6 @@ def test_clear_metadata_returns_self():
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'metadata': {'key': 'value'},
     }
-    from camtasia.timeline.clips.base import BaseClip
     clip = BaseClip(clip_data)
     returned: BaseClip = clip.clear_metadata()
     assert returned is clip
@@ -2303,7 +2232,6 @@ def test_clear_metadata_returns_self():
 def test_clear_metadata_on_empty():
     """clear_metadata works when metadata is already empty or absent."""
     clip_data: dict = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
-    from camtasia.timeline.clips.base import BaseClip
     clip = BaseClip(clip_data)
     clip.clear_metadata()
     assert clip_data['metadata'] == {}
@@ -2315,7 +2243,6 @@ def test_clear_metadata_on_empty():
 
 class TestIsSilentUnifiedMedia:
     def test_unified_media_silent_when_gain_zero(self):
-        from camtasia.timeline.clips.base import BaseClip
         clip = BaseClip({
             '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
             'audio': {'attributes': {'gain': 0.0}},
@@ -2323,7 +2250,6 @@ class TestIsSilentUnifiedMedia:
         assert clip.is_silent is True
 
     def test_unified_media_not_silent_when_gain_nonzero(self):
-        from camtasia.timeline.clips.base import BaseClip
         clip = BaseClip({
             '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
             'audio': {'attributes': {'gain': 0.8}},
@@ -2400,7 +2326,7 @@ class TestClipPredicates:
         clip = AMFile(_amfile_dict())
         called = []
         clip.apply_if(lambda c: False, lambda c: called.append(c))
-        assert len(called) == 0
+        assert called == []
 
 
 class TestRemoveEffectByName:

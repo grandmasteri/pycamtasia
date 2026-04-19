@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
 
+import camtasia.media_bin.media_bin as mb_mod
 from camtasia.media_bin import Media, MediaBin, MediaType
+from camtasia.media_bin.media_bin import _get_media_type, _parse_with_pymediainfo
 
 
 def _make_media_entry(
@@ -179,16 +182,12 @@ class TestMediaTypeEnum:
         assert member.value == expected_value
 
 
-# ── Merged from test_edge_case_coverage.py ───────────────────────────
-
 
 class TestMediaTypeEmptySourceTracks:
     def test_type_returns_none_for_empty_source_tracks(self, project):
         media = Media({'id': 1, 'src': './test.mp4', 'rect': [0, 0, 100, 100], 'sourceTracks': []})
         assert media.type is None
 
-
-# ── Merged from test_completeness.py ─────────────────────────────────
 
 
 class TestMediaSourceTracks:
@@ -227,8 +226,6 @@ class TestMediaSourceTracks:
         assert actual_rate is None
 
 
-# ── Media.range with no sourceTracks ─────────────────────────────────
-
 
 class TestMediaRangeNoSourceTracks:
     def test_range_returns_zeros_when_no_source_tracks(self):
@@ -243,8 +240,6 @@ class TestMediaRangeNoSourceTracks:
         assert media.range == (100, 5000)
 
 
-# ── Media.last_modification ──────────────────────────────────────────
-
 
 class TestMediaLastModification:
     def test_last_modification_parses_timestamp(self):
@@ -256,8 +251,6 @@ class TestMediaLastModification:
         assert ts.day == 6
 
 
-# ── import_media FileNotFoundError ───────────────────────────────────
-
 
 class TestImportMediaFileNotFound:
     def test_raises_file_not_found(self, project):
@@ -267,15 +260,12 @@ class TestImportMediaFileNotFound:
             )
 
 
-# ── import_media ValueError when pymediainfo unavailable ─────────────
-
 
 class TestImportMediaNoMediaType:
     def test_raises_value_error_without_media_type(self, project, tmp_path, monkeypatch):
         media_file = tmp_path / "clip.mov"
         media_file.write_bytes(b"\x00")
         # Force _parse_with_pymediainfo to return None
-        import camtasia.media_bin.media_bin as mb_mod
         monkeypatch.setattr(mb_mod, '_parse_with_pymediainfo', lambda fp: None)
         with pytest.raises(ValueError, match="Cannot determine media type"):
             project.media_bin.import_media(media_file, validate_format=False)
@@ -283,7 +273,6 @@ class TestImportMediaNoMediaType:
     def test_sample_rate_string_converted(self, project, tmp_path, monkeypatch):
         media_file = tmp_path / "clip.mov"
         media_file.write_bytes(b"\x00")
-        import camtasia.media_bin.media_bin as mb_mod
         monkeypatch.setattr(mb_mod, '_parse_with_pymediainfo', lambda fp: {
             'track_type': 'Audio',
             'width': None, 'height': None,
@@ -299,7 +288,6 @@ class TestImportMediaNoMediaType:
     def test_sample_rate_invalid_string_becomes_none(self, project, tmp_path, monkeypatch):
         media_file = tmp_path / "clip.mov"
         media_file.write_bytes(b"\x00")
-        import camtasia.media_bin.media_bin as mb_mod
         monkeypatch.setattr(mb_mod, '_parse_with_pymediainfo', lambda fp: {
             'track_type': 'Audio',
             'width': None, 'height': None,
@@ -313,14 +301,11 @@ class TestImportMediaNoMediaType:
         assert media is not None
 
 
-# ── import_media num_channels parsing ────────────────────────────────
-
 
 class TestImportMediaNumChannels:
     def test_num_channels_parsed_from_track(self, project, tmp_path, monkeypatch):
         media_file = tmp_path / "clip.mov"
         media_file.write_bytes(b"\x00")
-        import camtasia.media_bin.media_bin as mb_mod
         monkeypatch.setattr(mb_mod, '_parse_with_pymediainfo', lambda fp: {
             'track_type': 'Video',
             'width': 1920, 'height': 1080,
@@ -333,12 +318,9 @@ class TestImportMediaNumChannels:
         assert media is not None
 
 
-# ── _parse_with_pymediainfo ──────────────────────────────────────────
-
 
 class TestParseWithPymediainfo:
     def test_returns_track_data(self, monkeypatch):
-        from camtasia.media_bin.media_bin import _parse_with_pymediainfo
 
         class FakeTrack:
             def to_data(self):
@@ -356,7 +338,6 @@ class TestParseWithPymediainfo:
             def parse(path):
                 return FakeInfo()
 
-        import sys
         fake_mod = type(sys)('pymediainfo')
         fake_mod.MediaInfo = FakeMediaInfo
         monkeypatch.setitem(sys.modules, 'pymediainfo', fake_mod)
@@ -365,14 +346,12 @@ class TestParseWithPymediainfo:
         assert result == {'width': 1920, 'height': 1080}
 
     def test_returns_none_on_parse_error(self, monkeypatch):
-        from camtasia.media_bin.media_bin import _parse_with_pymediainfo
 
         class FakeMediaInfo:
             @staticmethod
             def parse(path):
                 raise RuntimeError('parse failed')
 
-        import sys
         fake_mod = type(sys)('pymediainfo')
         fake_mod.MediaInfo = FakeMediaInfo
         monkeypatch.setitem(sys.modules, 'pymediainfo', fake_mod)
@@ -381,7 +360,6 @@ class TestParseWithPymediainfo:
         assert result is None
 
     def test_returns_none_when_too_few_tracks(self, monkeypatch):
-        from camtasia.media_bin.media_bin import _parse_with_pymediainfo
 
         class FakeInfo:
             tracks = [type('T', (), {'to_data': lambda self: {}})()]
@@ -391,7 +369,6 @@ class TestParseWithPymediainfo:
             def parse(path):
                 return FakeInfo()
 
-        import sys
         fake_mod = type(sys)('pymediainfo')
         fake_mod.MediaInfo = FakeMediaInfo
         monkeypatch.setitem(sys.modules, 'pymediainfo', fake_mod)
@@ -400,8 +377,6 @@ class TestParseWithPymediainfo:
         assert result is None
 
     def test_returns_none_when_import_fails(self, monkeypatch):
-        import camtasia.media_bin.media_bin as mb_mod
-        import sys
 
         # Remove pymediainfo from sys.modules so the import inside the function is re-attempted
         monkeypatch.delitem(sys.modules, 'pymediainfo', raising=False)
@@ -414,3 +389,21 @@ class TestParseWithPymediainfo:
 
         result = mb_mod._parse_with_pymediainfo(Path('/fake/video.mp4'))
         assert result is None
+
+
+class TestMediaBinEdgeCases:
+    def test_media_range_empty_source_tracks(self):
+        data = {'id': 1, 'src': 'test.png', 'sourceTracks': [], 'rect': [0, 0, 100, 100]}
+        m = Media(data)
+        assert m.range == (0, 0)
+
+    def test_media_duration_seconds_image(self):
+        data = {'id': 1, 'src': 'test.png',
+                'sourceTracks': [{'type': 1, 'range': [0, 1], 'editRate': 1}],
+                'rect': [0, 0, 100, 100]}
+        m = Media(data)
+        assert m.duration_seconds == 0.0
+
+    def test_unsupported_stream_type_raises(self):
+        with pytest.raises(ValueError, match='Unsupported'):
+            _get_media_type({'kind_of_stream': 'Subtitle'})

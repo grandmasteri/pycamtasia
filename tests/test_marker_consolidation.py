@@ -1,6 +1,7 @@
 """Tests verifying the Marker class consolidation."""
 from __future__ import annotations
 
+from camtasia.timeline.marker import Marker as MarkerCompat
 from camtasia.timeline.markers import EDIT_RATE, Marker
 
 
@@ -15,10 +16,8 @@ def test_marker_repr_shows_seconds():
 
 
 def test_marker_importable_from_marker_module():
-    from camtasia.timeline.marker import Marker as MarkerCompat
     assert MarkerCompat is Marker
 
 
 def test_marker_importable_from_markers_module():
-    from camtasia.timeline.markers import Marker as MarkerDirect
-    assert MarkerDirect is Marker
+    assert Marker is Marker

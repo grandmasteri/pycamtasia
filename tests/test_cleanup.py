@@ -1,6 +1,10 @@
 """Tests for camtasia.operations.cleanup."""
 from __future__ import annotations
 
+import copy
+
+import pytest
+
 from camtasia.operations.cleanup import compact_project, remove_empty_tracks, remove_orphaned_media
 from camtasia.timing import seconds_to_ticks
 
@@ -96,7 +100,7 @@ class TestRemoveEmptyTracks:
     def test_remove_empty_tracks(self, project):
         # The new.cmproj fixture starts with empty tracks
         initial_count = project.timeline.track_count
-        assert initial_count > 0
+        assert initial_count == 2
 
         removed = remove_empty_tracks(project)
 
@@ -132,7 +136,6 @@ class TestCollectSourceIdsFromUnifiedMedia:
         # Add source bin entries for 50 and 51
         project._data['sourceBin'].append({'id': 50, 'src': 'video.trec'})
         project._data['sourceBin'].append({'id': 51, 'src': 'audio.trec'})
-        from camtasia.operations.cleanup import remove_orphaned_media
         removed = remove_orphaned_media(project)
         # Sources 50 and 51 should NOT be removed
         remaining_ids = {s['id'] for s in project._data['sourceBin']}
@@ -152,7 +155,6 @@ class TestCompactMethod:
         assert result['empty_tracks_removed'] == 1
 
     def test_compact_validates_after_cleanup(self, project):
-        import pytest
         # Add a zero-range audio source referenced by a clip so it survives cleanup
         project._data.setdefault('sourceBin', []).append({
             'id': 99,
@@ -165,10 +167,6 @@ class TestCompactMethod:
         with pytest.raises(ValueError, match='Validation errors after compact'):
             project.compact()
 
-
-# ── Merged from test_edge_case_coverage.py ───────────────────────────
-
-import copy
 
 
 STITCHED_MEDIA_CLEANUP = {

@@ -5,11 +5,18 @@ from fractions import Fraction
 
 import pytest
 
-from camtasia.operations.speed import rescale_project, set_audio_speed
-from camtasia.audiate.transcript import Word
+from camtasia.operations.diff import diff_projects
+from camtasia.operations.merge import _remap_clip_ids
+from camtasia.operations.speed import _adjust_scalar, rescale_project, set_audio_speed
 from camtasia.operations.sync import SyncSegment, match_marker_to_transcript, plan_sync
-from camtasia.operations.template import clone_project_structure, replace_media_source
-from camtasia.timing import EDIT_RATE, parse_scalar
+from camtasia.operations.template import (
+    _walk_clips,
+    clone_project_structure,
+    replace_media_source,
+)
+from camtasia.audiate.transcript import Word
+from camtasia.project import Project
+from camtasia.timing import EDIT_RATE, parse_scalar, seconds_to_ticks
 
 
 def _make_project(tracks: list[dict] | None = None, markers: list[dict] | None = None) -> dict:
@@ -416,11 +423,6 @@ class TestPlanSyncSkipsZeroDuration:
         assert all(s.scalar > 0 for s in segments)
 
 
-# ── _adjust_scalar (from test_coverage_speed.py) ──
-
-from camtasia.operations.speed import _adjust_scalar
-
-
 class TestAdjustScalar:
     def test_adjusts_existing_scalar(self):
         clip = {'scalar': '51/101'}
@@ -432,8 +434,6 @@ class TestAdjustScalar:
         _adjust_scalar(clip, Fraction(3))
         assert clip['scalar'] == '3/1'
 
-
-# ── overlap fix in rescale_project (from test_coverage_speed.py) ──
 
 
 def _minimal_project(*clips):
@@ -472,8 +472,6 @@ class TestOverlapFix:
         b_start = medias[1]['start']
         assert a_end <= b_start
 
-
-# ── _mark_speed_changed (from test_coverage_speed.py) ──
 
 
 class TestMarkSpeedChanged:
@@ -554,20 +552,13 @@ class TestMarkSpeedChanged:
         assert inner['metadata']['clipSpeedAttribute']['value'] is True
 
 
-# ── diff: clips on removed/added tracks (from test_coverage_extras.py) ──
-
-from camtasia.timing import seconds_to_ticks as _s2t
-
-_S1 = _s2t(1.0)
+_S1 = seconds_to_ticks(1.0)
 
 
 class TestDiffClipsOnRemovedAddedTracks:
     def test_diff_detects_clips_on_removed_tracks(self, project):
-        import copy as _copy
-        from camtasia.operations.diff import diff_projects
-        from camtasia.project import Project
         a = project
-        b_data = _copy.deepcopy(a._data)
+        b_data = copy.deepcopy(a._data)
         b = Project.__new__(Project)
         b._data = b_data
         b._file_path = a._file_path
@@ -581,12 +572,9 @@ class TestDiffClipsOnRemovedAddedTracks:
         assert result is not None
 
 
-# ── merge: remap clip IDs (from test_coverage_extras.py) ──
-
 
 class TestMergeRemapClipIds:
     def test_remap_clip_ids_unified(self):
-        from camtasia.operations.merge import _remap_clip_ids
         data = {
             'id': 1, '_type': 'UnifiedMedia',
             'video': {'_type': 'ScreenVMFile', 'id': 2, 'src': 1},
@@ -602,12 +590,9 @@ class TestMergeRemapClipIds:
         assert data['video']['src'] == 50
 
 
-# ── template: _walk_clips UnifiedMedia (from test_coverage_extras.py) ──
-
 
 class TestTemplateWalkClipsExtras:
     def test_walk_clips_unified(self):
-        from camtasia.operations.template import _walk_clips
         tracks = [{
             'medias': [{
                 '_type': 'UnifiedMedia', 'id': 1,
@@ -619,8 +604,6 @@ class TestTemplateWalkClipsExtras:
         assert any(c.get('_type') == 'ScreenVMFile' for c in clips)
         assert any(c.get('_type') == 'AMFile' for c in clips)
 
-
-# ── Merged from test_edge_case_coverage.py ───────────────────────────
 
 
 UNIFIED_MEDIA_OPS = {

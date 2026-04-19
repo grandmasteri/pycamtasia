@@ -1,20 +1,19 @@
 from __future__ import annotations
 
+import shutil
+
 import pytest
 from pathlib import Path
 
-from camtasia.operations.template import duplicate_project
+from camtasia.operations.template import _walk_clips, duplicate_project
+from camtasia.project import load_project
 
 
 @pytest.fixture
 def source_project(project, tmp_path):
     """Save the fixture project to a temp location so we have a real .cmproj bundle to duplicate."""
-    import shutil
-
     src = tmp_path / "source.cmproj"
     shutil.copytree(project.file_path, src)
-    from camtasia.project import load_project
-
     return load_project(str(src))
 
 
@@ -71,11 +70,6 @@ def test_copy_to_existing_raises(source_project, tmp_path):
     dst.mkdir()
     with pytest.raises(FileExistsError):
         source_project.copy_to(dst)
-
-
-# ── _walk_clips UnifiedMedia (from test_coverage_template.py) ──
-
-from camtasia.operations.template import _walk_clips
 
 
 class TestWalkClipsUnifiedMedia:

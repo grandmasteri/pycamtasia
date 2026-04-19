@@ -418,3 +418,10 @@ class TestTransitionListClear:
         tl = TransitionList(data)
         tl.clear()
         assert len(tl) == 0
+
+
+class TestTransitionBothNone:
+    def test_add_transition_both_none_raises(self):
+        tl = TransitionList([])
+        with pytest.raises(ValueError, match='At least one'):
+            tl.add('Fade', duration_ticks=352_800_000, left_clip_id=None, right_clip_id=None)

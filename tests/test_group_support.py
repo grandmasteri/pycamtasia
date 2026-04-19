@@ -1,6 +1,8 @@
 """Tests for Group manipulation support: add_clip, add_internal_track, ungroup, group_clips, clip_count."""
 from __future__ import annotations
 
+import warnings
+
 import pytest
 
 from camtasia.timeline.clips import BaseClip, Group, GroupTrack, clip_from_dict
@@ -285,11 +287,6 @@ class TestGroupClipsPreservesTiming:
         assert internal_clips[1].start == seconds_to_ticks(5.0)
 
 
-# ── from test_coverage_phase4: group.py tests ──
-
-import warnings
-
-
 def test_group_track_transitions_raises():
     gt = GroupTrack({'medias': []})
     with pytest.raises(AttributeError, match='do not support transitions'):
@@ -319,7 +316,7 @@ def test_set_internal_segment_speeds_warns_over_8():
         warnings.simplefilter('always')
         g.set_internal_segment_speeds(segments)
         warns = [x for x in w if '>8' in str(x.message)]
-        assert len(warns) >= 1
+        assert len(warns) == 1
 
 
 def test_set_internal_segment_speeds_canvas_aspect_mismatch():
@@ -341,7 +338,7 @@ def test_set_internal_segment_speeds_canvas_aspect_mismatch():
             source_height=1080,
         )
         warns = [x for x in w if 'aspect ratio' in str(x.message)]
-        assert len(warns) >= 1
+        assert len(warns) == 1
 
 
 def test_set_internal_segment_speeds_source_bin_resolve():
@@ -376,8 +373,6 @@ def test_group_trim_to_group_duration():
     assert g._data['tracks'][0]['medias'][0]['duration'] == 500
     assert g._data['tracks'][0]['medias'][1]['mediaDuration'] == 1
 
-
-# ── from test_ci_coverage_gaps: group.py set_internal_segment_speeds ──
 
 def _group_with_unified_media():
     return {
@@ -453,9 +448,6 @@ class TestGroupSetInternalSegmentSpeeds:
         group.set_internal_segment_speeds([(0, 50, 50)])
         clip = data['tracks'][1]['medias'][0]
         assert clip['scalar'] == 1
-
-
-# ── Merged from test_completeness.py ─────────────────────────────────
 
 
 class TestGroupFindInternalClip:

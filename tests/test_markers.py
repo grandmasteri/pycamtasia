@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from camtasia.timeline.markers import EDIT_RATE, Marker, MarkerList
+from camtasia.timeline.timeline import _TimelineMarkers
 
 
 def _make_keyframe(value: str, time: int) -> dict:
@@ -166,7 +167,6 @@ class TestTimelineMarkersReplace:
         }
 
     def test_replace_delegates(self):
-        from camtasia.timeline.timeline import _TimelineMarkers
         data = self._make_timeline_data()
         tm = _TimelineMarkers(data)
         tm.replace([("X", 1000), ("Y", 2000)])

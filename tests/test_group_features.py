@@ -86,9 +86,6 @@ def multi_type_group() -> Group:
     ])
 
 
-# ── all_internal_clips ──────────────────────────────────────────────
-
-
 class TestAllInternalClips:
     """Group.all_internal_clips returns a flat list of all clips."""
 
@@ -111,9 +108,6 @@ class TestAllInternalClips:
             assert isinstance(clip, BaseClip)
 
 
-# ── internal_clip_types ─────────────────────────────────────────────
-
-
 class TestInternalClipTypes:
     """Group.internal_clip_types returns unique clip type strings."""
 
@@ -131,9 +125,6 @@ class TestInternalClipTypes:
         assert result == {'VMFile', 'AMFile'}
 
 
-# ── has_audio ───────────────────────────────────────────────────────
-
-
 class TestHasAudio:
     """Group.has_audio detects audio clips."""
 
@@ -148,9 +139,6 @@ class TestHasAudio:
 
     def test_true_with_multi_type(self, multi_type_group: Group) -> None:
         assert multi_type_group.has_audio is True
-
-
-# ── has_video ───────────────────────────────────────────────────────
 
 
 class TestHasVideo:
@@ -170,9 +158,6 @@ class TestHasVideo:
             [_clip_data('AMFile', 10, 0.0, 3.0)],
         ])
         assert audio_only.has_video is False
-
-
-# ── internal_duration_seconds ───────────────────────────────────────
 
 
 class TestInternalDurationSeconds:
@@ -195,9 +180,6 @@ class TestInternalDurationSeconds:
 
     def test_returns_float(self, video_only_group: Group) -> None:
         assert video_only_group.internal_duration_seconds == pytest.approx(6.0)
-
-
-# ── find_internal_clips_by_type ─────────────────────────────────────
 
 
 class TestFindInternalClipsByType:
@@ -242,7 +224,6 @@ class TestGroupDescribe:
 
     def test_group_to_dict(self):
         """Group clips should have a working to_dict() method."""
-        from camtasia.timeline.clips.group import Group
         group = _make_group([[_clip_data('VMFile', 1, 0, 100)]])
         actual_dict: dict = group.to_dict()
         assert actual_dict['type'] == 'Group'
@@ -251,7 +232,6 @@ class TestGroupDescribe:
 
 class TestGroupTrackOperations:
     def test_group_track_len(self):
-        from camtasia.timeline.clips.group import GroupTrack
         track_data = {'trackIndex': 0, 'medias': [
             {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
             {'id': 2, '_type': 'AMFile', 'start': 100, 'duration': 200},
@@ -261,7 +241,6 @@ class TestGroupTrackOperations:
         assert len(gt) == 2
 
     def test_group_track_iter(self):
-        from camtasia.timeline.clips.group import GroupTrack
         track_data = {'trackIndex': 0, 'medias': [
             {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
         ], 'transitions': [], 'parameters': {}, 'ident': '',
@@ -272,7 +251,6 @@ class TestGroupTrackOperations:
         assert clips[0].id == 1
 
     def test_group_track_repr(self):
-        from camtasia.timeline.clips.group import GroupTrack
         track_data = {'trackIndex': 0, 'medias': [], 'transitions': [], 'parameters': {}, 'ident': '',
            'audioMuted': False, 'videoHidden': False, 'magnetic': False, 'matte': 0, 'solo': False}
         gt = GroupTrack(track_data)
@@ -281,50 +259,41 @@ class TestGroupTrackOperations:
 
 class TestGroupEdgeCases:
     def test_empty_group_clip_count(self):
-        from camtasia.timeline.clips.group import Group
         group = _make_group([[]])
         assert group.clip_count == 0
 
     def test_empty_group_all_internal_clips(self):
-        from camtasia.timeline.clips.group import Group
         group = _make_group([[]])
         assert group.all_internal_clips == []
 
     def test_empty_group_internal_duration(self):
-        from camtasia.timeline.clips.group import Group
         group = _make_group([[]])
         assert group.internal_duration_seconds == 0.0
 
     def test_group_find_internal_clips_no_match(self):
-        from camtasia.timeline.clips.group import Group
         group = _make_group([[_clip_data('VMFile', 1, 0, 100)]])
         assert group.find_internal_clips_by_type('AMFile') == []
 
     def test_group_has_audio_false(self):
-        from camtasia.timeline.clips.group import Group
         group = _make_group([[_clip_data('VMFile', 1, 0, 100)]])
         assert group.has_audio is False
 
     def test_group_has_video_false(self):
-        from camtasia.timeline.clips.group import Group
         group = _make_group([[_clip_data('AMFile', 1, 0, 100)]])
         assert group.has_video is False
 
     def test_group_rename_and_check(self):
-        from camtasia.timeline.clips.group import Group
         group = _make_group([[_clip_data('VMFile', 1, 0, 100)]])
         group.rename('My Group')
         assert group.ident == 'My Group'
 
     def test_group_set_dimensions_and_check(self):
-        from camtasia.timeline.clips.group import Group
         group = _make_group([[_clip_data('VMFile', 1, 0, 100)]])
         group.set_dimensions(1920.0, 1080.0)
         assert group.width == 1920.0
         assert group.height == 1080.0
 
     def test_group_no_tracks_internal_duration(self):
-        from camtasia.timeline.clips.group import Group
         group = Group({
             '_type': 'Group', 'id': 1, 'start': 0, 'duration': 100,
             'mediaDuration': 100, 'mediaStart': 0, 'scalar': 1,

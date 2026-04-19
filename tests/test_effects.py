@@ -5,10 +5,13 @@ from pathlib import Path
 
 import pytest
 
+from camtasia.effects import EffectSchema
 from camtasia.effects.base import Effect, effect_from_dict
-from camtasia.effects.cursor import CursorPhysics, LeftClickScaling
 from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
+from camtasia.effects.cursor import CursorMotionBlur, CursorPhysics, CursorShadow, LeftClickScaling
+from camtasia.effects.source import SourceEffect
 from camtasia.effects.visual import BlurRegion, DropShadow, Mask, MotionBlur, RoundCorners
+from camtasia.timing import seconds_to_ticks
 
 
 # ------------------------------------------------------------------
@@ -266,12 +269,9 @@ def test_effect_data_property_returns_underlying_dict() -> None:
     assert effect.data is data
 
 
-# ── effects/behaviors.py (from test_coverage_extras.py) ──
-
 
 class TestBehaviorEffectProperties:
     def test_behavior_name_category_parameters(self):
-        from camtasia.effects.behaviors import GenericBehaviorEffect
         data = {'effectName': 'TestBehavior', 'parameters': {}}
         b = GenericBehaviorEffect(data)
         assert b.name == 'TestBehavior'
@@ -279,12 +279,9 @@ class TestBehaviorEffectProperties:
         assert b.parameters == {}
 
 
-# ── effects/cursor.py (from test_coverage_extras.py) ──
-
 
 class TestCursorEffectEnabled:
     def test_cursor_enabled_property(self):
-        from camtasia.effects.cursor import CursorShadow
         data = {'effectName': 'CursorShadow', 'parameters': {'enabled': 1}}
         c = CursorShadow(data)
         assert c.enabled == 1
@@ -292,12 +289,9 @@ class TestCursorEffectEnabled:
         assert data['parameters']['enabled'] == 0
 
 
-# ── effects/source.py (from test_coverage_extras.py) ──
-
 
 class TestSourceEffectProperties:
     def _make(self, **params):
-        from camtasia.effects.source import SourceEffect
         return SourceEffect({'effectName': 'TestSource', 'parameters': params})
 
     def test_color0_none_when_missing(self):
@@ -336,12 +330,9 @@ class TestSourceEffectProperties:
         assert p['Color1-green'] == 1.0
 
 
-# ── effects/visual.py (from test_coverage_extras.py) ──
-
 
 class TestVisualEffectSigma:
     def test_blur_sigma(self):
-        from camtasia.effects.visual import BlurRegion
         data = {'effectName': 'blurRegion', 'parameters': {'sigma': 5.0}}
         b = BlurRegion(data)
         assert b.sigma == 5.0
@@ -349,118 +340,9 @@ class TestVisualEffectSigma:
         assert data['parameters']['sigma'] == 10.0
 
 
-# ── media_bin (from test_coverage_extras.py) ──
-
-
-class TestMediaBinEdgeCases:
-    def test_media_range_empty_source_tracks(self):
-        from camtasia.media_bin.media_bin import Media
-        data = {'id': 1, 'src': 'test.png', 'sourceTracks': [], 'rect': [0, 0, 100, 100]}
-        m = Media(data)
-        assert m.range == (0, 0)
-
-    def test_media_duration_seconds_image(self):
-        from camtasia.media_bin.media_bin import Media
-        data = {'id': 1, 'src': 'test.png',
-                'sourceTracks': [{'type': 1, 'range': [0, 1], 'editRate': 1}],
-                'rect': [0, 0, 100, 100]}
-        m = Media(data)
-        assert m.duration_seconds == 0.0
-
-    def test_unsupported_stream_type_raises(self):
-        from camtasia.media_bin.media_bin import _get_media_type
-        with pytest.raises(ValueError, match='Unsupported'):
-            _get_media_type({'kind_of_stream': 'Subtitle'})
-
-
-# ── timeline/clips/placeholder.py (from test_coverage_extras.py) ──
-
-from camtasia.timing import seconds_to_ticks
 
 _S1 = seconds_to_ticks(1.0)
 _S5 = seconds_to_ticks(5.0)
-
-
-class TestPlaceholderSetSource:
-    def test_set_source_raises(self):
-        from camtasia.timeline.clips.placeholder import PlaceholderMedia
-        data = {'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': _S1,
-                'mediaDuration': _S1, 'scalar': 1, 'parameters': {}, 'effects': []}
-        p = PlaceholderMedia(data)
-        with pytest.raises(TypeError, match='Cannot set_source'):
-            p.set_source(1)
-
-
-# ── timeline/clips/stitched.py (from test_coverage_extras.py) ──
-
-
-class TestStitchedSetSource:
-    def test_set_source_raises(self):
-        from camtasia.timeline.clips.stitched import StitchedMedia
-        data = {'_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': _S1,
-                'mediaDuration': _S1, 'scalar': 1, 'parameters': {}, 'effects': [],
-                'medias': []}
-        s = StitchedMedia(data)
-        with pytest.raises(TypeError, match='do not have a top-level source'):
-            s.set_source(1)
-
-
-# ── timeline/transitions.py (from test_coverage_extras.py) ──
-
-
-class TestTransitionBothNone:
-    def test_add_transition_both_none_raises(self):
-        from camtasia.timeline.transitions import TransitionList
-        tl = TransitionList([])
-        with pytest.raises(ValueError, match='At least one'):
-            tl.add('Fade', duration_ticks=_S1, left_clip_id=None, right_clip_id=None)
-
-
-# ── timeline/clips/unified.py (from test_coverage_extras.py) ──
-
-
-class TestUnifiedMediaEffectErrors:
-    def _make_um(self):
-        from camtasia.timeline.clips.unified import UnifiedMedia
-        return UnifiedMedia({
-            '_type': 'UnifiedMedia', 'id': 1,
-            'start': 0, 'duration': _S5, 'mediaDuration': _S5,
-            'mediaStart': 0, 'scalar': 1, 'parameters': {}, 'effects': [],
-            'video': {'_type': 'ScreenVMFile', 'id': 2, 'src': 0,
-                      'start': 0, 'duration': _S5, 'mediaDuration': _S5,
-                      'mediaStart': 0, 'scalar': 1},
-            'audio': {'_type': 'AMFile', 'id': 3, 'src': 0,
-                      'start': 0, 'duration': _S5, 'mediaDuration': _S5,
-                      'mediaStart': 0, 'scalar': 1, 'attributes': {'gain': 1.0}},
-        })
-
-    def test_add_effect_raises(self):
-        with pytest.raises(TypeError, match='Effects must be added'):
-            self._make_um().add_effect({})
-
-    def test_add_drop_shadow_raises(self):
-        with pytest.raises(TypeError):
-            self._make_um().add_drop_shadow()
-
-    def test_add_round_corners_raises(self):
-        with pytest.raises(TypeError):
-            self._make_um().add_round_corners()
-
-    def test_add_glow_raises(self):
-        with pytest.raises(TypeError):
-            self._make_um().add_glow()
-
-    def test_add_glow_timed_raises(self):
-        with pytest.raises(TypeError):
-            self._make_um().add_glow_timed()
-
-    def test_copy_effects_from_raises(self):
-        with pytest.raises(TypeError):
-            self._make_um().copy_effects_from(None)
-
-    def test_set_source_raises(self):
-        with pytest.raises(TypeError, match='Cannot set_source'):
-            self._make_um().set_source(1)
 
 
 
@@ -468,10 +350,6 @@ class TestUnifiedMediaEffectErrors:
 # ------------------------------------------------------------------
 # GenericBehaviorEffect: get/set parameter raise NotImplementedError
 # ------------------------------------------------------------------
-
-from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
-from camtasia.effects.source import SourceEffect
-from camtasia.effects.cursor import CursorShadow
 
 
 class TestBehaviorEffectParams:
@@ -750,10 +628,8 @@ class TestCursorPhysicsTilt:
         assert data['parameters']['tilt']['defaultValue'] == 0.7
 
 
-# ── from test_coverage_phase4: effects/visual.py ──
 
 def test_round_corners_properties():
-    from camtasia.effects.visual import RoundCorners
     data = {
         'effectName': 'RoundCorners',
         'parameters': {
@@ -808,7 +684,6 @@ def test_drop_shadow_properties():
 
 
 def test_mask_properties():
-    from camtasia.effects.visual import Mask
     data = {
         'effectName': 'Mask',
         'parameters': {
@@ -847,7 +722,6 @@ def test_mask_properties():
 
 
 def test_blur_region_properties():
-    from camtasia.effects.visual import BlurRegion
     data = {
         'effectName': 'BlurRegion',
         'parameters': {
@@ -901,7 +775,6 @@ def test_cursor_shadow_properties_phase4():
 
 
 def test_cursor_motion_blur_phase4():
-    from camtasia.effects.cursor import CursorMotionBlur
     data = {'effectName': 'CursorMotionBlur', 'parameters': {'intensity': 0.5}}
     cmb = CursorMotionBlur(data)
     assert cmb.intensity == 0.5
@@ -910,7 +783,6 @@ def test_cursor_motion_blur_phase4():
 
 
 def test_effect_schema_raises():
-    from camtasia.effects import EffectSchema
     with pytest.raises(RuntimeError, match='marshmallow'):
         EffectSchema()
 
@@ -952,11 +824,9 @@ def test_effect_edge_mods():
     assert e.duration == 500
 
 
-# ── from test_coverage_phase4b: cursor/behavior setters ──
 
 class TestCursorMotionBlurSetter:
     def test_set_intensity(self):
-        from camtasia.effects.cursor import CursorMotionBlur
         data = {"effectName": "CursorMotionBlur", "parameters": {"intensity": {"type": "double", "defaultValue": 0.5}}}
         e = CursorMotionBlur(data)
         e.intensity = 0.8
@@ -1416,7 +1286,7 @@ class TestProjectBEffectsIntegration:
             test_project_b_data,
             lambda d: d.get("_type") == "GenericBehaviorEffect",
         )
-        assert len(actual_behaviors) >= 1
+        assert len(actual_behaviors) == 16
         actual_effect = GenericBehaviorEffect(actual_behaviors[0])
         assert actual_effect.effect_name == "reveal"
         assert actual_effect.preset_name == "Reveal"
@@ -1429,7 +1299,7 @@ class TestProjectBEffectsIntegration:
             test_project_b_data,
             lambda d: d.get("effectName") == "Mask",
         )
-        assert len(actual_masks) >= 1
+        assert len(actual_masks) == 1
         actual_params = actual_masks[0]["parameters"]
         assert "mask-shape" in actual_params
 
@@ -1438,7 +1308,7 @@ class TestProjectBEffectsIntegration:
             test_project_b_data,
             lambda d: d.get("effectName") == "MotionBlur",
         )
-        assert len(actual_effects) >= 1
+        assert len(actual_effects) == 8
         actual_first = actual_effects[0]
         assert actual_first["category"] == "categoryVisualEffects"
 

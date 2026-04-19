@@ -1,6 +1,8 @@
 """Tests for CaptionAttributes API."""
 from __future__ import annotations
 
+import pytest
+
 from camtasia.timeline.captions import CaptionAttributes
 
 
@@ -62,9 +64,6 @@ def test_timeline_caption_attributes_property(project):
     # Mutations through the property should persist
     ca.font_name = 'Impact'
     assert tl.caption_attributes.font_name == 'Impact'
-
-
-import pytest
 
 
 def test_caption_alignment_validation():

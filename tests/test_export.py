@@ -3,10 +3,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import shutil
+
 import pytest
 
-from camtasia.export.srt import _format_srt_time, export_markers_as_srt
+from camtasia.export.csv_export import export_csv
+from camtasia.export.edl import _format_timecode, export_edl
 from camtasia.export.report import export_project_report
+from camtasia.export.srt import _format_srt_time, export_markers_as_srt
 from camtasia.timing import seconds_to_ticks
 
 
@@ -22,9 +26,6 @@ def _add_clip(project, start_seconds=0.0, duration_seconds=5.0):
         seconds_to_ticks(start_seconds),
         seconds_to_ticks(duration_seconds),
     )
-
-
-# ── SRT tests ──────────────────────────────────────────────────────
 
 
 def test_srt_marker_count(project, tmp_path):
@@ -53,9 +54,6 @@ def test_srt_custom_duration(project, tmp_path):
 def test_srt_empty_markers(project, tmp_path):
     out = export_markers_as_srt(project, tmp_path / 'out.srt')
     assert out.read_text() == ''
-
-
-# ── Report tests ───────────────────────────────────────────────────
 
 
 def test_report_markdown_has_headers(project, tmp_path):
@@ -87,9 +85,6 @@ def test_report_json_has_tracks(project, tmp_path):
     assert 'id' in clip and 'type' in clip and 'start_seconds' in clip and 'duration_seconds' in clip
 
 
-# ── _format_srt_time unit tests ────────────────────────────────────
-
-
 @pytest.mark.parametrize('seconds, expected', [
     (0.0, '00:00:00,000'),
     (61.5, '00:01:01,500'),
@@ -101,9 +96,6 @@ def test_format_srt_time(seconds, expected):
 
 class TestReportWithMedia:
     def test_markdown_report_includes_media(self, project, tmp_path):
-        from camtasia.export import export_project_report
-        # Import a media file to populate the media bin
-        import shutil
         wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
         project.import_media(wav)
         output = tmp_path / 'report.md'
@@ -113,8 +105,6 @@ class TestReportWithMedia:
         assert 'empty' in actual_content
 
     def test_json_report_includes_media(self, project, tmp_path):
-        from camtasia.export import export_project_report
-        import shutil
         wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
         project.import_media(wav)
         output = tmp_path / 'report.json'
@@ -123,11 +113,6 @@ class TestReportWithMedia:
         assert actual_data['media_count'] == 1
         actual_identities = [m['identity'] for m in actual_data['media']]
         assert 'empty' in actual_identities
-
-
-# ── EDL tests ──────────────────────────────────────────────────────
-
-from camtasia.export.edl import _format_timecode, export_edl
 
 
 def test_edl_header(project, tmp_path):
@@ -167,7 +152,6 @@ def test_format_timecode(seconds, expected):
 
 class TestEdlWithMedia:
     def test_edl_resolves_source_names(self, project, tmp_path):
-        from camtasia.export import export_edl
         wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
         media = project.import_media(wav)
         track = project.timeline.add_track('Audio')
@@ -178,7 +162,6 @@ class TestEdlWithMedia:
         assert 'empty' in actual_content  # source name resolved from media bin
 
     def test_edl_handles_missing_source(self, project, tmp_path):
-        from camtasia.export import export_edl
         track = project.timeline.add_track('Test')
         # Add clip with source_id that doesn't exist in media bin
         track.add_clip('AMFile', 9999, 0, 705600000)
@@ -186,11 +169,6 @@ class TestEdlWithMedia:
         export_edl(project, output)
         actual_content = output.read_text()
         assert 'AX' in actual_content  # fallback source name
-
-
-# ── CSV export tests ───────────────────────────────────────────────
-
-from camtasia.export.csv_export import export_csv
 
 
 def test_csv_export_header(project, tmp_path):
@@ -214,7 +192,6 @@ def test_csv_export_rows(project, tmp_path):
 
 def test_srt_clamps_overlapping_markers(project, tmp_path):
     """SRT export clamps end times to prevent overlapping subtitles."""
-    from camtasia.export.srt import export_markers_as_srt
     project.timeline.markers.add('First', 705600000)
     project.timeline.markers.add('Second', 705600000 * 2)
     out = tmp_path / 'test.srt'
@@ -223,13 +200,8 @@ def test_srt_clamps_overlapping_markers(project, tmp_path):
     assert '00:00:01,000 --> 00:00:02,000' in content
 
 
-# ── EDL unified audio track ──────────────────────────────────────────
-
 def test_edl_unified_clip_emits_audio_event(project, tmp_path):
     """UnifiedMedia clips with audio data emit an extra audio EDL event."""
-    from camtasia.export.edl import export_edl
-    from camtasia.timing import seconds_to_ticks
-    # Add a media bin entry so the audio src lookup succeeds (covers lines 108-110)
     project._data['sourceBin'].append({
         'id': 1, 'src': './media/recording.trec',
         'sourceTracks': [], 'rect': [0, 0, 1920, 1080], 'lastMod': '0',
@@ -276,16 +248,10 @@ def test_edl_unified_clip_emits_audio_event(project, tmp_path):
     assert any('A' in l and 'C' in l for l in actual_lines)
 
 
-# ── Merged from test_coverage_project.py (EDL tests) ────────────────
-
-
 class TestEdlMinuteOverflow:
     def test_minute_overflow(self):
         actual_result = _format_timecode(3599.999, fps=30)
         assert actual_result == '01:00:00:00'
-
-
-# ── Merged from test_coverage_export.py ──────────────────────────────
 
 
 def _inject_unified(project):
@@ -326,10 +292,7 @@ class TestEdlUnifiedMedia:
         assert 'AX' in content
 
 
-# ── Merged from test_coverage_misc.py (EDL tests) ───────────────────
-
-
-class TestEdlExportMisc:
+class TestEdlTimecodeEdgeCases:
     def test_edl_basic_export(self, tmp_path, project):
         out = tmp_path / 'test.edl'
         actual_result = export_edl(project, out, title='Test')
@@ -413,10 +376,7 @@ class TestFormatTimecodeCarry:
         assert actual_result == '00:00:00:00'
 
 
-# ── EDL export extras (from test_coverage_extras.py) ──
-
-
-class TestEdlExportExtras:
+class TestEdlSourceResolution:
     def test_format_timecode_carry(self):
         actual_result = _format_timecode(59.99, 30)
         assert actual_result.startswith('00:01:00') or actual_result.startswith('00:00:59')

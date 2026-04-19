@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 from typing import Any
 
+import jsonpatch
 import pytest
 
 from camtasia.history import ChangeHistory, ChangeRecord, with_undo
@@ -113,7 +114,6 @@ class TestChangeHistory:
 
 class TestChangeRecord:
     def test_is_frozen_dataclass(self) -> None:
-        import jsonpatch
         record = ChangeRecord(
             description="test",
             forward_patch=jsonpatch.make_patch({}, {"a": 1}),

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from camtasia.project import load_project
 from pathlib import Path
+
+from camtasia.timing import seconds_to_ticks
 
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 
@@ -23,9 +24,6 @@ def test_timeline_to_dict_top_level_keys(project):
 
 def test_timeline_to_dict_with_clip(project):
     track = project.timeline.add_track('TestTrack')
-    media = project.import_media(RESOURCES / 'new.cmproj' / 'media' / '..', media_type=None) if False else None
-    # Add a clip via the low-level API to avoid needing real media
-    from camtasia.timing import seconds_to_ticks
     clip = track.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
 
     actual_result = project.timeline_to_dict()
@@ -42,7 +40,6 @@ def test_timeline_to_dict_with_clip(project):
 
 def test_timeline_to_dict_clip_effects(project):
     track = project.timeline.add_track('FX')
-    from camtasia.timing import seconds_to_ticks
     clip = track.add_clip('VMFile', 1, 0, seconds_to_ticks(3.0))
     clip._data.setdefault('effects', []).append({'effectName': 'DropShadow'})
 
@@ -52,7 +49,6 @@ def test_timeline_to_dict_clip_effects(project):
 
 
 def test_timeline_to_dict_multiple_tracks(project):
-    from camtasia.timing import seconds_to_ticks
     project.timeline.add_track('A')
     t2 = project.timeline.add_track('B')
     t2.add_clip('IMFile', 2, 0, seconds_to_ticks(2.0))
@@ -73,7 +69,6 @@ def test_timeline_to_dict_resolution_format(project):
 
 def test_timeline_to_dict_effect_missing_name(project):
     track = project.timeline.add_track('T')
-    from camtasia.timing import seconds_to_ticks
     clip = track.add_clip('VMFile', 1, 0, seconds_to_ticks(1.0))
     clip._data.setdefault('effects', []).append({'bypassed': False})
 

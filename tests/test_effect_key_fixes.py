@@ -91,7 +91,6 @@ class TestSourceEffectMidPoint:
 
 class TestMaskCornerRadiusSetter:
     def test_mask_corner_radius_setter(self):
-        from camtasia.effects.visual import Mask
         data = {'effectName': 'Mask', 'parameters': {'mask-cornerRadius': {'type': 'double', 'defaultValue': 0.0}}}
         mask = Mask(data)
         mask.mask_corner_radius = 16.0

@@ -7,12 +7,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from camtasia.project import _probe_media
+from camtasia.project import _probe_media, load_project, new_project
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _make_track(track_type: str, **attrs):
     """Build a fake pymediainfo track object."""
@@ -32,10 +28,6 @@ def _make_mediainfo_result(tracks):
     result.tracks = tracks
     return result
 
-
-# ---------------------------------------------------------------------------
-# pymediainfo path
-# ---------------------------------------------------------------------------
 
 class TestProbeWithPymediainfo:
 
@@ -90,10 +82,6 @@ class TestProbeWithPymediainfo:
         assert actual_metadata['bit_depth'] == 24
 
 
-# ---------------------------------------------------------------------------
-# ffprobe fallback path
-# ---------------------------------------------------------------------------
-
 class TestProbeFallbackToFfprobe:
 
     @pytest.mark.parametrize("width,height", [(1920, 1080), (640, 480)])
@@ -124,16 +112,10 @@ class TestProbeFallbackToFfprobe:
         assert actual_metadata['_backend'] == 'ffprobe'
 
 
-# ---------------------------------------------------------------------------
-# import_media integration
-# ---------------------------------------------------------------------------
-
 class TestImportMediaUsesPymediainfo:
 
     def test_import_media_uses_pymediainfo_when_available(self, tmp_path):
         """Verify import_media passes pymediainfo metadata to the media bin."""
-        from camtasia.project import new_project, load_project
-
         proj_path = tmp_path / 'test.cmproj'
         new_project(proj_path)
         proj = load_project(proj_path)

@@ -1,13 +1,39 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
+import warnings as w
+from fractions import Fraction
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from camtasia.project import Project, load_project, use_project, new_project
 from camtasia.media_bin import MediaBin
+from camtasia.operations.diff import diff_projects
+from camtasia.operations.speed import _process_clip, _scale_clip_timing
+from camtasia.operations.template import (
+    _walk_clips,
+    clone_project_structure,
+    replace_media_source,
+)
+from camtasia.project import (
+    Project,
+    _probe_media,
+    _probe_media_ffprobe,
+    _remap_src_recursive,
+    load_project,
+    new_project,
+    use_project,
+)
+import camtasia.project as proj_mod
 from camtasia.timeline import Timeline
+from camtasia.timeline.clips import clip_from_dict
+from camtasia.timeline.clips.group import Group
+from camtasia.timeline.track import Track
+from camtasia.timing import seconds_to_ticks
+from camtasia.validation import ValidationIssue, _check_group_required_fields, _check_timing_consistency
 
 
 MINIMAL_PROJECT_DATA = {
@@ -205,13 +231,6 @@ class TestFromTemplate:
         assert proj.title == "My Video"
 
 
-# ── Merged from test_coverage_project.py ─────────────────────────────
-
-from fractions import Fraction
-from unittest.mock import patch, MagicMock
-from camtasia.timing import seconds_to_ticks
-from camtasia.timeline.timeline import Timeline
-
 
 class TestHasScreenRecordingUnifiedMedia:
     def test_unified_media_screen_recording(self, tmp_path):
@@ -298,13 +317,11 @@ class TestRepairZeroDuration:
              'animationTracks': {}},
         ]
         result = proj.repair()
-        assert result.get('zero_duration_removed', 0) >= 1
+        assert result.get('zero_duration_removed', 0) == 1
 
 
 class TestDiffRemovedAddedTracks:
     def test_clips_on_removed_and_added_tracks(self, tmp_path):
-        from camtasia.operations.diff import diff_projects
-
         path_a = tmp_path / 'a.cmproj'
         path_b = tmp_path / 'b.cmproj'
         new_project(path_a)
@@ -322,8 +339,6 @@ class TestDiffRemovedAddedTracks:
         assert result.has_changes
 
     def test_track_only_in_a(self, tmp_path):
-        from camtasia.operations.diff import diff_projects
-
         path_a = tmp_path / 'a2.cmproj'
         path_b = tmp_path / 'b2.cmproj'
         new_project(path_a)
@@ -336,12 +351,11 @@ class TestDiffRemovedAddedTracks:
         t3.add_clip('VMFile', 0, 0, 100)
 
         result = diff_projects(a, b)
-        assert len(result.tracks_removed) > 0
+        assert len(result.tracks_removed) == 2
 
 
 class TestSpeedEffectScaling:
     def test_effect_times_scaled(self):
-        from camtasia.operations.speed import _scale_clip_timing
         clip = {'_type': 'VMFile', 'start': 0, 'duration': 1000,
                 'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
                 'effects': [{'start': 100, 'duration': 200}]}
@@ -352,7 +366,6 @@ class TestSpeedEffectScaling:
 
 class TestSpeedStitchedMediaInnerEffects:
     def test_inner_effects_scaled(self):
-        from camtasia.operations.speed import _process_clip
         clip = {'_type': 'StitchedMedia', 'start': 0, 'duration': 1000,
                 'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
                 'metadata': {}, 'effects': [],
@@ -366,7 +379,6 @@ class TestSpeedStitchedMediaInnerEffects:
 
 class TestValidationVersionParseError:
     def test_invalid_version(self):
-        from camtasia.validation import _check_group_required_fields
         data = {'version': 'not-a-number',
                 'sceneTrack': {'scenes': [{'csml': {'tracks': []}}]}}
         issues = _check_group_required_fields(data)
@@ -374,7 +386,6 @@ class TestValidationVersionParseError:
 
 class TestValidationScalarParseError:
     def test_invalid_scalar(self):
-        from camtasia.validation import _check_timing_consistency
         data = {'timeline': {'sceneTrack': {'scenes': [{'csml': {'tracks': [
             {'trackIndex': 0, 'medias': [
                 {'id': 1, '_type': 'VMFile', 'scalar': '0/0',
@@ -384,12 +395,8 @@ class TestValidationScalarParseError:
         issues = _check_timing_consistency(data)
 
 
-# ── Merged from test_coverage_misc.py (template operations) ─────────
-
-
 class TestWalkClipsUnified:
     def test_walk_clips_yields_unified_children(self):
-        from camtasia.operations.template import _walk_clips
         tracks = [{
             'medias': [{
                 '_type': 'UnifiedMedia', 'id': 1, 'src': 10,
@@ -404,7 +411,6 @@ class TestWalkClipsUnified:
         assert 'AMFile' in types
 
     def test_replace_media_source_in_unified(self):
-        from camtasia.operations.template import replace_media_source
         data = {
             'timeline': {'sceneTrack': {'scenes': [{'csml': {'tracks': [{
                 'medias': [{
@@ -423,7 +429,6 @@ class TestWalkClipsUnified:
 
 class TestCloneProjectStructure:
     def test_clone_clears_media(self):
-        from camtasia.operations.template import clone_project_structure
         data = {
             'sourceBin': [{'id': 1}],
             'timeline': {
@@ -455,16 +460,12 @@ class TestRepairOverlapFix:
              'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {}},
         ])
         result = project.repair()
-        assert result.get('overlaps_fixed', 0) >= 1
+        assert result.get('overlaps_fixed', 0) == 1
         # First clip's duration should be trimmed to 50 (no overlap)
         clip1 = [m for m in track._data['medias'] if m['id'] == 10][0]
         assert clip1['duration'] == 50
         assert clip1['mediaDuration'] == 50  # recalculated: 50 / 1 = 50
 
-
-# =========================================================================
-# Tests migrated from test_convenience.py
-# =========================================================================
 
 def _make_timeline(track_specs):
     """Build a Timeline with tracks described as (name, media_list) tuples."""
@@ -498,11 +499,6 @@ def _make_project_data(track_medias_list):
 
 def test_project_has_screen_recording_with_real_data():
     """Test has_screen_recording against a real project fixture."""
-    import json
-    from pathlib import Path
-    from camtasia.timeline.clips import clip_from_dict
-    from camtasia.timeline.clips.group import Group
-    
     fixture = Path(__file__).parent / 'fixtures' / 'techsmith_sample.tscproj'
     data = json.loads(fixture.read_text())
     tracks = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
@@ -520,27 +516,17 @@ def test_project_has_screen_recording_with_real_data():
 
 
 
-# ---------------------------------------------------------------------------
-# Project.media_count
-# ---------------------------------------------------------------------------
-
 def test_media_count(project):
     assert project.media_count == 0
 
 
 
 
-# ---------------------------------------------------------------------------
-# Project.is_empty
-# ---------------------------------------------------------------------------
-
 def test_project_is_empty_true(project):
     assert project.is_empty is True
 
 
 def test_project_is_empty_false():
-    from camtasia.project import load_project
-    from pathlib import Path
     fixture = Path(__file__).parent / 'fixtures' / 'test_project_c.tscproj'
     proj = load_project(fixture)
     assert proj.is_empty is False
@@ -548,13 +534,7 @@ def test_project_is_empty_false():
 
 
 
-# ---------------------------------------------------------------------------
-# Project.describe
-# ---------------------------------------------------------------------------
-
 def test_project_describe():
-    from camtasia.project import load_project
-    from pathlib import Path
     fixture = Path(__file__).parent / 'fixtures' / 'test_project_c.tscproj'
     proj = load_project(fixture)
     desc = proj.describe()
@@ -569,8 +549,6 @@ def test_project_describe():
 
 
 def test_project_describe_unhealthy(project):
-    from unittest.mock import patch
-    from camtasia.validation import ValidationIssue
     with patch.object(project, 'validate', return_value=[ValidationIssue('error', 'bad')]):
         actual = project.describe()
         assert '❌' in actual
@@ -578,13 +556,7 @@ def test_project_describe_unhealthy(project):
 
 
 
-# ---------------------------------------------------------------------------
-# Project.track_count / clip_count / duration_seconds
-# ---------------------------------------------------------------------------
-
 def test_project_track_count():
-    from camtasia.project import Project
-    from unittest.mock import MagicMock
     media = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
     proj = MagicMock(spec=Project)
     proj._data = _make_project_data([[media], []])
@@ -593,8 +565,6 @@ def test_project_track_count():
 
 
 def test_project_clip_count():
-    from camtasia.project import Project
-    from unittest.mock import MagicMock
     m1 = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
     m2 = {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200}
     proj = MagicMock(spec=Project)
@@ -606,24 +576,19 @@ def test_project_clip_count():
 def test_project_duration_seconds(project):
     actual = project.duration_seconds
     assert isinstance(actual, float)
-    assert actual >= 0.0
+    assert actual == 0.0
 
 
 def test_find_media_by_extension(project):
-    from pathlib import Path
     wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
     project.import_media(wav)
     actual = project.find_media_by_extension('wav')
-    assert len(actual) >= 1
+    assert len(actual) == 1
     actual_none = project.find_media_by_extension('xyz')
     assert actual_none == []
 
 
 
-
-# ---------------------------------------------------------------------------
-# Project.remove_all_effects
-# ---------------------------------------------------------------------------
 
 def test_project_remove_all_effects(project):
     # Add a clip with effects to the project
@@ -634,7 +599,7 @@ def test_project_remove_all_effects(project):
     }
     track._data['medias'].append(media)
     removed = project.remove_all_effects()
-    assert removed >= 2
+    assert removed == 2
     # Verify effects are cleared
     for t in project.timeline.tracks:
         for clip in t.clips:
@@ -642,10 +607,6 @@ def test_project_remove_all_effects(project):
 
 
 
-
-# ---------------------------------------------------------------------------
-# Project.effect_summary
-# ---------------------------------------------------------------------------
 
 def test_project_effect_summary(project):
     track = project.timeline.add_track('Test')
@@ -659,10 +620,6 @@ def test_project_effect_summary(project):
 
 
 
-# ---------------------------------------------------------------------------
-# Project.clip_type_summary
-# ---------------------------------------------------------------------------
-
 def test_project_clip_type_summary(project):
     track = project.timeline.add_track('Test')
     track.add_clip('VMFile', 1, 0, 100)
@@ -675,14 +632,7 @@ def test_project_clip_type_summary(project):
 
 
 
-# ---------------------------------------------------------------------------
-# Project.summary_table
-# ---------------------------------------------------------------------------
-
 def test_summary_table():
-    from camtasia.project import Project
-    from unittest.mock import MagicMock
-
     medias0 = [
         {'id': 1, '_type': 'ScreenRecording', 'start': 0, 'duration': 300, 'effects': [
             {'effectName': 'Blur'},
@@ -722,14 +672,7 @@ def test_has_video(project):
 
 
 
-# ---------------------------------------------------------------------------
-# Project.source_bin_paths
-# ---------------------------------------------------------------------------
-
 def test_source_bin_paths(tmp_path):
-    from camtasia.project import Project
-    import json
-
     project_dir = tmp_path / 'test.tscproj'
     project_dir.mkdir()
     project_file = project_dir / 'project.tscproj'
@@ -756,23 +699,15 @@ def test_source_bin_paths(tmp_path):
 
 
 
-# ---------------------------------------------------------------------------
-# Project.total_effect_count
-# ---------------------------------------------------------------------------
-
 def test_total_effect_count(project):
     track = project.timeline.add_track('FX')
     clip = track.add_clip('VMFile', 1, 0, 705600000)
     clip.add_drop_shadow()
     clip.add_round_corners()
-    assert project.total_effect_count >= 2
+    assert project.total_effect_count == 2
 
 
 
-
-# ---------------------------------------------------------------------------
-# Project.average_clip_duration_seconds
-# ---------------------------------------------------------------------------
 
 def test_project_average_clip_duration(project):
     track = project.timeline.add_track('Test')
@@ -786,10 +721,6 @@ def test_project_average_clip_duration_empty(project):
 
 
 
-
-# ---------------------------------------------------------------------------
-# Project.replace_media_path
-# ---------------------------------------------------------------------------
 
 def test_replace_media_path(project):
     project._data.setdefault('sourceBin', []).extend([
@@ -811,19 +742,11 @@ def test_replace_media_path_no_match(project):
 
 
 
-# ---------------------------------------------------------------------------
-# Project.has_effects
-# ---------------------------------------------------------------------------
-
 def test_project_has_effects(project):
     assert project.has_effects is False
 
 
 
-
-# ---------------------------------------------------------------------------
-# Project.has_transitions
-# ---------------------------------------------------------------------------
 
 def test_project_has_transitions(project):
     assert project.has_transitions is False
@@ -831,19 +754,11 @@ def test_project_has_transitions(project):
 
 
 
-# ---------------------------------------------------------------------------
-# Project.has_keyframes
-# ---------------------------------------------------------------------------
-
 def test_project_has_keyframes(project):
     assert project.has_keyframes is False
 
 
 
-
-# ---------------------------------------------------------------------------
-# Project.empty_tracks
-# ---------------------------------------------------------------------------
 
 def test_project_empty_tracks_returns_tracks_with_no_clips():
     """Project.empty_tracks delegates to timeline.empty_tracks."""
@@ -868,10 +783,6 @@ def test_project_empty_tracks_returns_empty_list_when_all_have_clips():
 
 
 
-
-# ---------------------------------------------------------------------------
-# Project.remove_track_by_name
-# ---------------------------------------------------------------------------
 
 def test_remove_track_by_name_found(project):
     """remove_track_by_name removes the first matching track and returns True."""
@@ -906,12 +817,9 @@ def test_project_empty_tracks_property(project):
 
 
 
-# ── _probe_media with pymediainfo ────────────────────────────────────
-
 
 class TestProbeMediaPymediainfo:
     def test_pymediainfo_video_track(self, monkeypatch):
-        from camtasia.project import _probe_media
 
         class FakeTrack:
             def __init__(self, track_type, **kw):
@@ -935,7 +843,6 @@ class TestProbeMediaPymediainfo:
             def parse(path):
                 return FakeInfo()
 
-        import sys
         fake_module = type(sys)('pymediainfo')
         fake_module.MediaInfo = FakeMediaInfo
         monkeypatch.setitem(sys.modules, 'pymediainfo', fake_module)
@@ -947,8 +854,6 @@ class TestProbeMediaPymediainfo:
 
     def test_pymediainfo_import_error_falls_back_to_ffprobe(self, monkeypatch):
         """When pymediainfo raises ImportError, _probe_media falls back to ffprobe."""
-        from camtasia.project import _probe_media
-        import subprocess, sys
 
         # Make pymediainfo import fail
         monkeypatch.delitem(sys.modules, 'pymediainfo', raising=False)
@@ -978,8 +883,6 @@ class TestProbeMediaPymediainfo:
 
     def test_pymediainfo_exception_falls_back_to_ffprobe(self, monkeypatch):
         """When pymediainfo.parse raises an exception, _probe_media falls back to ffprobe."""
-        from camtasia.project import _probe_media
-        import subprocess, sys
 
         class BadMediaInfo:
             @staticmethod
@@ -1006,13 +909,9 @@ class TestProbeMediaPymediainfo:
         assert result['duration_seconds'] == 5.0
 
 
-# ── _probe_media_ffprobe ─────────────────────────────────────────────
-
 
 class TestProbeMediaFfprobe:
     def test_ffprobe_parses_width_height(self, monkeypatch):
-        from camtasia.project import _probe_media_ffprobe
-        import subprocess
 
         call_count = [0]
         def fake_run(*args, **kwargs):
@@ -1031,8 +930,6 @@ class TestProbeMediaFfprobe:
         assert result['duration_seconds'] == 5.5
 
     def test_ffprobe_exception_returns_minimal(self, monkeypatch):
-        from camtasia.project import _probe_media_ffprobe
-        import subprocess
 
         def fail_run(*args, **kwargs):
             raise OSError('ffprobe not found')
@@ -1044,37 +941,29 @@ class TestProbeMediaFfprobe:
         assert 'duration_seconds' not in result
 
 
-# ── _remap_src_recursive ────────────────────────────────────────────
-
 
 class TestRemapSrcRecursive:
     def test_remaps_src(self):
-        from camtasia.project import _remap_src_recursive
         clip = {'src': 1}
         _remap_src_recursive(clip, {1: 10})
         assert clip['src'] == 10
 
     def test_remaps_video_audio(self):
-        from camtasia.project import _remap_src_recursive
         clip = {'src': 1, 'video': {'src': 2}, 'audio': {'src': 3}}
         _remap_src_recursive(clip, {1: 10, 2: 20, 3: 30})
         assert clip['video']['src'] == 20
         assert clip['audio']['src'] == 30
 
     def test_remaps_tracks(self):
-        from camtasia.project import _remap_src_recursive
         clip = {'tracks': [{'medias': [{'src': 5}]}]}
         _remap_src_recursive(clip, {5: 50})
         assert clip['tracks'][0]['medias'][0]['src'] == 50
 
     def test_remaps_medias(self):
-        from camtasia.project import _remap_src_recursive
         clip = {'medias': [{'src': 7}]}
         _remap_src_recursive(clip, {7: 70})
         assert clip['medias'][0]['src'] == 70
 
-
-# ── has_screen_recording with ScreenVMFile ───────────────────────────
 
 
 class TestHasScreenRecordingDirect:
@@ -1089,15 +978,10 @@ class TestHasScreenRecordingDirect:
         assert proj.has_screen_recording is True
 
 
-# ── swap_tracks with short trackAttributes ───────────────────────────
-
 
 class TestSwapTracksShortAttrs:
     def test_warns_when_attrs_too_short(self, tmp_path, monkeypatch):
         """When trackAttributes is shorter than the track indices being swapped, a warning is emitted."""
-        import warnings as w
-        from camtasia.timeline.timeline import Timeline
-        from camtasia.timeline.track import Track
         data = json.loads(json.dumps(MINIMAL_PROJECT_DATA))
         data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'] = [
             {'trackIndex': 0, 'medias': []},
@@ -1125,8 +1009,6 @@ class TestSwapTracksShortAttrs:
             proj.swap_tracks('A', 'B')
         assert any('trackAttributes too short' in str(c.message) for c in caught)
 
-
-# ── all_clips with StitchedMedia / UnifiedMedia ─────────────────────
 
 
 class TestAllClipsNested:
@@ -1159,8 +1041,6 @@ class TestAllClipsNested:
         assert 'AMFile' in types
 
 
-# ── validate with overlapping clips ──────────────────────────────────
-
 
 class TestValidateOverlaps:
     def test_overlapping_clips_reported(self, tmp_path):
@@ -1173,10 +1053,8 @@ class TestValidateOverlaps:
         ]
         issues = proj.validate()
         overlap_issues = [i for i in issues if 'Overlapping' in i.message]
-        assert len(overlap_issues) > 0
+        assert len(overlap_issues) == 1
 
-
-# ── validate_and_report ──────────────────────────────────────────────
 
 
 class TestValidateAndReport:
@@ -1200,8 +1078,6 @@ class TestValidateAndReport:
         assert 'issue(s) found' in report
 
 
-# ── save with Infinity/NaN ───────────────────────────────────────────
-
 
 class TestSaveSpecialFloats:
     def test_infinity_replaced(self, tmp_path):
@@ -1217,8 +1093,6 @@ class TestSaveSpecialFloats:
         assert 'NaN' not in text
 
 
-# ── import_media ValueError for unknown extension ────────────────────
-
 
 class TestImportMediaUnknownExtension:
     def test_raises_for_unknown_extension(self, tmp_path):
@@ -1230,8 +1104,6 @@ class TestImportMediaUnknownExtension:
             proj.import_media(bad_file)
 
 
-# ── import_media audio/video duration defaults ───────────────────────
-
 
 class TestImportMediaDurationDefaults:
     def test_audio_duration_from_probe(self, tmp_path, monkeypatch):
@@ -1239,7 +1111,6 @@ class TestImportMediaDurationDefaults:
         proj = Project(proj_dir)
         wav = tmp_path / 'test.wav'
         wav.write_bytes(b'\x00')
-        import camtasia.project as proj_mod
         monkeypatch.setattr(proj_mod, '_probe_media', lambda p: {
             '_backend': 'ffprobe', 'duration_seconds': 2.0, 'sample_rate': 44100,
         })
@@ -1251,15 +1122,12 @@ class TestImportMediaDurationDefaults:
         proj = Project(proj_dir)
         mp4 = tmp_path / 'test.mp4'
         mp4.write_bytes(b'\x00')
-        import camtasia.project as proj_mod
         monkeypatch.setattr(proj_mod, '_probe_media', lambda p: {
             '_backend': 'ffprobe', 'duration_seconds': 3.0, 'frame_rate': 30,
         })
         media = proj.import_media(mp4)
         assert media is not None
 
-
-# ── media_summary ────────────────────────────────────────────────────
 
 
 class TestMediaSummary:
@@ -1283,8 +1151,6 @@ class TestMediaSummary:
         assert summary['wav'] == 1
 
 
-# ── rescale_timeline ─────────────────────────────────────────────────
-
 
 class TestRescaleTimeline:
     def test_rescale_timeline(self, tmp_path):
@@ -1298,8 +1164,6 @@ class TestRescaleTimeline:
         assert track._data['medias'][0]['duration'] == 2000
 
 
-# ── normalize_audio ──────────────────────────────────────────────────
-
 
 class TestNormalizeAudio:
     def test_normalize_unified_media(self, tmp_path):
@@ -1311,7 +1175,7 @@ class TestNormalizeAudio:
             'audio': {'_type': 'AMFile', 'attributes': {'gain': 0.5}},
         }]
         count = proj.normalize_audio(target_gain=0.8)
-        assert count >= 1
+        assert count == 2
 
     def test_normalize_amfile(self, tmp_path):
         proj_dir = _create_cmproj(tmp_path)
@@ -1324,10 +1188,8 @@ class TestNormalizeAudio:
             'attributes': {'ident': '', 'gain': 0.5, 'mixToMono': False, 'loudnessNormalization': False},
         }]
         count = proj.normalize_audio(target_gain=0.9)
-        assert count >= 1
+        assert count == 1
 
-
-# ── health_report with gaps ──────────────────────────────────────────
 
 
 class TestHealthReportGaps:
