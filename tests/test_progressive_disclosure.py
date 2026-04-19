@@ -64,6 +64,7 @@ def test_progressive_disclosure_creates_separate_tracks(images: list[Path]):
     assert 'Prog-1' in track_names
     assert 'Prog-2' in track_names
     assert len(clips) == 3
+    assert all(hasattr(c, 'start_seconds') for c in clips)
 
     # Each clip lives on a different track
     clip_track_names = set()
@@ -101,6 +102,10 @@ def test_progressive_disclosure_images_accumulate(images: list[Path]):
         if c.start_seconds <= t < c.start_seconds + c.duration_seconds
     ]
     assert len(visible) == 3
+    visible_starts = sorted(c.start_seconds for c in visible)
+    assert abs(visible_starts[0] - 0.0) < 0.01
+    assert abs(visible_starts[1] - 5.0) < 0.01
+    assert abs(visible_starts[2] - 10.0) < 0.01
 
 
 def test_progressive_disclosure_timing(images: list[Path]):
@@ -139,7 +144,9 @@ def test_progressive_disclosure_fade_in(images: list[Path]):
     params = clip_data.get('parameters', {})
     opacity_param = params.get('opacity', {})
     opacity_kfs = opacity_param.get('keyframes', []) if isinstance(opacity_param, dict) else []
-    assert len(opacity_kfs) > 0, 'Expected opacity keyframes for fade-in'
+    assert len(opacity_kfs) >= 1, 'Expected at least 1 opacity keyframe for fade-in'
+    assert opacity_kfs[0].get('value') == 1.0, 'Opacity keyframe should target fully opaque'
+    assert opacity_kfs[0].get('duration', 0) > 0, 'Opacity keyframe should have a fade duration'
 
     # Without fade
     proj2 = _make_project()

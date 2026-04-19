@@ -81,7 +81,7 @@ class TestAddTitleCard:
         track = proj.timeline.find_track_by_name('Titles')
         assert track is not None
         clip_ids = list(track.clip_ids)
-        assert len(clip_ids) >= 2
+        assert len(clip_ids) == 2
 
 
 # ── add_subtitle_track ──────────────────────────────────────────────

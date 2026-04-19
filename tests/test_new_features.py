@@ -557,7 +557,7 @@ class TestTestProjectBIntegration:
         assert actual_masks != []
         # Verify the raw parameter keys use dashes (real format)
         actual_params = actual_masks[0]["parameters"]
-        assert "mask-shape" in actual_params or "mask_shape" in actual_params
+        assert "mask-shape" in actual_params
 
     def test_motion_blur_effects(self, test_project_b_data):
         actual_effects = _collect_all(
@@ -607,11 +607,9 @@ class TestTestProjectBIntegration:
             "def": actual_callouts[0],
         })
         actual_fill = actual_callout.fill_color
-        assert isinstance(actual_fill, tuple)
-        assert len(actual_fill) == 4
+        assert actual_fill == (1.0, 1.0, 1.0, 1.0)
         actual_stroke = actual_callout.stroke_color
-        assert isinstance(actual_stroke, tuple)
-        assert len(actual_stroke) == 4
+        assert actual_stroke == (1.0, 1.0, 1.0, 1.0)
 
     def test_text_rectangle_has_corner_radius(self, test_project_b_data):
         actual_callouts = _collect_all(

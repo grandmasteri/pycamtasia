@@ -76,7 +76,7 @@ class TestGroupCount:
         assert empty_project.group_count == 0
 
     def test_returns_int(self, complex_project: Project) -> None:
-        assert isinstance(complex_project.group_count, int)
+        assert complex_project.group_count == len(complex_project.all_groups)
 
 
 # ---------------------------------------------------------------------------

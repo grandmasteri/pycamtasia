@@ -611,14 +611,14 @@ class TestBaseClipEffects:
         clip = BaseClip(data)
         effect_data = {"effectName": "TestEffect", "bypassed": False}
         actual_effect = clip.add_effect(effect_data)
-        assert actual_effect is not None
+        assert actual_effect.name == "TestEffect"
         assert data["effects"][0]["effectName"] == "TestEffect"
 
     def test_add_drop_shadow(self):
         data = _base()
         clip = BaseClip(data)
         actual_effect = clip.add_drop_shadow(offset=10, blur=20, opacity=0.3, angle=5.0, color=(0.1, 0.2, 0.3))
-        assert actual_effect is not None
+        assert actual_effect.name == "DropShadow"
         effect_dict = data["effects"][0]
         assert effect_dict["effectName"] == "DropShadow"
         assert effect_dict["parameters"]["offset"] == 10
@@ -627,7 +627,7 @@ class TestBaseClipEffects:
         data = _base()
         clip = BaseClip(data)
         actual_effect = clip.add_glow(radius=50.0, intensity=0.5)
-        assert actual_effect is not None
+        assert actual_effect.name == "Glow"
         assert data["effects"][0]["effectName"] == "Glow"
         assert data["effects"][0]["parameters"]["radius"] == 50.0
 
@@ -635,7 +635,7 @@ class TestBaseClipEffects:
         data = _base()
         clip = BaseClip(data)
         actual_effect = clip.add_round_corners(radius=20.0)
-        assert actual_effect is not None
+        assert actual_effect.name == "RoundCorners"
         assert data["effects"][0]["effectName"] == "RoundCorners"
         assert data["effects"][0]["parameters"]["radius"] == 20.0
 
@@ -654,7 +654,7 @@ class TestBaseClipEffects:
             radius=40.0, intensity=0.4,
             fade_in_seconds=0.3, fade_out_seconds=0.5,
         )
-        assert actual_glow is not None
+        assert actual_glow.name == "Glow"
         effect_dict = data["effects"][0]
         assert effect_dict["effectName"] == "Glow"
         assert effect_dict["parameters"]["radius"]["defaultValue"] == 40.0

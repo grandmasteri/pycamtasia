@@ -26,7 +26,7 @@ class TestFixtureValidation:
         for track in tracks:
             for media in track.get('medias', []):
                 clip = clip_from_dict(media)
-                assert clip.id is not None
+                assert clip.id > 0
 
     def test_no_duplicate_ids(self, fixture):
         data = json.loads((FIXTURES / fixture).read_text())

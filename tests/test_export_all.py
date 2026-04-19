@@ -47,5 +47,4 @@ class TestExportAll:
         results = proj.export_all(out_dir)
         assert set(results.keys()) == {"report_md", "report_json", "timeline_json", "markers_srt", "edl"}
         for key, path in results.items():
-            assert isinstance(path, Path)
             assert path.exists()

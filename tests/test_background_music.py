@@ -32,7 +32,8 @@ def _make_project():
 def test_returns_base_clip():
     proj = _make_project()
     clip = proj.add_background_music(EMPTY_WAV)
-    assert isinstance(clip, BaseClip)
+    assert clip.start == 0
+    assert clip.volume == 0.3
 
 
 def test_default_volume():
@@ -51,14 +52,18 @@ def test_default_track_name():
     proj = _make_project()
     proj.add_background_music(EMPTY_WAV)
     track = proj.timeline.get_or_create_track('Background Music')
-    assert len(list(track.clips)) == 1
+    clips = list(track.clips)
+    assert len(clips) == 1
+    assert clips[0].volume == 0.3
 
 
 def test_custom_track_name():
     proj = _make_project()
     proj.add_background_music(EMPTY_WAV, track_name='BGM')
     track = proj.timeline.get_or_create_track('BGM')
-    assert len(list(track.clips)) == 1
+    clips = list(track.clips)
+    assert len(clips) == 1
+    assert clips[0].start == 0
 
 
 def test_clip_starts_at_zero():
@@ -77,27 +82,28 @@ def test_empty_project_uses_fallback_duration():
 def test_string_path_accepted():
     proj = _make_project()
     clip = proj.add_background_music(str(EMPTY_WAV))
-    assert isinstance(clip, BaseClip)
+    assert clip.volume == 0.3
+    assert clip.start == 0
 
 
 def test_no_fade_in():
     proj = _make_project()
-    # Should not raise when fade_in_seconds=0
     clip = proj.add_background_music(EMPTY_WAV, fade_in_seconds=0)
-    assert isinstance(clip, BaseClip)
+    # Only fade-out should be present (default 3.0s)
+    assert clip.volume == 0.3
 
 
 def test_no_fade_out():
     proj = _make_project()
-    # Should not raise when fade_out_seconds=0
     clip = proj.add_background_music(EMPTY_WAV, fade_out_seconds=0)
-    assert isinstance(clip, BaseClip)
+    # Only fade-in should be present (default 2.0s)
+    assert clip.volume == 0.3
 
 
 def test_no_fades():
     proj = _make_project()
     clip = proj.add_background_music(EMPTY_WAV, fade_in_seconds=0, fade_out_seconds=0)
-    assert isinstance(clip, BaseClip)
+    assert 'opacity' not in clip._data.get('parameters', {})
 
 
 def test_media_imported_to_bin():
@@ -110,4 +116,6 @@ def test_media_imported_to_bin():
 def test_custom_fade_values():
     proj = _make_project()
     clip = proj.add_background_music(EMPTY_WAV, fade_in_seconds=1.0, fade_out_seconds=5.0)
-    assert isinstance(clip, BaseClip)
+    opacity = clip._data.get('parameters', {}).get('opacity')
+    assert isinstance(opacity, dict)
+    assert len(opacity['keyframes']) == 2

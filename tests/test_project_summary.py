@@ -71,7 +71,7 @@ class TestSummary:
         assert len(lines) >= 6
 
     def test_returns_string(self, project):
-        assert isinstance(project.summary(), str)
+        assert 'Project:' in project.summary()
 
 
 class TestRepr:

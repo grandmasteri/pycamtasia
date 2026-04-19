@@ -51,7 +51,7 @@ class TestNextClipId:
         data = _make_timeline_data(tracks=[])
         timeline = Timeline(data)
         actual_result = timeline.next_clip_id()
-        assert actual_result >= 1  # accounts for timeline ID
+        assert actual_result == 2  # timeline data has id=1
 
     def test_single_track(self):
         tracks = [{"trackIndex": 0, "medias": [_media_dict(5)]}]

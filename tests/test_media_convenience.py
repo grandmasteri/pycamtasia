@@ -28,7 +28,7 @@ class TestFindByType:
         ]
         mb = _make_bin(entries)
         result = mb.find_by_type(MediaType.Video)
-        assert len(result) == 2
+        assert {m.id for m in result} == {1, 3}
         assert all(m.type == MediaType.Video for m in result)
 
     def test_find_by_type_empty(self):
@@ -45,7 +45,7 @@ class TestAudioFilesProperty:
             _make_media(3, 2, "./media/b.wav"),
         ]
         mb = _make_bin(entries)
-        assert len(mb.audio_files) == 2
+        assert {m.id for m in mb.audio_files} == {1, 3}
         assert all(m.type == MediaType.Audio for m in mb.audio_files)
 
 
@@ -57,7 +57,7 @@ class TestVideoFilesProperty:
             _make_media(3, 0),
         ]
         mb = _make_bin(entries)
-        assert len(mb.video_files) == 2
+        assert {m.id for m in mb.video_files} == {1, 3}
         assert all(m.type == MediaType.Video for m in mb.video_files)
 
 
@@ -69,7 +69,7 @@ class TestImageFilesProperty:
             _make_media(3, 0),
         ]
         mb = _make_bin(entries)
-        assert len(mb.image_files) == 2
+        assert {m.id for m in mb.image_files} == {1, 2}
         assert all(m.type == MediaType.Image for m in mb.image_files)
 
 

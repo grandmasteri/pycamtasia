@@ -99,4 +99,4 @@ class TestRoundTrip:
 
         proj = load_project(str(dst))
         actual_summary = proj.summary()
-        assert 'Track' in actual_summary or 'Canvas' in actual_summary
+        assert 'Tracks:' in actual_summary and 'Duration:' in actual_summary

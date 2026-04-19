@@ -48,7 +48,7 @@ def test_merge_custom_title(tmp_path, project_a, project_b):
 def test_merge_empty_list(tmp_path):
     merged = Project.merge_projects([], tmp_path / 'merged.cmproj')
     assert merged.clip_count == 0
-    assert merged.track_count >= 0
+    assert merged.track_count == 2
 
 
 

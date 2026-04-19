@@ -27,12 +27,14 @@ class TestAddGrid:
         images = [DUMMY_IMAGE] * 4
         placed = layout.add_grid(images, start_seconds=0, end_seconds=10)
         assert len(placed) == 4
+        assert all(p.clip_type == 'IMFile' for p in placed)
 
     def test_tiles_property_accumulates(self, project):
         layout = TileLayout(project)
         layout.add_grid([DUMMY_IMAGE] * 2, start_seconds=0, end_seconds=5, grid=(1, 2))
         layout.add_grid([DUMMY_IMAGE], start_seconds=5, end_seconds=10, grid=(1, 1))
         assert len(layout.tiles) == 3
+        assert all(t.clip_type == 'IMFile' for t in layout.tiles)
 
     def test_tiles_returns_copy(self, project):
         layout = TileLayout(project)
@@ -46,11 +48,13 @@ class TestAddGrid:
         images = [DUMMY_IMAGE] * 10
         placed = layout.add_grid(images, start_seconds=0, end_seconds=10, grid=(2, 2))
         assert len(placed) == 4  # 2x2 = 4 max
+        assert all(p.clip_type == 'IMFile' for p in placed)
 
     def test_fewer_images_than_cells(self, project):
         layout = TileLayout(project)
         placed = layout.add_grid([DUMMY_IMAGE], start_seconds=0, end_seconds=5, grid=(2, 2))
         assert len(placed) == 1
+        assert placed[0].clip_type == 'IMFile'
 
     def test_empty_images_list(self, project):
         layout = TileLayout(project)
@@ -100,6 +104,8 @@ class TestAddGrid:
         )
         # Second clip should start 0.5s later
         assert len(placed) == 2
+        assert placed[0].start_seconds == pytest.approx(1.0)
+        assert placed[1].start_seconds == pytest.approx(1.5)
 
     def test_no_fade_when_zero(self, project):
         layout = TileLayout(project)
@@ -109,6 +115,7 @@ class TestAddGrid:
             grid=(1, 1), fade_in_seconds=0,
         )
         assert len(placed) == 1
+        assert placed[0].clip_type == 'IMFile'
 
     def test_custom_track_prefix(self, project):
         layout = TileLayout(project, track_prefix='Recap')
@@ -123,6 +130,7 @@ class TestAddGrid:
             [DUMMY_IMAGE] * 3, start_seconds=0, end_seconds=5, grid=(3, 1),
         )
         assert len(placed) == 3
+        assert all(p.clip_type == 'IMFile' for p in placed)
         # All should have x offset = 0 (single column)
         for clip in placed:
             assert clip.translation[0] == 0.0
@@ -135,3 +143,4 @@ class TestImportPath:
             [str(DUMMY_IMAGE)], start_seconds=0, end_seconds=5, grid=(1, 1),
         )
         assert len(placed) == 1
+        assert placed[0].clip_type == 'IMFile'

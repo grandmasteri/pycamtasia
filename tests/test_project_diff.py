@@ -46,7 +46,7 @@ def test_track_added():
     a, b = _load_empty(), _load_empty()
     b.timeline.get_or_create_track('New')
     result = diff_projects(a, b)
-    assert len(result.tracks_added) >= 1
+    assert len(result.tracks_added) == 1
     assert result.tracks_removed == []
 
 
@@ -54,7 +54,7 @@ def test_track_removed():
     a, b = _load_empty(), _load_empty()
     a.timeline.get_or_create_track('Extra')
     result = diff_projects(a, b)
-    assert len(result.tracks_removed) >= 1
+    assert len(result.tracks_removed) == 1
     assert result.tracks_added == []
 
 
@@ -83,7 +83,7 @@ def test_media_added():
     wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
     b.import_media(wav)
     result = diff_projects(a, b)
-    assert len(result.media_added) >= 1
+    assert len(result.media_added) == 1
     assert result.media_removed == []
 
 

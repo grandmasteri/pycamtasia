@@ -46,7 +46,7 @@ class TestAddFourCornerGradient:
 
         assert clip is not None
         assert clip._data['_type'] == 'VMFile'
-        # Shader was imported
+        assert clip.start == 0
         shaders = proj.find_media_by_suffix('.tscshadervid')
         assert [s.identity for s in shaders] == ['gradient']
 
@@ -90,11 +90,11 @@ class TestAddFourCornerGradient:
         shader = _make_shader(tmp_path)
         clip = proj.add_four_corner_gradient(Path(shader), duration_seconds=5.0)
 
-        assert clip is not None
+        assert clip._data['_type'] == 'VMFile'
 
     def test_accepts_string_path(self, tmp_path: Path):
         proj = _make_project(tmp_path)
         shader = _make_shader(tmp_path)
         clip = proj.add_four_corner_gradient(str(shader), duration_seconds=5.0)
 
-        assert clip is not None
+        assert clip._data['_type'] == 'VMFile'

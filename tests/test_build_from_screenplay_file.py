@@ -39,8 +39,9 @@ class TestBuildFromScreenplayFile:
             result = project.build_from_screenplay_file(screenplay_md, audio_dir)
 
         assert len(result['clips']) == 2
+        assert all(c.clip_type == 'AMFile' for c in result['clips'])
         assert result['total_duration'] > 0
-        assert len(result['sections']) == 1
+        assert result['sections'][0].title == 'Intro'
 
     def test_skips_missing_audio(self, project, tmp_path):
         """VO blocks without a matching .wav are silently skipped."""
@@ -58,6 +59,7 @@ class TestBuildFromScreenplayFile:
             result = project.build_from_screenplay_file(screenplay_md, audio_dir)
 
         assert len(result['clips']) == 1
+        assert result['clips'][0].clip_type == 'AMFile'
 
     def test_empty_screenplay(self, project, tmp_path):
         """An empty screenplay produces no clips."""

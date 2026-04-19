@@ -20,7 +20,6 @@ class TestExportProjectReport:
     def test_returns_path_object(self, project, tmp_path):
         out = tmp_path / 'report.md'
         result = project.export_project_report(out)
-        assert isinstance(result, Path)
         assert result == out
 
     def test_file_is_created(self, project, tmp_path):

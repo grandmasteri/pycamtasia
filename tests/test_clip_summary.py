@@ -69,4 +69,5 @@ class TestSummaryReturnType:
 
     def test_multiline(self) -> None:
         lines = _clip().summary().split("\n")
-        assert len(lines) >= 3
+        assert len(lines) == 3
+        assert lines[0] == "VMFile(id=1)"

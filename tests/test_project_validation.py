@@ -157,4 +157,4 @@ def test_save_calls_validate(project, tmp_path):
 def test_validate_schema_returns_list(project):
     """validate_schema returns a list of ValidationIssue."""
     result = project.validate_schema()
-    assert isinstance(result, list)
+    assert result == []

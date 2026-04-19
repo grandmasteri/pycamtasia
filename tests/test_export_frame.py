@@ -74,8 +74,7 @@ def test_export_frame_and_import_returns_media(mock_probe, mock_run, project):
 
     try:
         media = project.export_frame_and_import('/tmp/clip.mp4', 3.0)
-        assert media is not None
-        assert media.source.name.endswith('.png')
+        assert media.source.name == 'clip_frame_3.000s.png'
     finally:
         expected_png.unlink(missing_ok=True)
 

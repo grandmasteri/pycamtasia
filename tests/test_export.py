@@ -32,6 +32,10 @@ def test_srt_marker_count(project, tmp_path):
     out = export_markers_as_srt(project, tmp_path / 'out.srt')
     blocks = [b for b in out.read_text().split('\n\n') if b.strip()]
     assert len(blocks) == 3
+    block_text = '\n\n'.join(blocks)
+    assert 'A' in block_text
+    assert 'B' in block_text
+    assert 'C' in block_text
 
 
 def test_srt_timecodes(project, tmp_path):
@@ -116,7 +120,7 @@ class TestReportWithMedia:
         output = tmp_path / 'report.json'
         export_project_report(project, output, format='json')
         actual_data = json.loads(output.read_text())
-        assert actual_data['media_count'] >= 1
+        assert actual_data['media_count'] == 1
         actual_identities = [m['identity'] for m in actual_data['media']]
         assert 'empty' in actual_identities
 
@@ -139,6 +143,8 @@ def test_edl_events(project, tmp_path):
     out = export_edl(project, tmp_path / 'out.edl')
     event_lines = [l for l in out.read_text().splitlines() if l and l[0].isdigit()]
     assert len(event_lines) == 2
+    assert event_lines[0].startswith('001')
+    assert event_lines[1].startswith('002')
 
 
 def test_edl_timecodes(project, tmp_path):
@@ -199,6 +205,7 @@ def test_csv_export_rows(project, tmp_path):
     out = export_csv(project, tmp_path / 'out.csv')
     lines = [l for l in out.read_text().splitlines() if l.strip()]
     assert len(lines) == 3  # header + 2 data rows
+    assert lines[0].startswith('track_name')  # header row
     row = lines[1].split(',')
     assert row[0] == 'Test'  # track_name
     assert row[4] == '0.000'  # start_seconds

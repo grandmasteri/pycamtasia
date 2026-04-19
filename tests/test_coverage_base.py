@@ -57,9 +57,10 @@ class TestFadeInMergesWithFadeOut:
         clip = BaseClip(data)
         result = clip.fade_in(1.0)
         assert result is clip
-        # After merge, visual track should have 2 keyframes
+        # After merge, visual track should have segments with endTime keys
         visual = data['animationTracks'].get('visual', [])
-        assert len(visual) > 0
+        assert len(visual) == 2
+        assert 'endTime' in visual[0]
 
 
 # behaviors.py:173,177 — get_parameter / set_parameter raise NotImplementedError

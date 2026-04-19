@@ -32,36 +32,30 @@ def screenplay(tmp_path):
 
 
 def test_parse_sections(screenplay):
-    assert len(screenplay.sections) == 3
-    assert screenplay.sections[0].title == "Introduction"
-    assert screenplay.sections[1].title == "Main Content"
-    assert screenplay.sections[2].title == "Sub Section"
+    assert [s.title for s in screenplay.sections] == ["Introduction", "Main Content", "Sub Section"]
 
 
 def test_parse_vo_blocks(screenplay):
-    assert len(screenplay.vo_blocks) == 3
-    assert screenplay.vo_blocks[0].id == "1.1"
+    assert [b.id for b in screenplay.vo_blocks] == ["1.1", "2.1", "3.1"]
     assert screenplay.vo_blocks[0].text == "Welcome to the tutorial"
     assert screenplay.vo_blocks[1].section == "Main Content"
 
 
 def test_parse_pauses(screenplay):
     pauses = [p for s in screenplay.sections for p in s.pauses]
-    assert len(pauses) == 2
-    assert pauses[0].duration_seconds == 1.0
-    assert pauses[1].duration_seconds == 1.5
+    assert [p.duration_seconds for p in pauses] == [1.0, 1.5]
 
 
 def test_parse_transitions(screenplay):
     transitions = [t for s in screenplay.sections for t in s.transitions]
-    assert len(transitions) == 1
-    assert transitions[0].name == "fade to black"
+    assert [t.name for t in transitions] == ["fade to black"]
 
 
 def test_parse_images(screenplay):
     assert len(screenplay.all_images) == 1
-    assert screenplay.all_images[0].alt == "overview"
-    assert screenplay.all_images[0].path == "images/overview.png"
+    img = screenplay.all_images[0]
+    assert img.alt == "overview"
+    assert img.path == "images/overview.png"
 
 
 def test_vo_blocks_property(screenplay):

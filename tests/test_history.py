@@ -272,4 +272,4 @@ class TestWithUndoDecorator:
             return old_title
 
         returned_title: str = get_and_set_title(project, "New")
-        assert isinstance(returned_title, str)
+        assert returned_title == ""

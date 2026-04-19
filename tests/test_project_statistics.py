@@ -52,19 +52,19 @@ class TestStatistics:
         from pathlib import Path
         wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
         project.import_media(wav)
-        assert project.statistics()['media_count'] >= 1
+        assert project.statistics()['media_count'] == 1
 
     def test_empty_tracks_count(self, project):
         project.timeline.get_or_create_track('Empty1')
         project.timeline.get_or_create_track('Empty2')
         stats = project.statistics()
-        assert stats['empty_tracks'] >= 2
+        assert stats['empty_tracks'] == 4
 
 
 class TestToMarkdownReport:
     def test_returns_string(self, project):
         report = project.to_markdown_report()
-        assert isinstance(report, str)
+        assert '# Project Report' in report
 
     def test_contains_heading(self, project):
         project.title = 'Demo'

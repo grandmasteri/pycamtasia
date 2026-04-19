@@ -102,7 +102,7 @@ class TestAddCountdownReturn:
 
     def test_default_returns_three_clips(self):
         result = _make_project().add_countdown()
-        assert len(result) == 3
+        assert [c.text for c in result] == ['3', '2', '1']
 
     def test_all_are_base_clips(self):
         for clip in _make_project().add_countdown():
@@ -116,9 +116,7 @@ class TestAddCountdownText:
 
     def test_custom_seconds(self):
         clips = _make_project().add_countdown(seconds=5)
-        assert len(clips) == 5
-        assert clips[0].text == '5'
-        assert clips[-1].text == '1'
+        assert [c.text for c in clips] == ['5', '4', '3', '2', '1']
 
 
 class TestAddCountdownTrack:

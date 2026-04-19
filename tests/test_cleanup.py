@@ -106,7 +106,7 @@ class TestCompactProject:
         result = compact_project(project)
 
         assert result['orphaned_media_removed'] == 1
-        assert result['empty_tracks_removed'] >= 0
+        assert result['empty_tracks_removed'] == 1
         assert set(result.keys()) == {'orphaned_media_removed', 'empty_tracks_removed'}
 
 
@@ -142,7 +142,7 @@ class TestCompactMethod:
         result = project.compact()
 
         assert result['orphaned_media_removed'] == 1
-        assert result['empty_tracks_removed'] >= 0
+        assert result['empty_tracks_removed'] == 1
 
     def test_compact_validates_after_cleanup(self, project):
         import pytest

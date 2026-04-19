@@ -66,6 +66,10 @@ class TestGroupClipsAcrossTracks:
         group = tl.group_clips_across_tracks([c0.id, c1.id], t2.index)
 
         assert len(group.tracks) == 2
+        # Verify each internal track has the expected clip type
+        track_types = [group.tracks[i].clips[0].clip_type for i in range(2)]
+        assert 'VMFile' in track_types
+        assert 'AMFile' in track_types
 
     def test_clip_starts_adjusted_to_group_relative(self, project):
         """Internal clip starts are relative to the Group's start."""
@@ -182,6 +186,7 @@ class TestGroupClipsAcrossTracks:
 
         assert len(group.tracks) == 1
         assert len(group.tracks[0].clips) == 1
+        assert group.tracks[0].clips[0].clip_type == 'VMFile'
         assert abs(group.start_seconds - 3.0) < 0.01
         assert abs(group.duration_seconds - 2.0) < 0.01
 
@@ -195,7 +200,9 @@ class TestGroupClipsAcrossTracks:
         group = tl.group_clips_across_tracks([c0.id, c1.id], t0.index)
 
         assert len(group.tracks) == 1
-        assert len(group.tracks[0].clips) == 2
+        internal_clips = list(group.tracks[0].clips)
+        assert len(internal_clips) == 2
+        assert all(c.clip_type == 'VMFile' for c in internal_clips)
 
 
 class TestProjectGroupClipsAcrossTracks:

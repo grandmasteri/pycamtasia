@@ -42,6 +42,10 @@ class TestSplitAllClipsAt:
         split_count: int = track.split_all_clips_at(5.0)
         assert split_count == 1
         assert len(data['medias']) == 2
+        # Left half ends at 5s, right half starts at 5s
+        starts = sorted(m['start'] for m in data['medias'])
+        assert starts[0] == seconds_to_ticks(0.0)
+        assert starts[1] == seconds_to_ticks(5.0)
 
     def test_splits_multiple_overlapping_clips(self) -> None:
         """Two clips that both span the time point are both split."""
@@ -52,6 +56,8 @@ class TestSplitAllClipsAt:
         split_count: int = track.split_all_clips_at(5.0)
         assert split_count == 2
         assert len(data['medias']) == 4
+        # All four pieces should be VMFile clips
+        assert all(m['_type'] == 'VMFile' for m in data['medias'])
 
     def test_returns_zero_when_no_clips_span_time(self) -> None:
         """No clips at the time point means nothing is split."""
@@ -103,4 +109,4 @@ class TestSplitAllClipsAt:
         """The return value is an int."""
         track, _ = _make_track(_clip(1, 0.0, 10.0))
         result = track.split_all_clips_at(5.0)
-        assert isinstance(result, int)
+        assert result == 1

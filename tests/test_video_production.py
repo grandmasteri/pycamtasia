@@ -119,11 +119,13 @@ class TestAddVoiceoverSequenceV2:
         placed_clips = proj.add_voiceover_sequence_v2([EMPTY_WAV])
         assert len(placed_clips) == 1
         assert placed_clips[0].clip_type == 'AMFile'
+        assert placed_clips[0].start == 0
 
     def test_multiple_audio_files(self):
         proj = _make_project()
         placed_clips = proj.add_voiceover_sequence_v2([EMPTY_WAV, EMPTY2_WAV])
         assert len(placed_clips) == 2
+        assert all(c.clip_type == 'AMFile' for c in placed_clips)
 
     def test_clips_are_sequential(self):
         proj = _make_project()
@@ -161,6 +163,7 @@ class TestAddVoiceoverSequenceV2:
         proj = _make_project()
         placed_clips = proj.add_voiceover_sequence_v2([str(EMPTY_WAV)])
         assert len(placed_clips) == 1
+        assert placed_clips[0].clip_type == 'AMFile'
 
 
 # ── Project.add_image_sequence ──────────────────────────────────────
@@ -179,11 +182,13 @@ class TestAddImageSequence:
         placed_clips = proj.add_image_sequence([self.image_a])
         assert len(placed_clips) == 1
         assert placed_clips[0].clip_type == 'IMFile'
+        assert placed_clips[0].start_seconds == pytest.approx(0.0, abs=0.01)
 
     def test_multiple_images(self):
         proj = _make_project()
         placed_clips = proj.add_image_sequence([self.image_a, self.image_b])
         assert len(placed_clips) == 2
+        assert all(c.clip_type == 'IMFile' for c in placed_clips)
 
     def test_clips_are_sequential(self):
         proj = _make_project()
@@ -241,3 +246,4 @@ class TestAddImageSequence:
         proj = _make_project()
         placed_clips = proj.add_image_sequence([str(self.image_a)])
         assert len(placed_clips) == 1
+        assert placed_clips[0].clip_type == 'IMFile'

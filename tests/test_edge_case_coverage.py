@@ -324,8 +324,8 @@ class TestMergeProjectsWithClips:
         a.save()
 
         merged = Project.merge_projects([a], tmp_path / 'merged.cmproj')
-        assert merged.clip_count >= 1
-        assert len(merged._data.get('sourceBin', [])) >= 1
+        assert merged.clip_count == 1
+        assert len(merged._data.get('sourceBin', [])) == 1
 
 
 class TestCopyTo:

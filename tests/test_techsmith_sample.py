@@ -32,6 +32,8 @@ class TestTechSmithSampleStructure:
     def test_track_count(self, sample_data):
         tracks = sample_data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
         assert len(tracks) == 5
+        attrs = sample_data['timeline'].get('trackAttributes', [])
+        assert len(attrs) == 5
 
 
 class TestTechSmithSampleClips:
@@ -49,7 +51,7 @@ class TestTechSmithSampleClips:
                     _check(t.get('medias', []))
         for track in tracks:
             _check(track.get('medias', []))
-        assert clip_count > 50  # The sample has ~77 clips
+        assert clip_count == 77  # The sample has exactly 77 clips
 
     def test_clip_types_found(self, sample_data):
         """Expected clip types are present."""
@@ -99,7 +101,7 @@ class TestTechSmithLibraryAsset:
                     _check(t.get('medias', []))
         for track in tracks:
             _check(track.get('medias', []))
-        assert clip_count > 10
+        assert clip_count == 30
 
     def test_has_media_matte_effect(self, asset_data):
         tracks = asset_data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
@@ -133,7 +135,7 @@ class TestTechSmithComplexAsset:
                     _check(t.get('medias', []))
         for track in tracks:
             _check(track.get('medias', []))
-        assert count[0] >= 40
+        assert count[0] == 43
 
     def test_has_stitched_media(self, complex_data):
         tracks = complex_data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']

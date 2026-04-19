@@ -17,6 +17,10 @@ class TestTransitionListClear:
         c2 = track.add_video(1, 5, 5)
         track.transitions.add('FadeThroughBlack', c1.id, c2.id, 100_000)
         assert len(track.transitions) == 1
+        trans = list(track.transitions)[0]
+        assert trans.name == 'FadeThroughBlack'
+        assert trans.left_media_id == c1.id
+        assert trans.right_media_id == c2.id
 
         track.transitions.clear()
         assert len(track.transitions) == 0
@@ -61,6 +65,9 @@ class TestProjectRepair:
         result = project.repair()
         assert result['stale_transitions_removed'] == 0
         assert len(track.transitions) == 1
+        trans = list(track.transitions)[0]
+        assert trans.left_media_id == c1.id
+        assert trans.right_media_id == c2.id
 
     def test_repair_returns_zero_counts_when_clean(self, project):
         result = project.repair()

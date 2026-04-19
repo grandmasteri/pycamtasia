@@ -81,12 +81,14 @@ class TestClipsInRange:
 class TestClipsOfType:
     def test_clips_of_type_amfile(self, tl: Timeline):
         results = tl.clips_of_type("AMFile")
-        assert len(results) == 2
+        ids = {clip.id for _, clip in results}
+        assert ids == {1, 2}
         assert all(clip.clip_type == "AMFile" for _, clip in results)
 
     def test_clips_of_type_imfile(self, tl: Timeline):
         results = tl.clips_of_type("IMFile")
-        assert len(results) == 2
+        ids = {clip.id for _, clip in results}
+        assert ids == {3, 5}
         assert all(clip.clip_type == "IMFile" for _, clip in results)
 
     def test_clips_of_type_none_found(self, tl: Timeline):
@@ -96,15 +98,18 @@ class TestClipsOfType:
 class TestConvenienceProperties:
     def test_audio_clips_property(self, tl: Timeline):
         results = tl.audio_clips
-        assert len(results) == 2
+        ids = {clip.id for _, clip in results}
+        assert ids == {1, 2}
         assert all(clip.clip_type == "AMFile" for _, clip in results)
 
     def test_image_clips_property(self, tl: Timeline):
         results = tl.image_clips
-        assert len(results) == 2
+        ids = {clip.id for _, clip in results}
+        assert ids == {3, 5}
         assert all(clip.clip_type == "IMFile" for _, clip in results)
 
     def test_video_clips_property(self, tl: Timeline):
         results = tl.video_clips
         assert len(results) == 1
         assert results[0][1].clip_type == "VMFile"
+        assert results[0][1].id == 4

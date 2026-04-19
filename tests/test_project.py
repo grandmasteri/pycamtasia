@@ -87,12 +87,12 @@ class TestProjectProperties:
     def test_media_bin_returns_media_bin(self, tmp_path: Path):
         project = Project(_create_cmproj(tmp_path))
         assert isinstance(project.media_bin, MediaBin)
-        assert list(project.media_bin) is not None
+        assert list(project.media_bin) == []
 
     def test_timeline_returns_timeline(self, tmp_path: Path):
         project = Project(_create_cmproj(tmp_path))
         assert isinstance(project.timeline, Timeline)
-        assert project.timeline.track_count >= 0
+        assert project.timeline.track_count == 1
 
     def test_authoring_client(self, tmp_path: Path):
         project = Project(_create_cmproj(tmp_path))
@@ -172,7 +172,7 @@ class TestNewProject:
         project = load_project(project_path)
         assert isinstance(project.timeline, Timeline)
         assert isinstance(project.media_bin, MediaBin)
-        assert list(project.media_bin) is not None
+        assert list(project.media_bin) == []
 
 
 class TestProjectRepr:

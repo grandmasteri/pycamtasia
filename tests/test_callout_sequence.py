@@ -17,6 +17,7 @@ class TestAddCalloutSequenceBasic:
         entries = [(0.0, 3.0, 'A'), (5.0, 2.0, 'B'), (10.0, 4.0, 'C')]
         result = project.add_callout_sequence(entries)
         assert len(result) == 3
+        assert [c.text for c in result] == ['A', 'B', 'C']
 
     def test_clips_have_correct_text(self, project):
         entries = [(0.0, 3.0, 'First'), (5.0, 2.0, 'Second')]
@@ -30,6 +31,7 @@ class TestAddCalloutSequenceBasic:
         track = project.timeline.find_track_by_name('MyCallouts')
         assert track is not None
         assert len(track) == 1
+        assert list(track.clips)[0].text == 'Hello'
 
     def test_default_track_name(self, project):
         entries = [(0.0, 2.0, 'Hello')]
@@ -77,3 +79,5 @@ class TestAddCalloutSequenceMultiple:
         project.add_callout_sequence(entries, track_name='Annotations')
         track = project.timeline.find_track_by_name('Annotations')
         assert len(track) == 3
+        texts = [c.text for c in track.clips]
+        assert texts == ['A', 'B', 'C']

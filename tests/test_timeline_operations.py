@@ -181,4 +181,4 @@ class TestRemoveAllEmptyTracks:
 
 def test_timeline_duration_seconds_property(project):
     """Timeline.duration_seconds delegates to total_duration_seconds."""
-    assert project.timeline.duration_seconds >= 0.0
+    assert project.timeline.duration_seconds == 0.0

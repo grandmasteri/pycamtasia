@@ -77,7 +77,9 @@ class TestSourceEffectProperties:
         e.set_shader_colors((255, 0, 0), (0, 255, 0))
         # Verify color params were set
         p = e._data['parameters']
-        assert any('red' in k for k in p)
+        assert p['Color0-red'] == 1.0
+        assert p['Color0-green'] == 0.0
+        assert p['Color1-green'] == 1.0
 
 
 # ===== effects/visual.py (lines 336, 341) =====
@@ -335,7 +337,8 @@ class TestEdlExport:
         out = tmp_path / 'test_um.edl'
         result = export_edl(project, out)
         content = result.read_text()
-        assert content.count('C') >= 2
+        assert '  V  ' in content
+        assert '  A  ' in content
 
 
 # ===== media_bin/media_bin.py (lines 71, 103-104, 514) =====

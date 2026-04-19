@@ -138,7 +138,7 @@ class TestMediaSummary:
 
     def test_media_summary_on_new_project(self, project) -> None:
         summary: dict[str, int] = project.media_summary
-        assert isinstance(summary, dict)
+        assert summary == {}
 
     def test_media_summary_returns_dict(self, project) -> None:
         summary: dict[str, int] = project.media_summary
@@ -208,4 +208,4 @@ class TestMediaSummaryWithMedia:
         project.import_media(wav_path)
         actual_summary: dict[str, int] = project.media_summary
         assert 'wav' in actual_summary
-        assert actual_summary['wav'] >= 1
+        assert actual_summary['wav'] == 1

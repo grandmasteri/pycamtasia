@@ -52,9 +52,7 @@ class TestBuildFromScreenplay:
     def test_returns_summary(self, project, tmp_path):
         sp = _make_screenplay([])
         result = build_from_screenplay(project, sp, tmp_path)
-        assert 'clips_placed' in result
-        assert 'pauses_added' in result
-        assert 'total_duration' in result
+        assert result == {'clips_placed': 0, 'pauses_added': 0, 'total_duration': 0.0}
 
     def test_custom_resolver(self, project, tmp_path):
         wav = Path(__file__).parent / 'fixtures' / 'empty.wav'

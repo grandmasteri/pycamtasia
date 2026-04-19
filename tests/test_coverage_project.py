@@ -55,7 +55,7 @@ class TestMergeProjectsTransitions:
                 found_trans = True
                 for tr in t._data['transitions']:
                     # IDs should be remapped (different from originals)
-                    assert 'leftMedia' in tr or 'rightMedia' in tr
+                    assert 'leftMedia' in tr and 'rightMedia' in tr
         assert found_trans
 
 

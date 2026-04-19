@@ -64,7 +64,7 @@ class TestApplyToAllGroups:
 
     def test_return_type_is_int(self, complex_project: Project) -> None:
         result = complex_project.apply_to_all_groups(lambda g: None)
-        assert isinstance(result, int)
+        assert result == complex_project.group_count
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +88,7 @@ class TestMuteAllGroups:
 
     def test_return_type_is_int(self, complex_project: Project) -> None:
         result = complex_project.mute_all_groups()
-        assert isinstance(result, int)
+        assert result == complex_project.group_count
 
     def test_idempotent(self, complex_project: Project) -> None:
         first_count: int = complex_project.mute_all_groups()

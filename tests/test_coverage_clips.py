@@ -177,7 +177,7 @@ class TestGroupSetInternalSegmentSpeedsCanvasWidthOnly:
             canvas_width=1920,
         )
         clip = data['tracks'][0]['medias'][0]
-        assert 'scale0' in clip['parameters']
+        assert clip['parameters']['scale0']['defaultValue'] == 1.0
 
     def test_canvas_height_only(self):
         """set_internal_segment_speeds with only canvas_height (no width)."""
@@ -190,7 +190,7 @@ class TestGroupSetInternalSegmentSpeedsCanvasWidthOnly:
             canvas_height=1080,
         )
         clip = data['tracks'][0]['medias'][0]
-        assert 'scale1' in clip['parameters']
+        assert clip['parameters']['scale1']['defaultValue'] == 1.0
 
     def test_source_bin_lookup_miss(self):
         """source_bin provided but no matching entry — falls back to group attrs."""
@@ -204,7 +204,9 @@ class TestGroupSetInternalSegmentSpeedsCanvasWidthOnly:
             canvas_width=1920,
             canvas_height=1080,
         )
-        assert len(data['tracks'][0]['medias']) == 1
+        medias = data['tracks'][0]['medias']
+        assert len(medias) == 1
+        assert medias[0]['_type'] in ('UnifiedMedia', 'ScreenVMFile', 'VMFile')
 
     def test_no_internal_track_raises(self):
         """set_internal_segment_speeds raises when no media track found."""
