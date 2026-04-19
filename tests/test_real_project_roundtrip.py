@@ -92,7 +92,7 @@ class TestRoundTrip:
         errors = [i for i in issues if i.level == 'error']
         if 'Anomaly Detection Demo (v3)' in project_path:
             # v3 fixture has a known stale transition reference (rightMedia=4 not on track)
-            assert len(errors) >= 1
+            assert len(errors) == 21  # known fixture issues: duplicate IDs + stale transition refs
         else:
             assert errors == []
 

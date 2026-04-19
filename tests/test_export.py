@@ -78,7 +78,7 @@ def test_report_json_has_tracks(project, tmp_path):
     out = export_project_report(project, tmp_path / 'report.json', format='json')
     actual_data = json.loads(out.read_text())
     assert isinstance(actual_data['tracks'], list)
-    assert any(t['clip_count'] > 0 for t in actual_data['tracks'])
+    assert sum(t['clip_count'] for t in actual_data['tracks']) == 1
     clip = next(c for t in actual_data['tracks'] for c in t['clips'])
     assert {'id', 'type', 'start_seconds', 'duration_seconds'}.issubset(clip)
 

@@ -107,7 +107,7 @@ class TestFadeIn:
         actual_kfs = actual_opacity["keyframes"]
         assert [kf["value"] for kf in actual_kfs] == [1.0]
         actual_visual = clip._data["animationTracks"]["visual"]
-        assert [v["duration"] > 0 for v in actual_visual] == [True]
+        assert all(v["duration"] == 705600000 for v in actual_visual)
 
     def test_returns_self_for_chaining(self):
         clip = IMFile(_clip_data())

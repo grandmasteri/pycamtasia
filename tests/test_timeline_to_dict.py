@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from pathlib import Path
 
 from camtasia.timing import seconds_to_ticks
@@ -32,7 +34,7 @@ def test_timeline_to_dict_with_clip(project):
     assert track_data[0]['clip_count'] == 1
     clip_data = track_data[0]['clips'][0]
     assert clip_data['type'] == 'VMFile'
-    assert clip_data['duration_seconds'] > 0
+    assert clip_data['duration_seconds'] == pytest.approx(5.0)
     assert 'id' in clip_data
     assert 'speed' in clip_data
     assert isinstance(clip_data['effects'], list)

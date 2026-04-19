@@ -198,7 +198,7 @@ class TestTotalPatchSizeBytes:
         history.undo(project_data)  # moves "second" to redo stack
 
         total_size: int = history.total_patch_size_bytes
-        assert total_size > 0
+        assert isinstance(total_size, int) and total_size > 0  # patch size depends on jsonpatch internals
         # Both undo (1 entry) and redo (1 entry) contribute
         assert history.undo_count == 1
         assert history.redo_count == 1
