@@ -4,6 +4,8 @@ from __future__ import annotations
 from fractions import Fraction
 
 from camtasia.timeline.clips import StitchedMedia, UnifiedMedia
+from camtasia.timeline.clips.base import BaseClip
+from camtasia.timing import seconds_to_ticks
 
 EDIT_RATE = 705_600_000
 
@@ -168,3 +170,28 @@ class TestStitchedMediaPropagation:
             assert child['duration'] == data['duration']
             assert child['mediaDuration'] == data['mediaDuration']
             assert child['scalar'] == data.get('scalar', 1)
+
+
+class TestStitchedMediaSetStartSeconds:
+    """set_start_seconds propagates start to StitchedMedia children."""
+
+    def test_propagates_start(self):
+        data = _stitched_media_data()
+        clip = BaseClip(data)
+        clip.set_start_seconds(2.0)
+        expected_start = seconds_to_ticks(2.0)
+        for inner in data['medias']:
+            assert inner['start'] == expected_start
+
+
+class TestStitchedMediaSetDurationSeconds:
+    """set_duration_seconds propagates to StitchedMedia children."""
+
+    def test_propagates_duration_and_scalar(self):
+        data = _stitched_media_data()
+        clip = BaseClip(data)
+        clip.set_duration_seconds(3.0)
+        expected_dur = seconds_to_ticks(3.0)
+        for inner in data['medias']:
+            assert inner['duration'] == expected_dur
+            assert inner['scalar'] == data.get('scalar', 1)

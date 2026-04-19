@@ -583,6 +583,9 @@ class BaseClip:
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['start'] = self._data['start']
+        if self._data.get('_type') == 'StitchedMedia':
+            for inner in self._data.get('medias', []):
+                inner['start'] = self._data['start']
         return self
 
     def set_duration_seconds(self, duration_seconds: float) -> Self:
@@ -609,6 +612,11 @@ class BaseClip:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['scalar'] = self._data.get('scalar', 1)
+        if self._data.get('_type') == 'StitchedMedia':
+            for inner in self._data.get('medias', []):
+                inner['duration'] = self._data['duration']
+                inner['mediaDuration'] = self._data['mediaDuration']
+                inner['scalar'] = self._data.get('scalar', 1)
         return self
 
     def set_time_range(self, start_seconds: float, duration_seconds: float) -> Self:

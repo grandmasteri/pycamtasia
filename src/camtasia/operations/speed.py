@@ -240,6 +240,10 @@ def set_audio_speed(
                 target_clip["duration"] = round(float(Fraction(final_duration) * Fraction(1) / target)) if target != 1 else final_duration
                 target_clip["metadata"]["clipSpeedAttribute"]["value"] = final_speed_attr
                 target_clip["mediaDuration"] = final_duration
+                if clip.get('_type') == 'UnifiedMedia':
+                    clip['scalar'] = target_clip['scalar']
+                    clip['duration'] = target_clip['duration']
+                    clip['mediaDuration'] = target_clip['mediaDuration']
                 return factor
 
     raise ValueError("No speed-changed audio clips found")

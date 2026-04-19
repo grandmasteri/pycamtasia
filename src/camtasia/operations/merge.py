@@ -88,7 +88,7 @@ def merge_tracks(
             continue
 
         new_track = target.timeline.add_track(track.name)
-        id_counter = [target.timeline.next_clip_id()]
+        id_counter = [target.next_available_id]
 
         clip_id_map: dict[int, int] = {}
         for clip_data in track._data.get('medias', []):
