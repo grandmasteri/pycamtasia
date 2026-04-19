@@ -83,6 +83,9 @@ def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:
         raise ValueError(f'Grid must be positive, got {grid_seconds}')
     for m in track._data.get('medias', []):
         start = m.get('start', 0)
-        m['start'] = max(0, int(round(start / grid_ticks) * grid_ticks))
+        quotient, remainder = divmod(start, grid_ticks)
+        if 2 * remainder > grid_ticks or (2 * remainder == grid_ticks and quotient % 2 == 1):
+            quotient += 1
+        m['start'] = max(0, quotient * grid_ticks)
         _propagate_start_to_unified(m)
     track._data['transitions'] = []

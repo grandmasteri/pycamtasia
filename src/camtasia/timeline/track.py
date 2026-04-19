@@ -1652,11 +1652,10 @@ class Track:
 
         # Split right-to-left at segment boundaries
         split_points = []
-        clip_start = ticks_to_seconds(clip.start)
-        t = clip_start
+        t_ticks = clip.start
         for dur_s, _ in segments[:-1]:
-            t += dur_s
-            split_points.append(t)
+            t_ticks += seconds_to_ticks(dur_s)
+            split_points.append(ticks_to_seconds(t_ticks))
 
         current = clip
         split_piece_ids: set[int] = {clip.id}
