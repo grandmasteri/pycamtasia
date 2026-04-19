@@ -1,7 +1,26 @@
 """Callout annotations.
 """
 
+from camtasia.timeline.clips.callout import _WEIGHT_MAP
+
 from .types import Color, FillStyle, HorizontalAlignment, StrokeStyle, VerticalAlignment
+
+
+def _text_attributes(text: str, font_name: str, font_weight: str | int, font_size: float, font_color: Color) -> list[dict]:
+    """Build the 8 standard text attribute dicts for Camtasia."""
+    text_len = len(text)
+    fg_color = f"({int(font_color.red*255)},{int(font_color.green*255)},{int(font_color.blue*255)},{int(font_color.opacity*255)})"
+    weight_int = _WEIGHT_MAP.get(font_weight, 400) if isinstance(font_weight, str) else int(font_weight)
+    return [
+        {"name": "underline", "rangeEnd": text_len, "rangeStart": 0, "value": 0, "valueType": "int"},
+        {"name": "fontSize", "rangeEnd": text_len, "rangeStart": 0, "value": font_size, "valueType": "double"},
+        {"name": "fontName", "rangeEnd": text_len, "rangeStart": 0, "value": font_name, "valueType": "string"},
+        {"name": "kerning", "rangeEnd": text_len, "rangeStart": 0, "value": 0.0, "valueType": "double"},
+        {"name": "strikethrough", "rangeEnd": text_len, "rangeStart": 0, "value": 0, "valueType": "int"},
+        {"name": "fontWeight", "rangeEnd": text_len, "rangeStart": 0, "value": weight_int, "valueType": "int"},
+        {"name": "fontItalic", "rangeEnd": text_len, "rangeStart": 0, "value": 0, "valueType": "int"},
+        {"name": "fgColor", "rangeEnd": text_len, "rangeStart": 0, "value": fg_color, "valueType": "color"},
+    ]
 
 
 def text(text,
@@ -46,7 +65,7 @@ def text(text,
                 {
                     "endTime": 0,
                     "time": 0,
-                    "value": [],
+                    "value": _text_attributes(text, font_name, font_weight, font_size, font_color),
                     "duration": 0
                 }
             ]
@@ -117,7 +136,7 @@ def square(text,
                 {
                     "endTime": 0,
                     "time": 0,
-                    "value": [],
+                    "value": _text_attributes(text, font_name, font_weight, font_size, font_color),
                     "duration": 0
                 }
             ]

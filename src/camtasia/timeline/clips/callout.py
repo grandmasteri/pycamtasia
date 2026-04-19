@@ -114,7 +114,6 @@ class Callout(BaseClip):
         for kf in d.get('textAttributes', {}).get('keyframes', []):
             for attr in kf.get('value', []):
                 attr['rangeEnd'] = len(value)
-                attr['rangeStart'] = 0
 
     @property
     def font(self) -> dict[str, Any]:

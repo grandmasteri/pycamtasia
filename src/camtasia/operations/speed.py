@@ -157,26 +157,6 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
                     from camtasia.timeline.track import _propagate_start_to_unified
                     _propagate_start_to_unified(medias[i])
 
-    # Mark all clips as speed-adjusted
-    if factor != 1:
-        def _mark_speed_changed(clip_data: dict[str, Any]) -> None:
-            if clip_data.get('_type') not in ('IMFile', 'ScreenIMFile', 'Callout', 'Group', 'UnifiedMedia', 'StitchedMedia'):
-                clip_data.setdefault('metadata', {}).setdefault(
-                    'clipSpeedAttribute', {'type': 'bool', 'value': False}
-                )['value'] = True
-            for key in ('video', 'audio'):
-                child = clip_data.get(key)
-                if child and isinstance(child, dict):
-                    _mark_speed_changed(child)
-            for t in clip_data.get('tracks', []):
-                for m in t.get('medias', []):
-                    _mark_speed_changed(m)
-            for m in clip_data.get('medias', []):
-                _mark_speed_changed(m)
-        for track in scene["tracks"]:
-            for media in track.get('medias', []):
-                _mark_speed_changed(media)
-
 
 def set_audio_speed(
     project_data: dict[str, Any],
@@ -244,6 +224,11 @@ def set_audio_speed(
                     clip['scalar'] = target_clip['scalar']
                     clip['duration'] = target_clip['duration']
                     clip['mediaDuration'] = target_clip['mediaDuration']
+                    video = clip.get('video')
+                    if video and isinstance(video, dict):
+                        video.setdefault('metadata', {}).setdefault(
+                            'clipSpeedAttribute', {'type': 'bool', 'value': False}
+                        )['value'] = final_speed_attr
                     from camtasia.timeline.track import _propagate_start_to_unified
                     _propagate_start_to_unified(clip)
                 return factor

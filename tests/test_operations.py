@@ -635,7 +635,7 @@ class TestMarkSpeedChangedExclusions:
         }
         rescale_project(data, Fraction(2))
         vid = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['video']
-        assert vid.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
+        assert vid.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is not True
 
     def test_mark_speed_recurses_into_group_tracks(self):
         inner_vm = {
@@ -656,7 +656,7 @@ class TestMarkSpeedChangedExclusions:
         }
         rescale_project(data, Fraction(2))
         inner = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['tracks'][0]['medias'][0]
-        assert inner.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
+        assert inner.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is not True
 
     def test_mark_speed_recurses_into_stitched_medias(self):
         stitched = {
@@ -680,7 +680,7 @@ class TestMarkSpeedChangedExclusions:
         }
         rescale_project(data, Fraction(2))
         inner = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['medias'][0]
-        assert inner.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
+        assert inner.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is not True
 
 
 class TestOverlapFixWithUnified:
