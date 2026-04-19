@@ -144,3 +144,15 @@ class TestImportPath:
         )
         assert len(placed) == 1
         assert placed[0].clip_type == 'IMFile'
+
+
+# ── Merged from test_edge_case_coverage.py ───────────────────────────
+
+
+class TestTileLayoutNegativeDuration:
+    def test_stagger_causes_fewer_tiles(self, project):
+        dummy = FIXTURES / 'empty.wav'
+        layout = TileLayout(project)
+        images = [dummy] * 6
+        placed = layout.add_grid(images, start_seconds=0, end_seconds=5, stagger_seconds=2)
+        assert len(placed) < 6

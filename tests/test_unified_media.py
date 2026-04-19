@@ -130,3 +130,47 @@ class TestUnifiedMediaStreamTypes:
         clip = UnifiedMedia(data)
         assert clip.is_camera is True
         assert clip.is_screen_recording is False
+
+
+# ── Merged from test_completeness.py ─────────────────────────────────
+
+
+class TestUnifiedMediaImprovements:
+    def _make_unified(self) -> UnifiedMedia:
+        return UnifiedMedia({
+            'id': 1, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'video': {'id': 2, '_type': 'ScreenVMFile', 'src': 42,
+                      'start': 0, 'duration': 100, 'mediaStart': 0,
+                      'mediaDuration': 100, 'scalar': 1},
+            'audio': {'id': 3, '_type': 'AMFile',
+                      'attributes': {'gain': 1.0},
+                      'start': 0, 'duration': 100, 'mediaStart': 0,
+                      'mediaDuration': 100, 'scalar': 1},
+        })
+
+    def test_source_id(self):
+        assert self._make_unified().source_id == 42
+
+    def test_source_id_none_when_no_video(self):
+        assert UnifiedMedia({
+            'id': 1, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+        }).source_id is None
+
+    def test_mute_audio(self):
+        actual_clip = self._make_unified()
+        actual_result = actual_clip.mute_audio()
+        assert actual_clip._data['audio']['attributes']['gain'] == 0.0
+        assert actual_result is actual_clip
+
+    def test_mute_audio_no_audio(self):
+        actual_clip = UnifiedMedia({
+            'id': 1, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'video': {'id': 2, '_type': 'ScreenVMFile', 'src': 42,
+                      'start': 0, 'duration': 100, 'mediaStart': 0,
+                      'mediaDuration': 100, 'scalar': 1},
+        })
+        actual_result = actual_clip.mute_audio()
+        assert actual_result is actual_clip

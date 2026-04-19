@@ -1,12 +1,21 @@
-"""Tests covering missing lines in track.py."""
+"""Tests for track operations, attributes, protocols, and clip helpers."""
 from __future__ import annotations
 
+import warnings
 from fractions import Fraction
+from typing import Any
 
 import pytest
-from camtasia.timing import seconds_to_ticks
-from camtasia.timeline.track import Track, _propagate_start_to_unified
+
+from camtasia.timeline.clips import AMFile, Callout, IMFile, VMFile
 from camtasia.timeline.clips.base import BaseClip
+from camtasia.timeline.track import (
+    Track,
+    _PerMediaMarkers,
+    _propagate_start_to_unified,
+    _VALID_CLIP_TYPES,
+)
+from camtasia.timing import EDIT_RATE, seconds_to_ticks
 
 
 def _track(medias=None, transitions=None, attrs=None):
@@ -250,7 +259,6 @@ class TestMergeAdjacentIMFile:
 # track.py:394 — add_clip with None source_id for media file type
 class TestAddClipNoneSourceId:
     def test_warns_and_uses_src_0(self):
-        import warnings
         t = _track()
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
@@ -316,3 +324,463 @@ class TestMaxClipIdWithStitchedSubClips:
         # _next_clip_id should be > 50 (the sub-clip ID)
         next_id = t._next_clip_id()
         assert next_id > 50
+
+
+# ── Merged from test_track_coverage.py ───────────────────────────────
+
+
+def _coverage_track(
+    index: int = 0,
+    name: str = "Test",
+    medias: list[dict] | None = None,
+) -> Track:
+    attrs: dict[str, Any] = {
+        "ident": name,
+        "audioMuted": False,
+        "videoHidden": False,
+        "magnetic": False,
+        "solo": False,
+        "metadata": {"IsLocked": "False"},
+    }
+    data: dict[str, Any] = {
+        "trackIndex": index,
+        "medias": medias or [],
+        "transitions": [],
+        "parameters": {},
+    }
+    return Track(attrs, data)
+
+
+class TestTrackAttributeFlags:
+    def test_audio_muted_getter_and_setter(self):
+        track = _coverage_track()
+        assert track.audio_muted is False
+        track.audio_muted = True
+        assert track.audio_muted is True
+
+    def test_video_hidden_getter_and_setter(self):
+        track = _coverage_track()
+        assert track.video_hidden is False
+        track.video_hidden = True
+        assert track.video_hidden is True
+
+    def test_magnetic_getter_and_setter(self):
+        track = _coverage_track()
+        assert track.magnetic is False
+        track.magnetic = True
+        assert track.magnetic is True
+
+    def test_solo_getter_and_setter(self):
+        track = _coverage_track()
+        assert track.solo is False
+        track.solo = True
+        assert track.solo is True
+
+    def test_is_locked_getter_and_setter(self):
+        track = _coverage_track()
+        assert track.is_locked is False
+        track.is_locked = True
+        assert track.is_locked is True
+
+
+class TestTrackClipIteration:
+    def test_medias_alias_returns_same_as_clips(self):
+        track = _coverage_track()
+        track.add_clip("IMFile", 1, 0, EDIT_RATE)
+        actual_via_clips = [c.id for c in track.clips]
+        actual_via_medias = [c.id for c in track.medias]
+        assert actual_via_clips == actual_via_medias
+
+
+class TestTrackAddVideo:
+    def test_add_video_returns_vmfile(self):
+        track = _coverage_track()
+        actual_clip = track.add_video(source_id=10, start_seconds=1.0, duration_seconds=5.0)
+        assert isinstance(actual_clip, VMFile)
+        assert actual_clip.start == seconds_to_ticks(1.0)
+        assert actual_clip.duration == seconds_to_ticks(5.0)
+
+
+class TestTrackAddAudio:
+    def test_add_audio_returns_amfile(self):
+        track = _coverage_track()
+        actual_clip = track.add_audio(source_id=20, start_seconds=0.0, duration_seconds=3.0)
+        assert isinstance(actual_clip, AMFile)
+        assert actual_clip.start == 0
+        assert actual_clip.duration == seconds_to_ticks(3.0)
+
+
+class TestTrackAddCallout:
+    def test_add_callout_returns_callout(self):
+        track = _coverage_track()
+        actual_clip = track.add_callout(
+            text="Hello World",
+            start_seconds=2.0,
+            duration_seconds=4.0,
+        )
+        assert isinstance(actual_clip, Callout)
+        assert actual_clip.start == seconds_to_ticks(2.0)
+        assert actual_clip.duration == seconds_to_ticks(4.0)
+
+
+class TestTrackTransitions:
+    def test_add_transition(self):
+        track = _coverage_track()
+        clip_a = track.add_image(1, 0.0, 5.0)
+        clip_b = track.add_image(2, 5.0, 5.0)
+        actual_transition = track.add_transition("FadeThroughBlack", clip_a, clip_b, 0.5)
+        assert actual_transition.name == "FadeThroughBlack"
+        assert actual_transition.left_media_id == clip_a.id
+        assert actual_transition.right_media_id == clip_b.id
+
+    def test_add_fade_through_black(self):
+        track = _coverage_track()
+        clip_a = track.add_image(1, 0.0, 5.0)
+        clip_b = track.add_image(2, 5.0, 5.0)
+        actual_transition = track.add_fade_through_black(clip_a, clip_b, 1.0)
+        assert actual_transition.name == "FadeThroughBlack"
+        assert actual_transition.duration == seconds_to_ticks(1.0)
+
+
+class TestTrackImageSequence:
+    def test_creates_clips_without_transitions(self):
+        track = _coverage_track()
+        actual_clips = track.add_image_sequence([1, 2, 3], start_seconds=0.0, duration_per_image_seconds=2.0)
+        assert all(isinstance(c, IMFile) for c in actual_clips)
+        actual_starts = [c.start for c in actual_clips]
+        assert actual_starts == [seconds_to_ticks(0.0), seconds_to_ticks(2.0), seconds_to_ticks(4.0)]
+
+    def test_creates_clips_with_transitions(self):
+        track = _coverage_track()
+        actual_clips = track.add_image_sequence(
+            [1, 2, 3], start_seconds=0.0,
+            duration_per_image_seconds=2.0, transition_seconds=0.5,
+        )
+        assert [type(c).__name__ for c in actual_clips] == ['IMFile', 'IMFile', 'IMFile']
+        actual_transitions = list(track.transitions)
+        assert [t.name for t in actual_transitions] == ["FadeThroughBlack", "FadeThroughBlack"]
+
+
+class TestTrackEndTime:
+    def test_empty_track_returns_zero(self):
+        track = _coverage_track()
+        assert track.end_time_seconds() == 0.0
+
+    def test_returns_max_clip_end(self):
+        track = _coverage_track()
+        track.add_image(1, 0.0, 5.0)
+        track.add_image(2, 5.0, 3.0)
+        assert track.end_time_seconds() == pytest.approx(8.0)
+
+
+class TestTrackRemoveClip:
+    def test_remove_clip_by_id(self):
+        track = _coverage_track()
+        clip = track.add_image(1, 0.0, 5.0)
+        track.remove_clip(clip.id)
+        assert list(track.clips) == []
+
+    def test_remove_nonexistent_clip_raises(self):
+        track = _coverage_track()
+        with pytest.raises(KeyError, match="No clip with id=999"):
+            track.remove_clip(999)
+
+
+class TestTrackMarkers:
+    def test_track_markers_property(self):
+        track = _coverage_track()
+        assert list(track.markers) == []
+
+
+class TestTrackRepr:
+    def test_repr(self):
+        track = _coverage_track(index=2, name="My Track")
+        assert repr(track) == "Track(name='My Track', index=2)"
+
+
+class TestPerMediaMarkers:
+    def test_iterates_markers_with_adjusted_times(self):
+        media_data = {
+            "start": 1000,
+            "mediaStart": 500,
+            "parameters": {
+                "toc": {
+                    "keyframes": [
+                        {"time": 600, "value": "Marker A"},
+                        {"time": 800, "value": "Marker B"},
+                    ]
+                }
+            },
+        }
+        markers = _PerMediaMarkers(media_data)
+        actual_markers = list(markers)
+        assert [(m.name, m.time) for m in actual_markers] == [
+            ("Marker A", 1000 + (600 - 500)),
+            ("Marker B", 1000 + (800 - 500)),
+        ]
+
+    def test_len(self):
+        media_data = {
+            "parameters": {
+                "toc": {
+                    "keyframes": [{"time": 0, "value": "M1"}]
+                }
+            }
+        }
+        markers = list(_PerMediaMarkers(media_data))
+        assert [m.name for m in markers] == ["M1"]
+
+    def test_empty_markers(self):
+        assert list(_PerMediaMarkers({})) == []
+
+
+class TestClipAccessorMarkers:
+    def test_clip_has_per_media_markers(self):
+        """Clips yielded by track.clips should have markers attached."""
+        attrs = {"ident": "T", "audioMuted": False, "videoHidden": False,
+                 "magnetic": False, "metadata": {"IsLocked": "False"}}
+        data = {
+            "trackIndex": 0,
+            "medias": [{
+                "_type": "IMFile", "id": 1, "start": 0, "duration": EDIT_RATE,
+                "mediaStart": 0, "mediaDuration": EDIT_RATE, "scalar": 1,
+                "src": 1, "metadata": {}, "animationTracks": {}, "effects": [],
+                "parameters": {
+                    "toc": {"keyframes": [{"time": 100, "value": "Mark"}]}
+                },
+            }],
+            "transitions": [],
+        }
+        track = Track(attrs, data)
+        actual_clip = list(track.clips)[0]
+        actual_markers = list(actual_clip.markers)
+        assert actual_markers[0].name == "Mark"
+
+
+class TestTitlePresetUnknown:
+    def test_unknown_preset_raises(self):
+        attrs = {'ident': 'test', 'audioMuted': False, 'videoHidden': False}
+        data = {'trackIndex': 0, 'medias': []}
+        track = Track(attrs, data)
+        with pytest.raises(ValueError, match='Unknown title preset'):
+            track.add_title('Hello', 0, 5, preset='nonexistent')
+
+
+class TestSetSegmentSpeedsMissingClip:
+    def test_missing_clip_raises(self):
+        attrs = {'ident': 'test', 'audioMuted': False, 'videoHidden': False}
+        data = {'trackIndex': 0, 'medias': []}
+        track = Track(attrs, data)
+        with pytest.raises(KeyError, match='No clip with id=999'):
+            track.set_segment_speeds(999, [(30, 1.0)])
+
+
+class TestSplitClipMissingClip:
+    def test_missing_clip_raises(self):
+        attrs = {'ident': 'test', 'audioMuted': False, 'videoHidden': False}
+        data = {'trackIndex': 0, 'medias': []}
+        track = Track(attrs, data)
+        with pytest.raises(KeyError, match='No clip with id=999'):
+            track.split_clip(999, 5.0)
+
+
+class TestSplitClipOutOfRange:
+    def test_split_before_clip_raises(self):
+        clip = {
+            'id': 1, '_type': 'VMFile', 'src': 1, 'trackNumber': 0,
+            'start': seconds_to_ticks(10.0), 'duration': seconds_to_ticks(10.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+            'scalar': 1, 'metadata': {}, 'parameters': {}, 'effects': [],
+            'animationTracks': {},
+        }
+        attrs = {'ident': 'test', 'audioMuted': False, 'videoHidden': False}
+        data = {'trackIndex': 0, 'medias': [clip]}
+        track = Track(attrs, data)
+        with pytest.raises(ValueError, match='outside clip range'):
+            track.split_clip(1, 5.0)
+
+
+# ── Merged from test_feature_gaps_3_6.py ─────────────────────────────
+
+
+class TestTrackRemoveAllClips:
+    def test_remove_all_clips_returns_count(self, project):
+        track = project.timeline.tracks[0]
+        track.add_video(1, 0, 5)
+        track.add_video(1, 5, 5)
+        track.add_audio(1, 10, 5)
+        assert track.remove_all_clips() == 3
+
+    def test_remove_all_clips_empties_track(self, project):
+        track = project.timeline.tracks[0]
+        track.add_video(1, 0, 5)
+        track.add_video(1, 5, 5)
+        track.remove_all_clips()
+        assert len(track) == 0
+        assert track.is_empty
+
+    def test_remove_all_clips_clears_transitions(self, project):
+        track = project.timeline.tracks[0]
+        c1 = track.add_video(1, 0, 5)
+        c2 = track.add_video(1, 5, 5)
+        track.transitions.add('FadeThroughBlack', c1.id, c2.id, 100_000)
+        track.remove_all_clips()
+        assert len(track.transitions) == 0
+
+    def test_remove_all_clips_on_empty_returns_zero(self, project):
+        track = project.timeline.tracks[0]
+        assert track.remove_all_clips() == 0
+
+    def test_remove_all_clips_preserves_track_identity(self, project):
+        track = project.timeline.tracks[0]
+        track.name = 'MyTrack'
+        track.add_video(1, 0, 5)
+        track.remove_all_clips()
+        assert track.name == 'MyTrack'
+        assert track.index == project.timeline.tracks[0].index
+
+
+class TestTrackClearWithGroupTransitions:
+    def test_clear_removes_group_internal_transitions(self):
+        """clear() removes transitions from Group clips' internal tracks."""
+        group_media = {
+            'id': 1, '_type': 'Group', 'start': 0, 'duration': 100,
+            'tracks': [
+                {'trackIndex': 0, 'medias': [{'id': 10, '_type': 'VMFile', 'start': 0, 'duration': 50}],
+                 'transitions': [{'name': 'Fade', 'duration': 10, 'leftMedia': 10, 'rightMedia': 11}]},
+            ],
+        }
+        data = {'trackIndex': 0, 'medias': [group_media], 'transitions': []}
+        track = Track({'ident': 'test'}, data)
+        track.clear()
+        assert data['medias'] == []
+
+
+# ── Merged from test_track_protocols.py ──────────────────────────────
+
+
+def _proto_track(medias=None, index=0):
+    data = {"trackIndex": index, "medias": medias or []}
+    attrs = {"ident": f"Track-{index}"}
+    return Track(attrs, data)
+
+
+def _proto_track_with_clips(n=2, index=0):
+    medias = [
+        {"id": i + 1, "_type": "IMFile", "src": 10 + i, "trackNumber": 0,
+         "start": i * 1000, "duration": 1000, "mediaStart": 0,
+         "mediaDuration": 1, "scalar": 1, "metadata": {},
+         "animationTracks": {}, "parameters": {}, "effects": []}
+        for i in range(n)
+    ]
+    return _proto_track(medias=medias, index=index)
+
+
+class TestTrackEqHash:
+    def test_same_data_object_is_equal(self):
+        data = {"trackIndex": 0, "medias": []}
+        t1 = Track({"ident": "A"}, data)
+        t2 = Track({"ident": "B"}, data)
+        assert t1 == t2
+
+    def test_same_index_different_data_is_equal(self):
+        t1 = _proto_track(index=3)
+        t2 = _proto_track(index=3)
+        assert t1 == t2
+
+    def test_different_index_not_equal(self):
+        t1 = _proto_track(index=0)
+        t2 = _proto_track(index=1)
+        assert t1 != t2
+
+    def test_not_equal_to_non_track(self):
+        t = _proto_track()
+        assert t != "not a track"
+
+    def test_hash_same_index(self):
+        t1 = _proto_track(index=5)
+        t2 = _proto_track(index=5)
+        assert hash(t1) == hash(t2)
+
+    def test_usable_in_set(self):
+        t1 = _proto_track(index=0)
+        t2 = _proto_track(index=0)
+        assert {t1, t2} == {t1}
+
+
+class TestTrackLen:
+    def test_empty_track(self):
+        t = _proto_track()
+        assert len(t) == 0
+
+    def test_track_with_clips(self):
+        t = _proto_track_with_clips(3)
+        assert len(t) == 3
+        assert [c.id for c in t.clips] == [1, 2, 3]
+
+    def test_no_medias_key(self):
+        data = {"trackIndex": 0}
+        t = Track({"ident": "X"}, data)
+        assert len(t) == 0
+
+
+class TestClipCount:
+    def test_matches_len(self):
+        t = _proto_track_with_clips(4)
+        assert t.clip_count == len(t) == 4
+
+    def test_empty(self):
+        t = _proto_track()
+        assert t.clip_count == 0
+
+
+class TestFindClip:
+    def test_found(self):
+        t = _proto_track_with_clips(3)
+        clip = t.find_clip(2)
+        assert clip is not None
+        assert clip.id == 2
+
+    def test_not_found(self):
+        t = _proto_track_with_clips(3)
+        assert t.find_clip(999) is None
+
+
+class TestAddClipValidation:
+    def test_invalid_type_raises(self):
+        t = _proto_track()
+        with pytest.raises(ValueError, match="Unknown clip type 'Bogus'"):
+            t.add_clip("Bogus", 1, 0, 1000)
+
+    @pytest.mark.parametrize("clip_type", sorted(_VALID_CLIP_TYPES))
+    def test_valid_types_accepted(self, clip_type):
+        t = _proto_track()
+        source_id = None if clip_type in ("Callout", "Group") else 1
+        clip = t.add_clip(clip_type, source_id, 0, 1000)
+        assert clip is not None
+
+
+class TestTrackIter:
+    def test_track_iter(self):
+        t = _proto_track_with_clips(3)
+        clips = list(t)
+        assert [c.id for c in clips] == [1, 2, 3]
+
+
+class TestTrackContains:
+    def test_track_contains_by_id(self):
+        t = _proto_track_with_clips(2)
+        assert 1 in t
+
+    def test_track_contains_by_clip(self):
+        t = _proto_track_with_clips(2)
+        clip = list(t.clips)[0]
+        assert clip in t
+
+    def test_track_not_contains(self):
+        t = _proto_track_with_clips(2)
+        assert 999 not in t
+
+    def test_track_contains_non_clip_returns_false(self):
+        t = _proto_track_with_clips(2)
+        assert ("not a clip" in t) is False

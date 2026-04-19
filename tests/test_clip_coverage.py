@@ -839,3 +839,105 @@ class TestOpacityEmptyKeyframes:
         }
         clip = BaseClip(data)
         assert clip._get_existing_opacity_keyframes() is None
+
+
+# ── Merged from test_edge_case_coverage.py ───────────────────────────
+
+
+class TestCalloutStrokeColorAnimated:
+    def test_stroke_color_setter_preserves_keyframes(self, project):
+        from camtasia.timeline.clips.callout import Callout
+        keyframes = [{'time': 0, 'value': 0.5}, {'time': 100, 'value': 1.0}]
+        data = {
+            '_type': 'Callout', 'id': 99, 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'def': {
+                'stroke-color-red': {'defaultValue': 0.1, 'keyframes': list(keyframes)},
+                'stroke-color-green': {'defaultValue': 0.2, 'keyframes': list(keyframes)},
+                'stroke-color-blue': {'defaultValue': 0.3, 'keyframes': list(keyframes)},
+                'stroke-color-opacity': {'defaultValue': 0.4, 'keyframes': list(keyframes)},
+            },
+        }
+        callout = Callout(data)
+        callout.stroke_color = (0.9, 0.8, 0.7, 0.6)
+        d = callout.definition
+        assert d['stroke-color-red']['defaultValue'] == 0.9
+        assert d['stroke-color-green']['defaultValue'] == 0.8
+        assert d['stroke-color-blue']['defaultValue'] == 0.7
+        assert d['stroke-color-opacity']['defaultValue'] == 0.6
+        assert 'keyframes' not in d['stroke-color-red']
+
+
+class TestCalloutStrokeColorAnimatedGetter:
+    """Cover callout.py:188 - stroke_color getter with animated values."""
+
+    def test_stroke_color_getter_with_animated_dict(self):
+        from camtasia.timeline.clips.callout import Callout
+        data = {
+            '_type': 'Callout', 'id': 1, 'start': 0, 'duration': 100,
+            'def': {
+                'stroke-color-red': {'type': 'double', 'defaultValue': 0.5, 'keyframes': [{'time': 0, 'value': 0.5}]},
+                'stroke-color-green': 0.3,
+                'stroke-color-blue': 0.1,
+                'stroke-color-opacity': 1.0,
+            },
+        }
+        callout = Callout(data)
+        r, g, b, a = callout.stroke_color
+        assert r == 0.5
+
+
+class TestCalloutFillColorAnimatedSetter:
+    """Cover callout.py:188 - fill_color setter with animated dict values."""
+
+    def test_fill_color_setter_preserves_keyframes(self):
+        from camtasia.timeline.clips.callout import Callout
+        data = {
+            '_type': 'Callout', 'id': 1, 'start': 0, 'duration': 100,
+            'def': {
+                'fill-color-red': {'type': 'double', 'defaultValue': 0.5, 'keyframes': [{'time': 0, 'value': 0.5}]},
+                'fill-color-green': {'type': 'double', 'defaultValue': 0.3, 'keyframes': []},
+                'fill-color-blue': 0.1,
+                'fill-color-opacity': 1.0,
+            },
+        }
+        callout = Callout(data)
+        callout.fill_color = (0.9, 0.8, 0.7, 0.6)
+        assert data['def']['fill-color-red']['defaultValue'] == 0.9
+        assert 'keyframes' not in data['def']['fill-color-red']
+        assert data['def']['fill-color-blue'] == 0.7
+
+
+# ── Merged from test_completeness.py (StitchedMedia) ────────────────
+
+from camtasia.timeline.clips.stitched import StitchedMedia
+
+
+class TestStitchedMediaImprovements:
+    def _make_stitched(self) -> StitchedMedia:
+        return StitchedMedia({
+            'id': 1, '_type': 'StitchedMedia', 'start': 0, 'duration': 200,
+            'mediaStart': 0, 'mediaDuration': 200, 'scalar': 1,
+            'medias': [
+                {'id': 10, '_type': 'ScreenVMFile', 'start': 0, 'duration': 100,
+                 'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1},
+                {'id': 11, '_type': 'ScreenVMFile', 'start': 100, 'duration': 100,
+                 'mediaStart': 100, 'mediaDuration': 100, 'scalar': 1},
+            ],
+        })
+
+    def test_segment_count(self):
+        assert self._make_stitched().segment_count == 2
+
+    def test_segment_count_empty(self):
+        assert StitchedMedia({
+            'id': 1, '_type': 'StitchedMedia', 'start': 0, 'duration': 0,
+            'mediaStart': 0, 'mediaDuration': 0, 'scalar': 1,
+        }).segment_count == 0
+
+    def test_clear_segments(self):
+        actual_clip = self._make_stitched()
+        actual_clip.clear_segments()
+        assert actual_clip.segment_count == 0
+        assert actual_clip._data['medias'] == []

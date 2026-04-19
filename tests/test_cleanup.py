@@ -164,3 +164,41 @@ class TestCompactMethod:
 
         with pytest.raises(ValueError, match='Validation errors after compact'):
             project.compact()
+
+
+# ── Merged from test_edge_case_coverage.py ───────────────────────────
+
+import copy
+
+
+STITCHED_MEDIA_CLEANUP = {
+    '_type': 'StitchedMedia', 'id': 10, 'start': 0, 'duration': 100,
+    'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+    'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+    'minMediaStart': 0,
+    'medias': [
+        {'_type': 'AMFile', 'id': 11, 'start': 0, 'duration': 50, 'src': 1,
+         'mediaStart': 0, 'mediaDuration': 50, 'scalar': 1,
+         'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {}},
+        {'_type': 'AMFile', 'id': 12, 'start': 50, 'duration': 50, 'src': 1,
+         'mediaStart': 0, 'mediaDuration': 50, 'scalar': 1,
+         'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {}},
+    ],
+}
+
+
+def _inject_clips_cleanup(project, clip_dicts):
+    tracks = project._data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
+    for clip in clip_dicts:
+        tracks[0]['medias'].append(clip)
+
+
+class TestCleanupStitchedMediaSources:
+    def test_stitched_media_sub_clip_sources_not_orphaned(self, project):
+        _add_source(project, 1)
+        _add_source(project, 2)
+        _add_source(project, 999)
+        _inject_clips_cleanup(project, [copy.deepcopy(STITCHED_MEDIA_CLEANUP)])
+        removed = remove_orphaned_media(project)
+        assert 1 not in removed
+        assert 999 in removed

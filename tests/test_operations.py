@@ -618,3 +618,32 @@ class TestTemplateWalkClipsExtras:
         clips = list(_walk_clips(tracks))
         assert any(c.get('_type') == 'ScreenVMFile' for c in clips)
         assert any(c.get('_type') == 'AMFile' for c in clips)
+
+
+# ── Merged from test_edge_case_coverage.py ───────────────────────────
+
+
+UNIFIED_MEDIA_OPS = {
+    '_type': 'UnifiedMedia', 'id': 20, 'start': 100, 'duration': 100,
+    'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+    'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+    'video': {'_type': 'VMFile', 'id': 21, 'start': 0, 'duration': 100, 'src': 2,
+              'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+              'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {}},
+    'audio': {'_type': 'AMFile', 'id': 22, 'start': 0, 'duration': 100, 'src': 3,
+              'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+              'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {}},
+}
+
+
+class TestRescaleUnifiedMedia:
+    def test_unified_media_children_scaled(self, project):
+        tracks = project._data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
+        tracks[0]['medias'].append(copy.deepcopy(UNIFIED_MEDIA_OPS))
+        factor = Fraction(2)
+        rescale_project(project._data, factor)
+        um = next(m for m in tracks[0]['medias'] if m['_type'] == 'UnifiedMedia')
+        assert um['video']['start'] == 0
+        assert um['video']['duration'] == 200
+        assert um['audio']['start'] == 0
+        assert um['audio']['duration'] == 200

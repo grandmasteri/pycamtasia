@@ -453,3 +453,32 @@ class TestGroupSetInternalSegmentSpeeds:
         group.set_internal_segment_speeds([(0, 50, 50)])
         clip = data['tracks'][1]['medias'][0]
         assert clip['scalar'] == 1
+
+
+# ── Merged from test_completeness.py ─────────────────────────────────
+
+
+class TestGroupFindInternalClip:
+    def _make_group(self) -> Group:
+        return Group({
+            'id': 1, '_type': 'Group', 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [
+                    {'id': 10, '_type': 'ScreenVMFile', 'start': 0, 'duration': 100,
+                     'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1},
+                    {'id': 11, '_type': 'AMFile', 'start': 0, 'duration': 100,
+                     'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1},
+                ],
+            }],
+        })
+
+    def test_find_existing_clip(self):
+        actual_clip = self._make_group().find_internal_clip('AMFile')
+        assert actual_clip is not None
+        assert actual_clip.clip_type == 'AMFile'
+
+    def test_find_returns_none_when_not_found(self):
+        actual_clip = self._make_group().find_internal_clip('VMFile')
+        assert actual_clip is None

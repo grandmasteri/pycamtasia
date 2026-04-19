@@ -177,3 +177,51 @@ class TestMediaTypeEnum:
     )
     def test_enum_values(self, member: MediaType, expected_value: int):
         assert member.value == expected_value
+
+
+# ── Merged from test_edge_case_coverage.py ───────────────────────────
+
+
+class TestMediaTypeEmptySourceTracks:
+    def test_type_returns_none_for_empty_source_tracks(self, project):
+        media = Media({'id': 1, 'src': './test.mp4', 'rect': [0, 0, 100, 100], 'sourceTracks': []})
+        assert media.type is None
+
+
+# ── Merged from test_completeness.py ─────────────────────────────────
+
+
+class TestMediaSourceTracks:
+    def test_source_tracks_returns_list(self):
+        actual_tracks = Media({
+            'id': 1, 'src': './media/test.mp4', 'rect': [0, 0, 1920, 1080],
+            'lastMod': '20250101T120000',
+            'sourceTracks': [
+                {'type': 0, 'editRate': 30, 'range': [0, 9000]},
+                {'type': 2, 'editRate': 44100, 'range': [0, 441000]},
+            ],
+        }).source_tracks
+        assert [t['type'] for t in actual_tracks] == [0, 2]
+
+    def test_source_tracks_empty_when_missing(self):
+        actual_tracks = Media({
+            'id': 1, 'src': './media/test.png', 'rect': [0, 0, 100, 100],
+            'lastMod': '20250101T120000',
+        }).source_tracks
+        assert actual_tracks == []
+
+    def test_video_edit_rate_returns_int(self):
+        actual_rate = Media({
+            'id': 1, 'src': './media/test.mp4', 'rect': [0, 0, 1920, 1080],
+            'lastMod': '20250101T120000',
+            'sourceTracks': [{'type': 0, 'editRate': 30, 'range': [0, 9000]}],
+        }).video_edit_rate
+        assert actual_rate == 30
+
+    def test_video_edit_rate_none_when_no_video_track(self):
+        actual_rate = Media({
+            'id': 1, 'src': './media/test.wav', 'rect': [0, 0, 0, 0],
+            'lastMod': '20250101T120000',
+            'sourceTracks': [{'type': 2, 'editRate': 44100, 'range': [0, 441000]}],
+        }).video_edit_rate
+        assert actual_rate is None

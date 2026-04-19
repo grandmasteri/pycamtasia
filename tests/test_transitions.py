@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 
 from camtasia.timeline.transitions import EDIT_RATE, Transition, TransitionList
+from camtasia.timeline.timeline import Timeline
+from camtasia.timeline.track import Track
 
 
 def _make_track_data(*transitions: dict) -> dict:
@@ -217,3 +219,150 @@ class TestTransitionFadeToWhite:
         assert t._data['attributes']['Color-red'] == 1.0
         assert t._data['attributes']['Color-green'] == 1.0
         assert t._data['attributes']['Color-blue'] == 1.0
+
+
+# =========================================================================
+# Tests migrated from test_convenience.py
+# =========================================================================
+
+def _make_track(medias=None, name='T'):
+    """Build a minimal Track from raw dicts."""
+    data = {'trackIndex': 0, 'medias': medias or []}
+    attrs = {'ident': name}
+    return Track(attrs, data)
+
+
+def _make_timeline(track_specs):
+    """Build a Timeline with tracks described as (name, media_list) tuples."""
+    tracks = []
+    attrs = []
+    for i, (name, medias) in enumerate(track_specs):
+        tracks.append({'trackIndex': i, 'medias': medias})
+        attrs.append({'ident': name})
+    data = {
+        'sceneTrack': {'scenes': [{'csml': {'tracks': tracks}}]},
+        'trackAttributes': attrs,
+    }
+    return Timeline(data)
+
+
+
+
+# ---------------------------------------------------------------------------
+# Timeline.remove_all_transitions
+# ---------------------------------------------------------------------------
+
+def test_remove_all_transitions():
+    """remove_all_transitions clears transitions from all tracks."""
+    tl = _make_timeline([
+        ('Track1', [{'id': 1, 'start': 0, 'duration': 100}]),
+        ('Track2', [{'id': 2, 'start': 0, 'duration': 100}]),
+    ])
+    # Inject transitions into raw data
+    for track in tl.tracks:
+        track._data['transitions'] = [{'type': 'fade'}, {'type': 'dissolve'}]
+    count = tl.remove_all_transitions()
+    assert count == 4
+    for track in tl.tracks:
+        assert track._data.get('transitions') == []
+
+
+def test_add_paint_arcs_transition():
+    from camtasia.timeline.track import Track
+    data = {'trackIndex': 0, 'medias': [
+        {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 705600000},
+        {'id': 2, '_type': 'AMFile', 'start': 705600000, 'duration': 705600000},
+    ], 'transitions': []}
+    t = Track({'ident': 'test'}, data)
+    t.transitions.add_paint_arcs(1, 2, 0.5)
+    assert len(data['transitions']) == 1
+    assert data['transitions'][0]['name'] == 'PaintArcs'
+
+
+def test_add_spherical_spin_transition():
+    from camtasia.timeline.track import Track
+    data = {'trackIndex': 0, 'medias': [
+        {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 705600000},
+        {'id': 2, '_type': 'AMFile', 'start': 705600000, 'duration': 705600000},
+    ], 'transitions': []}
+    t = Track({'ident': 'test'}, data)
+    t.transitions.add_spherical_spin(1, 2, 0.5)
+    assert len(data['transitions']) == 1
+    assert data['transitions'][0]['name'] == 'SphericalSpin'
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.total_transition_count
+# ---------------------------------------------------------------------------
+
+def test_total_transition_count():
+    track_data_a: dict[str, Any] = {
+        'trackIndex': 0,
+        'medias': [
+            {'id': 1, 'start': 0, 'duration': 100},
+            {'id': 2, 'start': 100, 'duration': 100},
+        ],
+        'transitions': [
+            {'start': 50, 'end': 150, 'duration': 100},
+        ],
+    }
+    track_data_b: dict[str, Any] = {
+        'trackIndex': 1,
+        'medias': [],
+        'transitions': [],
+    }
+    data: dict[str, Any] = {
+        'timeline': {
+            'id': 'test',
+            'sceneTrack': {'scenes': [{'csml': {'tracks': [track_data_a, track_data_b]}}]},
+            'trackAttributes': [{'ident': 'A'}, {'ident': 'B'}],
+            'parameters': {},
+            'authoringClientName': 'test',
+        },
+    }
+    timeline = Timeline(data['timeline'])
+
+    from camtasia.project import Project
+    project = Project.__new__(Project)
+    object.__setattr__(project, '_timeline', timeline)
+    object.__setattr__(project, '_data', data)
+    object.__setattr__(project, '_path', None)
+    assert project.total_transition_count == 1
+
+
+
+
+# ---------------------------------------------------------------------------
+# Track.total_transition_duration_seconds
+# ---------------------------------------------------------------------------
+
+def test_total_transition_duration_seconds_empty():
+    """total_transition_duration_seconds is 0.0 when no transitions exist."""
+    track = _make_track()
+    assert track.total_transition_duration_seconds == 0.0
+
+
+def test_total_transition_duration_seconds_single():
+    """total_transition_duration_seconds converts a single transition correctly."""
+    from camtasia.timing import EDIT_RATE
+    duration_ticks: int = EDIT_RATE * 2  # 2 seconds
+    data: dict = {'trackIndex': 0, 'medias': [], 'transitions': [{'duration': duration_ticks}]}
+    attrs: dict = {'ident': 'T'}
+    track = Track(attrs, data)
+    assert track.total_transition_duration_seconds == pytest.approx(2.0)
+
+
+def test_total_transition_duration_seconds_multiple():
+    """total_transition_duration_seconds sums multiple transitions."""
+    from camtasia.timing import EDIT_RATE
+    transitions: list[dict] = [
+        {'duration': EDIT_RATE},      # 1 second
+        {'duration': EDIT_RATE * 3},   # 3 seconds
+    ]
+    data: dict = {'trackIndex': 0, 'medias': [], 'transitions': transitions}
+    attrs: dict = {'ident': 'T'}
+    track = Track(attrs, data)
+    assert track.total_transition_duration_seconds == pytest.approx(4.0)
+

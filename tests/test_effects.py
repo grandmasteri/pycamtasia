@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from camtasia.effects.base import Effect, effect_from_dict
 from camtasia.effects.cursor import CursorPhysics, LeftClickScaling
-from camtasia.effects.visual import DropShadow, RoundCorners
+from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
+from camtasia.effects.visual import BlurRegion, DropShadow, Mask, MotionBlur, RoundCorners
 
 
 # ------------------------------------------------------------------
@@ -468,8 +472,6 @@ class TestUnifiedMediaEffectErrors:
 from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
 from camtasia.effects.source import SourceEffect
 from camtasia.effects.cursor import CursorShadow
-from camtasia.timeline.timeline import Timeline
-from camtasia.timeline.track import Track
 
 
 class TestBehaviorEffectParams:
@@ -1087,247 +1089,384 @@ class TestBehaviorEdgeCases:
         assert e.duration == 200
 
 
-# =========================================================================
-# Tests migrated from test_convenience.py
-# =========================================================================
-
-def _make_track(medias=None, name='T'):
-    """Build a minimal Track from raw dicts."""
-    data = {'trackIndex': 0, 'medias': medias or []}
-    attrs = {'ident': name}
-    return Track(attrs, data)
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def _make_timeline(track_specs):
-    """Build a Timeline with tracks described as (name, media_list) tuples."""
-    tracks = []
-    attrs = []
-    for i, (name, medias) in enumerate(track_specs):
-        tracks.append({'trackIndex': i, 'medias': medias})
-        attrs.append({'ident': name})
-    data = {
-        'sceneTrack': {'scenes': [{'csml': {'tracks': tracks}}]},
-        'trackAttributes': attrs,
+# ------------------------------------------------------------------
+# Helpers (from test_new_features)
+# ------------------------------------------------------------------
+
+def _nf_param(value, type_: str = "double", interp: str = "linr") -> dict:
+    """Build a standard Camtasia parameter dict."""
+    return {"type": type_, "defaultValue": value, "interp": interp}
+
+
+def _keyframed_param(default: float, keyframes: list[dict]) -> dict:
+    """Build a keyframed parameter dict."""
+    return {
+        "type": "double",
+        "defaultValue": default,
+        "keyframes": keyframes,
     }
-    return Timeline(data)
 
 
+# ------------------------------------------------------------------
+# MotionBlur
+# ------------------------------------------------------------------
+
+MOTION_BLUR_DICT = {
+    "effectName": "MotionBlur",
+    "bypassed": False,
+    "category": "categoryVisualEffects",
+    "parameters": {
+        "intensity": _nf_param(0.75),
+    },
+}
 
 
-# ---------------------------------------------------------------------------
-# BaseClip.has_effects
-# ---------------------------------------------------------------------------
+class TestMotionBlur:
+    def test_intensity_read(self):
+        actual_effect = MotionBlur(MOTION_BLUR_DICT)
+        assert actual_effect.intensity == 0.75
 
-def test_has_effects_true():
-    from camtasia.timeline.clips.base import BaseClip
-    clip = BaseClip({'id': 1, 'effects': [{'effectName': 'Glow'}]})
-    assert clip.has_effects is True
+    def test_intensity_write(self):
+        data = json.loads(json.dumps(MOTION_BLUR_DICT))
+        actual_effect = MotionBlur(data)
+        actual_effect.intensity = 1.5
+        assert actual_effect.intensity == 1.5
+        assert data["parameters"]["intensity"]["defaultValue"] == 1.5
 
+    def test_name_and_category(self):
+        actual_effect = MotionBlur(MOTION_BLUR_DICT)
+        assert actual_effect.name == "MotionBlur"
+        assert actual_effect.category == "categoryVisualEffects"
 
-def test_has_effects_false():
-    from camtasia.timeline.clips.base import BaseClip
-    clip = BaseClip({'id': 1, 'effects': []})
-    assert clip.has_effects is False
-    clip2 = BaseClip({'id': 2})
-    assert clip2.has_effects is False
-
-
-
-
-# ---------------------------------------------------------------------------
-# BaseClip.effect_count
-# ---------------------------------------------------------------------------
-
-def test_effect_count():
-    from camtasia.timeline.clips.base import BaseClip
-    clip = BaseClip({'id': 1, 'effects': [{'effectName': 'Glow'}, {'effectName': 'Border'}]})
-    assert clip.effect_count == 2
-    empty = BaseClip({'id': 2})
-    assert empty.effect_count == 0
+    def test_effect_from_dict_dispatches_motion_blur(self):
+        actual_effect = effect_from_dict(MOTION_BLUR_DICT)
+        assert isinstance(actual_effect, MotionBlur)
+        assert actual_effect.intensity == 0.75
 
 
+# ------------------------------------------------------------------
+# Mask
+# ------------------------------------------------------------------
+
+MASK_KEYFRAMES = [
+    {"endTime": 705600000, "time": 0, "value": 346.97, "duration": 705600000},
+    {"endTime": 9760800000, "time": 9055200000, "value": 346.97, "duration": 705600000},
+]
+
+MASK_DICT = {
+    "effectName": "Mask",
+    "bypassed": False,
+    "category": "categoryVisualEffects",
+    "parameters": {
+        "mask-shape": _nf_param(0, type_="int"),
+        "mask-opacity": _nf_param(0.0),
+        "mask-blend": _nf_param(-0.02),
+        "mask-invert": _nf_param(0, type_="int"),
+        "mask-rotation": _nf_param(0.0),
+        "mask-width": _keyframed_param(346.97, MASK_KEYFRAMES),
+        "mask-height": _keyframed_param(347.68, MASK_KEYFRAMES),
+        "mask-positionX": _keyframed_param(9.07, MASK_KEYFRAMES),
+        "mask-positionY": _keyframed_param(1.96, MASK_KEYFRAMES),
+    },
+}
 
 
-# ---------------------------------------------------------------------------
-# Timeline.all_effects
-# ---------------------------------------------------------------------------
+class TestMaskEffect:
+    def test_all_scalar_parameters(self):
+        actual_effect = Mask(MASK_DICT)
+        assert actual_effect.mask_shape == 0
+        assert actual_effect.mask_opacity == 0.0
+        assert actual_effect.mask_blend == -0.02
+        assert actual_effect.mask_invert == 0
+        assert actual_effect.mask_rotation == 0.0
 
-def test_all_effects():
-    medias_a = [
-        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
-         'effects': [{'effectName': 'Glow'}, {'effectName': 'Border'}]},
-    ]
-    medias_b = [
-        {'id': 2, '_type': 'AMFile', 'start': 0, 'duration': 50, 'effects': []},
-        {'id': 3, '_type': 'VMFile', 'start': 50, 'duration': 50,
-         'effects': [{'effectName': 'Shadow'}]},
-    ]
-    tl = _make_timeline([('A', medias_a), ('B', medias_b)])
-    effects = tl.all_effects
-    assert len(effects) == 3
-    # Each entry is (track, clip, effect_dict)
-    names = [e[2]['effectName'] for e in effects]
-    assert names == ['Glow', 'Border', 'Shadow']
-    assert effects[0][0].name == 'A'
-    assert effects[0][1].id == 1
-    assert effects[2][0].name == 'B'
-    assert effects[2][1].id == 3
+    def test_keyframed_width_returns_default_value(self):
+        actual_effect = Mask(MASK_DICT)
+        assert actual_effect.mask_width == 346.97
+
+    def test_keyframed_height_returns_default_value(self):
+        actual_effect = Mask(MASK_DICT)
+        assert actual_effect.mask_height == 347.68
+
+    def test_keyframed_position(self):
+        actual_effect = Mask(MASK_DICT)
+        assert actual_effect.mask_position_x == 9.07
+        assert actual_effect.mask_position_y == 1.96
+
+    def test_mask_shape_write(self):
+        data = json.loads(json.dumps(MASK_DICT))
+        actual_effect = Mask(data)
+        actual_effect.mask_shape = 2
+        assert actual_effect.mask_shape == 2
+
+    def test_effect_from_dict_dispatches_mask(self):
+        actual_effect = effect_from_dict(MASK_DICT)
+        assert isinstance(actual_effect, Mask)
+        assert actual_effect.mask_blend == -0.02
 
 
+# ------------------------------------------------------------------
+# BlurRegion
+# ------------------------------------------------------------------
+
+BLUR_REGION_DICT = {
+    "effectName": "BlurRegion",
+    "bypassed": False,
+    "category": "",
+    "parameters": {
+        "sigma": _nf_param(10.0),
+        "mask-cornerRadius": _nf_param(5.0),
+        "mask-invert": _nf_param(0, type_="int"),
+        "color-alpha": _nf_param(0.8),
+    },
+    "metadata": {"presetName": "Blur Region"},
+}
 
 
-# ---------------------------------------------------------------------------
-# BaseClip.remove_effect_by_name
-# ---------------------------------------------------------------------------
-
-def test_remove_effect_by_name():
-    from camtasia.timeline.clips import clip_from_dict
-    data = {
-        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
-        'effects': [
-            {'effectName': 'Glow'},
-            {'effectName': 'Border'},
-            {'effectName': 'Glow'},
+class TestEffectFromDictDispatchNewFeatures:
+    @pytest.mark.parametrize(
+        "effect_dict, expected_type",
+        [
+            (MOTION_BLUR_DICT, MotionBlur),
+            (MASK_DICT, Mask),
         ],
-    }
-    clip = clip_from_dict(data)
-    removed = clip.remove_effect_by_name('Glow')
-    assert removed == 2
-    assert len(clip.effects) == 1
-    assert clip.effects[0]['effectName'] == 'Border'
-
-
-def test_remove_effect_by_name_not_found():
-    from camtasia.timeline.clips import clip_from_dict
-    data = {
-        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
-        'effects': [{'effectName': 'Border'}],
-    }
-    clip = clip_from_dict(data)
-    removed = clip.remove_effect_by_name('Glow')
-    assert removed == 0
-    assert len(clip.effects) == 1
-
-
-
-
-# ---------------------------------------------------------------------------
-# BaseClip.reset_transforms
-# ---------------------------------------------------------------------------
-
-def test_reset_transforms():
-    from camtasia.timeline.clips.base import BaseClip
-    clip = BaseClip({
-        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
-        'parameters': {
-            'positionX': 50.0,
-            'positionY': -30.0,
-            'scale0': 2.5,
-            'scale1': 2.5,
-            'rotation': 45.0,
-        },
-    })
-    result = clip.reset_transforms()
-    assert result is clip  # fluent chaining
-    assert clip.rotation == 0.0
-
-
-
-
-# ---------------------------------------------------------------------------
-# BaseClip.remove_all_effects
-# ---------------------------------------------------------------------------
-
-def test_remove_all_effects():
-    from camtasia.timeline.clips.base import BaseClip
-    clip = BaseClip({
-        'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
-        'effects': [
-            {'effectName': 'blur'},
-            {'effectName': 'glow'},
-        ],
-    })
-    assert clip.has_effects is True
-    result = clip.remove_all_effects()
-    assert result is clip  # fluent chaining
-    assert clip.has_effects is False
-    assert clip._data['effects'] == []
-
-
-
-
-# ---------------------------------------------------------------------------
-# InterpolationType enum
-# ---------------------------------------------------------------------------
-
-def test_interpolation_type_values():
-    from camtasia.types import InterpolationType
-    assert InterpolationType.LINEAR == 'linr'
-    assert InterpolationType.EASE_IN_OUT == 'eioe'
-    assert InterpolationType.SPRING == 'sprg'
-    assert InterpolationType.BOUNCE == 'bnce'
-    assert len(InterpolationType) == 4
-
-
-
-
-# ---------------------------------------------------------------------------
-# ColorAdjustment ramp parameters
-# ---------------------------------------------------------------------------
-
-def test_color_adjustment_ramp_params():
-    media = {'id': 1, '_type': 'IMFile', 'start': 0, 'duration': 100, 'effects': []}
-    from camtasia.timeline.clips import clip_from_dict
-    clip = clip_from_dict(media)
-    clip.add_color_adjustment(
-        brightness=0.1,
-        shadow_ramp_start=0.05,
-        shadow_ramp_end=0.2,
-        highlight_ramp_start=0.8,
-        highlight_ramp_end=0.95,
+        ids=["MotionBlur", "Mask"],
     )
-    effects = media['effects']
-    assert len(effects) == 1
-    params = effects[0]['parameters']
-    assert params['brightness'] == 0.1
-    assert params['shadowRampStart'] == 0.05
-    assert params['shadowRampEnd'] == 0.2
-    assert params['highlightRampStart'] == 0.8
-    assert params['highlightRampEnd'] == 0.95
+    def test_dispatches_to_correct_class(self, effect_dict, expected_type):
+        actual_effect = effect_from_dict(effect_dict)
+        assert type(actual_effect) is expected_type
+
+    def test_unknown_effect_returns_base(self):
+        actual_effect = effect_from_dict({"effectName": "UnknownEffect", "parameters": {}})
+        assert type(actual_effect) is Effect
 
 
+# ------------------------------------------------------------------
+# GenericBehaviorEffect (from test_new_features)
+# ------------------------------------------------------------------
+
+BEHAVIOR_DICT = {
+    "_type": "GenericBehaviorEffect",
+    "effectName": "reveal",
+    "bypassed": False,
+    "start": 1411200000,
+    "duration": 12277440000,
+    "in": {
+        "attributes": {
+            "name": "reveal",
+            "type": 0,
+            "characterOrder": 7,
+            "offsetBetweenCharacters": 35280000,
+            "suggestedDurationPerCharacter": 517440000,
+            "overlapProportion": 0,
+            "movement": 16,
+            "springDamping": 5.0,
+            "springStiffness": 50.0,
+            "bounceBounciness": 0.45,
+        },
+        "parameters": {
+            "direction": {
+                "type": "int",
+                "valueBounds": {"minValue": 0, "maxValue": 20, "defaultValue": 0},
+                "keyframes": [
+                    {"endTime": 0, "time": 0, "value": 0, "duration": 0}
+                ],
+            }
+        },
+    },
+    "center": {
+        "attributes": {
+            "name": "none",
+            "type": 1,
+            "characterOrder": 6,
+            "secondsPerLoop": 1,
+            "numberOfLoops": -1,
+        },
+        "parameters": {},
+    },
+    "out": {
+        "attributes": {
+            "name": "reveal",
+            "type": 0,
+            "characterOrder": 7,
+            "offsetBetweenCharacters": 35280000,
+            "suggestedDurationPerCharacter": 517440000,
+            "overlapProportion": "1/2",
+            "movement": 6,
+            "springDamping": 5.0,
+            "springStiffness": 50.0,
+            "bounceBounciness": 0.45,
+        },
+        "parameters": {},
+    },
+    "metadata": {"presetName": "Reveal"},
+}
 
 
-# ---------------------------------------------------------------------------
-# BaseClip.duplicate_effects_to
-# ---------------------------------------------------------------------------
+class TestGenericBehaviorEffectNewFeatures:
+    def test_create_from_dict(self):
+        actual_effect = GenericBehaviorEffect(BEHAVIOR_DICT)
+        assert actual_effect.effect_name == "reveal"
+        assert actual_effect.bypassed is False
+        assert actual_effect.start == 1411200000
+        assert actual_effect.duration == 12277440000
+        assert actual_effect.preset_name == "Reveal"
 
-def test_duplicate_effects_to():
-    """duplicate_effects_to copies effects from self to target clip."""
-    source_media: dict[str, Any] = {
-        'id': 1,
-        'start': 0,
-        'duration': 100,
-        'effects': [{'effectName': 'Glow', 'params': {'radius': 10}}],
-    }
-    target_media: dict[str, Any] = {
-        'id': 2,
-        'start': 200,
-        'duration': 100,
-    }
-    track = _make_track(medias=[source_media, target_media])
-    clips = list(track.clips)
-    source_clip = clips[0]
-    target_clip = clips[1]
+    def test_entrance_phase(self):
+        actual_phase = GenericBehaviorEffect(BEHAVIOR_DICT).entrance
+        assert actual_phase.name == "reveal"
+        assert actual_phase.phase_type == 0
+        assert actual_phase.character_order == 7
+        assert actual_phase.offset_between_characters == 35280000
+        assert actual_phase.suggested_duration_per_character == 517440000
+        assert actual_phase.movement == 16
+        assert actual_phase.spring_damping == 5.0
+        assert actual_phase.spring_stiffness == 50.0
+        assert actual_phase.bounce_bounciness == 0.45
 
-    result = source_clip.duplicate_effects_to(target_clip)
+    def test_center_phase(self):
+        actual_phase = GenericBehaviorEffect(BEHAVIOR_DICT).center
+        assert actual_phase.name == "none"
+        assert actual_phase.phase_type == 1
+        assert actual_phase.character_order == 6
 
-    # Returns self for chaining
-    assert result is source_clip
-    # Target now has the effect
-    assert len(target_clip._data.get('effects', [])) == 1
-    assert target_clip._data['effects'][0]['effectName'] == 'Glow'
-    # Deep copy — mutating target doesn't affect source
-    target_clip._data['effects'][0]['params']['radius'] = 999
-    assert source_clip._data['effects'][0]['params']['radius'] == 10
+    def test_exit_phase(self):
+        actual_phase = GenericBehaviorEffect(BEHAVIOR_DICT).exit
+        assert actual_phase.name == "reveal"
+        assert actual_phase.phase_type == 0
+        assert actual_phase.movement == 6
 
+    def test_overlap_proportion_string_fraction(self):
+        actual_phase = GenericBehaviorEffect(BEHAVIOR_DICT).exit
+        assert actual_phase.overlap_proportion == "1/2"
+
+    def test_overlap_proportion_integer(self):
+        actual_phase = GenericBehaviorEffect(BEHAVIOR_DICT).entrance
+        assert actual_phase.overlap_proportion == 0
+
+    def test_entrance_parameters_contain_direction(self):
+        actual_params = GenericBehaviorEffect(BEHAVIOR_DICT).entrance.parameters
+        assert "direction" in actual_params
+        assert actual_params["direction"]["type"] == "int"
+
+    def test_bypassed_write(self):
+        data = json.loads(json.dumps(BEHAVIOR_DICT))
+        actual_effect = GenericBehaviorEffect(data)
+        actual_effect.bypassed = True
+        assert actual_effect.bypassed is True
+        assert data["bypassed"] is True
+
+    def test_preset_name_missing_metadata(self):
+        data = json.loads(json.dumps(BEHAVIOR_DICT))
+        del data["metadata"]
+        actual_effect = GenericBehaviorEffect(data)
+        assert actual_effect.preset_name == ""
+
+    def test_repr(self):
+        actual_repr = repr(GenericBehaviorEffect(BEHAVIOR_DICT))
+        assert actual_repr == "GenericBehaviorEffect(name='reveal', preset='Reveal')"
+
+
+class TestBehaviorPhaseNewFeatures:
+    def test_repr(self):
+        actual_phase = GenericBehaviorEffect(BEHAVIOR_DICT).entrance
+        assert repr(actual_phase) == "BehaviorPhase(name='reveal', type=0)"
+
+    def test_name_write(self):
+        data = json.loads(json.dumps(BEHAVIOR_DICT))
+        actual_phase = GenericBehaviorEffect(data).entrance
+        actual_phase.name = "typewriter"
+        assert actual_phase.name == "typewriter"
+        assert data["in"]["attributes"]["name"] == "typewriter"
+
+    def test_spring_damping_write(self):
+        data = json.loads(json.dumps(BEHAVIOR_DICT))
+        actual_phase = GenericBehaviorEffect(data).entrance
+        actual_phase.spring_damping = 10.0
+        assert actual_phase.spring_damping == 10.0
+
+    def test_defaults_for_missing_optional_attrs(self):
+        actual_phase = GenericBehaviorEffect(BEHAVIOR_DICT).center
+        assert actual_phase.movement == 0
+        assert actual_phase.spring_damping == 0.0
+        assert actual_phase.spring_stiffness == 0.0
+        assert actual_phase.bounce_bounciness == 0.0
+        assert actual_phase.offset_between_characters == 0
+        assert actual_phase.suggested_duration_per_character == 0
+
+
+# ------------------------------------------------------------------
+# Integration tests with test project B fixture (effect-related)
+# ------------------------------------------------------------------
+
+@pytest.fixture
+def test_project_b_data():
+    fixture_path = FIXTURES / "test_project_b.tscproj"
+    if not fixture_path.exists():
+        pytest.skip("test_project_b.tscproj fixture not available")
+    with open(fixture_path) as f:
+        return json.load(f)
+
+
+def _collect_all(obj, predicate):
+    """Recursively collect all dicts matching predicate."""
+    results = []
+    if isinstance(obj, dict):
+        if predicate(obj):
+            results.append(obj)
+        for v in obj.values():
+            results.extend(_collect_all(v, predicate))
+    elif isinstance(obj, list):
+        for v in obj:
+            results.extend(_collect_all(v, predicate))
+    return results
+
+
+class TestProjectBEffectsIntegration:
+    def test_generic_behavior_effects(self, test_project_b_data):
+        actual_behaviors = _collect_all(
+            test_project_b_data,
+            lambda d: d.get("_type") == "GenericBehaviorEffect",
+        )
+        assert actual_behaviors != []
+        actual_effect = GenericBehaviorEffect(actual_behaviors[0])
+        assert actual_effect.effect_name == "reveal"
+        assert actual_effect.preset_name == "Reveal"
+        assert actual_effect.entrance.name == "reveal"
+        assert actual_effect.center.name == "none"
+        assert actual_effect.exit.name == "reveal"
+
+    def test_mask_effects(self, test_project_b_data):
+        actual_masks = _collect_all(
+            test_project_b_data,
+            lambda d: d.get("effectName") == "Mask",
+        )
+        assert actual_masks != []
+        actual_params = actual_masks[0]["parameters"]
+        assert "mask-shape" in actual_params
+
+    def test_motion_blur_effects(self, test_project_b_data):
+        actual_effects = _collect_all(
+            test_project_b_data,
+            lambda d: d.get("effectName") == "MotionBlur",
+        )
+        assert actual_effects != []
+        actual_first = actual_effects[0]
+        assert actual_first["category"] == "categoryVisualEffects"
+
+
+# ------------------------------------------------------------------
+# EffectMetadata (from test_new_effect_types)
+# ------------------------------------------------------------------
+
+class TestEffectMetadataProperty:
+    def test_effect_metadata_property(self):
+        e = Effect({"effectName": "X", "parameters": {}, "metadata": {"presetName": "foo"}})
+        assert e.metadata == {"presetName": "foo"}
+
+    def test_effect_without_metadata(self):
+        e2 = Effect({"effectName": "Y", "parameters": {}})
+        assert e2.metadata == {}

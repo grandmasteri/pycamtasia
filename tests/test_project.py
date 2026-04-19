@@ -210,6 +210,7 @@ class TestFromTemplate:
 from fractions import Fraction
 from unittest.mock import patch, MagicMock
 from camtasia.timing import seconds_to_ticks
+from camtasia.timeline.timeline import Timeline
 
 
 class TestHasScreenRecordingUnifiedMedia:
@@ -459,3 +460,447 @@ class TestRepairOverlapFix:
         clip1 = [m for m in track._data['medias'] if m['id'] == 10][0]
         assert clip1['duration'] == 50
         assert clip1['mediaDuration'] == 50  # recalculated: 50 / 1 = 50
+
+
+# =========================================================================
+# Tests migrated from test_convenience.py
+# =========================================================================
+
+def _make_timeline(track_specs):
+    """Build a Timeline with tracks described as (name, media_list) tuples."""
+    tracks = []
+    attrs = []
+    for i, (name, medias) in enumerate(track_specs):
+        tracks.append({'trackIndex': i, 'medias': medias})
+        attrs.append({'ident': name})
+    data = {
+        'sceneTrack': {'scenes': [{'csml': {'tracks': tracks}}]},
+        'trackAttributes': attrs,
+    }
+    return Timeline(data)
+
+
+def _make_project_data(track_medias_list):
+    """Build minimal Project._data with given track medias."""
+    tracks = []
+    attrs = []
+    for i, medias in enumerate(track_medias_list):
+        tracks.append({'trackIndex': i, 'medias': medias})
+        attrs.append({'ident': f'Track{i}'})
+    return {
+        'timeline': {
+            'sceneTrack': {'scenes': [{'csml': {'tracks': tracks}}]},
+            'trackAttributes': attrs,
+        },
+        'sourceBin': [],
+    }
+
+
+def test_project_has_screen_recording_with_real_data():
+    """Test has_screen_recording against a real project fixture."""
+    import json
+    from pathlib import Path
+    from camtasia.timeline.clips import clip_from_dict
+    from camtasia.timeline.clips.group import Group
+    
+    fixture = Path(__file__).parent / 'fixtures' / 'techsmith_sample.tscproj'
+    data = json.loads(fixture.read_text())
+    tracks = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
+    
+    has_screen = False
+    for t in tracks:
+        for m in t.get('medias', []):
+            clip = clip_from_dict(m)
+            if isinstance(clip, Group) and clip.is_screen_recording:
+                has_screen = True
+    # TechSmith sample has ScreenVMFile clips
+    # (may or may not be inside Groups depending on the sample)
+    assert has_screen is False
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.media_count
+# ---------------------------------------------------------------------------
+
+def test_media_count(project):
+    assert project.media_count == 0
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.is_empty
+# ---------------------------------------------------------------------------
+
+def test_project_is_empty_true(project):
+    assert project.is_empty is True
+
+
+def test_project_is_empty_false():
+    from camtasia.project import load_project
+    from pathlib import Path
+    fixture = Path(__file__).parent / 'fixtures' / 'test_project_c.tscproj'
+    proj = load_project(fixture)
+    assert proj.is_empty is False
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.describe
+# ---------------------------------------------------------------------------
+
+def test_project_describe():
+    from camtasia.project import load_project
+    from pathlib import Path
+    fixture = Path(__file__).parent / 'fixtures' / 'test_project_c.tscproj'
+    proj = load_project(fixture)
+    desc = proj.describe()
+    assert isinstance(desc, str)
+    assert f'Project: {proj.file_path.name}' in desc
+    assert f'{proj.frame_rate}fps' in desc
+    assert 'Duration:' in desc
+    assert 'Tracks:' in desc
+    assert 'Clips:' in desc
+    assert 'Media:' in desc
+    assert 'Health:' in desc
+
+
+def test_project_describe_unhealthy(project):
+    from unittest.mock import patch
+    from camtasia.validation import ValidationIssue
+    with patch.object(project, 'validate', return_value=[ValidationIssue('error', 'bad')]):
+        actual = project.describe()
+        assert '❌' in actual
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.track_count / clip_count / duration_seconds
+# ---------------------------------------------------------------------------
+
+def test_project_track_count():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+    media = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([[media], []])
+    proj.timeline = Timeline(proj._data['timeline'])
+    assert Project.track_count.fget(proj) == 2
+
+
+def test_project_clip_count():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+    m1 = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
+    m2 = {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200}
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([[m1], [m2]])
+    proj.timeline = Timeline(proj._data['timeline'])
+    assert Project.clip_count.fget(proj) == 2
+
+
+def test_project_duration_seconds(project):
+    actual = project.duration_seconds
+    assert isinstance(actual, float)
+    assert actual >= 0.0
+
+
+def test_find_media_by_extension(project):
+    from pathlib import Path
+    wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
+    project.import_media(wav)
+    actual = project.find_media_by_extension('wav')
+    assert len(actual) >= 1
+    actual_none = project.find_media_by_extension('xyz')
+    assert actual_none == []
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.remove_all_effects
+# ---------------------------------------------------------------------------
+
+def test_project_remove_all_effects(project):
+    # Add a clip with effects to the project
+    track = list(project.timeline.tracks)[0]
+    media = {
+        '_type': 'VMFile', 'id': 999, 'start': 0, 'duration': seconds_to_ticks(5.0),
+        'effects': [{'effectName': 'FakeEffect1'}, {'effectName': 'FakeEffect2'}],
+    }
+    track._data['medias'].append(media)
+    removed = project.remove_all_effects()
+    assert removed >= 2
+    # Verify effects are cleared
+    for t in project.timeline.tracks:
+        for clip in t.clips:
+            assert clip._data.get('effects', []) == []
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.effect_summary
+# ---------------------------------------------------------------------------
+
+def test_project_effect_summary(project):
+    track = project.timeline.add_track('Test')
+    c1 = track.add_clip('VMFile', 1, 0, 100)
+    c1._data['effects'] = [{'effectName': 'Blur'}, {'effectName': 'Glow'}]
+    c2 = track.add_clip('VMFile', 1, 100, 100)
+    c2._data['effects'] = [{'effectName': 'Blur'}]
+    result = project.effect_summary
+    assert result == {'Blur': 2, 'Glow': 1}
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.clip_type_summary
+# ---------------------------------------------------------------------------
+
+def test_project_clip_type_summary(project):
+    track = project.timeline.add_track('Test')
+    track.add_clip('VMFile', 1, 0, 100)
+    track.add_clip('AMFile', 1, 100, 100)
+    track.add_clip('VMFile', 1, 200, 100)
+    result = project.clip_type_summary
+    assert result['VMFile'] == 2
+    assert result['AMFile'] == 1
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.summary_table
+# ---------------------------------------------------------------------------
+
+def test_summary_table():
+    from camtasia.project import Project
+    from unittest.mock import MagicMock
+
+    medias0 = [
+        {'id': 1, '_type': 'ScreenRecording', 'start': 0, 'duration': 300, 'effects': [
+            {'effectName': 'Blur'},
+        ]},
+        {'id': 2, '_type': 'UnifiedMedia', 'start': 300, 'duration': 600, 'effects': []},
+    ]
+    medias1 = []
+    proj = MagicMock(spec=Project)
+    proj._data = _make_project_data([medias0, medias1])
+    proj.timeline = Timeline(proj._data['timeline'])
+    proj.clip_count = 2
+    proj.duration_seconds = 30.0
+
+    result = Project.summary_table(proj)
+    lines = result.split('\n')
+    assert lines[0] == '| Track | Clips | Types | Duration | Effects |'
+    assert lines[1].startswith('|---')
+    # Track0 row
+    assert '| Track0 |' in lines[2]
+    assert '| 2 |' in lines[2]
+    # Track1 row (empty)
+    assert '| Track1 |' in lines[3]
+    assert '| 0 |' in lines[3]
+    # Total row
+    assert '**Total**' in lines[4]
+    assert '**2**' in lines[4]
+    assert '**30.0s**' in lines[4]
+
+
+def test_has_audio(project):
+    assert project.has_audio is False  # empty project has no audio
+
+
+def test_has_video(project):
+    assert project.has_video is False  # empty project has no video
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.source_bin_paths
+# ---------------------------------------------------------------------------
+
+def test_source_bin_paths(tmp_path):
+    from camtasia.project import Project
+    import json
+
+    project_dir = tmp_path / 'test.tscproj'
+    project_dir.mkdir()
+    project_file = project_dir / 'project.tscproj'
+    project_data = {
+        'title': 'test',
+        'sourceBin': [
+            {'id': 1, 'src': 'clip_a.mp4', 'rect': [0, 0, 100, 100], 'lastMod': '0', 'sourceTracks': []},
+            {'id': 2, 'src': 'clip_b.wav', 'rect': [0, 0, 0, 0], 'lastMod': '0', 'sourceTracks': []},
+        ],
+        'timeline': {
+            'sceneTrack': {'scenes': [{'csml': {'tracks': []}}]},
+            'trackAttributes': [],
+        },
+        'authoringClientName': {'name': 'test', 'platform': 'test', 'version': '1'},
+    }
+    project_file.write_text(json.dumps(project_data))
+
+    project = Project(project_dir)
+    source_paths: list[str] = project.source_bin_paths
+    assert len(source_paths) == 2
+    assert any('clip_a.mp4' in path for path in source_paths)
+    assert any('clip_b.wav' in path for path in source_paths)
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.total_effect_count
+# ---------------------------------------------------------------------------
+
+def test_total_effect_count(project):
+    track = project.timeline.add_track('FX')
+    clip = track.add_clip('VMFile', 1, 0, 705600000)
+    clip.add_drop_shadow()
+    clip.add_round_corners()
+    assert project.total_effect_count >= 2
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.average_clip_duration_seconds
+# ---------------------------------------------------------------------------
+
+def test_project_average_clip_duration(project):
+    track = project.timeline.add_track('Test')
+    track.add_clip('VMFile', 1, 0, 705600000 * 3)  # 3s
+    track.add_clip('VMFile', 1, 705600000 * 4, 705600000 * 5)  # 5s
+    assert project.average_clip_duration_seconds == pytest.approx(4.0)
+
+
+def test_project_average_clip_duration_empty(project):
+    assert project.average_clip_duration_seconds == 0.0
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.replace_media_path
+# ---------------------------------------------------------------------------
+
+def test_replace_media_path(project):
+    project._data.setdefault('sourceBin', []).extend([
+        {'src': '/old/path/video.mp4'},
+        {'src': '/old/path/audio.wav'},
+    ])
+    replaced_count: int = project.replace_media_path('/old/path', '/new/path')
+    assert replaced_count == 2
+    assert project._data['sourceBin'][-2]['src'] == '/new/path/video.mp4'
+    assert project._data['sourceBin'][-1]['src'] == '/new/path/audio.wav'
+
+
+def test_replace_media_path_no_match(project):
+    project._data.setdefault('sourceBin', []).append({'src': '/some/other/file.mp4'})
+    replaced_count: int = project.replace_media_path('/nonexistent', '/replacement')
+    assert replaced_count == 0
+    assert project._data['sourceBin'][-1]['src'] == '/some/other/file.mp4'
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.has_effects
+# ---------------------------------------------------------------------------
+
+def test_project_has_effects(project):
+    assert project.has_effects is False
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.has_transitions
+# ---------------------------------------------------------------------------
+
+def test_project_has_transitions(project):
+    assert project.has_transitions is False
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.has_keyframes
+# ---------------------------------------------------------------------------
+
+def test_project_has_keyframes(project):
+    assert project.has_keyframes is False
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.empty_tracks
+# ---------------------------------------------------------------------------
+
+def test_project_empty_tracks_returns_tracks_with_no_clips():
+    """Project.empty_tracks delegates to timeline.empty_tracks."""
+    timeline = _make_timeline([
+        ('Audio', [{'id': 1, 'start': 0, 'duration': 100}]),
+        ('Empty', []),
+        ('Also Empty', []),
+    ])
+    empty_track_names: list[str] = [t.name for t in timeline.empty_tracks]
+    assert 'Empty' in empty_track_names
+    assert 'Also Empty' in empty_track_names
+    assert 'Audio' not in empty_track_names
+
+
+def test_project_empty_tracks_returns_empty_list_when_all_have_clips():
+    """Project.empty_tracks returns [] when every track has clips."""
+    timeline = _make_timeline([
+        ('A', [{'id': 1, 'start': 0, 'duration': 100}]),
+    ])
+    empty_tracks: list = timeline.empty_tracks
+    assert empty_tracks == []
+
+
+
+
+# ---------------------------------------------------------------------------
+# Project.remove_track_by_name
+# ---------------------------------------------------------------------------
+
+def test_remove_track_by_name_found(project):
+    """remove_track_by_name removes the first matching track and returns True."""
+    project.timeline.add_track('Disposable')
+    initial_track_count: int = project.track_count
+    removed: bool = project.remove_track_by_name('Disposable')
+    assert removed is True
+    assert project.track_count == initial_track_count - 1
+
+
+def test_remove_track_by_name_not_found(project):
+    """remove_track_by_name returns False when no track matches."""
+    removed: bool = project.remove_track_by_name('NonExistent')
+    assert removed is False
+
+
+def test_remove_track_by_name_only_first(project):
+    """remove_track_by_name removes only the first track with a duplicate name."""
+    project.timeline.add_track('Dup')
+    project.timeline.add_track('Dup')
+    count_before: int = project.track_count
+    project.remove_track_by_name('Dup')
+    assert project.track_count == count_before - 1
+    remaining_names: list[str] = [t.name for t in project.timeline.tracks]
+    assert 'Dup' in remaining_names
+
+
+def test_project_empty_tracks_property(project):
+    """Project.empty_tracks delegates to timeline.empty_tracks."""
+    actual_empty: list = project.empty_tracks
+    assert isinstance(actual_empty, list)
+
