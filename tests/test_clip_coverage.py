@@ -688,3 +688,154 @@ class TestScreenIMFileSetSourceRaises:
         clip = ScreenIMFile(data)
         with pytest.raises(TypeError, match='Cannot change source on cursor overlay clips'):
             clip.set_source(1)
+
+
+# ── from test_coverage_phase4: base.py tests ──
+
+import warnings
+from camtasia.timing import seconds_to_ticks
+
+
+def test_base_clip_is_audio_stitched_media():
+    clip = BaseClip({
+        '_type': 'StitchedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'medias': [{'_type': 'AMFile'}],
+    })
+    assert clip.is_audio is True
+
+
+def test_base_clip_is_video_stitched_media():
+    clip = BaseClip({
+        '_type': 'StitchedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'medias': [{'_type': 'VMFile'}],
+    })
+    assert clip.is_video is True
+
+
+def test_base_clip_is_muted_unified_media():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'audio': {'attributes': {'gain': 0.0}},
+    })
+    assert clip.is_muted is True
+
+
+def test_base_clip_mute_unified_media():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'audio': {'attributes': {'gain': 1.0}},
+    })
+    clip.mute()
+    assert clip._data['audio']['attributes']['gain'] == 0.0
+
+
+def test_base_clip_mute_unified_media_no_audio():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+    })
+    with pytest.raises(ValueError, match='no audio'):
+        clip.mute()
+
+
+def test_base_clip_media_start_fraction():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'video': {'start': 0, 'mediaStart': 0},
+        'audio': {'start': 0, 'mediaStart': 0},
+    })
+    clip.media_start = Fraction(1, 3)
+    assert clip._data['mediaStart'] == '1/3'
+    assert clip._data['video']['mediaStart'] == '1/3'
+    clip.media_start = Fraction(10, 1)
+    assert clip._data['mediaStart'] == 10
+
+
+def test_base_clip_opacity_setter_dict():
+    clip = BaseClip({
+        '_type': 'VMFile',
+        'id': 1, 'start': 0, 'duration': 100,
+        'parameters': {'opacity': {'type': 'double', 'defaultValue': 1.0, 'keyframes': []}},
+        'animationTracks': {'visual': [{'key': 'val'}]},
+    })
+    clip.opacity = 0.5
+    assert clip._data['parameters']['opacity']['defaultValue'] == 0.5
+    assert 'keyframes' not in clip._data['parameters']['opacity']
+    assert clip._data['animationTracks']['visual'] == []
+
+
+def test_base_clip_volume_setter_dict():
+    clip = BaseClip({
+        '_type': 'VMFile',
+        'id': 1, 'start': 0, 'duration': 100,
+        'parameters': {'volume': {'type': 'double', 'defaultValue': 1.0, 'keyframes': []}},
+    })
+    clip.volume = 0.5
+    assert clip._data['parameters']['volume']['defaultValue'] == 0.5
+
+
+def test_base_clip_is_silent_unified_media():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'audio': {'attributes': {'gain': 0.0}},
+    })
+    assert clip.is_silent is True
+
+
+def test_base_clip_set_start_seconds_unified():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'video': {'start': 0},
+        'audio': {'start': 0},
+    })
+    clip.set_start_seconds(2.0)
+    expected = seconds_to_ticks(2.0)
+    assert clip._data['start'] == expected
+    assert clip._data['video']['start'] == expected
+    assert clip._data['audio']['start'] == expected
+
+
+def test_base_clip_set_opacity_method_dict():
+    clip = BaseClip({
+        '_type': 'VMFile',
+        'id': 1, 'start': 0, 'duration': 100,
+        'parameters': {'opacity': {'type': 'double', 'defaultValue': 1.0, 'keyframes': []}},
+        'animationTracks': {'visual': [{'key': 'val'}]},
+    })
+    clip.set_opacity(0.3)
+    assert clip._data['parameters']['opacity']['defaultValue'] == 0.3
+    assert clip._data['animationTracks']['visual'] == []
+
+
+def test_base_clip_source_path_deprecation():
+    clip = BaseClip({
+        '_type': 'VMFile',
+        'id': 1, 'start': 0, 'duration': 100,
+        'src': 42,
+    })
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always')
+        result = clip.source_path
+        assert result == 42
+        assert len(w) == 1
+        assert 'deprecated' in str(w[0].message).lower()
+
+
+# ── from test_ci_coverage_gaps: base.py opacity empty keyframes ──
+
+class TestOpacityEmptyKeyframes:
+    def test_empty_keyframes_returns_none(self):
+        data = {
+            'id': 1, '_type': 'VMFile', 'src': 0,
+            'start': 0, 'duration': 100, 'mediaStart': 0,
+            'parameters': {'opacity': {'keyframes': []}},
+        }
+        clip = BaseClip(data)
+        assert clip._get_existing_opacity_keyframes() is None

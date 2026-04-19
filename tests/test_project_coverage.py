@@ -300,3 +300,161 @@ class TestAddGradientBackground:
             track_index=1,
         )
         assert actual_clip is not None
+
+
+# ── from test_coverage_phase4: project.py tests ──
+
+import warnings
+from types import SimpleNamespace
+from camtasia.timing import seconds_to_ticks
+
+
+def test_remap_src_recursive():
+    from camtasia.project import _remap_src_recursive
+    clip = {
+        'src': 1,
+        'video': {'src': 1},
+        'audio': {'src': 2},
+        'tracks': [{'medias': [{'src': 1}]}],
+        'medias': [{'src': 2}],
+    }
+    _remap_src_recursive(clip, {1: 10, 2: 20})
+    assert clip['src'] == 10
+    assert clip['video']['src'] == 10
+    assert clip['audio']['src'] == 20
+    assert clip['tracks'][0]['medias'][0]['src'] == 10
+    assert clip['medias'][0]['src'] == 20
+
+
+def test_has_screen_recording_false(project):
+    assert project.has_screen_recording is False
+
+
+def test_has_screen_recording_screen_vm_file(project):
+    t = project.timeline.tracks[0]
+    t._data.setdefault('medias', []).append({
+        '_type': 'ScreenVMFile',
+        'id': 999, 'start': 0, 'duration': 100,
+    })
+    assert project.has_screen_recording is True
+
+
+def test_has_screen_recording_unified_media(project):
+    t = project.timeline.tracks[0]
+    t._data.setdefault('medias', []).append({
+        '_type': 'UnifiedMedia',
+        'id': 998, 'start': 0, 'duration': 100,
+        'video': {'_type': 'ScreenVMFile'},
+    })
+    assert project.has_screen_recording is True
+
+
+def test_swap_tracks_short_attrs_warning(project):
+    from unittest.mock import MagicMock
+    tl = project.timeline
+    mock_a = MagicMock()
+    mock_a.index = 5
+    mock_a._data = {'trackIndex': 5}
+    mock_b = MagicMock()
+    mock_b.index = 6
+    mock_b._data = {'trackIndex': 6}
+    while len(tl._track_list) <= 6:
+        tl._track_list.append({'medias': [], 'trackIndex': len(tl._track_list)})
+    tl._data['trackAttributes'] = [{'ident': ''}]
+    with patch.object(type(tl), 'find_track_by_name', side_effect=[mock_a, mock_b]):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            project.swap_tracks('A', 'B')
+            warns = [x for x in w if 'trackAttributes too short' in str(x.message)]
+            assert len(warns) >= 1
+
+
+def test_validate_overlapping_clips(project):
+    t = project.timeline.tracks[0]
+    t.add_video(1, start_seconds=0, duration_seconds=5)
+    t.add_video(1, start_seconds=2, duration_seconds=5)
+    issues = project.validate()
+    overlap_issues = [i for i in issues if 'Overlapping' in str(i)]
+    assert len(overlap_issues) >= 1
+
+
+def test_save_handles_infinity_nan(project, tmp_path):
+    project._data.setdefault('parameters', {})['testNaN'] = float('nan')
+    project._data['parameters']['testInf'] = float('inf')
+    project._data['parameters']['testNegInf'] = float('-inf')
+    project.save()
+
+
+def test_normalize_audio(project):
+    t = project.timeline.tracks[0]
+    clip = t.add_video(1, start_seconds=0, duration_seconds=2)
+    clip._data['_type'] = 'UnifiedMedia'
+    clip._data['audio'] = {'_type': 'AMFile', 'attributes': {'gain': 0.5}, 'start': 0, 'duration': 100}
+    clip._data['video'] = {'_type': 'VMFile', 'start': 0, 'duration': 100, 'src': 1, 'id': clip.id + 100}
+    count = project.normalize_audio(target_gain=0.8)
+    assert count >= 1
+    assert clip._data['audio']['attributes']['gain'] == 0.8
+
+
+def test_rescale_timeline(project):
+    t = project.timeline.tracks[0]
+    t.add_video(1, start_seconds=0, duration_seconds=5)
+    project.rescale_timeline(1.1)
+
+
+# ── from test_ci_coverage_gaps: project.py tests ──
+
+class TestProbeMediaVideoTrack:
+    def test_video_track_extracts_dimensions_and_framerate(self):
+        tracks = [
+            SimpleNamespace(track_type='Video', width=1920, height=1080,
+                            duration=10000, frame_rate='30.0'),
+        ]
+        mock_mi = MagicMock()
+        mock_mi.MediaInfo.parse.return_value = MagicMock(tracks=tracks)
+        with patch.dict('sys.modules', {'pymediainfo': mock_mi}):
+            result = _probe_media(Path('/fake/video.mp4'))
+        assert result['width'] == 1920
+        assert result['height'] == 1080
+        assert result['duration_seconds'] == 10.0
+        assert result['frame_rate'] == 30.0
+        assert result['_backend'] == 'pymediainfo'
+
+
+class TestProbeMediaException:
+    def test_exception_falls_back_to_ffprobe(self):
+        mock_mi = MagicMock()
+        mock_mi.MediaInfo.parse.side_effect = RuntimeError('corrupt file')
+        with patch.dict('sys.modules', {'pymediainfo': mock_mi}), \
+             patch('camtasia.project._probe_media_ffprobe', return_value={'_backend': 'ffprobe'}) as mock_ff:
+            result = _probe_media(Path('/fake/bad.mp4'))
+        mock_ff.assert_called_once()
+        assert result['_backend'] == 'ffprobe'
+
+
+class TestSaveWithValidationIssues:
+    def test_save_prints_validation_issues(self, tmp_path):
+        from camtasia.project import new_project, load_project
+        from camtasia.validation import ValidationIssue
+        proj_path = tmp_path / 'test.cmproj'
+        new_project(proj_path)
+        proj = load_project(proj_path)
+        fake_issue = ValidationIssue('warning', 'test issue', None)
+        with patch.object(proj, 'validate', return_value=[fake_issue]):
+            proj.save()
+
+
+class TestImportShaderVid:
+    def test_import_tscshadervid_sets_shader_defaults(self, tmp_path):
+        from camtasia.project import new_project, load_project
+        proj_path = tmp_path / 'test.cmproj'
+        new_project(proj_path)
+        proj = load_project(proj_path)
+        shader_file = tmp_path / 'effect.tscshadervid'
+        shader_file.write_bytes(b'\x00' * 10)
+        with patch('camtasia.project._probe_media', return_value={}):
+            media = proj.import_media(shader_file)
+        st = media._data['sourceTracks'][0]
+        assert st['range'][1] == 9223372036854775807
+        assert media._data['rect'][2] == 1920
+        assert media._data['rect'][3] == 1080

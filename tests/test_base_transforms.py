@@ -170,3 +170,17 @@ def test_chaining_multiple_calls() -> None:
     assert clip.translation == (10.0, 20.0)
     assert clip.scale == (2.0, 2.0)
     assert clip._get_param_value("geometryCrop0") == 0.1
+
+
+# ------------------------------------------------------------------
+# timing.py: format_duration centisecond overflow
+# ------------------------------------------------------------------
+
+from camtasia.timing import EDIT_RATE, format_duration
+
+
+class TestFormatDurationCsOverflow:
+    def test_cs_overflow(self):
+        ticks = round(59.995 * EDIT_RATE)
+        result = format_duration(ticks)
+        assert '0:60.00' not in result

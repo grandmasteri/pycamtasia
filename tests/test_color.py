@@ -111,3 +111,26 @@ class TestRGBAToFloats:
         assert g == 0.0
         assert abs(b - 128/255) < 0.001
         assert a == 1.0
+
+
+# ── color.py non-integer channels (from test_coverage_extras.py) ──
+
+
+class TestColorFromFloatsError:
+    def test_non_integer_channels_raise(self):
+        with pytest.raises(TypeError, match='integers'):
+            RGBA(1.5, 0, 0, 255)  # type: ignore[arg-type]
+
+
+# ── Merged from test_coverage_misc.py ────────────────────────────────
+
+
+class TestHexRgb4Digit:
+    def test_4_digit_hex(self):
+        result = hex_rgb('#F0A8')
+        assert len(result) == 4
+        assert result == (255, 0, 170, 136)
+
+    def test_invalid_length_raises(self):
+        with pytest.raises(ValueError, match='Could not interpret'):
+            hex_rgb('#12345')

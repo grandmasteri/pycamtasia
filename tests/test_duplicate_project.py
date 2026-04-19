@@ -71,3 +71,36 @@ def test_copy_to_existing_raises(source_project, tmp_path):
     dst.mkdir()
     with pytest.raises(FileExistsError):
         source_project.copy_to(dst)
+
+
+# ── _walk_clips UnifiedMedia (from test_coverage_template.py) ──
+
+from camtasia.operations.template import _walk_clips
+
+
+class TestWalkClipsUnifiedMedia:
+    def test_yields_unified_media_children(self):
+        tracks = [{
+            'medias': [{
+                '_type': 'UnifiedMedia', 'id': 1,
+                'video': {'_type': 'VMFile', 'id': 2, 'src': 10},
+                'audio': {'_type': 'AMFile', 'id': 3, 'src': 10},
+            }],
+        }]
+        clips = list(_walk_clips(tracks))
+        ids = [c.get('id') for c in clips]
+        assert 1 in ids
+        assert 2 in ids
+        assert 3 in ids
+
+    def test_unified_media_without_audio(self):
+        tracks = [{
+            'medias': [{
+                '_type': 'UnifiedMedia', 'id': 1,
+                'video': {'_type': 'VMFile', 'id': 2, 'src': 10},
+            }],
+        }]
+        clips = list(_walk_clips(tracks))
+        ids = [c.get('id') for c in clips]
+        assert 2 in ids
+        assert len(ids) == 2

@@ -240,3 +240,49 @@ class TestClipAccessorMarkers:
         actual_clip = list(track.clips)[0]
         actual_markers = list(actual_clip.markers)
         assert actual_markers[0].name == "Mark"
+
+
+# ── from test_ci_coverage_gaps: track.py tests ──
+
+
+class TestTitlePresetUnknown:
+    def test_unknown_preset_raises(self):
+        attrs = {'ident': 'test', 'audioMuted': False, 'videoHidden': False}
+        data = {'trackIndex': 0, 'medias': []}
+        track = Track(attrs, data)
+        with pytest.raises(ValueError, match='Unknown title preset'):
+            track.add_title('Hello', 0, 5, preset='nonexistent')
+
+
+class TestSetSegmentSpeedsMissingClip:
+    def test_missing_clip_raises(self):
+        attrs = {'ident': 'test', 'audioMuted': False, 'videoHidden': False}
+        data = {'trackIndex': 0, 'medias': []}
+        track = Track(attrs, data)
+        with pytest.raises(KeyError, match='No clip with id=999'):
+            track.set_segment_speeds(999, [(30, 1.0)])
+
+
+class TestSplitClipMissingClip:
+    def test_missing_clip_raises(self):
+        attrs = {'ident': 'test', 'audioMuted': False, 'videoHidden': False}
+        data = {'trackIndex': 0, 'medias': []}
+        track = Track(attrs, data)
+        with pytest.raises(KeyError, match='No clip with id=999'):
+            track.split_clip(999, 5.0)
+
+
+class TestSplitClipOutOfRange:
+    def test_split_before_clip_raises(self):
+        clip = {
+            'id': 1, '_type': 'VMFile', 'src': 1, 'trackNumber': 0,
+            'start': seconds_to_ticks(10.0), 'duration': seconds_to_ticks(10.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+            'scalar': 1, 'metadata': {}, 'parameters': {}, 'effects': [],
+            'animationTracks': {},
+        }
+        attrs = {'ident': 'test', 'audioMuted': False, 'videoHidden': False}
+        data = {'trackIndex': 0, 'medias': [clip]}
+        track = Track(attrs, data)
+        with pytest.raises(ValueError, match='outside clip range'):
+            track.split_clip(1, 5.0)

@@ -154,3 +154,89 @@ class TestClipsOfTypeWithStitchedMedia:
         tl = Timeline(data)
         results = tl.clips_of_type('ScreenVMFile')
         assert any(clip.id == 11 for _, clip in results)
+
+
+# ── from test_coverage_phase4: timeline.py remap helpers ──
+
+def test_remap_clip_ids_recursive_with_video_audio_and_tracks():
+    from camtasia.timeline.timeline import _remap_clip_ids_recursive
+    clip = {
+        'id': 100,
+        'video': {'id': 200},
+        'audio': {'id': 300},
+        'tracks': [{'medias': [{'id': 400}]}],
+    }
+    counter = [1]
+    _remap_clip_ids_recursive(clip, counter)
+    assert clip['id'] == 1
+    assert clip['video']['id'] == 2
+    assert clip['audio']['id'] == 3
+    assert clip['tracks'][0]['medias'][0]['id'] == 4
+    assert counter[0] == 5
+
+
+def test_remap_clip_ids_with_map():
+    from camtasia.timeline.timeline import _remap_clip_ids_with_map
+    clip = {
+        'id': 10,
+        'video': {'id': 20},
+        'tracks': [{'medias': [{'id': 30}]}],
+    }
+    counter = [100]
+    id_map: dict[int, int] = {}
+    _remap_clip_ids_with_map(clip, counter, id_map)
+    assert id_map == {10: 100, 20: 101, 30: 102}
+    assert clip['id'] == 100
+
+
+def test_group_clips_in_range(project):
+    tl = project.timeline
+    track = tl.tracks[0]
+    track.add_video(1, start_seconds=0, duration_seconds=5)
+    group = tl.group_clips_in_range(0.0, 5.0, 0)
+    assert group is not None
+
+
+def test_group_clips_in_range_no_clips(project):
+    tl = project.timeline
+    with pytest.raises(ValueError, match='No clips found'):
+        tl.group_clips_in_range(100.0, 200.0, 0)
+
+
+def test_build_section_timeline(project):
+    tl = project.timeline
+    t0 = tl.tracks[0]
+    c1 = t0.add_video(1, start_seconds=0, duration_seconds=3)
+    c2 = t0.add_video(1, start_seconds=5, duration_seconds=3)
+    tl.build_section_timeline(
+        [(c1.id, None), (c2.id, 'FadeThrough')],
+        target_track_index=0,
+        transition_duration_seconds=0.5,
+    )
+    assert c1._data['start'] == 0
+
+
+def test_build_section_timeline_clip_not_found(project):
+    tl = project.timeline
+    with pytest.raises(KeyError, match='Clip 9999 not found'):
+        tl.build_section_timeline([(9999, None)], 0)
+
+
+def test_build_section_timeline_moves_clip_across_tracks(project):
+    tl = project.timeline
+    t0 = tl.tracks[0]
+    t1 = tl.get_or_create_track('Track2')
+    c1 = t0.add_video(1, start_seconds=0, duration_seconds=2)
+    c2 = t1.add_video(1, start_seconds=0, duration_seconds=2)
+    tl.build_section_timeline(
+        [(c1.id, None), (c2.id, 'FadeThrough')],
+        target_track_index=0,
+    )
+
+
+def test_duplicate_track_registers_ids(project):
+    tl = project.timeline
+    t0 = tl.tracks[0]
+    t0.add_video(1, start_seconds=0, duration_seconds=3)
+    tl.duplicate_track(0)
+    assert tl.track_count >= 2

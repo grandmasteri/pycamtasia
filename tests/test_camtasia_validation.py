@@ -103,3 +103,145 @@ class TestCamtasiaValidateCustomTimeout:
 
         # sleep(2) for initial kill wait, then sleep(30) for the custom timeout
         assert mock_time.sleep.call_args_list == [call(2), call(30)]
+
+
+# ── validation edge cases (from test_coverage_extras.py) ──
+
+from camtasia.timing import seconds_to_ticks as _s2t
+
+_S1_VAL = _s2t(1.0)
+_S10_VAL = _s2t(10.0)
+
+
+class TestValidationEdgeCases:
+    def test_get_tracks_empty_scenes(self):
+        from camtasia.validation import _get_tracks
+        assert _get_tracks({'timeline': {'sceneTrack': {'scenes': []}}}) == []
+
+    def test_check_edit_rate_missing(self):
+        from camtasia.validation import _check_edit_rate
+        issues = _check_edit_rate({})
+        assert any('missing' in str(i) for i in issues)
+
+    def test_check_edit_rate_wrong(self):
+        from camtasia.validation import _check_edit_rate
+        issues = _check_edit_rate({'editRate': 12345})
+        assert any('expected' in str(i) for i in issues)
+
+    def test_duplicate_source_bin_ids(self):
+        from camtasia.validation import _check_source_bin_ids
+        issues = _check_source_bin_ids({'sourceBin': [{'id': 1, 'src': 'a'}, {'id': 1, 'src': 'b'}]})
+        assert any('Duplicate' in str(i) for i in issues)
+
+    def test_validate_all_negative_start(self):
+        from camtasia.validation import validate_all
+        data = {
+            'version': '9.0',
+            'editRate': 705600000,
+            'sourceBin': [],
+            'timeline': {
+                'sceneTrack': {
+                    'scenes': [{
+                        'csml': {
+                            'tracks': [{
+                                'trackIndex': 0,
+                                'medias': [{
+                                    '_type': 'VMFile', 'id': 1, 'start': -100, 'duration': _S1_VAL,
+                                    'mediaDuration': _S1_VAL, 'mediaStart': 0, 'scalar': 1,
+                                    'parameters': {}, 'effects': [], 'metadata': {},
+                                }],
+                            }],
+                        }
+                    }]
+                },
+                'parameters': {},
+                'trackAttributes': [{}],
+            },
+        }
+        issues = validate_all(data)
+        assert any('negative start' in str(i) for i in issues)
+
+    def test_validate_all_zero_duration(self):
+        from camtasia.validation import validate_all
+        data = {
+            'version': '9.0',
+            'editRate': 705600000,
+            'sourceBin': [],
+            'timeline': {
+                'sceneTrack': {
+                    'scenes': [{
+                        'csml': {
+                            'tracks': [{
+                                'trackIndex': 0,
+                                'medias': [{
+                                    '_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 0,
+                                    'mediaDuration': 0, 'mediaStart': 0, 'scalar': 1,
+                                    'parameters': {}, 'effects': [], 'metadata': {},
+                                }],
+                            }],
+                        }
+                    }]
+                },
+                'parameters': {},
+                'trackAttributes': [{}],
+            },
+        }
+        issues = validate_all(data)
+        assert any('duration' in str(i).lower() for i in issues)
+
+    def test_validate_all_scalar_mismatch(self):
+        from camtasia.validation import validate_all
+        data = {
+            'version': '9.0',
+            'editRate': 705600000,
+            'sourceBin': [],
+            'timeline': {
+                'sceneTrack': {
+                    'scenes': [{
+                        'csml': {
+                            'tracks': [{
+                                'trackIndex': 0,
+                                'medias': [{
+                                    '_type': 'VMFile', 'id': 1, 'start': 0, 'duration': _S10_VAL,
+                                    'mediaDuration': 99999, 'mediaStart': 0, 'scalar': '1/2',
+                                    'parameters': {}, 'effects': [], 'metadata': {},
+                                }],
+                            }],
+                        }
+                    }]
+                },
+                'parameters': {},
+                'trackAttributes': [{}],
+            },
+        }
+        issues = validate_all(data)
+        assert any('mediaDuration' in str(i) or 'scalar' in str(i) for i in issues)
+
+    def test_validate_all_group_missing_metadata(self):
+        from camtasia.validation import validate_all
+        data = {
+            'version': '9.0',
+            'editRate': 705600000,
+            'sourceBin': [],
+            'timeline': {
+                'sceneTrack': {
+                    'scenes': [{
+                        'csml': {
+                            'tracks': [{
+                                'trackIndex': 0,
+                                'medias': [{
+                                    '_type': 'Group', 'id': 1, 'start': 0, 'duration': _S10_VAL,
+                                    'mediaDuration': _S10_VAL, 'mediaStart': 0, 'scalar': 1,
+                                    'parameters': {}, 'effects': [],
+                                    'tracks': [{'trackIndex': 0, 'medias': []}],
+                                }],
+                            }],
+                        }
+                    }]
+                },
+                'parameters': {},
+                'trackAttributes': [{}],
+            },
+        }
+        issues = validate_all(data)
+        assert any('metadata' in str(i) for i in issues)

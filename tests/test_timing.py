@@ -168,3 +168,65 @@ def test_seconds_to_ticks_very_large() -> None:
 def test_parse_scalar_zero() -> None:
     actual_scalar = parse_scalar(0)
     assert actual_scalar == Fraction(0)
+
+
+# ── Merged from test_coverage_misc.py ────────────────────────────────
+
+
+class TestFormatDurationHours:
+    def test_hours_format(self):
+        result = format_duration(seconds_to_ticks(3661.5))
+        assert result.startswith('1:01:01')
+
+    def test_negative_duration(self):
+        result = format_duration(-seconds_to_ticks(5.0))
+        assert result.startswith('-')
+
+    def test_centisecond_carry(self):
+        result = format_duration(seconds_to_ticks(59.999))
+        assert ':' in result
+
+    def test_zero(self):
+        assert format_duration(0) == '0:00.00'
+
+
+class TestParseScalarEdgeCases:
+    def test_fraction_passthrough(self):
+        assert parse_scalar(Fraction(3, 7)) == Fraction(3, 7)
+
+    def test_string_fraction(self):
+        assert parse_scalar('51/101') == Fraction(51, 101)
+
+    def test_zero_division_string(self):
+        with pytest.raises(ValueError, match='division by zero'):
+            parse_scalar('1/0')
+
+    def test_float_input(self):
+        result = parse_scalar(0.5)
+        assert result == Fraction(1, 2)
+
+
+class TestScalarToStringMisc:
+    def test_unity(self):
+        assert scalar_to_string(Fraction(1)) == 1
+
+    def test_non_unity(self):
+        assert scalar_to_string(Fraction(3, 4)) == '3/4'
+
+
+class TestSpeedScalarConversions:
+    def test_speed_zero_raises(self):
+        with pytest.raises(ValueError, match='zero'):
+            speed_to_scalar(0)
+
+    def test_speed_negative_raises(self):
+        with pytest.raises(ValueError, match='negative'):
+            speed_to_scalar(-1.0)
+
+    def test_scalar_zero_raises(self):
+        with pytest.raises(ValueError, match='zero'):
+            scalar_to_speed(Fraction(0))
+
+    def test_scalar_negative_raises(self):
+        with pytest.raises(ValueError, match='negative'):
+            scalar_to_speed(Fraction(-1))

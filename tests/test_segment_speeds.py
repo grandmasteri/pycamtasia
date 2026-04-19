@@ -1,6 +1,8 @@
 """Tests for Track.set_segment_speeds()."""
 from __future__ import annotations
 
+import pytest
+
 from camtasia.timeline.track import Track
 from fractions import Fraction
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
@@ -130,3 +132,182 @@ def test_set_internal_segment_speeds_clears_transitions():
     group.set_internal_segment_speeds([(0, 50, 50.0), (50, 100, 50.0)])
     media_track = clip_data['tracks'][1]
     assert media_track.get('transitions', []) == []
+
+
+# ── from test_coverage_phase4b: operations/speed.py tests ──
+
+from fractions import Fraction
+from camtasia.operations.speed import rescale_project, set_audio_speed
+
+
+def _make_project_data_with_unified_audio(scalar="1/2"):
+    return {
+        "timeline": {
+            "sceneTrack": {
+                "scenes": [{
+                    "csml": {
+                        "tracks": [{
+                            "medias": [{
+                                "_type": "UnifiedMedia",
+                                "start": 0,
+                                "duration": 1000,
+                                "mediaDuration": 1000,
+                                "video": {
+                                    "_type": "VMFile",
+                                    "start": 0,
+                                    "duration": 1000,
+                                    "mediaDuration": 1000,
+                                    "scalar": 1,
+                                },
+                                "audio": {
+                                    "_type": "AMFile",
+                                    "start": 0,
+                                    "duration": 1000,
+                                    "mediaDuration": 2000,
+                                    "scalar": scalar,
+                                    "metadata": {
+                                        "clipSpeedAttribute": {"type": "bool", "value": True}
+                                    },
+                                },
+                            }],
+                        }],
+                    }
+                }]
+            },
+            "parameters": {"toc": {"keyframes": []}},
+        }
+    }
+
+
+class TestSetAudioSpeedUnifiedMedia:
+    def test_unified_media_audio_path(self):
+        data = _make_project_data_with_unified_audio("1/2")
+        factor = set_audio_speed(data, target_speed=1.0)
+        assert factor == Fraction(2)
+        audio = data["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]["audio"]
+        assert audio["scalar"] == 1
+        assert audio["metadata"]["clipSpeedAttribute"]["value"] is False
+
+    def test_set_audio_speed_negative_raises(self):
+        data = _make_project_data_with_unified_audio("1/2")
+        with pytest.raises(ValueError, match="positive"):
+            set_audio_speed(data, target_speed=-1.0)
+
+    def test_set_audio_speed_non_unity_target(self):
+        data = _make_project_data_with_unified_audio("1/2")
+        factor = set_audio_speed(data, target_speed=0.5)
+        audio = data["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]["audio"]
+        assert audio["metadata"]["clipSpeedAttribute"]["value"] is True
+        assert audio["scalar"] != 1
+
+
+class TestProcessClipStitchedUnified:
+    def test_stitched_media_with_unified_child(self):
+        data = {
+            "timeline": {
+                "sceneTrack": {
+                    "scenes": [{
+                        "csml": {
+                            "tracks": [{
+                                "medias": [{
+                                    "_type": "StitchedMedia",
+                                    "start": 0,
+                                    "duration": 1000,
+                                    "mediaStart": 0,
+                                    "mediaDuration": 1000,
+                                    "medias": [{
+                                        "_type": "UnifiedMedia",
+                                        "start": 0,
+                                        "duration": 500,
+                                        "mediaStart": 0,
+                                        "mediaDuration": 500,
+                                        "video": {
+                                            "_type": "VMFile",
+                                            "start": 0,
+                                            "duration": 500,
+                                            "mediaDuration": 500,
+                                            "scalar": 1,
+                                        },
+                                        "audio": {
+                                            "_type": "AMFile",
+                                            "start": 0,
+                                            "duration": 500,
+                                            "mediaDuration": 500,
+                                            "scalar": 1,
+                                        },
+                                    }],
+                                }],
+                            }],
+                        }
+                    }]
+                },
+                "parameters": {"toc": {"keyframes": []}},
+            }
+        }
+        rescale_project(data, Fraction(2))
+        inner = data["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]["medias"][0]
+        assert inner["video"]["duration"] == 1000
+        assert inner["audio"]["duration"] == 1000
+
+
+class TestOverlapFix:
+    def test_overlap_fix_shrinks_duration(self):
+        data = {
+            "timeline": {
+                "sceneTrack": {
+                    "scenes": [{
+                        "csml": {
+                            "tracks": [{
+                                "medias": [
+                                    {"_type": "AMFile", "start": 0, "duration": 100, "mediaDuration": 100, "scalar": 1},
+                                    {"_type": "AMFile", "start": 99, "duration": 100, "mediaDuration": 100, "scalar": 1},
+                                ],
+                            }],
+                        }
+                    }]
+                },
+                "parameters": {"toc": {"keyframes": []}},
+            }
+        }
+        rescale_project(data, Fraction(3, 2))
+        medias = data["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"]
+        a_end = medias[0]["start"] + medias[0]["duration"]
+        b_start = medias[1]["start"]
+        assert a_end <= b_start
+
+    def test_overlap_fix_with_non_unity_scalar(self):
+        data = {
+            "timeline": {
+                "sceneTrack": {
+                    "scenes": [{
+                        "csml": {
+                            "tracks": [{
+                                "medias": [
+                                    {
+                                        "_type": "AMFile",
+                                        "start": 0,
+                                        "duration": 100,
+                                        "mediaDuration": 200,
+                                        "scalar": "1/2",
+                                        "metadata": {"clipSpeedAttribute": {"type": "bool", "value": True}},
+                                    },
+                                    {
+                                        "_type": "AMFile",
+                                        "start": 99,
+                                        "duration": 100,
+                                        "mediaDuration": 100,
+                                        "scalar": 1,
+                                    },
+                                ],
+                            }],
+                        }
+                    }]
+                },
+                "parameters": {"toc": {"keyframes": []}},
+            }
+        }
+        rescale_project(data, Fraction(3, 2))
+        medias = data["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"]
+        a_end = medias[0]["start"] + medias[0]["duration"]
+        b_start = medias[1]["start"]
+        assert a_end <= b_start

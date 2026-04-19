@@ -206,3 +206,73 @@ class TestAudioTrackToJson:
         assert actual_json["sourceTracks"][0]["type"] == MediaType.Audio.value
         assert actual_json["sourceTracks"][0]["sampleRate"] == 44100
         assert actual_json["sourceTracks"][0]["metaData"] == "sound.wav;"
+
+
+# ── from test_coverage_phase4b: media_bin tests ──
+
+from unittest.mock import MagicMock
+
+
+class TestImportMediaSampleRateConversion:
+    def test_non_int_sample_rate_converted(self, project, tmp_path):
+        wav = tmp_path / "test.wav"
+        wav.write_bytes(b"\x00" * 100)
+        mock_track = {
+            "kind_of_stream": "Audio",
+            "sampling_rate": "44100.0",
+            "duration": 1000,
+            "bit_depth": 16,
+            "channel_s": 2,
+        }
+        with patch("camtasia.media_bin.media_bin._parse_with_pymediainfo", return_value=mock_track):
+            media = project.media_bin.import_media(wav)
+            assert media is not None
+
+    def test_non_int_sample_rate_invalid_becomes_none(self, project, tmp_path):
+        wav = tmp_path / "test.wav"
+        wav.write_bytes(b"\x00" * 100)
+        mock_track = {
+            "kind_of_stream": "Audio",
+            "sampling_rate": "invalid",
+            "duration": 1000,
+            "bit_depth": 16,
+            "channel_s": 2,
+        }
+        with patch("camtasia.media_bin.media_bin._parse_with_pymediainfo", return_value=mock_track):
+            media = project.media_bin.import_media(wav)
+            assert media is not None
+
+
+class TestParseWithPymediainfoPhase4b:
+    def test_parse_returns_none_on_import_error(self):
+        with patch("builtins.__import__", side_effect=ImportError):
+            result = _parse_with_pymediainfo(Path("/fake/file.mp4"))
+            assert result is None
+
+    def test_parse_returns_none_on_parse_exception(self):
+        mock_mi = MagicMock()
+        mock_mi.parse.side_effect = RuntimeError("parse failed")
+        with patch.dict("sys.modules", {"pymediainfo": MagicMock(MediaInfo=mock_mi)}):
+            result = _parse_with_pymediainfo(Path("/fake/file.mp4"))
+            assert result is None
+
+    def test_parse_returns_none_on_too_few_tracks(self):
+        mock_mi = MagicMock()
+        mock_result = MagicMock()
+        mock_result.tracks = [MagicMock()]
+        mock_mi.parse.return_value = mock_result
+        with patch.dict("sys.modules", {"pymediainfo": MagicMock(MediaInfo=mock_mi)}):
+            result = _parse_with_pymediainfo(Path("/fake/file.mp4"))
+            assert result is None
+
+    def test_parse_success_returns_track_data(self):
+        mock_mi = MagicMock()
+        mock_result = MagicMock()
+        track0 = MagicMock()
+        track1 = MagicMock()
+        track1.to_data.return_value = {"kind_of_stream": "Video", "width": 1920}
+        mock_result.tracks = [track0, track1]
+        mock_mi.parse.return_value = mock_result
+        with patch.dict("sys.modules", {"pymediainfo": MagicMock(MediaInfo=mock_mi)}):
+            result = _parse_with_pymediainfo(Path("/fake/file.mp4"))
+            assert result == {"kind_of_stream": "Video", "width": 1920}

@@ -274,3 +274,181 @@ def test_edl_unified_clip_emits_audio_event(project, tmp_path):
     # Should have at least 2 events: one V and one A
     assert any('V' in l and 'C' in l for l in lines)
     assert any('A' in l and 'C' in l for l in lines)
+
+
+# ── Merged from test_coverage_project.py (EDL tests) ────────────────
+
+
+class TestEdlMinuteOverflow:
+    def test_minute_overflow(self):
+        result = _format_timecode(3599.999, fps=30)
+        assert result == '01:00:00:00'
+
+
+# ── Merged from test_coverage_export.py ──────────────────────────────
+
+
+def _inject_unified(project):
+    """Add a UnifiedMedia clip to the project's first track."""
+    tracks = project._data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
+    if not tracks:
+        tracks.append({'trackIndex': 0, 'medias': []})
+    tracks[0]['medias'].append({
+        '_type': 'UnifiedMedia', 'id': 50, 'start': 0, 'duration': 705_600_000,
+        'mediaStart': 0, 'mediaDuration': 705_600_000, 'scalar': 1,
+        'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        'video': {
+            '_type': 'ScreenVMFile', 'id': 51, 'src': 999, 'start': 0,
+            'duration': 705_600_000, 'mediaStart': 0, 'mediaDuration': 705_600_000,
+            'scalar': 1, 'parameters': {}, 'effects': [], 'metadata': {},
+        },
+        'audio': {
+            '_type': 'AMFile', 'id': 52, 'src': 999, 'start': 0,
+            'duration': 705_600_000, 'mediaStart': 0, 'mediaDuration': 705_600_000,
+            'scalar': 1, 'parameters': {}, 'effects': [], 'metadata': {},
+        },
+    })
+
+
+class TestEdlUnifiedMedia:
+    def test_unified_media_generates_video_and_audio_events(self, project, tmp_path):
+        _inject_unified(project)
+        out = export_edl(project, tmp_path / 'out.edl')
+        lines = [l for l in out.read_text().splitlines() if l and l[0].isdigit()]
+        assert len(lines) == 2
+        assert 'V' in lines[0]
+        assert 'A' in lines[1]
+
+    def test_unified_media_source_id_from_video(self, project, tmp_path):
+        _inject_unified(project)
+        out = export_edl(project, tmp_path / 'out.edl')
+        content = out.read_text()
+        assert 'AX' in content
+
+
+# ── Merged from test_coverage_misc.py (EDL tests) ───────────────────
+
+
+class TestEdlExportMisc:
+    def test_edl_basic_export(self, tmp_path, project):
+        out = tmp_path / 'test.edl'
+        result = export_edl(project, out, title='Test')
+        assert result.exists()
+        content = result.read_text()
+        assert 'TITLE: Test' in content
+        assert 'FCM: NON-DROP FRAME' in content
+
+    def test_edl_with_unified_media(self, tmp_path, project):
+        track = project.timeline.tracks[0]
+        um_data = {
+            '_type': 'UnifiedMedia', 'id': 900, 'start': 0, 'duration': seconds_to_ticks(5.0),
+            'mediaDuration': seconds_to_ticks(5.0), 'mediaStart': 0, 'scalar': 1,
+            'parameters': {}, 'effects': [],
+            'video': {
+                '_type': 'ScreenVMFile', 'id': 901, 'src': 1,
+                'start': 0, 'duration': seconds_to_ticks(5.0), 'mediaDuration': seconds_to_ticks(5.0),
+                'mediaStart': 0, 'scalar': 1,
+                'parameters': {}, 'effects': [], 'attributes': {},
+            },
+            'audio': {
+                '_type': 'AMFile', 'id': 902, 'src': 1,
+                'start': 0, 'duration': seconds_to_ticks(5.0), 'mediaDuration': seconds_to_ticks(5.0),
+                'mediaStart': 0, 'scalar': 1, 'attributes': {},
+            },
+        }
+        track._data.setdefault('medias', []).append(um_data)
+        out = tmp_path / 'unified.edl'
+        result = export_edl(project, out)
+        content = result.read_text()
+        assert '  V  ' in content
+        assert '  A  ' in content
+
+    def test_edl_with_audio_clip(self, tmp_path, project):
+        track = project.timeline.tracks[0]
+        am_data = {
+            '_type': 'AMFile', 'id': 910, 'src': 1,
+            'start': 0, 'duration': seconds_to_ticks(5.0), 'mediaDuration': seconds_to_ticks(5.0),
+            'mediaStart': 0, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'attributes': {},
+        }
+        track._data.setdefault('medias', []).append(am_data)
+        out = tmp_path / 'audio.edl'
+        result = export_edl(project, out)
+        content = result.read_text()
+        assert '  A  ' in content
+
+    def test_edl_source_name_from_media_bin(self, tmp_path, project):
+        project._data.setdefault('sourceBin', []).append({
+            'id': 42, 'src': '/path/to/video.mp4',
+            'sourceTracks': [], 'rect': [0, 0, 1920, 1080],
+            'lastMod': '2026-01-01',
+        })
+        track = project.timeline.tracks[0]
+        vm_data = {
+            '_type': 'VMFile', 'id': 920, 'src': 42,
+            'start': 0, 'duration': seconds_to_ticks(5.0), 'mediaDuration': seconds_to_ticks(5.0),
+            'mediaStart': 0, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'attributes': {},
+        }
+        track._data.setdefault('medias', []).append(vm_data)
+        out = tmp_path / 'named.edl'
+        export_edl(project, out)
+
+
+class TestFormatTimecodeCarry:
+    def test_frame_carry(self):
+        result = _format_timecode(1.0, fps=30)
+        assert result == '00:00:01:00'
+
+    def test_second_carry(self):
+        result = _format_timecode(60.0, fps=30)
+        assert result == '00:01:00:00'
+
+    def test_minute_carry(self):
+        result = _format_timecode(3600.0, fps=30)
+        assert result == '01:00:00:00'
+
+    def test_negative_clamped(self):
+        result = _format_timecode(-5.0, fps=30)
+        assert result == '00:00:00:00'
+
+
+# ── EDL export extras (from test_coverage_extras.py) ──
+
+
+class TestEdlExportExtras:
+    def test_format_timecode_carry(self):
+        result = _format_timecode(59.99, 30)
+        assert result.startswith('00:01:00') or result.startswith('00:00:59')
+
+    def test_export_edl_basic(self, project, tmp_path):
+        track = project.timeline.tracks[0]
+        track._data['medias'].append({
+            '_type': 'VMFile', 'id': 1, 'src': 0, 'start': 0, 'duration': seconds_to_ticks(5.0),
+            'mediaDuration': seconds_to_ticks(5.0), 'mediaStart': 0, 'scalar': 1,
+            'parameters': {}, 'effects': [],
+        })
+        out = tmp_path / 'test.edl'
+        result = export_edl(project, out)
+        assert result.exists()
+        content = result.read_text()
+        assert 'TITLE' in content
+
+    def test_export_edl_unified_media(self, project, tmp_path):
+        track = project.timeline.tracks[0]
+        track._data['medias'].append({
+            '_type': 'UnifiedMedia', 'id': 10,
+            'start': 0, 'duration': seconds_to_ticks(5.0), 'mediaDuration': seconds_to_ticks(5.0),
+            'mediaStart': 0, 'scalar': 1, 'parameters': {}, 'effects': [],
+            'video': {'_type': 'ScreenVMFile', 'id': 11, 'src': 0,
+                      'start': 0, 'duration': seconds_to_ticks(5.0), 'mediaDuration': seconds_to_ticks(5.0),
+                      'mediaStart': 0, 'scalar': 1},
+            'audio': {'_type': 'AMFile', 'id': 12, 'src': 0,
+                      'start': 0, 'duration': seconds_to_ticks(5.0), 'mediaDuration': seconds_to_ticks(5.0),
+                      'mediaStart': 0, 'scalar': 1, 'attributes': {'gain': 1.0}},
+        })
+        out = tmp_path / 'test_um.edl'
+        result = export_edl(project, out)
+        content = result.read_text()
+        assert '  V  ' in content
+        assert '  A  ' in content

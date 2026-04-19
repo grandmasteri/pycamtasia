@@ -203,3 +203,259 @@ class TestFromTemplate:
         assert proj.width == 3840
         assert proj.height == 2160
         assert proj.title == "My Video"
+
+
+# ── Merged from test_coverage_project.py ─────────────────────────────
+
+from fractions import Fraction
+from unittest.mock import patch, MagicMock
+from camtasia.timing import seconds_to_ticks
+
+
+class TestHasScreenRecordingUnifiedMedia:
+    def test_unified_media_screen_recording(self, tmp_path):
+        proj_path = tmp_path / 'test.cmproj'
+        new_project(proj_path)
+        proj = load_project(proj_path)
+        track = proj.timeline.add_track('Screen')
+        m = {'id': 99, '_type': 'UnifiedMedia', 'src': 0, 'start': 0, 'duration': 100,
+             'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+             'animationTracks': {},
+             'video': {'_type': 'ScreenVMFile', 'id': 100}}
+        track._data.setdefault('medias', []).append(m)
+        assert proj.has_screen_recording is True
+
+
+class TestMergeProjectsTransitions:
+    def test_transitions_remapped(self, tmp_path):
+        src_path = tmp_path / 'src.cmproj'
+        new_project(src_path)
+        src = load_project(src_path)
+        track = src.timeline.add_track('V')
+        c1 = track.add_clip('VMFile', 0, 0, 100)
+        c2 = track.add_clip('VMFile', 0, 100, 100)
+        track._data.setdefault('transitions', []).append({
+            'start': 100, 'duration': 10, 'leftMedia': c1.id, 'rightMedia': c2.id,
+        })
+        src.save()
+
+        out_path = tmp_path / 'merged.cmproj'
+        merged = Project.merge_projects([src], out_path)
+        found_trans = False
+        for t in merged.timeline.tracks:
+            if t._data.get('transitions'):
+                found_trans = True
+                for tr in t._data['transitions']:
+                    assert 'leftMedia' in tr and 'rightMedia' in tr
+        assert found_trans
+
+
+class TestValidateAudioMissingSourceTracks:
+    def test_missing_range(self, tmp_path):
+        proj_path = tmp_path / 'test.cmproj'
+        new_project(proj_path)
+        proj = load_project(proj_path)
+        proj._data.setdefault('sourceBin', []).append({
+            'id': 999, 'src': 'fake.wav', 'lastMod': '2024-01-01',
+            'sourceTracks': [{'type': 2}],
+            'rect': [0, 0, 100, 100],
+        })
+        issues = proj.validate()
+        msgs = [i.message for i in issues]
+        assert any('missing sourceTracks or range' in m for m in msgs)
+
+
+class TestValidateImageMissingRect:
+    def test_missing_rect(self, tmp_path):
+        proj_path = tmp_path / 'test.cmproj'
+        new_project(proj_path)
+        proj = load_project(proj_path)
+        proj._data.setdefault('sourceBin', []).append({
+            'id': 998, 'src': 'fake.png', 'lastMod': '2024-01-01',
+            'sourceTracks': [{'type': 1}],
+        })
+        issues = proj.validate()
+        msgs = [i.message for i in issues]
+        assert any('missing rect' in m for m in msgs)
+
+
+class TestRepairZeroDuration:
+    def test_zero_duration_removed(self, tmp_path):
+        proj_path = tmp_path / 'test.cmproj'
+        new_project(proj_path)
+        proj = load_project(proj_path)
+        track = proj.timeline.add_track('V')
+        track._data['medias'] = [
+            {'id': 60, '_type': 'VMFile', 'src': 0, 'start': 0, 'duration': 1,
+             'mediaStart': 0, 'mediaDuration': 1, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+             'animationTracks': {}},
+            {'id': 61, '_type': 'VMFile', 'src': 0, 'start': 0, 'duration': 100,
+             'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+             'animationTracks': {}},
+        ]
+        result = proj.repair()
+        assert result.get('zero_duration_removed', 0) >= 1
+
+
+class TestDiffRemovedAddedTracks:
+    def test_clips_on_removed_and_added_tracks(self, tmp_path):
+        from camtasia.operations.diff import diff_projects
+
+        path_a = tmp_path / 'a.cmproj'
+        path_b = tmp_path / 'b.cmproj'
+        new_project(path_a)
+        new_project(path_b)
+        a = load_project(path_a)
+        b = load_project(path_b)
+
+        ta = a.timeline.add_track('ExtraA')
+        ta.add_clip('VMFile', 0, 0, 100)
+        b.timeline.add_track('ExtraB1')
+        tb2 = b.timeline.add_track('ExtraB2')
+        tb2.add_clip('VMFile', 0, 0, 100)
+
+        result = diff_projects(a, b)
+        assert result.has_changes
+
+    def test_track_only_in_a(self, tmp_path):
+        from camtasia.operations.diff import diff_projects
+
+        path_a = tmp_path / 'a2.cmproj'
+        path_b = tmp_path / 'b2.cmproj'
+        new_project(path_a)
+        new_project(path_b)
+        a = load_project(path_a)
+        b = load_project(path_b)
+
+        a.timeline.add_track('T2')
+        t3 = a.timeline.add_track('T3')
+        t3.add_clip('VMFile', 0, 0, 100)
+
+        result = diff_projects(a, b)
+        assert len(result.tracks_removed) > 0
+
+
+class TestSpeedEffectScaling:
+    def test_effect_times_scaled(self):
+        from camtasia.operations.speed import _scale_clip_timing
+        clip = {'_type': 'VMFile', 'start': 0, 'duration': 1000,
+                'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+                'effects': [{'start': 100, 'duration': 200}]}
+        _scale_clip_timing(clip, Fraction(2))
+        assert clip['effects'][0]['start'] == 200
+        assert clip['effects'][0]['duration'] == 400
+
+
+class TestSpeedStitchedMediaInnerEffects:
+    def test_inner_effects_scaled(self):
+        from camtasia.operations.speed import _process_clip
+        clip = {'_type': 'StitchedMedia', 'start': 0, 'duration': 1000,
+                'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+                'metadata': {}, 'effects': [],
+                'medias': [{'start': 0, 'duration': 500, 'mediaStart': 0, 'mediaDuration': 500,
+                            'effects': [{'start': 10, 'duration': 20}]}]}
+        _process_clip(clip, Fraction(2))
+        inner_effect = clip['medias'][0]['effects'][0]
+        assert inner_effect['start'] == 20
+        assert inner_effect['duration'] == 40
+
+
+class TestValidationVersionParseError:
+    def test_invalid_version(self):
+        from camtasia.validation import _check_group_required_fields
+        data = {'version': 'not-a-number',
+                'sceneTrack': {'scenes': [{'csml': {'tracks': []}}]}}
+        issues = _check_group_required_fields(data)
+
+
+class TestValidationScalarParseError:
+    def test_invalid_scalar(self):
+        from camtasia.validation import _check_timing_consistency
+        data = {'timeline': {'sceneTrack': {'scenes': [{'csml': {'tracks': [
+            {'trackIndex': 0, 'medias': [
+                {'id': 1, '_type': 'VMFile', 'scalar': '0/0',
+                 'duration': 100, 'mediaDuration': 100}
+            ]}
+        ]}}]}}}
+        issues = _check_timing_consistency(data)
+
+
+# ── Merged from test_coverage_misc.py (template operations) ─────────
+
+
+class TestWalkClipsUnified:
+    def test_walk_clips_yields_unified_children(self):
+        from camtasia.operations.template import _walk_clips
+        tracks = [{
+            'medias': [{
+                '_type': 'UnifiedMedia', 'id': 1, 'src': 10,
+                'video': {'_type': 'ScreenVMFile', 'id': 2, 'src': 10},
+                'audio': {'_type': 'AMFile', 'id': 3, 'src': 10},
+            }]
+        }]
+        clips = list(_walk_clips(tracks))
+        types = [c.get('_type') for c in clips]
+        assert 'UnifiedMedia' in types
+        assert 'ScreenVMFile' in types
+        assert 'AMFile' in types
+
+    def test_replace_media_source_in_unified(self):
+        from camtasia.operations.template import replace_media_source
+        data = {
+            'timeline': {'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+                'medias': [{
+                    '_type': 'UnifiedMedia', 'id': 1,
+                    'video': {'_type': 'ScreenVMFile', 'id': 2, 'src': 10},
+                    'audio': {'_type': 'AMFile', 'id': 3, 'src': 10},
+                }]
+            }]}}]}},
+        }
+        count = replace_media_source(data, 10, 20)
+        assert count == 2
+        um = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        assert um['video']['src'] == 20
+        assert um['audio']['src'] == 20
+
+
+class TestCloneProjectStructure:
+    def test_clone_clears_media(self):
+        from camtasia.operations.template import clone_project_structure
+        data = {
+            'sourceBin': [{'id': 1}],
+            'timeline': {
+                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+                    'medias': [{'_type': 'VMFile', 'id': 1}],
+                    'transitions': [{'name': 'Fade'}],
+                }]}}]},
+                'parameters': {'toc': {'keyframes': [{'time': 100}]}},
+            },
+        }
+        result = clone_project_structure(data)
+        assert result['sourceBin'] == []
+        assert result['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'] == []
+        assert result['timeline']['parameters']['toc']['keyframes'] == []
+
+
+class TestRepairOverlapFix:
+    """Test repair() overlap detection and mediaDuration recalculation."""
+
+    def test_overlap_fixed_and_media_duration_recalculated(self, project, tmp_path):
+        track = project.timeline.tracks[0]
+        # Create two overlapping clips: clip1 at 0-100, clip2 at 50-150
+        track._data.setdefault('medias', []).extend([
+            {'_type': 'VMFile', 'id': 10, 'src': 0, 'start': 0, 'duration': 100,
+             'mediaDuration': 100, 'mediaStart': 0, 'scalar': 1,
+             'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {}},
+            {'_type': 'VMFile', 'id': 11, 'src': 0, 'start': 50, 'duration': 100,
+             'mediaDuration': 100, 'mediaStart': 0, 'scalar': 1,
+             'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {}},
+        ])
+        result = project.repair()
+        assert result.get('overlaps_fixed', 0) >= 1
+        # First clip's duration should be trimmed to 50 (no overlap)
+        clip1 = [m for m in track._data['medias'] if m['id'] == 10][0]
+        assert clip1['duration'] == 50
+        assert clip1['mediaDuration'] == 50  # recalculated: 50 / 1 = 50

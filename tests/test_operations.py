@@ -414,3 +414,207 @@ class TestPlanSyncSkipsZeroDuration:
         segments = plan_sync(markers, words)
         # The first segment (start→middle) has zero audio duration and should be skipped
         assert all(s.scalar > 0 for s in segments)
+
+
+# ── _adjust_scalar (from test_coverage_speed.py) ──
+
+from camtasia.operations.speed import _adjust_scalar
+
+
+class TestAdjustScalar:
+    def test_adjusts_existing_scalar(self):
+        clip = {'scalar': '51/101'}
+        _adjust_scalar(clip, Fraction(2))
+        assert clip['scalar'] == '102/101'
+
+    def test_adjusts_default_scalar(self):
+        clip = {}
+        _adjust_scalar(clip, Fraction(3))
+        assert clip['scalar'] == '3/1'
+
+
+# ── overlap fix in rescale_project (from test_coverage_speed.py) ──
+
+
+def _minimal_project(*clips):
+    """Build a minimal project dict with given clips on one track."""
+    return {
+        'timeline': {
+            'sceneTrack': {
+                'scenes': [{
+                    'csml': {
+                        'tracks': [{'trackIndex': 0, 'medias': list(clips), 'transitions': []}],
+                    },
+                }],
+            },
+            'parameters': {'toc': {'keyframes': []}},
+        },
+    }
+
+
+class TestOverlapFix:
+    def test_overlap_trimmed_after_rescale(self):
+        """Two clips that overlap by 1 tick after rescaling get fixed."""
+        clip_a = {
+            '_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+        }
+        clip_b = {
+            '_type': 'AMFile', 'id': 2, 'start': 99, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+        }
+        data = _minimal_project(clip_a, clip_b)
+        rescale_project(data, Fraction(1))
+        medias = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias']
+        a_end = medias[0]['start'] + medias[0]['duration']
+        b_start = medias[1]['start']
+        assert a_end <= b_start
+
+
+# ── _mark_speed_changed (from test_coverage_speed.py) ──
+
+
+class TestMarkSpeedChanged:
+    def test_marks_amfile_via_rescale(self):
+        clip = {
+            '_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+        }
+        data = _minimal_project(clip)
+        rescale_project(data, Fraction(2))
+        media = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        assert media['metadata']['clipSpeedAttribute']['value'] is True
+
+    def test_skips_excluded_types(self):
+        clip = {
+            '_type': 'IMFile', 'id': 1, 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 1, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+        }
+        data = _minimal_project(clip)
+        rescale_project(data, Fraction(2))
+        media = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        assert 'clipSpeedAttribute' not in media.get('metadata', {})
+
+    def test_recurses_into_unified_children(self):
+        clip = {
+            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'video': {
+                '_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 100,
+                'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+                'parameters': {}, 'effects': [], 'metadata': {},
+            },
+            'audio': {
+                '_type': 'AMFile', 'id': 3, 'start': 0, 'duration': 100,
+                'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+                'parameters': {}, 'effects': [], 'metadata': {},
+            },
+        }
+        data = _minimal_project(clip)
+        rescale_project(data, Fraction(2))
+        um = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        assert um['video']['metadata']['clipSpeedAttribute']['value'] is True
+        assert um['audio']['metadata']['clipSpeedAttribute']['value'] is True
+
+    def test_recurses_into_group_tracks(self):
+        clip = {
+            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'tracks': [{'medias': [{
+                '_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 100,
+                'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+                'parameters': {}, 'effects': [], 'metadata': {},
+            }]}],
+        }
+        data = _minimal_project(clip)
+        rescale_project(data, Fraction(2))
+        inner = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['tracks'][0]['medias'][0]
+        assert inner['metadata']['clipSpeedAttribute']['value'] is True
+
+    def test_recurses_into_stitched_medias(self):
+        clip = {
+            '_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'medias': [{
+                '_type': 'AMFile', 'id': 2, 'start': 0, 'duration': 100,
+                'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+                'parameters': {}, 'effects': [], 'metadata': {},
+            }],
+        }
+        data = _minimal_project(clip)
+        rescale_project(data, Fraction(2))
+        inner = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['medias'][0]
+        assert inner['metadata']['clipSpeedAttribute']['value'] is True
+
+
+# ── diff: clips on removed/added tracks (from test_coverage_extras.py) ──
+
+from camtasia.timing import seconds_to_ticks as _s2t
+
+_S1 = _s2t(1.0)
+
+
+class TestDiffClipsOnRemovedAddedTracks:
+    def test_diff_detects_clips_on_removed_tracks(self, project):
+        import copy as _copy
+        from camtasia.operations.diff import diff_projects
+        from camtasia.project import Project
+        a = project
+        b_data = _copy.deepcopy(a._data)
+        b = Project.__new__(Project)
+        b._data = b_data
+        b._file_path = a._file_path
+        track = a.timeline.tracks[0]
+        track._data['medias'].append({
+            '_type': 'VMFile', 'id': 999, 'src': 0, 'start': 0, 'duration': _S1,
+            'mediaDuration': _S1, 'mediaStart': 0, 'scalar': 1,
+            'parameters': {}, 'effects': [],
+        })
+        result = diff_projects(a, b)
+        assert result is not None
+
+
+# ── merge: remap clip IDs (from test_coverage_extras.py) ──
+
+
+class TestMergeRemapClipIds:
+    def test_remap_clip_ids_unified(self):
+        from camtasia.operations.merge import _remap_clip_ids
+        data = {
+            'id': 1, '_type': 'UnifiedMedia',
+            'video': {'_type': 'ScreenVMFile', 'id': 2, 'src': 1},
+            'audio': {'_type': 'AMFile', 'id': 3, 'src': 1},
+            'tracks': [{'medias': [{'id': 4, 'src': 1}]}],
+            'medias': [{'id': 5, 'src': 1}],
+        }
+        id_counter = [100]
+        id_map = {}
+        src_map = {1: 50}
+        _remap_clip_ids(data, id_counter, id_map, src_map)
+        assert data['id'] != 1
+        assert data['video']['src'] == 50
+
+
+# ── template: _walk_clips UnifiedMedia (from test_coverage_extras.py) ──
+
+
+class TestTemplateWalkClipsExtras:
+    def test_walk_clips_unified(self):
+        from camtasia.operations.template import _walk_clips
+        tracks = [{
+            'medias': [{
+                '_type': 'UnifiedMedia', 'id': 1,
+                'video': {'_type': 'ScreenVMFile', 'id': 2},
+                'audio': {'_type': 'AMFile', 'id': 3},
+            }]
+        }]
+        clips = list(_walk_clips(tracks))
+        assert any(c.get('_type') == 'ScreenVMFile' for c in clips)
+        assert any(c.get('_type') == 'AMFile' for c in clips)

@@ -182,3 +182,113 @@ class TestRemoveAllEmptyTracks:
 def test_timeline_duration_seconds_property(project):
     """Timeline.duration_seconds delegates to total_duration_seconds."""
     assert project.timeline.duration_seconds == 0.0
+
+
+# ── Merged from test_coverage_timeline.py ────────────────────────────
+
+import copy
+import pytest
+from camtasia.timing import seconds_to_ticks
+
+
+def _tl_media(id, start=0, dur=100, _type='VMFile', src=0, **kw):
+    d = {'id': id, '_type': _type, 'src': src, 'start': start, 'duration': dur,
+         'mediaStart': 0, 'mediaDuration': dur, 'scalar': 1,
+         'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+         'animationTracks': {}}
+    d.update(kw)
+    return d
+
+
+def _tl_track_data(index, medias=None, transitions=None):
+    return {'trackIndex': index, 'medias': medias or [], 'transitions': transitions or []}
+
+
+def _tl_make_timeline_data(tracks=None, attrs=None):
+    return {
+        'sceneTrack': {
+            'scenes': [{
+                'csml': {
+                    'tracks': tracks or [],
+                }
+            }]
+        },
+        'trackAttributes': attrs or [],
+    }
+
+
+class TestClipsOfTypeNestedIds:
+    def test_nested_ids_registered(self):
+        inner_media = _tl_media(10, 0, 50)
+        group = _tl_media(1, 0, 100, _type='Group')
+        group['tracks'] = [{'medias': [inner_media]}]
+        group['medias'] = [_tl_media(20, 0, 50)]
+
+        t_data = _tl_track_data(0, [group])
+        data = _tl_make_timeline_data([t_data], [{'ident': 'T0'}])
+        tl = Timeline(data)
+        results = tl.clips_of_type('VMFile')
+        found_ids = {clip.id for _, clip in results}
+        assert 10 in found_ids
+
+
+class TestValidateStructureDuplicateIds:
+    def test_duplicate_nested_id(self):
+        m1 = _tl_media(1, 0, 100)
+        m2 = _tl_media(2, 100, 100)
+        m2['tracks'] = [{'medias': [{'id': 1, '_type': 'VMFile'}]}]
+        t_data = _tl_track_data(0, [m1, m2])
+        data = _tl_make_timeline_data([t_data], [{'ident': 'T0'}])
+        tl = Timeline(data)
+        issues = tl.validate_structure()
+        assert any('Duplicate clip ID 1' in i for i in issues)
+
+    def test_duplicate_video_sub_id(self):
+        m1 = _tl_media(1, 0, 100)
+        m2 = _tl_media(2, 100, 100, _type='UnifiedMedia')
+        m2['video'] = {'id': 1, '_type': 'VMFile'}
+        t_data = _tl_track_data(0, [m1, m2])
+        data = _tl_make_timeline_data([t_data], [{'ident': 'T0'}])
+        tl = Timeline(data)
+        issues = tl.validate_structure()
+        assert any('Duplicate clip ID 1' in i for i in issues)
+
+    def test_duplicate_stitched_media_id(self):
+        m1 = _tl_media(1, 0, 100)
+        m2 = _tl_media(2, 100, 100, _type='StitchedMedia')
+        m2['medias'] = [{'id': 1, '_type': 'VMFile'}]
+        t_data = _tl_track_data(0, [m1, m2])
+        data = _tl_make_timeline_data([t_data], [{'ident': 'T0'}])
+        tl = Timeline(data)
+        issues = tl.validate_structure()
+        assert any('Duplicate clip ID 1' in i for i in issues)
+
+
+class TestReverseTrackOrderPadsAttrs:
+    def test_pads_missing_attrs(self):
+        t0 = _tl_track_data(0, [_tl_media(1)])
+        t1 = _tl_track_data(1, [_tl_media(2, start=100)])
+        data = _tl_make_timeline_data([t0, t1], [])
+        tl = Timeline(data)
+        tl.reverse_track_order()
+        assert len(data['trackAttributes']) >= 2
+
+
+class TestSortTracksByNamePadsAttrs:
+    def test_pads_missing_attrs(self):
+        t0 = _tl_track_data(0, [_tl_media(1)])
+        t1 = _tl_track_data(1, [_tl_media(2, start=100)])
+        data = _tl_make_timeline_data([t0, t1], [{'ident': 'B'}])
+        tl = Timeline(data)
+        tl.sort_tracks_by_name()
+        assert len(data['trackAttributes']) >= 2
+
+
+class TestReorderTracksPadsAttrs:
+    def test_pads_missing_attrs(self):
+        t0 = _tl_track_data(0, [_tl_media(1)])
+        t1 = _tl_track_data(1, [_tl_media(2, start=100)])
+        data = _tl_make_timeline_data([t0, t1], [])
+        tl = Timeline(data)
+        tl.reorder_tracks([1, 0])
+        assert len(data['trackAttributes']) >= 2

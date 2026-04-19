@@ -203,3 +203,17 @@ class TestTransitionRepr:
         assert 'FadeThroughBlack' in r
         assert 'left=1' in r
         assert 'right=2' in r
+
+
+# ── Merged from test_coverage_misc.py ────────────────────────────────
+
+
+class TestTransitionFadeToWhite:
+    def test_add_fade_to_white(self):
+        data = {'transitions': []}
+        tl = TransitionList(data)
+        t = tl.add_fade_to_white(left_clip=1, right_clip=2, duration_seconds=0.5)
+        assert t.name == 'FadeThroughColor'
+        assert t._data['attributes']['Color-red'] == 1.0
+        assert t._data['attributes']['Color-green'] == 1.0
+        assert t._data['attributes']['Color-blue'] == 1.0

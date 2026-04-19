@@ -156,3 +156,61 @@ class TestApplyColorGrade:
 
     def test_empty_project(self, project):
         assert project.apply_color_grade() == 0
+
+
+# ── from test_coverage_phase4b: operations/template.py tests ──
+
+from camtasia.operations.template import _walk_clips
+
+
+class TestWalkClipsEdgeCases:
+    def test_unified_media_inside_stitched_media(self):
+        tracks = [{
+            "medias": [{
+                "_type": "StitchedMedia",
+                "medias": [{
+                    "_type": "UnifiedMedia",
+                    "video": {"_type": "VMFile", "src": 1},
+                    "audio": {"_type": "AMFile", "src": 2},
+                }],
+            }],
+        }]
+        clips = list(_walk_clips(tracks))
+        types = [c.get("_type") for c in clips]
+        assert "StitchedMedia" in types
+        assert "UnifiedMedia" in types
+        assert "VMFile" in types
+        assert "AMFile" in types
+
+    def test_top_level_unified_media(self):
+        tracks = [{
+            "medias": [{
+                "_type": "UnifiedMedia",
+                "video": {"_type": "VMFile", "src": 1},
+                "audio": {"_type": "AMFile", "src": 2},
+            }],
+        }]
+        clips = list(_walk_clips(tracks))
+        types = [c.get("_type") for c in clips]
+        assert "UnifiedMedia" in types
+        assert "VMFile" in types
+        assert "AMFile" in types
+
+    def test_duplicate_project_clear_media_with_keyframes(self, tmp_path):
+        import shutil
+        from camtasia.operations.template import duplicate_project
+        from camtasia.project import load_project
+
+        src = Path(__file__).parent.parent / "src" / "camtasia" / "resources" / "new.cmproj"
+        src_copy = tmp_path / "source.cmproj"
+        shutil.copytree(src, src_copy)
+
+        proj = load_project(src_copy)
+        toc = proj._data.setdefault("timeline", {}).setdefault("parameters", {}).setdefault("toc", {})
+        toc["keyframes"] = [{"time": 100, "value": "Chapter 1"}]
+        proj.save()
+
+        dest = tmp_path / "dest.cmproj"
+        result = duplicate_project(src_copy, dest, clear_media=True)
+        result_toc = result._data.get("timeline", {}).get("parameters", {}).get("toc", {})
+        assert result_toc.get("keyframes") == []

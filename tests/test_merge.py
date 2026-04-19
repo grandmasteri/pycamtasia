@@ -178,3 +178,48 @@ class TestMergeRemapsGroupInternalIds:
         collect_ids(group)
         # All IDs must be unique
         assert len(all_ids) == len(set(all_ids))
+
+
+# ── from test_coverage_phase4b: operations/merge.py tests ──
+
+from camtasia.operations.merge import _remap_clip_ids
+
+
+class TestRemapClipIdsAssetProperties:
+    def test_dict_format_objects_in_asset_properties(self):
+        clip = {
+            "id": 10,
+            "attributes": {
+                "assetProperties": [
+                    {
+                        "objects": [
+                            {"media": 10, "other": "data"},
+                            5,
+                        ]
+                    }
+                ]
+            },
+        }
+        id_counter = [100]
+        id_map: dict[int, int] = {}
+        src_map: dict[int, int] = {}
+        _remap_clip_ids(clip, id_counter, id_map, src_map)
+        assert id_map[10] == 100
+        ap = clip["attributes"]["assetProperties"][0]["objects"]
+        assert ap[0]["media"] == 100
+        assert ap[1] == 5
+
+    def test_int_objects_remapped(self):
+        clip = {
+            "id": 20,
+            "attributes": {
+                "assetProperties": [
+                    {"objects": [7]}
+                ]
+            },
+        }
+        id_counter = [200]
+        id_map: dict[int, int] = {7: 77}
+        src_map: dict[int, int] = {}
+        _remap_clip_ids(clip, id_counter, id_map, src_map)
+        assert clip["attributes"]["assetProperties"][0]["objects"][0] == 77

@@ -283,3 +283,173 @@ class TestGroupClipsPreservesTiming:
         assert internal_clips[0].start == 0
         # Second clip was at 5.0s absolute, group at 0.0s → relative 5.0s
         assert internal_clips[1].start == seconds_to_ticks(5.0)
+
+
+# ── from test_coverage_phase4: group.py tests ──
+
+import warnings
+
+
+def test_group_track_transitions_raises():
+    gt = GroupTrack({'medias': []})
+    with pytest.raises(AttributeError, match='do not support transitions'):
+        gt.transitions
+
+
+def test_group_set_source_raises():
+    g = Group({
+        '_type': 'Group',
+        'id': 1, 'start': 0, 'duration': 100,
+        'tracks': [],
+    })
+    with pytest.raises(TypeError, match='do not have a source'):
+        g.set_source(1)
+
+
+def test_set_internal_segment_speeds_warns_over_8():
+    g = Group({
+        '_type': 'Group',
+        'id': 1, 'start': 0, 'duration': 10000,
+        'tracks': [{'medias': [{'_type': 'ScreenVMFile', 'id': 10, 'start': 0, 'duration': 10000,
+                                 'src': 1, 'mediaStart': 0, 'mediaDuration': 10000,
+                                 'attributes': {'ident': ''}, 'trackNumber': 0}]}],
+    })
+    segments = [(i * 0.1, (i + 1) * 0.1, 0.1) for i in range(9)]
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always')
+        g.set_internal_segment_speeds(segments)
+        warns = [x for x in w if '>8' in str(x.message)]
+        assert len(warns) >= 1
+
+
+def test_set_internal_segment_speeds_canvas_aspect_mismatch():
+    g = Group({
+        '_type': 'Group',
+        'id': 1, 'start': 0, 'duration': 10000,
+        'attributes': {'widthAttr': 1920, 'heightAttr': 1080},
+        'tracks': [{'medias': [{'_type': 'ScreenVMFile', 'id': 10, 'start': 0, 'duration': 10000,
+                                 'src': 1, 'mediaStart': 0, 'mediaDuration': 10000,
+                                 'attributes': {'ident': ''}, 'trackNumber': 0}]}],
+    })
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always')
+        g.set_internal_segment_speeds(
+            [(0, 5.0, 5.0)],
+            canvas_width=800,
+            canvas_height=800,
+            source_width=1920,
+            source_height=1080,
+        )
+        warns = [x for x in w if 'aspect ratio' in str(x.message)]
+        assert len(warns) >= 1
+
+
+def test_set_internal_segment_speeds_source_bin_resolve():
+    g = Group({
+        '_type': 'Group',
+        'id': 1, 'start': 0, 'duration': 10000,
+        'tracks': [{'medias': [{'_type': 'ScreenVMFile', 'id': 10, 'start': 0, 'duration': 10000,
+                                 'src': 42, 'mediaStart': 0, 'mediaDuration': 10000,
+                                 'attributes': {'ident': ''}, 'trackNumber': 0}]}],
+    })
+    source_bin = [
+        {'id': 42, 'sourceTracks': [{'trackRect': [0, 0, 3840, 2160]}]},
+    ]
+    g.set_internal_segment_speeds(
+        [(0, 5.0, 5.0)],
+        canvas_width=1920,
+        canvas_height=1080,
+        source_bin=source_bin,
+    )
+
+
+def test_group_trim_to_group_duration():
+    g = Group({
+        '_type': 'Group',
+        'id': 1, 'start': 0, 'duration': 500,
+        'tracks': [{'medias': [
+            {'_type': 'VMFile', 'id': 10, 'start': 0, 'duration': 1000, 'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1},
+            {'_type': 'IMFile', 'id': 11, 'start': 0, 'duration': 1000, 'mediaStart': 0, 'mediaDuration': 1000},
+        ]}],
+    })
+    g.sync_internal_durations()
+    assert g._data['tracks'][0]['medias'][0]['duration'] == 500
+    assert g._data['tracks'][0]['medias'][1]['mediaDuration'] == 1
+
+
+# ── from test_ci_coverage_gaps: group.py set_internal_segment_speeds ──
+
+def _group_with_unified_media():
+    return {
+        'id': 1, '_type': 'Group',
+        'start': 0, 'duration': seconds_to_ticks(100),
+        'mediaStart': 0, 'mediaDuration': seconds_to_ticks(100),
+        'scalar': 1, 'metadata': {}, 'parameters': {}, 'effects': [],
+        'attributes': {'ident': ''}, 'animationTracks': {},
+        'tracks': [
+            {'medias': [{'id': 10, '_type': 'VMFile', 'src': 1,
+                         'start': 0, 'duration': seconds_to_ticks(100),
+                         'mediaStart': 0, 'mediaDuration': seconds_to_ticks(100),
+                         'scalar': 1}]},
+            {'medias': [{'id': 11, '_type': 'UnifiedMedia',
+                         'video': {'src': 2, 'attributes': {'ident': 'rec'},
+                                   'parameters': {}, 'effects': []},
+                         'start': 0, 'duration': seconds_to_ticks(100),
+                         'mediaStart': 0, 'mediaDuration': seconds_to_ticks(100)}]},
+        ],
+    }
+
+
+class TestGroupSetInternalSegmentSpeeds:
+    def test_creates_screenvm_clips(self):
+        data = _group_with_unified_media()
+        group = Group(data)
+        group.set_internal_segment_speeds([(0, 50, 50), (50, 100, 25)])
+        media_track = data['tracks'][1]
+        assert [m['_type'] for m in media_track['medias']] == ['ScreenVMFile', 'ScreenVMFile']
+
+    def test_updates_group_duration(self):
+        data = _group_with_unified_media()
+        group = Group(data)
+        group.set_internal_segment_speeds([(0, 50, 30), (50, 100, 20)])
+        assert data['duration'] == seconds_to_ticks(50)
+
+    def test_extends_vmfile_on_other_tracks(self):
+        data = _group_with_unified_media()
+        group = Group(data)
+        group.set_internal_segment_speeds([(0, 50, 50), (50, 100, 50)])
+        vmfile = data['tracks'][0]['medias'][0]
+        assert vmfile['duration'] == seconds_to_ticks(100)
+
+    def test_no_unified_media_raises(self):
+        data = {
+            'id': 1, '_type': 'Group',
+            'start': 0, 'duration': 100, 'mediaStart': 0,
+            'mediaDuration': 100, 'scalar': 1,
+            'tracks': [{'medias': [{'id': 10, '_type': 'AMFile'}]}],
+        }
+        group = Group(data)
+        with pytest.raises(ValueError, match='No internal track'):
+            group.set_internal_segment_speeds([(0, 50, 50)])
+
+    def test_stitched_media_template(self):
+        data = _group_with_unified_media()
+        data['tracks'][1]['medias'] = [{'id': 11, '_type': 'StitchedMedia',
+                                         'src': 2, 'attributes': {'ident': 'rec'}}]
+        group = Group(data)
+        group.set_internal_segment_speeds([(0, 50, 50)])
+        assert data['tracks'][1]['medias'][0]['_type'] == 'ScreenVMFile'
+
+    def test_scalar_is_string_when_not_one(self):
+        data = _group_with_unified_media()
+        group = Group(data)
+        group.set_internal_segment_speeds([(0, 100, 50)])
+        clip = data['tracks'][1]['medias'][0]
+        assert isinstance(clip['scalar'], str)
+
+    def test_scalar_is_int_one_for_normal_speed(self):
+        data = _group_with_unified_media()
+        group = Group(data)
+        group.set_internal_segment_speeds([(0, 50, 50)])
+        clip = data['tracks'][1]['medias'][0]
+        assert clip['scalar'] == 1
