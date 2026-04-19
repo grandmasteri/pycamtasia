@@ -115,6 +115,9 @@ class BaseClip:
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['start'] = self._data['start']
+        if self._data.get('_type') == 'StitchedMedia':
+            for inner in self._data.get('medias', []):
+                inner['start'] = self._data['start']
 
     @property
     def duration(self) -> int:
@@ -139,6 +142,11 @@ class BaseClip:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['scalar'] = self._data.get('scalar', 1)
+        if self._data.get('_type') == 'StitchedMedia':
+            for inner in self._data.get('medias', []):
+                inner['duration'] = self._data['duration']
+                inner['mediaDuration'] = self._data['mediaDuration']
+                inner['scalar'] = self._data.get('scalar', 1)
 
     @property
     def end_seconds(self) -> float:
@@ -257,6 +265,9 @@ class BaseClip:
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['mediaDuration'] = stored
+        if self._data.get('_type') == 'StitchedMedia':
+            for inner in self._data.get('medias', []):
+                inner['mediaDuration'] = stored
 
     @property
     def scalar(self) -> Fraction:
@@ -286,6 +297,10 @@ class BaseClip:
                 if sub is not None:
                     sub['scalar'] = self._data['scalar']
                     sub['mediaDuration'] = self._data['mediaDuration']
+        if self._data.get('_type') == 'StitchedMedia':
+            for inner in self._data.get('medias', []):
+                inner['scalar'] = self._data['scalar']
+                inner['mediaDuration'] = self._data['mediaDuration']
 
     def set_speed(self, speed: float) -> Self:
         """Set playback speed multiplier.
@@ -616,6 +631,12 @@ class BaseClip:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['scalar'] = self._data.get('scalar', 1)
+        if self._data.get('_type') == 'StitchedMedia':
+            for inner in self._data.get('medias', []):
+                inner['start'] = self._data['start']
+                inner['duration'] = self._data['duration']
+                inner['mediaDuration'] = self._data['mediaDuration']
+                inner['scalar'] = self._data.get('scalar', 1)
         return self
 
     def __eq__(self, other: object) -> bool:
