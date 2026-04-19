@@ -66,3 +66,14 @@ def test_keystroke_callout_custom_font_size():
     result = keystroke_callout('Cmd+Shift+S', font_size=36.0)
     assert result['text'] == 'Cmd+Shift+S'
     assert result['font']['size'] == 36.0
+
+
+from camtasia.annotations.callouts import square
+from camtasia.annotations.types import Color, HorizontalAlignment, VerticalAlignment
+
+
+def test_square_callout_line_spacing():
+    result = square('Hello', 'Arial', 'Bold', line_spacing=1.5)
+    assert result['line-spacing'] == 1.5
+    assert result['kind'] == 'remix'
+    assert result['shape'] == 'text-rectangle'

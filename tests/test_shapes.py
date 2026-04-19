@@ -47,3 +47,10 @@ class TestRectangle:
         assert actual_result["height"] == 100.0
         assert actual_result["width"] == 200.0
         assert actual_result["stroke-width"] == 3.0
+
+
+class TestColorValidation:
+    def test_color_rejects_out_of_range_component(self):
+        import pytest
+        with pytest.raises(ValueError, match='Color red component'):
+            Color(red=1.5, green=0.0, blue=0.0)

@@ -266,3 +266,53 @@ class TestAddClipIdSentinel:
         # Clone produces id=-1; simulate by passing id=-1 in kwargs
         clip = t.add_clip('VMFile', 0, 0, 100, id=-1)
         assert clip.id != -1
+
+
+# track.py:1182,1184,1186 — add_image_sequence validation errors
+class TestAddImageSequenceValidation:
+    def test_transition_ge_duration_raises(self):
+        t = _track()
+        with pytest.raises(ValueError, match='transition_seconds.*must be less than'):
+            t.add_image_sequence([1, 2], 0, duration_per_image_seconds=5.0, transition_seconds=5.0)
+
+    def test_negative_transition_raises(self):
+        t = _track()
+        with pytest.raises(ValueError, match='transition_seconds must be non-negative'):
+            t.add_image_sequence([1, 2], 0, duration_per_image_seconds=5.0, transition_seconds=-1.0)
+
+
+# track.py:1231,1233,1238 — add_freeze_frame validation errors
+class TestAddFreezeFrameValidation:
+    def test_no_source_id_raises(self):
+        t = _track()
+        clip = t.add_clip('Callout', None, 0, seconds_to_ticks(10.0))
+        with pytest.raises(ValueError, match='source_clip has no source ID'):
+            t.add_freeze_frame(clip, at_seconds=5.0, freeze_duration_seconds=2.0)
+
+    def test_before_clip_start_raises(self):
+        t = _track()
+        clip = t.add_clip('VMFile', 1, seconds_to_ticks(5.0), seconds_to_ticks(10.0))
+        with pytest.raises(ValueError, match='at_seconds.*is before source_clip start'):
+            t.add_freeze_frame(clip, at_seconds=3.0, freeze_duration_seconds=2.0)
+
+    def test_past_clip_end_raises(self):
+        t = _track()
+        clip = t.add_clip('VMFile', 1, seconds_to_ticks(5.0), seconds_to_ticks(10.0))
+        with pytest.raises(ValueError, match='at_seconds.*is past the end'):
+            t.add_freeze_frame(clip, at_seconds=16.0, freeze_duration_seconds=2.0)
+
+
+# track.py:2406 — _max_clip_id recursion into StitchedMedia sub-clips
+class TestMaxClipIdWithStitchedSubClips:
+    def test_next_clip_id_accounts_for_stitched_sub_clips(self):
+        """Ensure _next_clip_id finds IDs inside StitchedMedia.medias."""
+        stitched = _media(10, 0, seconds_to_ticks(10.0), _type='StitchedMedia')
+        stitched['medias'] = [
+            {'id': 50, '_type': 'VMFile', 'src': 1, 'start': 0,
+             'duration': seconds_to_ticks(5.0), 'mediaStart': 0,
+             'mediaDuration': seconds_to_ticks(5.0), 'scalar': 1},
+        ]
+        t = _track(medias=[stitched])
+        # _next_clip_id should be > 50 (the sub-clip ID)
+        next_id = t._next_clip_id()
+        assert next_id > 50

@@ -1182,7 +1182,7 @@ class Track:
             raise ValueError(f'transition_seconds ({transition_seconds}) must be less than duration_per_image_seconds ({duration_per_image_seconds})')
         if transition_seconds < 0:
             raise ValueError(f'transition_seconds must be non-negative, got {transition_seconds}')
-        if duration_per_image_seconds <= 0:
+        if duration_per_image_seconds <= 0:  # pragma: no cover — unreachable: guards above ensure transition_seconds >= 0 and transition_seconds < duration_per_image_seconds
             raise ValueError(f'duration_per_image_seconds must be positive, got {duration_per_image_seconds}')
         clips: list[IMFile] = []
         offset = start_seconds

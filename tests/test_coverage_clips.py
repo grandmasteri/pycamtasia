@@ -485,3 +485,68 @@ class TestStitchedSetSource:
         })
         with pytest.raises(TypeError, match='do not have a top-level source'):
             s.set_source(1)
+
+
+# ===== callout.py — set_source raises TypeError (line 96) =====
+
+class TestCalloutSetSourceRaises:
+    def test_set_source_raises_type_error(self):
+        from camtasia.timeline.clips.callout import Callout
+        c = Callout(_callout_data())
+        with pytest.raises(TypeError, match='Callout clips do not have a source ID'):
+            c.set_source(1)
+
+
+# ===== callout.py — text setter updates textAttributes ranges (lines 114-116) =====
+
+class TestCalloutTextSetterUpdatesRanges:
+    def test_text_setter_updates_keyframe_ranges(self):
+        from camtasia.timeline.clips.callout import Callout
+        d = _callout_data()
+        c = Callout(d)
+        c.text = 'New longer text'
+        for kf in d['def']['textAttributes']['keyframes']:
+            for attr in kf['value']:
+                assert attr['rangeEnd'] == len('New longer text')
+                assert attr['rangeStart'] == 0
+
+
+# ===== callout.py — width/height/corner_radius setters with dict values (lines 160-161, 177-178, 262-263) =====
+
+class TestCalloutDimensionSettersWithDictValues:
+    def test_width_setter_with_dict_value(self):
+        from camtasia.timeline.clips.callout import Callout
+        d = _callout_data()
+        d['def']['width'] = {'defaultValue': 200, 'keyframes': [{'time': 0, 'value': 200}]}
+        c = Callout(d)
+        c.width = 300
+        assert d['def']['width']['defaultValue'] == 300
+        assert 'keyframes' not in d['def']['width']
+
+    def test_height_setter_with_dict_value(self):
+        from camtasia.timeline.clips.callout import Callout
+        d = _callout_data()
+        d['def']['height'] = {'defaultValue': 100, 'keyframes': [{'time': 0, 'value': 100}]}
+        c = Callout(d)
+        c.height = 200
+        assert d['def']['height']['defaultValue'] == 200
+        assert 'keyframes' not in d['def']['height']
+
+    def test_corner_radius_setter_with_dict_value(self):
+        from camtasia.timeline.clips.callout import Callout
+        d = _callout_data()
+        d['def']['corner-radius'] = {'defaultValue': 5, 'keyframes': [{'time': 0, 'value': 5}]}
+        c = Callout(d)
+        c.corner_radius = 10
+        assert d['def']['corner-radius']['defaultValue'] == 10
+        assert 'keyframes' not in d['def']['corner-radius']
+
+
+# ===== unified.py — duplicate_effects_to raises TypeError (line 108) =====
+
+class TestUnifiedMediaDuplicateEffectsTo:
+    def test_duplicate_effects_to_raises(self):
+        from camtasia.timeline.clips.unified import UnifiedMedia
+        um = UnifiedMedia(_um_data())
+        with pytest.raises(TypeError, match='Cannot duplicate effects from UnifiedMedia'):
+            um.duplicate_effects_to(um)

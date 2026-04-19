@@ -67,3 +67,11 @@ def test_generated_project_is_schema_valid(built_project: dict) -> None:
         f"{len(errors)} schema violation(s):\n"
         + "\n".join(f"  • {e.message}" for e in errors)
     )
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_schema_validation_reports_errors_for_invalid_data() -> None:
+    """Cover validation.py lines 376-377: schema violation loop body."""
+    issues = validate_against_schema({"invalid_key": True})
+    errors = [i for i in issues if i.level == "error"]
+    assert len(errors) > 0

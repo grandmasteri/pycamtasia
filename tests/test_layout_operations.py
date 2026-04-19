@@ -195,3 +195,10 @@ class TestSnapToGrid:
         }])
         snap_to_grid(track, grid_seconds=1.0)
         assert track._data['medias'][0]['start'] == 0
+
+
+class TestPackTrackNegativeGap:
+    def test_negative_gap_raises(self):
+        track = _make_track([_clip(1, 0.0, 2.0)])
+        with pytest.raises(ValueError, match='gap_seconds must be non-negative'):
+            pack_track(track, gap_seconds=-1.0)

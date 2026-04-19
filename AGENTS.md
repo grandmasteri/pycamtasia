@@ -265,6 +265,7 @@ Use `@pytest.mark.parametrize` for multiple cases. Select valuable cases at boun
 
 ### Test Organization
 
+- Test files mirror the source layout: `src/camtasia/timeline/track.py` → `tests/test_track.py`, `src/camtasia/operations/speed.py` → `tests/test_speed.py`. New tests go in the existing file for that module — never in grab-bag files like `test_coverage_gaps.py` or `test_coverage_100.py`.
 - Name test classes by category (`TestScalarArithmetic`, `TestGroupOperations`), not meta-details (`TestCoverageGaps`, `TestRound95Fixes`)
 - Colocate related tests in the same class/file
 

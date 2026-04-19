@@ -98,3 +98,38 @@ class TestAddFourCornerGradient:
         clip = proj.add_four_corner_gradient(str(shader), duration_seconds=5.0)
 
         assert clip._data['_type'] == 'VMFile'
+
+
+class TestGradientBackgroundNonMatchingShader:
+    """Cover project.py line 1453: existing shader without Color0/Color1 is not reused."""
+
+    def test_creates_new_shader_when_existing_lacks_color_defs(self, tmp_path: Path):
+        proj = _make_project(tmp_path)
+        # Add a second track so track_index=1 exists
+        proj.timeline.add_track('Background')
+        # Add a shader media entry WITHOUT Color0/Color1 effectDef
+        proj._data['sourceBin'].append({
+            'id': 99, 'src': './media/other.tscshadervid',
+            'sourceTracks': [], 'effectDef': [{'name': 'SomeOtherEffect'}],
+            'rect': [0, 0, 1920, 1080], 'lastMod': '0',
+        })
+        proj.add_gradient_background(duration_seconds=5.0)
+        # Should have created a new shader, not reused the existing one
+        shaders = [m for m in proj.media_bin if str(m.source).endswith('.tscshadervid')]
+        assert len(shaders) >= 2
+
+
+class TestFourCornerGradientNonMatchingShader:
+    """Cover project.py line 1624: existing shader IS a 2-color gradient, so not reused for 4-corner."""
+
+    def test_imports_new_shader_when_existing_is_two_color(self, tmp_path: Path):
+        proj = _make_project(tmp_path)
+        # Add a 2-color gradient shader (has Color0 and Color1 only)
+        proj._data['sourceBin'].append({
+            'id': 99, 'src': './media/gradient.tscshadervid',
+            'sourceTracks': [], 'effectDef': [{'name': 'Color0'}, {'name': 'Color1'}],
+            'rect': [0, 0, 1920, 1080], 'lastMod': '0',
+        })
+        shader = _make_shader(tmp_path)
+        clip = proj.add_four_corner_gradient(shader, duration_seconds=5.0)
+        assert clip._data['_type'] == 'VMFile'

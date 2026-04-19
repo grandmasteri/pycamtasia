@@ -221,3 +221,56 @@ def test_srt_clamps_overlapping_markers(project, tmp_path):
     export_markers_as_srt(project, str(out), duration_seconds=3.0)
     content = out.read_text()
     assert '00:00:01,000 --> 00:00:02,000' in content
+
+
+# ── EDL unified audio track ──────────────────────────────────────────
+
+def test_edl_unified_clip_emits_audio_event(project, tmp_path):
+    """UnifiedMedia clips with audio data emit an extra audio EDL event."""
+    from camtasia.export.edl import export_edl
+    from camtasia.timing import seconds_to_ticks
+    # Add a media bin entry so the audio src lookup succeeds (covers lines 108-110)
+    project._data['sourceBin'].append({
+        'id': 1, 'src': './media/recording.trec',
+        'sourceTracks': [], 'rect': [0, 0, 1920, 1080], 'lastMod': '0',
+    })
+    track = project.timeline.get_or_create_track('Video')
+    unified_data = {
+        '_type': 'UnifiedMedia',
+        'id': 900,
+        'src': 1,
+        'start': 0,
+        'duration': seconds_to_ticks(5.0),
+        'mediaStart': 0,
+        'mediaDuration': seconds_to_ticks(5.0),
+        'scalar': 1,
+        'metadata': {},
+        'parameters': {},
+        'effects': [],
+        'attributes': {'ident': ''},
+        'audio': {
+            'id': 901,
+            '_type': 'AMFile',
+            'src': 1,
+            'start': 0,
+            'duration': seconds_to_ticks(5.0),
+            'mediaStart': 0,
+            'mediaDuration': seconds_to_ticks(5.0),
+        },
+        'video': {
+            'id': 902,
+            '_type': 'VMFile',
+            'src': 1,
+            'start': 0,
+            'duration': seconds_to_ticks(5.0),
+            'mediaStart': 0,
+            'mediaDuration': seconds_to_ticks(5.0),
+        },
+    }
+    track._data['medias'].append(unified_data)
+    out = export_edl(project, tmp_path / 'out.edl')
+    text = out.read_text()
+    lines = [l for l in text.splitlines() if l.strip() and not l.startswith('TITLE') and not l.startswith('FCM')]
+    # Should have at least 2 events: one V and one A
+    assert any('V' in l and 'C' in l for l in lines)
+    assert any('A' in l and 'C' in l for l in lines)

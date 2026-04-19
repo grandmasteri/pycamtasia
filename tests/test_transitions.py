@@ -190,3 +190,16 @@ class TestTransitionMissingLeftMedia:
         from camtasia.timeline.transitions import Transition
         t = Transition({'name': 'FadeThroughBlack', 'duration': 100, 'rightMedia': 1, 'attributes': {}})
         assert t.left_media_id is None
+
+
+class TestTransitionRepr:
+    def test_repr_format(self):
+        from camtasia.timeline.transitions import Transition
+        t = Transition({
+            'name': 'FadeThroughBlack', 'duration': 352_800_000,
+            'leftMedia': 1, 'rightMedia': 2, 'attributes': {},
+        })
+        r = repr(t)
+        assert 'FadeThroughBlack' in r
+        assert 'left=1' in r
+        assert 'right=2' in r

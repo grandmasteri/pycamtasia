@@ -678,3 +678,13 @@ class TestScreenVMFileEffectParamRawValue:
         ])
         clip = ScreenVMFile(data)
         assert clip.cursor_motion_blur_intensity == 0.75
+
+
+# ===== screen_recording.py — ScreenIMFile.set_source raises TypeError (line 134) =====
+
+class TestScreenIMFileSetSourceRaises:
+    def test_set_source_raises_type_error(self):
+        data = _base(_type="ScreenIMFile", parameters={}, effects=[])
+        clip = ScreenIMFile(data)
+        with pytest.raises(TypeError, match='Cannot change source on cursor overlay clips'):
+            clip.set_source(1)

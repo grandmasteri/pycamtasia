@@ -158,3 +158,21 @@ def test_progressive_disclosure_fade_in(images: list[Path]):
     opacity_param2 = params2.get('opacity', {})
     opacity_kfs2 = opacity_param2.get('keyframes', []) if isinstance(opacity_param2, dict) else []
     assert len(opacity_kfs2) == 0, 'Expected no opacity keyframes when fade_in_seconds=0'
+
+
+def test_progressive_disclosure_replace_previous_with_fade_out(images: list[Path]):
+    """Cover project.py lines 1581-1582, 1585-1587: replace_previous fade-out."""
+    proj = _make_project()
+    clips = proj.add_progressive_disclosure(
+        images, fade_out_seconds=0.5, replace_previous=True,
+    )
+    assert len(clips) == 3
+
+
+def test_progressive_disclosure_fade_out_without_replace(images: list[Path]):
+    """Cover project.py lines 1588-1589: fade-out without replace_previous."""
+    proj = _make_project()
+    clips = proj.add_progressive_disclosure(
+        images, fade_out_seconds=0.5, replace_previous=False,
+    )
+    assert len(clips) == 3

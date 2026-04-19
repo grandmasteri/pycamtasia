@@ -102,3 +102,55 @@ class TestTimelineRemoveTrack:
         tl = Timeline(_timeline_data())
         with pytest.raises(KeyError, match="No track with index=99"):
             tl.remove_track(99)
+
+
+class TestDuplicateTrackRemapsTransitions:
+    """Cover timeline.py lines 188-193: transition leftMedia/rightMedia remapping."""
+
+    def test_duplicate_track_remaps_transition_references(self):
+        data = _timeline_data()
+        tl = Timeline(data)
+        track = tl.tracks[0]
+        c1 = track.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
+        c2 = track.add_clip('VMFile', 1, seconds_to_ticks(5.0), seconds_to_ticks(5.0))
+        track.add_transition('FadeThroughBlack', c1, c2, duration_seconds=0.5)
+        tl.duplicate_track(0)
+        dup_track = tl.tracks[1]
+        dup_transitions = dup_track._data.get('transitions', [])
+        # Transitions should reference the new clip IDs, not the originals
+        orig_ids = {c1.id, c2.id}
+        for t in dup_transitions:
+            if t.get('leftMedia') is not None:
+                assert t['leftMedia'] not in orig_ids
+            if t.get('rightMedia') is not None:
+                assert t['rightMedia'] not in orig_ids
+
+
+class TestClipsOfTypeWithStitchedMedia:
+    """Cover timeline.py line 569: _register_ids recursion into video/audio sub-dicts."""
+
+    def test_finds_clips_inside_unified_media(self):
+        data = _timeline_data()
+        # Add a UnifiedMedia clip with video/audio sub-dicts
+        data['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'].append({
+            'id': 10, '_type': 'UnifiedMedia', 'start': 0,
+            'duration': seconds_to_ticks(10.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+            'scalar': 1, 'parameters': {}, 'effects': [],
+            'attributes': {'ident': ''},
+            'video': {
+                'id': 11, '_type': 'ScreenVMFile', 'src': 1, 'start': 0,
+                'duration': seconds_to_ticks(10.0), 'mediaStart': 0,
+                'mediaDuration': seconds_to_ticks(10.0), 'scalar': 1,
+                'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+            },
+            'audio': {
+                'id': 12, '_type': 'AMFile', 'src': 1, 'start': 0,
+                'duration': seconds_to_ticks(10.0), 'mediaStart': 0,
+                'mediaDuration': seconds_to_ticks(10.0), 'scalar': 1,
+                'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+            },
+        })
+        tl = Timeline(data)
+        results = tl.clips_of_type('ScreenVMFile')
+        assert any(clip.id == 11 for _, clip in results)

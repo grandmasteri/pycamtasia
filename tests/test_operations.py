@@ -368,3 +368,49 @@ class TestReplaceMediaSource:
         inner = scene["tracks"][0]["medias"][0]["tracks"][0]["medias"][0]
         assert actual_count == 1
         assert inner["src"] == 99
+
+
+class TestMatchMarkerWordBoundaryRetry:
+    """Cover sync.py line 80: retry find when first match is not at word boundary."""
+
+    def test_skips_partial_match_and_finds_word_boundary(self):
+        # Transcript: "abatch batch" — first find of "batch" hits inside "abatch"
+        words = [
+            Word(word_id='', text='abatch', start=0.0, end=0.5),
+            Word(word_id='', text='batch', start=1.0, end=1.5),
+        ]
+        result = match_marker_to_transcript('batch', words)
+        assert result == 1.0
+
+
+class TestMatchMarkerFallbackFirstWord:
+    """Cover sync.py line 90: fallback first-word match."""
+
+    def test_fallback_matches_first_word(self):
+        # Label has multiple words but none match as a phrase; first word matches a transcript word
+        words = [
+            Word(word_id='', text='hello', start=2.0, end=2.5),
+            Word(word_id='', text='world', start=3.0, end=3.5),
+        ]
+        result = match_marker_to_transcript('hello nonexistent phrase', words)
+        assert result == 2.0
+
+
+class TestPlanSyncSkipsZeroDuration:
+    """Cover sync.py line 140: skip segments with zero audio duration."""
+
+    def test_skips_zero_audio_duration_segment(self):
+        # Two markers at the same audio timestamp → audio_dur_ticks == 0 → skip
+        words = [
+            Word(word_id='', text='start', start=5.0, end=5.5),
+            Word(word_id='', text='middle', start=5.0, end=5.5),  # same timestamp
+            Word(word_id='', text='end', start=10.0, end=10.5),
+        ]
+        markers = [
+            ('start', 0),
+            ('middle', 100_000_000),
+            ('end', 705_600_000),
+        ]
+        segments = plan_sync(markers, words)
+        # The first segment (start→middle) has zero audio duration and should be skipped
+        assert all(s.scalar > 0 for s in segments)

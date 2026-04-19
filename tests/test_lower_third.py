@@ -179,3 +179,22 @@ class TestLowerThirdTemplateIdent:
 
         actual_ident = clip._data["attributes"]["ident"]
         assert actual_ident == expected_ident
+
+
+class TestLowerThirdScaleOverrideWithDictParam:
+    """Cover track.py line 862: scale override when existing param is a dict."""
+
+    def test_scale_updates_existing_dict_param(self):
+        import copy
+        from unittest.mock import patch
+        from camtasia.templates import lower_third
+        original = lower_third.LOWER_THIRD_TEMPLATE
+        patched = copy.deepcopy(original)
+        patched['parameters']['scale0'] = {'type': 'double', 'defaultValue': 1.0, 'interp': 'eioe'}
+        patched['parameters']['scale1'] = {'type': 'double', 'defaultValue': 1.0, 'interp': 'eioe'}
+        with patch.object(lower_third, 'LOWER_THIRD_TEMPLATE', patched):
+            track = _make_track()
+            clip = track.add_lower_third("Name", "Sub", 0, 10, scale=0.5)
+        actual = clip._data['parameters']
+        assert actual['scale0']['defaultValue'] == 0.5
+        assert actual['scale1']['defaultValue'] == 0.5

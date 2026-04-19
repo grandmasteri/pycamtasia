@@ -157,3 +157,17 @@ class TestImportMediaUsesPymediainfo:
         assert actual_metadata['numChannels'] == 2
         assert actual_metadata['bitDepth'] == 24
         assert actual_metadata['editRate'] == 48000
+
+
+class TestProbeAudioOnlyDuration:
+    """Cover project.py line 55: audio-only duration when no video track."""
+
+    def test_audio_only_sets_duration(self):
+        tracks = [
+            _make_track('Audio', duration=7000, sampling_rate=44100,
+                        channel_s=1, bit_depth=16),
+        ]
+        with patch('pymediainfo.MediaInfo.parse',
+                   return_value=_make_mediainfo_result(tracks)):
+            result = _probe_media(Path('/fake/audio_only.wav'))
+        assert result['duration_seconds'] == 7.0
