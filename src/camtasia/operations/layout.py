@@ -1,7 +1,7 @@
 from __future__ import annotations
 from camtasia.timing import seconds_to_ticks
 
-from camtasia.timeline.track import _propagate_start_to_unified, ticks_to_seconds
+from camtasia.timeline.track import _propagate_start_to_unified
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from camtasia.timeline.track import Track

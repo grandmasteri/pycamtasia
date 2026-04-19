@@ -50,7 +50,7 @@ def match_marker_to_transcript(
 
     Args:
         label: Marker label text (e.g. "Selecting a recent batch run").
-        words: List of dicts with ``word``, ``start``, ``end`` keys.
+        words: List of Word objects with .text, .start, .end attributes.
 
     Returns:
         Start timestamp (seconds) of the best match, or None.
