@@ -64,9 +64,10 @@ def match_marker_to_transcript(
     text_to_word_idx = []
     for wi, w in enumerate(words):
         cleaned = re.sub(r'[^\w\s]', '', w.text.lower()).strip()
-        if cleaned:
-            texts.append(cleaned)
-            text_to_word_idx.append(wi)
+        for sub_word in cleaned.split():
+            if sub_word:
+                texts.append(sub_word)
+                text_to_word_idx.append(wi)
     full = " ".join(texts)
     target = " ".join(label_lower)
 

@@ -311,6 +311,13 @@ class BaseClip:
                     sub['scalar'] = self._data['scalar']
                     sub['mediaStart'] = self._data.get('mediaStart', 0)
                     sub.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
+        if self._data.get('_type') == 'StitchedMedia':
+            for inner in self._data.get('medias', []):
+                inner['scalar'] = self._data['scalar']
+                inner['mediaDuration'] = self._data['mediaDuration']
+                inner.setdefault('metadata', {})['clipSpeedAttribute'] = {
+                    'type': 'bool', 'value': scalar_fraction != 1
+                }
         return self
 
     @property

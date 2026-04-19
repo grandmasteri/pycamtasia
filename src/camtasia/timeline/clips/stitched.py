@@ -50,3 +50,5 @@ class StitchedMedia(BaseClip):
     def clear_segments(self) -> None:
         """Remove all nested segments."""
         self._data['medias'] = []
+        self._data['duration'] = 0
+        self._data['mediaDuration'] = 0
