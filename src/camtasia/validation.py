@@ -8,7 +8,7 @@ from importlib import resources as importlib_resources
 from typing import Any
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValidationIssue:
     """A single validation finding.
 

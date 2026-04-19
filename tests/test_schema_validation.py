@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from camtasia import load_project, new_project
-from camtasia.validation import validate_against_schema
+from camtasia.validation import validate_against_schema, ValidationIssue
 
 try:
     import jsonschema  # noqa: F401
@@ -73,5 +73,14 @@ def test_generated_project_is_schema_valid(built_project: dict) -> None:
 def test_schema_validation_reports_errors_for_invalid_data() -> None:
     """Cover validation.py lines 376-377: schema violation loop body."""
     issues = validate_against_schema({"invalid_key": True})
-    errors = [i for i in issues if i.level == "error"]
-    assert len(errors) > 0
+    actual_errors = {i for i in issues if i.level == "error"}
+    expected_errors = {
+        ValidationIssue("error", "Schema violation at (root): 'editRate' is a required property"),
+        ValidationIssue("error", "Schema violation at (root): 'height' is a required property"),
+        ValidationIssue("error", "Schema violation at (root): 'sourceBin' is a required property"),
+        ValidationIssue("error", "Schema violation at (root): 'timeline' is a required property"),
+        ValidationIssue("error", "Schema violation at (root): 'version' is a required property"),
+        ValidationIssue("error", "Schema violation at (root): 'width' is a required property"),
+        ValidationIssue("error", "Schema violation at (root): Additional properties are not allowed ('invalid_key' was unexpected)"),
+    }
+    assert actual_errors == expected_errors
