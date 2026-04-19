@@ -1796,3 +1796,17 @@ class TestAddFreezeFrame:
         initial_count = len(track)
         track.add_freeze_frame(src, at_seconds=5.0, freeze_duration_seconds=2.0)
         assert len(track) == initial_count + 1
+
+
+class TestAddClipScalarValidation:
+    """add_clip rejects scalar <= 0."""
+
+    def test_zero_scalar_raises(self, project):
+        track = project.timeline.tracks[0]
+        with pytest.raises(ValueError, match=r"scalar must be positive"):
+            track.add_clip("VMFile", 0, 0, 705600000, scalar=0)
+
+    def test_negative_scalar_raises(self, project):
+        track = project.timeline.tracks[0]
+        with pytest.raises(ValueError, match=r"scalar must be positive"):
+            track.add_clip("VMFile", 0, 0, 705600000, scalar=-1)

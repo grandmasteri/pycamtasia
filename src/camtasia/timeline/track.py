@@ -361,6 +361,8 @@ class Track:
 
         scalar = kwargs.pop('scalar', 1)
         scalar_val = _parse_scalar(scalar)
+        if scalar_val <= 0:
+            raise ValueError(f'scalar must be positive, got {scalar}')
 
         # Ensure media-file types have required trackNumber, attributes, channelNumber
         _MEDIA_FILE_TYPES = {'VMFile', 'AMFile', 'IMFile', 'ScreenVMFile', 'ScreenIMFile'}

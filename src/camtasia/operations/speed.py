@@ -244,6 +244,8 @@ def set_audio_speed(
                     clip['scalar'] = target_clip['scalar']
                     clip['duration'] = target_clip['duration']
                     clip['mediaDuration'] = target_clip['mediaDuration']
+                    from camtasia.timeline.track import _propagate_start_to_unified
+                    _propagate_start_to_unified(clip)
                 return factor
 
     raise ValueError("No speed-changed audio clips found")
