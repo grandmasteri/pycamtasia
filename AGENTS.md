@@ -277,6 +277,15 @@ Use names that convey role: `actual_result`, `expected_result`, `actual_clips`, 
 
 Use `@pytest.mark.parametrize` for multiple cases. Select valuable cases at boundaries and transitions — avoid redundant mid-range cases.
 
+### Test Efficiency
+
+Quality is the primary goal — every test must verify real behavior with strong assertions. But given that bar is met, fewer tests covering the same logic is better than more. Redundant tests add maintenance burden, slow the suite, and dilute signal when something fails.
+
+- If two tests verify the same code path with different inputs, parametrize into one
+- If a test is a strict subset of another test (same assertions plus more), remove the subset
+- Never delete a test that covers a unique code path just to reduce count
+- Priority order: correctness > coverage > clarity > efficiency
+
 ### Test Organization
 
 - Test files mirror the source layout: `src/camtasia/timeline/track.py` → `tests/test_track.py`, `src/camtasia/operations/speed.py` → `tests/test_speed.py`. New tests go in the existing file for that module — never in grab-bag files like `test_coverage_gaps.py` or `test_coverage_100.py`.
