@@ -482,3 +482,29 @@ class TestGroupFindInternalClip:
     def test_find_returns_none_when_not_found(self):
         actual_clip = self._make_group().find_internal_clip('VMFile')
         assert actual_clip is None
+
+
+# ==================================================================
+# GroupTrack repr and parameters (from test_clip_coverage.py)
+# ==================================================================
+
+class TestGroupTrackReprAndParams:
+    def test_group_track_repr(self):
+        track_data = {
+            "trackIndex": 2,
+            "medias": [
+                {"id": 1, "_type": "AMFile", "src": 1, "start": 0, "duration": 100,
+                 "mediaStart": 0, "mediaDuration": 100, "scalar": 1},
+                {"id": 2, "_type": "AMFile", "src": 1, "start": 0, "duration": 100,
+                 "mediaStart": 0, "mediaDuration": 100, "scalar": 1},
+            ],
+            "parameters": {},
+        }
+        track = GroupTrack(track_data)
+        actual_repr = repr(track)
+        assert actual_repr == "GroupTrack(index=2, clips=2)"
+
+    def test_group_track_parameters(self):
+        track_data = {"trackIndex": 0, "medias": [], "parameters": {"volume": 0.5}}
+        track = GroupTrack(track_data)
+        assert track.parameters == {"volume": 0.5}

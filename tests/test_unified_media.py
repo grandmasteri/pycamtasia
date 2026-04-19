@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import json
+from fractions import Fraction
 from pathlib import Path
 
 import pytest
 
 from camtasia.timeline.clips import clip_from_dict, UnifiedMedia
 from camtasia.timeline.clips.audio import AMFile
+from camtasia.timeline.clips.base import BaseClip
 from camtasia.timeline.clips.screen_recording import ScreenVMFile
+from camtasia.timing import seconds_to_ticks
 
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -174,3 +177,72 @@ class TestUnifiedMediaImprovements:
         })
         actual_result = actual_clip.mute_audio()
         assert actual_result is actual_clip
+
+
+# ==================================================================
+# UnifiedMedia base clip behavior (from test_clip_coverage.py)
+# ==================================================================
+
+def test_base_clip_is_muted_unified_media():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'audio': {'attributes': {'gain': 0.0}},
+    })
+    assert clip.is_muted is True
+
+
+def test_base_clip_mute_unified_media():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'audio': {'attributes': {'gain': 1.0}},
+    })
+    clip.mute()
+    assert clip._data['audio']['attributes']['gain'] == 0.0
+
+
+def test_base_clip_mute_unified_media_no_audio():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+    })
+    with pytest.raises(ValueError, match='no audio'):
+        clip.mute()
+
+
+def test_base_clip_media_start_fraction():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'video': {'start': 0, 'mediaStart': 0},
+        'audio': {'start': 0, 'mediaStart': 0},
+    })
+    clip.media_start = Fraction(1, 3)
+    assert clip._data['mediaStart'] == '1/3'
+    assert clip._data['video']['mediaStart'] == '1/3'
+    clip.media_start = Fraction(10, 1)
+    assert clip._data['mediaStart'] == 10
+
+
+def test_base_clip_is_silent_unified_media():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'audio': {'attributes': {'gain': 0.0}},
+    })
+    assert clip.is_silent is True
+
+
+def test_base_clip_set_start_seconds_unified():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'video': {'start': 0},
+        'audio': {'start': 0},
+    })
+    clip.set_start_seconds(2.0)
+    expected = seconds_to_ticks(2.0)
+    assert clip._data['start'] == expected
+    assert clip._data['video']['start'] == expected
+    assert clip._data['audio']['start'] == expected
