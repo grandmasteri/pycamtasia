@@ -206,8 +206,15 @@ def set_audio_speed(
     # Find the first audio clip with a speed change
     for track in scene["tracks"]:
         for clip in track.get("medias", []):
+            target_clip = None
             if clip.get("_type") == "AMFile" and _has_speed_change(clip):
-                current = parse_scalar(clip["scalar"])
+                target_clip = clip
+            elif clip.get("_type") == "UnifiedMedia":
+                audio = clip.get("audio")
+                if audio and audio.get("_type") == "AMFile" and _has_speed_change(audio):
+                    target_clip = audio
+            if target_clip is not None:
+                current = parse_scalar(target_clip["scalar"])
                 # scalar < 1 means audio was sped up; we need to stretch
                 # factor = current_scalar / target_scalar
                 target_scalar = Fraction(1) / target
@@ -217,7 +224,7 @@ def set_audio_speed(
                 # Save desired final state, rescale everything, then apply
                 # to avoid double-scaling this clip.
                 final_scalar: Any
-                final_duration = clip["mediaDuration"]
+                final_duration = target_clip["mediaDuration"]
                 final_speed_attr: bool
                 if target == 1:
                     final_scalar = 1
@@ -230,10 +237,10 @@ def set_audio_speed(
                 rescale_project(project_data, factor)
 
                 # Now overwrite this clip with the correct final state
-                clip["scalar"] = final_scalar
-                clip["duration"] = round(float(Fraction(final_duration) * Fraction(1) / target)) if target != 1 else final_duration
-                clip["metadata"]["clipSpeedAttribute"]["value"] = final_speed_attr
-                clip["mediaDuration"] = final_duration
+                target_clip["scalar"] = final_scalar
+                target_clip["duration"] = round(float(Fraction(final_duration) * Fraction(1) / target)) if target != 1 else final_duration
+                target_clip["metadata"]["clipSpeedAttribute"]["value"] = final_speed_attr
+                target_clip["mediaDuration"] = final_duration
                 return factor
 
     raise ValueError("No speed-changed audio clips found")

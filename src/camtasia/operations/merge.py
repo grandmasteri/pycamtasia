@@ -28,7 +28,16 @@ def _remap_clip_ids(clip_data: dict, id_counter: list[int], id_map: dict[int, in
     for media in clip_data.get('medias', []):
         _remap_clip_ids(media, id_counter, id_map, src_map)
     for ap in clip_data.get('attributes', {}).get('assetProperties', []):
-        ap['objects'] = [id_map.get(o, o) for o in ap.get('objects', [])]
+        new_objects = []
+        for o in ap.get('objects', []):
+            if isinstance(o, dict):
+                new_o = dict(o)
+                if 'media' in new_o:
+                    new_o['media'] = id_map.get(new_o['media'], new_o['media'])
+                new_objects.append(new_o)
+            else:
+                new_objects.append(id_map.get(o, o))
+        ap['objects'] = new_objects
 
 
 def merge_tracks(
@@ -56,9 +65,13 @@ def merge_tracks(
 
     # Build media ID mapping (source ID -> target ID)
     src_id_map: dict[int, int] = {}
+    def _track_type(media_data: dict) -> str | None:
+        tracks = media_data.get('sourceTracks', [])
+        return tracks[0].get('type') if tracks else None
+
     for media in source.media_bin:
         existing = target.find_media_by_name(media.identity)
-        if existing and existing._data.get('sourceTracks', [{}])[0].get('type') == media._data.get('sourceTracks', [{}])[0].get('type'):
+        if existing and _track_type(existing._data) == _track_type(media._data):
             src_id_map[media.id] = existing.id
         else:
             new_id = target.media_bin.next_id()
