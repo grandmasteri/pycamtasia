@@ -7,51 +7,24 @@ from camtasia.templates.behavior_presets import get_behavior_preset
 REQUIRED_FIELDS = {'_type', 'effectName', 'bypassed', 'start', 'duration', 'in', 'center', 'out'}
 
 
-def test_reveal_preset_structure():
-    effect = get_behavior_preset('reveal', 30 * 60 * 5880000)
+@pytest.mark.parametrize("preset_name, in_name, out_name, meta_key", [
+    ('reveal', 'reveal', 'reveal', None),
+    ('sliding', 'sliding', 'sliding', None),
+    ('fade', 'fadeIn', None, 'Fade'),
+    ('flyIn', 'flyIn', None, 'FlyIn'),
+    ('popUp', 'hinge', None, 'PopUp'),
+], ids=['reveal', 'sliding', 'fade', 'flyIn', 'popUp'])
+def test_preset_structure(preset_name, in_name, out_name, meta_key):
+    effect = get_behavior_preset(preset_name, 30 * 60 * 5880000)
     assert REQUIRED_FIELDS <= set(effect.keys())
     assert effect['_type'] == 'GenericBehaviorEffect'
-    assert effect['effectName'] == 'reveal'
+    assert effect['effectName'] == preset_name
     assert 'metadata' in effect
-    assert effect['in']['attributes']['name'] == 'reveal'
-    assert effect['out']['attributes']['name'] == 'reveal'
-
-
-def test_sliding_preset_structure():
-    effect = get_behavior_preset('sliding', 30 * 60 * 5880000)
-    assert REQUIRED_FIELDS <= set(effect.keys())
-    assert effect['_type'] == 'GenericBehaviorEffect'
-    assert effect['effectName'] == 'sliding'
-    assert 'metadata' in effect
-    assert effect['in']['attributes']['name'] == 'sliding'
-    assert effect['out']['attributes']['name'] == 'sliding'
-
-
-def test_fade_preset_structure():
-    effect = get_behavior_preset('fade', 30 * 60 * 5880000)
-    assert REQUIRED_FIELDS <= set(effect.keys())
-    assert effect['_type'] == 'GenericBehaviorEffect'
-    assert effect['effectName'] == 'fade'
-    assert effect['in']['attributes']['name'] == 'fadeIn'
-    assert effect['metadata']['presetName'] == 'Fade'
-
-
-def test_flyin_preset_structure():
-    effect = get_behavior_preset('flyIn', 30 * 60 * 5880000)
-    assert REQUIRED_FIELDS <= set(effect.keys())
-    assert effect['_type'] == 'GenericBehaviorEffect'
-    assert effect['effectName'] == 'flyIn'
-    assert effect['in']['attributes']['name'] == 'flyIn'
-    assert effect['metadata']['presetName'] == 'FlyIn'
-
-
-def test_popup_preset_structure():
-    effect = get_behavior_preset('popUp', 30 * 60 * 5880000)
-    assert REQUIRED_FIELDS <= set(effect.keys())
-    assert effect['_type'] == 'GenericBehaviorEffect'
-    assert effect['effectName'] == 'popUp'
-    assert effect['in']['attributes']['name'] == 'hinge'
-    assert effect['metadata']['presetName'] == 'PopUp'
+    assert effect['in']['attributes']['name'] == in_name
+    if out_name is not None:
+        assert effect['out']['attributes']['name'] == out_name
+    if meta_key is not None:
+        assert effect['metadata']['presetName'] == meta_key
 
 
 def test_unknown_preset_raises():
@@ -59,13 +32,8 @@ def test_unknown_preset_raises():
         get_behavior_preset('Bogus', 1000)
 
 
-def test_preset_duration_calculated():
+@pytest.mark.parametrize("preset_name", ['reveal', 'sliding', 'fade'])
+def test_preset_duration_calculated(preset_name):
     clip_dur = 30 * 60 * 5880000
-    reveal = get_behavior_preset('reveal', clip_dur)
-    assert reveal['duration'] == clip_dur
-
-    sliding = get_behavior_preset('sliding', clip_dur)
-    assert sliding['duration'] == clip_dur
-
-    fade = get_behavior_preset('fade', clip_dur)
-    assert fade['duration'] == clip_dur
+    effect = get_behavior_preset(preset_name, clip_dur)
+    assert effect['duration'] == clip_dur

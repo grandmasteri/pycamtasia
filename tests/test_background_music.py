@@ -9,14 +9,10 @@ FIXTURES = Path(__file__).parent / 'fixtures'
 EMPTY_WAV = FIXTURES / 'empty.wav'
 
 
-def test_returns_base_clip(project):
-    clip = project.add_background_music(EMPTY_WAV)
+@pytest.mark.parametrize("path", [EMPTY_WAV, str(EMPTY_WAV)], ids=["Path", "str"])
+def test_returns_base_clip(project, path):
+    clip = project.add_background_music(path)
     assert clip.start == 0
-    assert clip.volume == 0.3
-
-
-def test_default_volume(project):
-    clip = project.add_background_music(EMPTY_WAV)
     assert clip.volume == 0.3
 
 
@@ -41,21 +37,10 @@ def test_custom_track_name(project):
     assert clips[0].start == 0
 
 
-def test_clip_starts_at_zero(project):
-    clip = project.add_background_music(EMPTY_WAV)
-    assert clip.start == 0
-
-
 def test_empty_project_uses_fallback_duration(project):
     assert project.duration_seconds == 0
     clip = project.add_background_music(EMPTY_WAV)
     assert clip.duration_seconds == pytest.approx(60.0)
-
-
-def test_string_path_accepted(project):
-    clip = project.add_background_music(str(EMPTY_WAV))
-    assert clip.volume == 0.3
-    assert clip.start == 0
 
 
 def test_no_fade_in(project):

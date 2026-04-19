@@ -124,12 +124,6 @@ class TestClearAllInternalClips:
 class TestSetDimensions:
     """Group.set_dimensions updates widthAttr and heightAttr."""
 
-    def test_sets_width_and_height(self) -> None:
-        group: Group = _make_group([[]])
-        group.set_dimensions(3840.0, 2160.0)
-        assert group.width == 3840.0
-        assert group.height == 2160.0
-
     def test_returns_self_for_chaining(self) -> None:
         group: Group = _make_group([[]])
         result = group.set_dimensions(1280.0, 720.0)
@@ -167,11 +161,6 @@ class TestSetDimensions:
 
 class TestRename:
     """Group.rename updates the ident attribute."""
-
-    def test_sets_new_name(self) -> None:
-        group: Group = _make_group([[]])
-        group.rename('NewGroupName')
-        assert group.ident == 'NewGroupName'
 
     def test_returns_self_for_chaining(self) -> None:
         group: Group = _make_group([[]])

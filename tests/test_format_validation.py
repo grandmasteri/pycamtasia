@@ -38,17 +38,14 @@ class TestDetectCodec:
             ]
             assert _detect_codec(Path("file.mp4")) == "h264"
 
-    def test_returns_none_when_ffprobe_missing(self):
+    @pytest.mark.parametrize("side_effect", [
+        FileNotFoundError,
+        subprocess.TimeoutExpired("ffprobe", 10),
+    ])
+    def test_returns_none_on_subprocess_error(self, side_effect):
         with patch(
             "camtasia.media_bin.media_bin.subprocess.run",
-            side_effect=FileNotFoundError,
-        ):
-            assert _detect_codec(Path("file.wav")) is None
-
-    def test_returns_none_on_timeout(self):
-        with patch(
-            "camtasia.media_bin.media_bin.subprocess.run",
-            side_effect=subprocess.TimeoutExpired("ffprobe", 10),
+            side_effect=side_effect,
         ):
             assert _detect_codec(Path("file.wav")) is None
 

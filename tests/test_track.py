@@ -186,6 +186,7 @@ def test_total_duration_seconds():
     ]
     track = _make_track(medias=medias)
     assert track.total_duration_seconds == pytest.approx(3.5)
+    assert track.duration_seconds == track.total_duration_seconds
 
 
 
@@ -562,19 +563,6 @@ def test_to_dict():
     assert '__test_sentinel' not in proj._data
 
 
-
-
-# ---------------------------------------------------------------------------
-# Track.duration_seconds
-# ---------------------------------------------------------------------------
-
-def test_track_duration_seconds():
-    medias = [
-        {'id': 1, 'start': 0, 'duration': seconds_to_ticks(1.5)},
-        {'id': 2, 'start': seconds_to_ticks(2.0), 'duration': seconds_to_ticks(2.5)},
-    ]
-    t = _make_track(medias)
-    assert t.duration_seconds == t.total_duration_seconds
 
 
 

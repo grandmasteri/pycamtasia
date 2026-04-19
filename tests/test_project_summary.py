@@ -1,6 +1,8 @@
 """Tests for Project.summary(), Project.__repr__, and Project.__str__."""
 from __future__ import annotations
 
+import pytest
+
 
 class TestSummary:
     def test_contains_title(self, project):
@@ -8,26 +10,15 @@ class TestSummary:
         text = project.summary()
         assert 'Project: My Video' in text
 
-    def test_contains_duration(self, project):
-        text = project.summary()
-        assert text.startswith('Project:')
-        assert f'Duration: {project.total_duration_formatted}' in text
-
-    def test_contains_resolution(self, project):
-        text = project.summary()
-        assert f'Resolution: {project.width}x{project.height}' in text
-
-    def test_contains_track_count(self, project):
-        text = project.summary()
-        assert f'Tracks: {project.track_count}' in text
-
-    def test_contains_clip_count(self, project):
-        text = project.summary()
-        assert f'Clips: {project.clip_count}' in text
-
-    def test_contains_group_count(self, project):
-        text = project.summary()
-        assert f'Groups: {project.group_count}' in text
+    @pytest.mark.parametrize("substring_fn", [
+        lambda p: f'Duration: {p.total_duration_formatted}',
+        lambda p: f'Resolution: {p.width}x{p.height}',
+        lambda p: f'Tracks: {p.track_count}',
+        lambda p: f'Clips: {p.clip_count}',
+        lambda p: f'Groups: {p.group_count}',
+    ])
+    def test_contains_field(self, project, substring_fn):
+        assert substring_fn(project) in project.summary()
 
     def test_media_files_shown_when_bin_nonempty(self, project):
         # Add a media entry so the bin is non-empty
@@ -80,22 +71,18 @@ class TestRepr:
         r = repr(project)
         assert '\n' not in r
 
+    @pytest.mark.parametrize("substring_fn", [
+        lambda p: f'{p.width}x{p.height}',
+        lambda p: f'tracks={p.track_count}',
+        lambda p: f'clips={p.clip_count}',
+    ])
+    def test_repr_contains_field(self, project, substring_fn):
+        assert substring_fn(project) in repr(project)
+
     def test_repr_contains_title(self, project):
         project.title = 'Demo'
         r = repr(project)
         assert "'Demo'" in r
-
-    def test_repr_contains_resolution(self, project):
-        r = repr(project)
-        assert f'{project.width}x{project.height}' in r
-
-    def test_repr_contains_tracks(self, project):
-        r = repr(project)
-        assert f'tracks={project.track_count}' in r
-
-    def test_repr_contains_clips(self, project):
-        r = repr(project)
-        assert f'clips={project.clip_count}' in r
 
     def test_repr_starts_with_angle_bracket(self, project):
         assert repr(project).startswith('<Project ')
@@ -105,18 +92,17 @@ class TestRepr:
 
 
 class TestStr:
+    @pytest.mark.parametrize("substring_fn", [
+        lambda p: p.total_duration_formatted,
+        lambda p: f'{p.track_count} tracks',
+        lambda p: f'{p.clip_count} clips',
+    ])
+    def test_str_contains_field(self, project, substring_fn):
+        assert substring_fn(project) in str(project)
+
     def test_str_contains_title(self, project):
         project.title = 'Demo'
         assert 'Demo' in str(project)
-
-    def test_str_contains_duration(self, project):
-        assert project.total_duration_formatted in str(project)
-
-    def test_str_contains_track_count(self, project):
-        assert f'{project.track_count} tracks' in str(project)
-
-    def test_str_contains_clip_count(self, project):
-        assert f'{project.clip_count} clips' in str(project)
 
     def test_str_is_one_liner(self, project):
         assert '\n' not in str(project)

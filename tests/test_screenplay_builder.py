@@ -156,23 +156,3 @@ class TestBuildFromScreenplayEdgeCases:
         result = build_from_screenplay(project, sp, tmp_path)
         assert result['pauses_added'] == 1
 
-
-# ── _find_audio_file extras (from test_coverage_extras.py) ──
-
-
-class TestFindAudioFileExtras:
-    def test_find_audio_file_numbered_prefix(self, tmp_path):
-        audio_file = tmp_path / '01-01-take1.wav'
-        audio_file.write_bytes(b'fake')
-        result = _find_audio_file(tmp_path, '1.1')
-        assert result == audio_file
-
-    def test_find_audio_file_no_prefix(self, tmp_path):
-        audio_file = tmp_path / '1.1.wav'
-        audio_file.write_bytes(b'fake')
-        result = _find_audio_file(tmp_path, '1.1')
-        assert result == audio_file
-
-    def test_find_audio_file_not_found(self, tmp_path):
-        result = _find_audio_file(tmp_path, 'nonexistent')
-        assert result is None

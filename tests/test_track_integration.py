@@ -69,22 +69,6 @@ class TestTrackProperties:
         track = _make_track(index=3)
         assert track.index == 3
 
-    def test_audio_muted_false(self):
-        track = _make_track(audio_muted=False)
-        assert track.audio_muted is False
-
-    def test_audio_muted_true(self):
-        track = _make_track(audio_muted=True)
-        assert track.audio_muted is True
-
-    def test_video_hidden_false(self):
-        track = _make_track(video_hidden=False)
-        assert track.video_hidden is False
-
-    def test_video_hidden_true(self):
-        track = _make_track(video_hidden=True)
-        assert track.video_hidden is True
-
     def test_is_locked_false(self):
         track = _make_track(is_locked="False")
         assert track.is_locked is False

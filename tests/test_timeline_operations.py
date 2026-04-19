@@ -175,19 +175,6 @@ class TestRemoveAllEmptyTracks:
         assert removed_count == 2
         assert timeline.track_count == 0
 
-    def test_delegates_to_remove_empty_tracks(self) -> None:
-        """Verify remove_empty_tracks produces the same result as remove_empty_tracks."""
-        tracks_a = [{"medias": []}, {"medias": [_clip(1, 0, 100)]}, {"medias": []}]
-        tracks_b = [{"medias": []}, {"medias": [_clip(1, 0, 100)]}, {"medias": []}]
-
-        timeline_a = Timeline(_make_timeline_data(tracks_a))
-        timeline_b = Timeline(_make_timeline_data(tracks_b))
-
-        count_a: int = timeline_a.remove_empty_tracks()
-        count_b: int = timeline_b.remove_empty_tracks()
-
-        assert count_a == count_b
-        assert timeline_a.track_count == timeline_b.track_count
 
 
 def test_timeline_duration_seconds_property(project):
@@ -355,21 +342,6 @@ def test_timeline_empty_tracks():
 
 
 
-# ---------------------------------------------------------------------------
-# Timeline.remove_empty_tracks
-# ---------------------------------------------------------------------------
-
-def test_timeline_remove_empty_tracks():
-    tl = _make_timeline([
-        ('Empty1', []),
-        ('Keep', [{'id': 1, 'start': 0, 'duration': 1}]),
-        ('Empty2', []),
-    ])
-    removed = tl.remove_empty_tracks()
-    assert removed == 2
-    assert tl.track_count == 1
-    remaining = list(tl.tracks)
-    assert remaining[0].name == 'Keep'
 
 
 

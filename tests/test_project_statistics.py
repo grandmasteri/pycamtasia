@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from camtasia.timing import seconds_to_ticks
 
 
@@ -106,46 +108,22 @@ class TestToMarkdownReport:
 class TestInfoUsesNewStatistics:
     """Ensure info() returns the comprehensive dict."""
 
-    def test_info_has_clip_count(self, project):
+    @pytest.mark.parametrize("key,expected_fn", [
+        ('clip_count', None),
+        ('resolution', None),
+        ('file_path', lambda v: isinstance(v, str)),
+        ('version', None),
+        ('frame_rate', None),
+        ('sample_rate', None),
+        ('authoring_client', None),
+        ('has_screen_recording', lambda v: v is False),
+        ('validation_issues', lambda v: isinstance(v, int)),
+    ])
+    def test_info_has_key(self, project, key, expected_fn):
         info = project.info()
-        assert 'clip_count' in info
-
-    def test_info_has_resolution(self, project):
-        info = project.info()
-        assert 'resolution' in info
-
-    def test_info_has_file_path(self, project):
-        info = project.info()
-        assert 'file_path' in info
-        assert isinstance(info['file_path'], str)
-
-    def test_info_has_version(self, project):
-        info = project.info()
-        assert 'version' in info
-
-    def test_info_has_frame_rate(self, project):
-        info = project.info()
-        assert 'frame_rate' in info
-        assert info['frame_rate'] == project.frame_rate
-
-    def test_info_has_sample_rate(self, project):
-        info = project.info()
-        assert 'sample_rate' in info
-        assert info['sample_rate'] == project.sample_rate
-
-    def test_info_has_authoring_client(self, project):
-        info = project.info()
-        assert 'authoring_client' in info
-
-    def test_info_has_has_screen_recording(self, project):
-        info = project.info()
-        assert 'has_screen_recording' in info
-        assert info['has_screen_recording'] is False
-
-    def test_info_has_validation_issues(self, project):
-        info = project.info()
-        assert 'validation_issues' in info
-        assert isinstance(info['validation_issues'], int)
+        assert key in info
+        if expected_fn is not None:
+            assert expected_fn(info[key])
 
 
 class TestHealthCheckUsesNewStatistics:

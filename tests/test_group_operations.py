@@ -41,10 +41,6 @@ class TestApplyToAllGroups:
         complex_project.apply_to_all_groups(lambda g: received_types.append(type(g)))
         assert all(t is Group for t in received_types)
 
-    def test_return_type_is_int(self, complex_project: Project) -> None:
-        result = complex_project.apply_to_all_groups(lambda g: None)
-        assert result == complex_project.group_count
-
 
 # ---------------------------------------------------------------------------
 # Project.mute_all_groups
@@ -64,10 +60,6 @@ class TestMuteAllGroups:
         complex_project.mute_all_groups()
         for _track, group in complex_project.all_groups:
             assert group.is_muted is True
-
-    def test_return_type_is_int(self, complex_project: Project) -> None:
-        result = complex_project.mute_all_groups()
-        assert result == complex_project.group_count
 
     def test_idempotent(self, complex_project: Project) -> None:
         first_count: int = complex_project.mute_all_groups()

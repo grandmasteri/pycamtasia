@@ -26,40 +26,44 @@ class TestDescription:
     def test_default_empty(self, project: Project):
         assert project.description == ''
 
+    def test_setter(self, project: Project):
+        project.description = 'D'
+        assert project.description == 'D'
+
 
 class TestAuthor:
     def test_default_empty(self, project: Project):
         assert project.author == ''
+
+    def test_setter(self, project: Project):
+        project.author = 'A'
+        assert project.author == 'A'
 
 
 class TestTargetLoudness:
     def test_default(self, project: Project):
         assert project.target_loudness == -18.0
 
+    def test_setter(self, project: Project):
+        project.target_loudness = -24.0
+        assert project.target_loudness == -24.0
+
 
 class TestFrameRate:
     def test_default(self, project: Project):
         assert project.frame_rate == 30
+
+    def test_setter(self, project: Project):
+        project.frame_rate = 60
+        assert project.frame_rate == 60
 
 
 class TestSampleRate:
     def test_default(self, project: Project):
         assert project.sample_rate == 44100
 
-
-class TestAllSetters:
-    def test_all_setters_work(self, project: Project):
-        project.title = 'T'
-        project.description = 'D'
-        project.author = 'A'
-        project.target_loudness = -24.0
-        project.frame_rate = 60
+    def test_setter(self, project: Project):
         project.sample_rate = 48000
-        assert project.title == 'T'
-        assert project.description == 'D'
-        assert project.author == 'A'
-        assert project.target_loudness == -24.0
-        assert project.frame_rate == 60
         assert project.sample_rate == 48000
 
 

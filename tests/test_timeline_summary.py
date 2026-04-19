@@ -35,39 +35,20 @@ def _add_clip(data: dict, track_idx: int, clip_id: int, start_sec: float, dur_se
 
 
 class TestTotalDurationFormatted:
-    def test_empty_timeline(self):
-        tl = Timeline(_timeline_data())
-        assert tl.total_duration_formatted == "0:00"
-
-    def test_seconds_only(self):
+    @pytest.mark.parametrize("dur_seconds,expected", [
+        (0, "0:00"),
+        (45, "0:45"),
+        (125, "2:05"),
+        (3661, "1:01:01"),
+        (3600, "1:00:00"),
+        (60, "1:00"),
+    ], ids=["empty", "seconds-only", "minutes-and-seconds", "hours", "exact-hour", "exact-minute"])
+    def test_total_duration_formatted(self, dur_seconds, expected):
         data = _timeline_data()
-        _add_clip(data, 0, 1, 0, 45)
+        if dur_seconds:
+            _add_clip(data, 0, 1, 0, dur_seconds)
         tl = Timeline(data)
-        assert tl.total_duration_formatted == "0:45"
-
-    def test_minutes_and_seconds(self):
-        data = _timeline_data()
-        _add_clip(data, 0, 1, 0, 125)  # 2m5s
-        tl = Timeline(data)
-        assert tl.total_duration_formatted == "2:05"
-
-    def test_hours_format(self):
-        data = _timeline_data()
-        _add_clip(data, 0, 1, 0, 3661)  # 1h1m1s
-        tl = Timeline(data)
-        assert tl.total_duration_formatted == "1:01:01"
-
-    def test_exact_hour(self):
-        data = _timeline_data()
-        _add_clip(data, 0, 1, 0, 3600)
-        tl = Timeline(data)
-        assert tl.total_duration_formatted == "1:00:00"
-
-    def test_exact_minute(self):
-        data = _timeline_data()
-        _add_clip(data, 0, 1, 0, 60)
-        tl = Timeline(data)
-        assert tl.total_duration_formatted == "1:00"
+        assert tl.total_duration_formatted == expected
 
 
 class TestSummary:

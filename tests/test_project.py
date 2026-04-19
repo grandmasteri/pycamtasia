@@ -425,24 +425,6 @@ class TestWalkClipsUnified:
         assert um['audio']['src'] == 20
 
 
-class TestCloneProjectStructure:
-    def test_clone_clears_media(self):
-        data = {
-            'sourceBin': [{'id': 1}],
-            'timeline': {
-                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
-                    'medias': [{'_type': 'VMFile', 'id': 1}],
-                    'transitions': [{'name': 'Fade'}],
-                }]}}]},
-                'parameters': {'toc': {'keyframes': [{'time': 100}]}},
-            },
-        }
-        result = clone_project_structure(data)
-        assert result['sourceBin'] == []
-        assert result['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'] == []
-        assert result['timeline']['parameters']['toc']['keyframes'] == []
-
-
 class TestRepairOverlapFix:
     """Test repair() overlap detection and mediaDuration recalculation."""
 

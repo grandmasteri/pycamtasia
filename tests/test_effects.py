@@ -321,14 +321,6 @@ class TestSourceEffectProperties:
     def test_source_file_type_none_when_missing(self):
         assert self._make().source_file_type is None
 
-    def test_set_shader_colors_2(self):
-        e = self._make()
-        e.set_shader_colors((255, 0, 0), (0, 255, 0))
-        p = e._data['parameters']
-        assert p['Color0-red'] == 1.0
-        assert p['Color0-green'] == 0.0
-        assert p['Color1-green'] == 1.0
-
 
 
 class TestVisualEffectSigma:
@@ -348,27 +340,6 @@ _S5 = seconds_to_ticks(5.0)
 
 
 # ------------------------------------------------------------------
-# GenericBehaviorEffect: get/set parameter raise NotImplementedError
-# ------------------------------------------------------------------
-
-
-class TestBehaviorEffectParams:
-    def test_get_parameter_raises(self):
-        data = {'effectName': 'test', '_type': 'GenericBehaviorEffect',
-                'in': {}, 'center': {}, 'out': {}}
-        effect = GenericBehaviorEffect(data)
-        with pytest.raises(NotImplementedError):
-            effect.get_parameter('foo')
-
-    def test_set_parameter_raises(self):
-        data = {'effectName': 'test', '_type': 'GenericBehaviorEffect',
-                'in': {}, 'center': {}, 'out': {}}
-        effect = GenericBehaviorEffect(data)
-        with pytest.raises(NotImplementedError):
-            effect.set_parameter('foo', 42)
-
-
-# ------------------------------------------------------------------
 # SourceEffect: shader colors wrong count
 # ------------------------------------------------------------------
 
@@ -385,6 +356,16 @@ class TestShaderColorsWrongCount:
 # ------------------------------------------------------------------
 
 class TestSourceEffectMidPoint:
+    def test_mid_point_getter_radial(self):
+        e = SourceEffect({'effectName': 'SourceEffect', 'parameters': {'MidPoint': _param(0.75)}})
+        assert e.mid_point == 0.75
+
+    def test_mid_point_getter_four_corner(self):
+        e = SourceEffect({'effectName': 'SourceEffect', 'parameters': {
+            'MidPointX': _param(0.3), 'MidPointY': _param(0.7),
+        }})
+        assert e.mid_point == (0.3, 0.7)
+
     def test_mid_point_setter_scalar_creates_key(self):
         data = {'effectName': 'SourceEffect', 'parameters': {}}
         e = SourceEffect(data)
@@ -909,41 +890,6 @@ class TestLeftClickScalingSetters:
         assert getattr(e, attr) == new_value
 
 
-class TestBehaviorEdgeCases:
-    def test_behavior_phase_data_property(self):
-        raw = {"attributes": {"name": "reveal"}, "parameters": {}}
-        phase = BehaviorPhase(raw)
-        assert phase.data is raw
-
-    def test_set_start(self):
-        data = {
-            "_type": "GenericBehaviorEffect",
-            "effectName": "reveal",
-            "start": 0,
-            "duration": 100,
-            "in": {"attributes": {"name": "reveal"}, "parameters": {}},
-            "center": {"attributes": {"name": "none"}, "parameters": {}},
-            "out": {"attributes": {"name": "reveal"}, "parameters": {}},
-        }
-        e = GenericBehaviorEffect(data)
-        e.start = 50
-        assert e.start == 50
-
-    def test_set_duration(self):
-        data = {
-            "_type": "GenericBehaviorEffect",
-            "effectName": "reveal",
-            "start": 0,
-            "duration": 100,
-            "in": {"attributes": {"name": "reveal"}, "parameters": {}},
-            "center": {"attributes": {"name": "none"}, "parameters": {}},
-            "out": {"attributes": {"name": "reveal"}, "parameters": {}},
-        }
-        e = GenericBehaviorEffect(data)
-        e.duration = 200
-        assert e.duration == 200
-
-
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
@@ -1383,17 +1329,3 @@ def test_set_shader_colors_four_colors():
     assert abs(r - 128 / 255) < 1e-9
     assert a == 1.0
 
-
-class TestMidPointSetter:
-    def test_mid_point_setter_radial(self):
-        data = {'parameters': {'MidPoint': 0.5}}
-        se = SourceEffect(data)
-        se.mid_point = 0.7
-        assert data['parameters']['MidPoint'] == 0.7
-
-    def test_mid_point_setter_four_corner(self):
-        data = {'parameters': {'MidPointX': 0.5, 'MidPointY': 0.5}}
-        se = SourceEffect(data)
-        se.mid_point = (0.3, 0.8)
-        assert data['parameters']['MidPointX'] == 0.3
-        assert data['parameters']['MidPointY'] == 0.8

@@ -152,9 +152,15 @@ class TestScreenVMFileCoverage:
         clip = ScreenVMFile(data)
         assert clip.cursor_motion_blur_intensity == 1.0
 
-    def test_cursor_motion_blur_intensity_no_effect(self):
+    @pytest.mark.parametrize("attr,expected", [
+        ("cursor_motion_blur_intensity", 0.0),
+        ("cursor_shadow", {}),
+        ("cursor_physics", {}),
+        ("left_click_scaling", {}),
+    ])
+    def test_cursor_effect_no_effect_defaults(self, attr, expected):
         clip = ScreenVMFile(_base(_type="ScreenVMFile"))
-        assert clip.cursor_motion_blur_intensity == 0.0
+        assert getattr(clip, attr) == expected
 
     def test_cursor_shadow_with_effect(self):
         data = _base(_type="ScreenVMFile", parameters={}, effects=[
@@ -168,9 +174,6 @@ class TestScreenVMFileCoverage:
         assert actual_shadow["angle"] == 3.9
         assert actual_shadow["offset"] == 7.0
 
-    def test_cursor_shadow_no_effect(self):
-        clip = ScreenVMFile(_base(_type="ScreenVMFile"))
-        assert clip.cursor_shadow == {}
 
     def test_cursor_physics_with_effect(self):
         data = _base(_type="ScreenVMFile", parameters={}, effects=[
@@ -184,9 +187,6 @@ class TestScreenVMFileCoverage:
         assert actual_physics["intensity"] == 1.5
         assert actual_physics["tilt"] == 2.5
 
-    def test_cursor_physics_no_effect(self):
-        clip = ScreenVMFile(_base(_type="ScreenVMFile"))
-        assert clip.cursor_physics == {}
 
     def test_left_click_scaling_with_effect(self):
         data = _base(_type="ScreenVMFile", parameters={}, effects=[
@@ -200,9 +200,6 @@ class TestScreenVMFileCoverage:
         assert actual_click["scale"] == 3.5
         assert actual_click["speed"] == 7.5
 
-    def test_left_click_scaling_no_effect(self):
-        clip = ScreenVMFile(_base(_type="ScreenVMFile"))
-        assert clip.left_click_scaling == {}
 
     def test_get_param_value_raw_numeric(self):
         data = _base(_type="ScreenVMFile", parameters={"cursorScale": 3.0})

@@ -57,27 +57,7 @@ class TestRoundCornersHyphenatedKeys:
         assert rc.bottom_right is False
 
 
-class TestSourceEffectMidPoint:
-    def test_source_effect_radial_midpoint(self):
-        """Radial gradient uses a single MidPoint key."""
-        se = _make_effect(SourceEffect, {
-            "MidPoint": _param(0.75),
-        })
-        assert se.mid_point == 0.75
-
-    def test_source_effect_four_corner_midpoint(self):
-        """Four-corner gradient uses MidPointX/MidPointY."""
-        se = _make_effect(SourceEffect, {
-            "MidPointX": _param(0.3),
-            "MidPointY": _param(0.7),
-        })
-        assert se.mid_point == (0.3, 0.7)
-
-    def test_source_effect_midpoint_default(self):
-        """No midpoint keys returns default (0.5, 0.5)."""
-        se = _make_effect(SourceEffect, {})
-        assert se.mid_point == (0.5, 0.5)
-
+class TestSourceEffectColorDefaults:
     def test_color2_none_for_radial(self):
         """color2 returns None when not present (radial gradient)."""
         se = _make_effect(SourceEffect, {})

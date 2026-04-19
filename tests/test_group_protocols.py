@@ -38,19 +38,6 @@ def _make_group_data(media_ids=(1, 2, 3)):
     }
 
 
-def test_group_track_len():
-    data = _make_group_data()
-    track = GroupTrack(data['tracks'][0])
-    assert [c.id for c in track] == [1, 2, 3]
-
-
-def test_group_track_iter():
-    data = _make_group_data()
-    track = GroupTrack(data['tracks'][0])
-    clips = list(track)
-    assert [c.id for c in clips] == [1, 2, 3]
-
-
 def test_set_internal_segment_speeds_auto_id():
     data = _make_group_data(media_ids=(5, 20, 15))
     group = Group(data)

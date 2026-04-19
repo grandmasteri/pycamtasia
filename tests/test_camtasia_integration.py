@@ -259,42 +259,21 @@ class TestAdvancedOperations:
 
 class TestNewTransitions:
     @pytest.mark.integration
-    def test_card_flip_transition_opens(self, project):
+    @pytest.mark.parametrize("method, use_ticks", [
+        ('add_card_flip', True),
+        ('add_glitch', True),
+        ('add_linear_blur', True),
+        ('add_stretch', True),
+        ('add_paint_arcs', False),
+        ('add_spherical_spin', False),
+    ])
+    def test_transition_opens(self, project, method, use_ticks):
         media = project.import_media(EMPTY_WAV)
         track = project.timeline.add_track('Audio')
         c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
         c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
-        track.transitions.add_card_flip(c1.id, c2.id, seconds_to_ticks(0.5))
-        project.save()
-        assert _validate_in_camtasia(str(project.file_path)) == 0
-
-    @pytest.mark.integration
-    def test_glitch_transition_opens(self, project):
-        media = project.import_media(EMPTY_WAV)
-        track = project.timeline.add_track('Audio')
-        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
-        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
-        track.transitions.add_glitch(c1.id, c2.id, seconds_to_ticks(0.5))
-        project.save()
-        assert _validate_in_camtasia(str(project.file_path)) == 0
-
-    @pytest.mark.integration
-    def test_linear_blur_transition_opens(self, project):
-        media = project.import_media(EMPTY_WAV)
-        track = project.timeline.add_track('Audio')
-        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
-        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
-        track.transitions.add_linear_blur(c1.id, c2.id, seconds_to_ticks(0.5))
-        project.save()
-        assert _validate_in_camtasia(str(project.file_path)) == 0
-
-    @pytest.mark.integration
-    def test_stretch_transition_opens(self, project):
-        media = project.import_media(EMPTY_WAV)
-        track = project.timeline.add_track('Audio')
-        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
-        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
-        track.transitions.add_stretch(c1.id, c2.id, seconds_to_ticks(0.5))
+        dur = seconds_to_ticks(0.5) if use_ticks else 0.5
+        getattr(track.transitions, method)(c1.id, c2.id, dur)
         project.save()
         assert _validate_in_camtasia(str(project.file_path)) == 0
 
@@ -325,21 +304,3 @@ class TestBehaviorPresets:
         project.save()
         assert _validate_in_camtasia(str(project.file_path)) == 0
 
-class TestNewTransitionTypes:
-    def test_paint_arcs_transition_opens(self, project):
-        media = project.import_media(EMPTY_WAV)
-        track = project.timeline.add_track('Audio')
-        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
-        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
-        track.transitions.add_paint_arcs(c1.id, c2.id, 0.5)
-        project.save()
-        assert _validate_in_camtasia(str(project.file_path)) == 0
-
-    def test_spherical_spin_transition_opens(self, project):
-        media = project.import_media(EMPTY_WAV)
-        track = project.timeline.add_track('Audio')
-        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)
-        c2 = track.add_audio(media.id, start_seconds=4.0, duration_seconds=4.0)
-        track.transitions.add_spherical_spin(c1.id, c2.id, 0.5)
-        project.save()
-        assert _validate_in_camtasia(str(project.file_path)) == 0

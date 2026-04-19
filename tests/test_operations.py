@@ -474,84 +474,6 @@ class TestOverlapFix:
 
 
 
-class TestMarkSpeedChanged:
-    def test_marks_amfile_via_rescale(self):
-        clip = {
-            '_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100,
-            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
-            'parameters': {}, 'effects': [], 'metadata': {},
-        }
-        data = _minimal_project(clip)
-        rescale_project(data, Fraction(2))
-        media = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
-        assert media['metadata']['clipSpeedAttribute']['value'] is True
-
-    def test_skips_excluded_types(self):
-        clip = {
-            '_type': 'IMFile', 'id': 1, 'start': 0, 'duration': 100,
-            'mediaStart': 0, 'mediaDuration': 1, 'scalar': 1,
-            'parameters': {}, 'effects': [], 'metadata': {},
-        }
-        data = _minimal_project(clip)
-        rescale_project(data, Fraction(2))
-        media = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
-        assert 'clipSpeedAttribute' not in media.get('metadata', {})
-
-    def test_recurses_into_unified_children(self):
-        clip = {
-            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
-            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
-            'parameters': {}, 'effects': [], 'metadata': {},
-            'video': {
-                '_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 100,
-                'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
-                'parameters': {}, 'effects': [], 'metadata': {},
-            },
-            'audio': {
-                '_type': 'AMFile', 'id': 3, 'start': 0, 'duration': 100,
-                'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
-                'parameters': {}, 'effects': [], 'metadata': {},
-            },
-        }
-        data = _minimal_project(clip)
-        rescale_project(data, Fraction(2))
-        um = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
-        assert um['video']['metadata']['clipSpeedAttribute']['value'] is True
-        assert um['audio']['metadata']['clipSpeedAttribute']['value'] is True
-
-    def test_recurses_into_group_tracks(self):
-        clip = {
-            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 100,
-            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
-            'parameters': {}, 'effects': [], 'metadata': {},
-            'tracks': [{'medias': [{
-                '_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 100,
-                'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
-                'parameters': {}, 'effects': [], 'metadata': {},
-            }]}],
-        }
-        data = _minimal_project(clip)
-        rescale_project(data, Fraction(2))
-        inner = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['tracks'][0]['medias'][0]
-        assert inner['metadata']['clipSpeedAttribute']['value'] is True
-
-    def test_recurses_into_stitched_medias(self):
-        clip = {
-            '_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': 100,
-            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
-            'parameters': {}, 'effects': [], 'metadata': {},
-            'medias': [{
-                '_type': 'AMFile', 'id': 2, 'start': 0, 'duration': 100,
-                'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
-                'parameters': {}, 'effects': [], 'metadata': {},
-            }],
-        }
-        data = _minimal_project(clip)
-        rescale_project(data, Fraction(2))
-        inner = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['medias'][0]
-        assert inner['metadata']['clipSpeedAttribute']['value'] is True
-
-
 _S1 = seconds_to_ticks(1.0)
 
 
@@ -588,21 +510,6 @@ class TestMergeRemapClipIds:
         _remap_clip_ids(data, id_counter, id_map, src_map)
         assert data['id'] != 1
         assert data['video']['src'] == 50
-
-
-
-class TestTemplateWalkClipsExtras:
-    def test_walk_clips_unified(self):
-        tracks = [{
-            'medias': [{
-                '_type': 'UnifiedMedia', 'id': 1,
-                'video': {'_type': 'ScreenVMFile', 'id': 2},
-                'audio': {'_type': 'AMFile', 'id': 3},
-            }]
-        }]
-        clips = list(_walk_clips(tracks))
-        assert any(c.get('_type') == 'ScreenVMFile' for c in clips)
-        assert any(c.get('_type') == 'AMFile' for c in clips)
 
 
 
@@ -671,18 +578,6 @@ def _cov_group_data_ops(inner=None, duration=None):
         'attributes': {'ident': 'grp', 'widthAttr': 1920, 'heightAttr': 1080},
         'tracks': [{'trackIndex': 0, 'medias': inner or [], 'transitions': []}],
     }
-
-
-class TestAdjustScalar:
-    def test_adjust_scalar_modifies_clip(self):
-        clip = {'scalar': '1/2', 'metadata': {}}
-        _adjust_scalar(clip, Fraction(2))
-        assert Fraction(clip['scalar']) == Fraction(1)
-
-    def test_adjust_scalar_unity(self):
-        clip = {'scalar': 1}
-        _adjust_scalar(clip, Fraction(3, 2))
-        assert Fraction(clip['scalar']) == Fraction(3, 2)
 
 
 class TestMarkSpeedChangedExclusions:

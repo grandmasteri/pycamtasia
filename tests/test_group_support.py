@@ -182,7 +182,7 @@ class TestGroupAddInternalTrack:
 class TestGroupUngroup:
     """Group.ungroup() extracts clips with timeline-absolute positions."""
 
-    def test_ungroup_returns_all_clips(self, group: Group) -> None:
+    def test_ungroup_returns_all_clips_with_correct_types(self, group: Group) -> None:
         extracted_clips: list[BaseClip] = group.ungroup()
         assert [c.clip_type for c in extracted_clips] == ['VMFile', 'AMFile']
 
@@ -199,11 +199,6 @@ class TestGroupUngroup:
         second_clip: BaseClip = extracted_clips[1]
         expected_start: int = group_start + seconds_to_ticks(4.0)
         assert second_clip.start == expected_start
-
-    def test_ungroup_preserves_clip_types(self, group: Group) -> None:
-        extracted_clips: list[BaseClip] = group.ungroup()
-        clip_types: list[str] = [c.clip_type for c in extracted_clips]
-        assert clip_types == ['VMFile', 'AMFile']
 
 
 class TestTrackGroupClips:

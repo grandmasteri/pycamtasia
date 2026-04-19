@@ -48,18 +48,10 @@ def _base(**kw) -> dict:
 # AMFile properties
 # ------------------------------------------------------------------
 
-def test_amfile_channel_number() -> None:
+def test_amfile_properties() -> None:
     clip = AMFile(_amfile_dict())
     assert clip.channel_number == "0,1"
-
-
-def test_amfile_gain() -> None:
-    clip = AMFile(_amfile_dict())
     assert clip.gain == 0.8
-
-
-def test_amfile_loudness_normalization() -> None:
-    clip = AMFile(_amfile_dict())
     assert clip.loudness_normalization is True
 
 
@@ -70,21 +62,11 @@ def test_amfile_gain_setter_mutates_dict() -> None:
     assert data["attributes"]["gain"] == 1.5
 
 
-def test_amfile_channel_number_default() -> None:
+def test_amfile_defaults() -> None:
     data = _base_clip_dict(_type="AMFile")
     clip = AMFile(data)
     assert clip.channel_number == "0"
-
-
-def test_amfile_gain_default() -> None:
-    data = _base_clip_dict(_type="AMFile")
-    clip = AMFile(data)
     assert clip.gain == 1.0
-
-
-def test_amfile_loudness_normalization_default() -> None:
-    data = _base_clip_dict(_type="AMFile")
-    clip = AMFile(data)
     assert clip.loudness_normalization is False
 
 

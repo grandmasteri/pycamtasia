@@ -272,51 +272,6 @@ def _um_data():
     }
 
 
-@pytest.fixture
-def um():
-    return UnifiedMedia({
-        '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
-        'video': {'_type': 'VMFile', 'id': 2, 'src': 1, 'start': 0, 'duration': 100,
-                  'attributes': {}, 'parameters': {}, 'effects': []},
-        'audio': {'_type': 'AMFile', 'id': 3, 'src': 1, 'start': 0, 'duration': 100,
-                  'attributes': {}, 'parameters': {}, 'effects': []},
-    })
-
-
-def test_um_add_effect_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.add_effect({'effectName': 'Glow'})
-
-
-def test_um_add_drop_shadow_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.add_drop_shadow()
-
-
-def test_um_add_round_corners_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.add_round_corners()
-
-
-def test_um_add_glow_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.add_glow()
-
-
-def test_um_add_glow_timed_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.add_glow_timed()
-
-
-def test_um_copy_effects_from_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.copy_effects_from(um)
-
-
-def test_um_set_source_raises(um):
-    with pytest.raises(TypeError, match='Cannot set_source'):
-        um.set_source(42)
-
 
 class TestUnifiedMediaEffectBlocking:
     def test_add_effect(self):

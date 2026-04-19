@@ -147,12 +147,6 @@ class TestAddChapterMarkers:
         markers = list(proj.timeline.markers)
         assert [m.name for m in markers] == ["Intro", "Chapter 1"]
 
-    def test_marker_names(self, tmp_path: Path):
-        proj = _create_project(tmp_path)
-        chapters = [(0.0, "Intro"), (60.0, "Chapter 1")]
-        proj.add_chapter_markers(chapters)
-        names = [m.name for m in proj.timeline.markers]
-        assert names == ["Intro", "Chapter 1"]
 
     def test_marker_times(self, tmp_path: Path):
         proj = _create_project(tmp_path)

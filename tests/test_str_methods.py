@@ -1,6 +1,8 @@
 """Tests for Track.__str__ and BaseClip.__str__."""
 from __future__ import annotations
 
+import pytest
+
 from camtasia.timeline.clips import BaseClip, EDIT_RATE
 from camtasia.timeline.track import Track
 
@@ -27,21 +29,14 @@ def _track(name: str = "Track 1", medias: list | None = None) -> Track:
 
 
 class TestBaseClipStr:
-    def test_basic(self) -> None:
-        clip = _clip()
-        assert str(clip) == "VMFile(id=1, 10.0s)"
-
-    def test_audio_type(self) -> None:
-        clip = _clip(_type="AMFile", id=42, duration=int(5.5 * EDIT_RATE))
-        assert str(clip) == "AMFile(id=42, 5.5s)"
-
-    def test_short_duration(self) -> None:
-        clip = _clip(duration=int(0.3 * EDIT_RATE))
-        assert str(clip) == "VMFile(id=1, 0.3s)"
-
-    def test_zero_duration(self) -> None:
-        clip = _clip(duration=0)
-        assert str(clip) == "VMFile(id=1, 0.0s)"
+    @pytest.mark.parametrize("overrides,expected", [
+        ({}, "VMFile(id=1, 10.0s)"),
+        ({"_type": "AMFile", "id": 42, "duration": int(5.5 * EDIT_RATE)}, "AMFile(id=42, 5.5s)"),
+        ({"duration": int(0.3 * EDIT_RATE)}, "VMFile(id=1, 0.3s)"),
+        ({"duration": 0}, "VMFile(id=1, 0.0s)"),
+    ], ids=["basic", "audio-type", "short-duration", "zero-duration"])
+    def test_str_format(self, overrides, expected) -> None:
+        assert str(_clip(**overrides)) == expected
 
     def test_str_differs_from_repr(self) -> None:
         clip = _clip()

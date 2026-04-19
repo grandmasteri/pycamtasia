@@ -186,32 +186,14 @@ class TestFormatDurationHours:
         result = format_duration(seconds_to_ticks(59.999))
         assert ':' in result
 
-    def test_zero(self):
-        assert format_duration(0) == '0:00.00'
 
 
 class TestParseScalarEdgeCases:
-    def test_fraction_passthrough(self):
-        assert parse_scalar(Fraction(3, 7)) == Fraction(3, 7)
-
-    def test_string_fraction(self):
-        assert parse_scalar('51/101') == Fraction(51, 101)
-
     def test_zero_division_string(self):
         with pytest.raises(ValueError, match='division by zero'):
             parse_scalar('1/0')
 
-    def test_float_input(self):
-        result = parse_scalar(0.5)
-        assert result == Fraction(1, 2)
 
-
-class TestScalarToStringMisc:
-    def test_unity(self):
-        assert scalar_to_string(Fraction(1)) == 1
-
-    def test_non_unity(self):
-        assert scalar_to_string(Fraction(3, 4)) == '3/4'
 
 
 class TestSpeedScalarConversions:

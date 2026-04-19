@@ -105,8 +105,3 @@ class TestSplitAllClipsAt:
         total: int = sum(m['duration'] for m in data['medias'])
         assert total == original_duration
 
-    def test_return_type_is_int(self) -> None:
-        """The return value is an int."""
-        track, _ = _make_track(_clip(1, 0.0, 10.0))
-        result = track.split_all_clips_at(5.0)
-        assert result == 1
