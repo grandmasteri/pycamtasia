@@ -2307,3 +2307,96 @@ def test_clear_metadata_on_empty():
     clip.clear_metadata()
     assert clip_data['metadata'] == {}
 
+
+
+# ── is_silent for UnifiedMedia ──────────────────────────────────────
+
+
+class TestIsSilentUnifiedMedia:
+    def test_unified_media_silent_when_gain_zero(self):
+        from camtasia.timeline.clips.base import BaseClip
+        clip = BaseClip({
+            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
+            'audio': {'attributes': {'gain': 0.0}},
+        })
+        assert clip.is_silent is True
+
+    def test_unified_media_not_silent_when_gain_nonzero(self):
+        from camtasia.timeline.clips.base import BaseClip
+        clip = BaseClip({
+            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
+            'audio': {'attributes': {'gain': 0.8}},
+        })
+        assert clip.is_silent is False
+
+    def test_non_unified_silent_when_gain_zero(self):
+        clip = AMFile(_amfile_dict(attributes={'ident': '', 'gain': 0.0, 'mixToMono': False, 'loudnessNormalization': False}))
+        assert clip.is_silent is True
+
+
+# ── add_lut_effect, add_media_matte, add_motion_blur, add_emphasize ─
+
+
+class TestEffectAddMethods:
+    def _clip(self):
+        return VMFile(_base_clip_dict(effects=[]))
+
+    def test_add_lut_effect(self):
+        clip = self._clip()
+        result = clip.add_lut_effect(intensity=0.5)
+        assert result is clip
+        eff = clip._data['effects'][-1]
+        assert eff['effectName'] == 'LutEffect'
+        assert eff['parameters']['lut_intensity'] == 0.5
+
+    def test_add_media_matte(self):
+        clip = self._clip()
+        result = clip.add_media_matte(intensity=0.7, matte_mode=2)
+        assert result is clip
+        eff = clip._data['effects'][-1]
+        assert eff['effectName'] == 'MediaMatte'
+        assert eff['parameters']['matteMode'] == 2
+
+    def test_add_motion_blur(self):
+        clip = self._clip()
+        result = clip.add_motion_blur(intensity=0.9)
+        assert result is clip
+        eff = clip._data['effects'][-1]
+        assert eff['effectName'] == 'MotionBlur'
+
+    def test_add_emphasize(self):
+        clip = self._clip()
+        result = clip.add_emphasize(amount=0.3)
+        assert result is clip
+        eff = clip._data['effects'][-1]
+        assert eff['effectName'] == 'Emphasize'
+        assert eff['parameters']['emphasizeAmount'] == 0.3
+
+    def test_add_blend_mode(self):
+        clip = self._clip()
+        result = clip.add_blend_mode(mode=3, intensity=0.8)
+        assert result is clip
+        eff = clip._data['effects'][-1]
+        assert eff['effectName'] == 'BlendModeEffect'
+        assert eff['parameters']['mode'] == 3
+
+
+# ── is_longer_than / apply_if ───────────────────────────────────────
+
+
+class TestClipPredicates:
+    def test_is_longer_than(self):
+        clip = AMFile(_amfile_dict())
+        assert clip.is_longer_than(0.0) is True
+
+    def test_apply_if_true(self):
+        clip = AMFile(_amfile_dict())
+        called = []
+        clip.apply_if(lambda c: True, lambda c: called.append(c))
+        assert len(called) == 1
+
+    def test_apply_if_false(self):
+        clip = AMFile(_amfile_dict())
+        called = []
+        clip.apply_if(lambda c: False, lambda c: called.append(c))
+        assert len(called) == 0

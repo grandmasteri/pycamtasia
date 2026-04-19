@@ -904,3 +904,457 @@ def test_project_empty_tracks_property(project):
     actual_empty: list = project.empty_tracks
     assert isinstance(actual_empty, list)
 
+
+
+# ── _probe_media with pymediainfo ────────────────────────────────────
+
+
+class TestProbeMediaPymediainfo:
+    def test_pymediainfo_video_track(self, monkeypatch):
+        from camtasia.project import _probe_media
+
+        class FakeTrack:
+            def __init__(self, track_type, **kw):
+                self.track_type = track_type
+                self.width = kw.get('width')
+                self.height = kw.get('height')
+                self.duration = kw.get('duration')
+                self.frame_rate = kw.get('frame_rate')
+                self.sampling_rate = kw.get('sampling_rate')
+                self.channel_s = kw.get('channel_s')
+                self.bit_depth = kw.get('bit_depth')
+
+        class FakeInfo:
+            tracks = [
+                FakeTrack('General'),
+                FakeTrack('Video', width=1920, height=1080, duration=5000, frame_rate='30.0'),
+            ]
+
+        class FakeMediaInfo:
+            @staticmethod
+            def parse(path):
+                return FakeInfo()
+
+        import sys
+        fake_module = type(sys)('pymediainfo')
+        fake_module.MediaInfo = FakeMediaInfo
+        monkeypatch.setitem(sys.modules, 'pymediainfo', fake_module)
+
+        result = _probe_media(Path('/fake/video.mp4'))
+        assert result['width'] == 1920
+        assert result['height'] == 1080
+        assert result['_backend'] == 'pymediainfo'
+
+    def test_pymediainfo_import_error_falls_back_to_ffprobe(self, monkeypatch):
+        """When pymediainfo raises ImportError, _probe_media falls back to ffprobe."""
+        from camtasia.project import _probe_media
+        import subprocess, sys
+
+        # Make pymediainfo import fail
+        monkeypatch.delitem(sys.modules, 'pymediainfo', raising=False)
+        real_import = __builtins__['__import__'] if isinstance(__builtins__, dict) else __builtins__.__import__
+        def _fail_pymediainfo(name, *a, **kw):
+            if name == 'pymediainfo':
+                raise ImportError('mocked')
+            return real_import(name, *a, **kw)
+        monkeypatch.setattr('builtins.__import__', _fail_pymediainfo)
+
+        # Make ffprobe return valid data
+        call_count = [0]
+        def fake_run(*args, **kwargs):
+            call_count[0] += 1
+            r = type('R', (), {'stdout': '', 'returncode': 0})()
+            if call_count[0] == 1:
+                r.stdout = '1280,720\n'
+            elif call_count[0] == 2:
+                r.stdout = '10.0\n'
+            return r
+        monkeypatch.setattr(subprocess, 'run', fake_run)
+
+        result = _probe_media(Path('/fake/video.mp4'))
+        assert result['width'] == 1280
+        assert result['height'] == 720
+        assert result['duration_seconds'] == 10.0
+
+    def test_pymediainfo_exception_falls_back_to_ffprobe(self, monkeypatch):
+        """When pymediainfo.parse raises an exception, _probe_media falls back to ffprobe."""
+        from camtasia.project import _probe_media
+        import subprocess, sys
+
+        class BadMediaInfo:
+            @staticmethod
+            def parse(path):
+                raise RuntimeError('parse failed')
+
+        fake_module = type(sys)('pymediainfo')
+        fake_module.MediaInfo = BadMediaInfo
+        monkeypatch.setitem(sys.modules, 'pymediainfo', fake_module)
+
+        call_count = [0]
+        def fake_run(*args, **kwargs):
+            call_count[0] += 1
+            r = type('R', (), {'stdout': '', 'returncode': 0})()
+            if call_count[0] == 1:
+                r.stdout = '640,480\n'
+            elif call_count[0] == 2:
+                r.stdout = '5.0\n'
+            return r
+        monkeypatch.setattr(subprocess, 'run', fake_run)
+
+        result = _probe_media(Path('/fake/video.mp4'))
+        assert result['width'] == 640
+        assert result['duration_seconds'] == 5.0
+
+
+# ── _probe_media_ffprobe ─────────────────────────────────────────────
+
+
+class TestProbeMediaFfprobe:
+    def test_ffprobe_parses_width_height(self, monkeypatch):
+        from camtasia.project import _probe_media_ffprobe
+        import subprocess
+
+        call_count = [0]
+        def fake_run(*args, **kwargs):
+            call_count[0] += 1
+            result = type('R', (), {'stdout': '', 'returncode': 0})()
+            if call_count[0] == 1:
+                result.stdout = '1920,1080\n'
+            elif call_count[0] == 2:
+                result.stdout = '5.5\n'
+            return result
+
+        monkeypatch.setattr(subprocess, 'run', fake_run)
+        result = _probe_media_ffprobe(Path('/fake/video.mp4'))
+        assert result['width'] == 1920
+        assert result['height'] == 1080
+        assert result['duration_seconds'] == 5.5
+
+    def test_ffprobe_exception_returns_minimal(self, monkeypatch):
+        from camtasia.project import _probe_media_ffprobe
+        import subprocess
+
+        def fail_run(*args, **kwargs):
+            raise OSError('ffprobe not found')
+
+        monkeypatch.setattr(subprocess, 'run', fail_run)
+        result = _probe_media_ffprobe(Path('/fake/video.mp4'))
+        assert '_backend' in result
+        assert 'width' not in result
+        assert 'duration_seconds' not in result
+
+
+# ── _remap_src_recursive ────────────────────────────────────────────
+
+
+class TestRemapSrcRecursive:
+    def test_remaps_src(self):
+        from camtasia.project import _remap_src_recursive
+        clip = {'src': 1}
+        _remap_src_recursive(clip, {1: 10})
+        assert clip['src'] == 10
+
+    def test_remaps_video_audio(self):
+        from camtasia.project import _remap_src_recursive
+        clip = {'src': 1, 'video': {'src': 2}, 'audio': {'src': 3}}
+        _remap_src_recursive(clip, {1: 10, 2: 20, 3: 30})
+        assert clip['video']['src'] == 20
+        assert clip['audio']['src'] == 30
+
+    def test_remaps_tracks(self):
+        from camtasia.project import _remap_src_recursive
+        clip = {'tracks': [{'medias': [{'src': 5}]}]}
+        _remap_src_recursive(clip, {5: 50})
+        assert clip['tracks'][0]['medias'][0]['src'] == 50
+
+    def test_remaps_medias(self):
+        from camtasia.project import _remap_src_recursive
+        clip = {'medias': [{'src': 7}]}
+        _remap_src_recursive(clip, {7: 70})
+        assert clip['medias'][0]['src'] == 70
+
+
+# ── has_screen_recording with ScreenVMFile ───────────────────────────
+
+
+class TestHasScreenRecordingDirect:
+    def test_screen_vmfile_clip(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        track = proj.timeline.add_track('Screen')
+        track._data.setdefault('medias', []).append({
+            'id': 99, '_type': 'ScreenVMFile', 'src': 0, 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+        })
+        assert proj.has_screen_recording is True
+
+
+# ── swap_tracks with short trackAttributes ───────────────────────────
+
+
+class TestSwapTracksShortAttrs:
+    def test_warns_when_attrs_too_short(self, tmp_path, monkeypatch):
+        """When trackAttributes is shorter than the track indices being swapped, a warning is emitted."""
+        import warnings as w
+        from camtasia.timeline.timeline import Timeline
+        from camtasia.timeline.track import Track
+        data = json.loads(json.dumps(MINIMAL_PROJECT_DATA))
+        data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'] = [
+            {'trackIndex': 0, 'medias': []},
+            {'trackIndex': 1, 'medias': []},
+        ]
+        # Only 1 trackAttribute entry — shorter than max(0, 1)
+        data['timeline']['trackAttributes'] = [
+            {'ident': 'A', 'audioMuted': False, 'videoHidden': False},
+        ]
+        proj_dir = _create_cmproj(tmp_path, data)
+        proj = Project(proj_dir)
+        tracks_data = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
+        track_a = Track({'ident': 'A'}, tracks_data[0])
+        track_b = Track({'ident': 'B'}, tracks_data[1])
+        results = [track_a, track_b]
+        call_idx = [0]
+        orig_find = Timeline.find_track_by_name
+        def patched_find(self_tl, name):
+            i = call_idx[0]
+            call_idx[0] += 1
+            return results[i] if i < len(results) else orig_find(self_tl, name)
+        monkeypatch.setattr(Timeline, 'find_track_by_name', patched_find)
+        with w.catch_warnings(record=True) as caught:
+            w.simplefilter('always')
+            proj.swap_tracks('A', 'B')
+        assert any('trackAttributes too short' in str(c.message) for c in caught)
+
+
+# ── all_clips with StitchedMedia / UnifiedMedia ─────────────────────
+
+
+class TestAllClipsNested:
+    def test_stitched_media_nested(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        track = proj.timeline.tracks[0]
+        track._data['medias'] = [{
+            'id': 1, '_type': 'StitchedMedia', 'start': 0, 'duration': 100,
+            'medias': [{'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 50}],
+        }]
+        clips = proj.all_clips
+        types = [c.clip_type for _, c in clips]
+        assert 'StitchedMedia' in types
+        assert 'VMFile' in types
+
+    def test_unified_media_nested(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        track = proj.timeline.tracks[0]
+        track._data['medias'] = [{
+            'id': 1, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100,
+            'video': {'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 100},
+            'audio': {'id': 3, '_type': 'AMFile', 'start': 0, 'duration': 100},
+        }]
+        clips = proj.all_clips
+        types = [c.clip_type for _, c in clips]
+        assert 'UnifiedMedia' in types
+        assert 'VMFile' in types
+        assert 'AMFile' in types
+
+
+# ── validate with overlapping clips ──────────────────────────────────
+
+
+class TestValidateOverlaps:
+    def test_overlapping_clips_reported(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        track = proj.timeline.tracks[0]
+        track._data['medias'] = [
+            {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 200},
+            {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200},
+        ]
+        issues = proj.validate()
+        overlap_issues = [i for i in issues if 'Overlapping' in i.message]
+        assert len(overlap_issues) > 0
+
+
+# ── validate_and_report ──────────────────────────────────────────────
+
+
+class TestValidateAndReport:
+    def test_no_issues(self, tmp_path):
+        data = json.loads(json.dumps(MINIMAL_PROJECT_DATA))
+        data['editRate'] = 705600000
+        proj_dir = _create_cmproj(tmp_path, data)
+        proj = Project(proj_dir)
+        report = proj.validate_and_report()
+        assert 'No issues found' in report
+
+    def test_with_issues(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        track = proj.timeline.tracks[0]
+        track._data['medias'] = [
+            {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 200},
+            {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200},
+        ]
+        report = proj.validate_and_report()
+        assert 'issue(s) found' in report
+
+
+# ── save with Infinity/NaN ───────────────────────────────────────────
+
+
+class TestSaveSpecialFloats:
+    def test_infinity_replaced(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        proj._data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'] = [{
+            'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
+            'parameters': {'scale': float('inf'), 'neg': float('-inf'), 'bad': float('nan')},
+        }]
+        proj.save()
+        text = (proj_dir / 'project.tscproj').read_text()
+        assert '-Infinity' not in text
+        assert 'NaN' not in text
+
+
+# ── import_media ValueError for unknown extension ────────────────────
+
+
+class TestImportMediaUnknownExtension:
+    def test_raises_for_unknown_extension(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        bad_file = tmp_path / 'file.xyz'
+        bad_file.write_bytes(b'\x00')
+        with pytest.raises(ValueError, match="Cannot determine media type"):
+            proj.import_media(bad_file)
+
+
+# ── import_media audio/video duration defaults ───────────────────────
+
+
+class TestImportMediaDurationDefaults:
+    def test_audio_duration_from_probe(self, tmp_path, monkeypatch):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        wav = tmp_path / 'test.wav'
+        wav.write_bytes(b'\x00')
+        import camtasia.project as proj_mod
+        monkeypatch.setattr(proj_mod, '_probe_media', lambda p: {
+            '_backend': 'ffprobe', 'duration_seconds': 2.0, 'sample_rate': 44100,
+        })
+        media = proj.import_media(wav)
+        assert media is not None
+
+    def test_video_duration_from_probe(self, tmp_path, monkeypatch):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        mp4 = tmp_path / 'test.mp4'
+        mp4.write_bytes(b'\x00')
+        import camtasia.project as proj_mod
+        monkeypatch.setattr(proj_mod, '_probe_media', lambda p: {
+            '_backend': 'ffprobe', 'duration_seconds': 3.0, 'frame_rate': 30,
+        })
+        media = proj.import_media(mp4)
+        assert media is not None
+
+
+# ── media_summary ────────────────────────────────────────────────────
+
+
+class TestMediaSummary:
+    def test_media_summary_counts_extensions(self, tmp_path, monkeypatch):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        # Add some media entries directly
+        proj._data['sourceBin'] = [
+            {'id': 1, 'src': './media/a.mov', 'rect': [0,0,1920,1080], 'lastMod': '20200101T000000',
+             'sourceTracks': [{'type': 0, 'editRate': 30, 'range': [0, 100], 'trackRect': [0,0,1920,1080],
+                               'sampleRate': 0, 'bitDepth': 0, 'numChannels': 0}]},
+            {'id': 2, 'src': './media/b.mov', 'rect': [0,0,1920,1080], 'lastMod': '20200101T000000',
+             'sourceTracks': [{'type': 0, 'editRate': 30, 'range': [0, 100], 'trackRect': [0,0,1920,1080],
+                               'sampleRate': 0, 'bitDepth': 0, 'numChannels': 0}]},
+            {'id': 3, 'src': './media/c.wav', 'rect': [0,0,0,0], 'lastMod': '20200101T000000',
+             'sourceTracks': [{'type': 2, 'editRate': 44100, 'range': [0, 44100], 'trackRect': [0,0,0,0],
+                               'sampleRate': 44100, 'bitDepth': 16, 'numChannels': 2}]},
+        ]
+        summary = proj.media_summary
+        assert summary['mov'] == 2
+        assert summary['wav'] == 1
+
+
+# ── rescale_timeline ─────────────────────────────────────────────────
+
+
+class TestRescaleTimeline:
+    def test_rescale_timeline(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        track = proj.timeline.tracks[0]
+        track._data['medias'] = [
+            {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 1000, 'mediaDuration': 1000, 'scalar': 1},
+        ]
+        proj.rescale_timeline(2.0)
+        assert track._data['medias'][0]['duration'] == 2000
+
+
+# ── normalize_audio ──────────────────────────────────────────────────
+
+
+class TestNormalizeAudio:
+    def test_normalize_unified_media(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        track = proj.timeline.tracks[0]
+        track._data['medias'] = [{
+            'id': 1, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100,
+            'audio': {'_type': 'AMFile', 'attributes': {'gain': 0.5}},
+        }]
+        count = proj.normalize_audio(target_gain=0.8)
+        assert count >= 1
+
+    def test_normalize_amfile(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        track = proj.timeline.tracks[0]
+        track._data['medias'] = [{
+            'id': 1, '_type': 'AMFile', 'src': 0, 'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'channelNumber': '0,1',
+            'attributes': {'ident': '', 'gain': 0.5, 'mixToMono': False, 'loudnessNormalization': False},
+        }]
+        count = proj.normalize_audio(target_gain=0.9)
+        assert count >= 1
+
+
+# ── health_report with gaps ──────────────────────────────────────────
+
+
+class TestHealthReportGaps:
+    def test_gaps_in_health_report(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        track = proj.timeline.tracks[0]
+        track._data['medias'] = [
+            {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
+            {'id': 2, '_type': 'VMFile', 'start': 300, 'duration': 100},
+        ]
+        report = proj.health_report()
+        assert '- Gaps:' in report
+
+    def test_transitions_in_health_report(self, tmp_path):
+        proj_dir = _create_cmproj(tmp_path)
+        proj = Project(proj_dir)
+        track = proj.timeline.tracks[0]
+        track._data['medias'] = [
+            {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 200},
+            {'id': 2, '_type': 'VMFile', 'start': 200, 'duration': 200},
+        ]
+        track._data['transitions'] = [{
+            'name': 'FadeThroughBlack', 'duration': 100,
+            'leftMedia': 1, 'rightMedia': 2,
+            'attributes': {'bypass': False, 'reverse': False, 'trivial': False,
+                           'useAudioPreRoll': True, 'useVisualPreRoll': True},
+        }]
+        report = proj.health_report()
+        assert '- Transitions:' in report

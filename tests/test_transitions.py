@@ -366,3 +366,55 @@ def test_total_transition_duration_seconds_multiple():
     track = Track(attrs, data)
     assert track.total_transition_duration_seconds == pytest.approx(4.0)
 
+
+
+# ── Convenience add methods (card_flip, glitch, linear_blur, stretch, paint_arcs, spherical_spin) ──
+
+
+class TestTransitionConvenienceAdds:
+    def _tl(self) -> TransitionList:
+        return TransitionList({"transitions": []})
+
+    def test_add_card_flip(self):
+        tl = self._tl()
+        t = tl.add_card_flip(1, 2)
+        assert isinstance(t, Transition)
+        assert t.name == "CardFlip"
+
+    def test_add_glitch(self):
+        tl = self._tl()
+        t = tl.add_glitch(1, 2)
+        assert isinstance(t, Transition)
+        assert t.name == "Glitch3"
+
+    def test_add_linear_blur(self):
+        tl = self._tl()
+        t = tl.add_linear_blur(1, 2)
+        assert isinstance(t, Transition)
+        assert t.name == "LinearBlur"
+
+    def test_add_stretch(self):
+        tl = self._tl()
+        t = tl.add_stretch(1, 2)
+        assert isinstance(t, Transition)
+        assert t.name == "Stretch"
+
+    def test_add_paint_arcs(self):
+        tl = self._tl()
+        t = tl.add_paint_arcs(1, 2)
+        assert isinstance(t, Transition)
+        assert t.name == "PaintArcs"
+
+    def test_add_spherical_spin(self):
+        tl = self._tl()
+        t = tl.add_spherical_spin(1, 2)
+        assert isinstance(t, Transition)
+        assert t.name == "SphericalSpin"
+
+
+class TestTransitionListClear:
+    def test_clear_removes_all(self):
+        data = {"transitions": [_fade_through_black_record(), _fade_through_black_record()]}
+        tl = TransitionList(data)
+        tl.clear()
+        assert len(tl) == 0

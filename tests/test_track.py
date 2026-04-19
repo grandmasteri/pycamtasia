@@ -1715,3 +1715,68 @@ def test_find_track_by_name_returns_none_when_not_found():
     result: Track | None = timeline.find_track_by_name('Nonexistent')
     assert result is None
 
+
+
+# ── total_clip_duration_ticks ────────────────────────────────────────
+
+
+def test_total_clip_duration_ticks():
+    track = _make_track(medias=[
+        {'id': 1, 'start': 0, 'duration': 300},
+        {'id': 2, 'start': 400, 'duration': 200},
+    ])
+    assert track.total_clip_duration_ticks == 500
+
+
+# ── first_gap / largest_gap ─────────────────────────────────────────
+
+
+def test_first_gap_returns_first():
+    track = _make_track(medias=[
+        {'id': 1, 'start': 0, 'duration': 100},
+        {'id': 2, 'start': 200, 'duration': 100},
+        {'id': 3, 'start': 400, 'duration': 100},
+    ])
+    gap = track.first_gap
+    assert gap is not None
+
+
+def test_first_gap_none_when_no_gaps():
+    track = _make_track(medias=[
+        {'id': 1, 'start': 0, 'duration': 100},
+        {'id': 2, 'start': 100, 'duration': 100},
+    ])
+    assert track.first_gap is None
+
+
+def test_largest_gap():
+    track = _make_track(medias=[
+        {'id': 1, 'start': 0, 'duration': 100},
+        {'id': 2, 'start': 200, 'duration': 100},
+        {'id': 3, 'start': 500, 'duration': 100},
+    ])
+    gap = track.largest_gap
+    assert gap is not None
+    # The gap from 300..500 is larger than 100..200
+    assert gap[1] > gap[0]
+
+
+def test_largest_gap_none_when_no_gaps():
+    track = _make_track(medias=[{'id': 1, 'start': 0, 'duration': 100}])
+    assert track.largest_gap is None
+
+
+# ── partition_by_type ────────────────────────────────────────────────
+
+
+def test_partition_by_type():
+    track = _make_track(medias=[
+        {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
+        {'id': 2, '_type': 'AMFile', 'start': 100, 'duration': 100},
+        {'id': 3, '_type': 'VMFile', 'start': 200, 'duration': 100},
+    ])
+    result = track.partition_by_type()
+    assert 'VMFile' in result
+    assert 'AMFile' in result
+    assert len(result['VMFile']) == 2
+    assert len(result['AMFile']) == 1

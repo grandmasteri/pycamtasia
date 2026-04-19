@@ -225,3 +225,192 @@ class TestMediaSourceTracks:
             'sourceTracks': [{'type': 2, 'editRate': 44100, 'range': [0, 441000]}],
         }).video_edit_rate
         assert actual_rate is None
+
+
+# ── Media.range with no sourceTracks ─────────────────────────────────
+
+
+class TestMediaRangeNoSourceTracks:
+    def test_range_returns_zeros_when_no_source_tracks(self):
+        entry = _make_media_entry()
+        del entry['sourceTracks']
+        media = Media(entry)
+        assert media.range == (0, 0)
+
+    def test_range_returns_values_from_source_tracks(self):
+        entry = _make_media_entry(range_vals=[100, 5000])
+        media = Media(entry)
+        assert media.range == (100, 5000)
+
+
+# ── Media.last_modification ──────────────────────────────────────────
+
+
+class TestMediaLastModification:
+    def test_last_modification_parses_timestamp(self):
+        entry = _make_media_entry(last_mod="20190606T103830")
+        media = Media(entry)
+        ts = media.last_modification
+        assert ts.year == 2019
+        assert ts.month == 6
+        assert ts.day == 6
+
+
+# ── import_media FileNotFoundError ───────────────────────────────────
+
+
+class TestImportMediaFileNotFound:
+    def test_raises_file_not_found(self, project):
+        with pytest.raises(FileNotFoundError):
+            project.media_bin.import_media(
+                "/nonexistent/file.mov", media_type=MediaType.Video,
+            )
+
+
+# ── import_media ValueError when pymediainfo unavailable ─────────────
+
+
+class TestImportMediaNoMediaType:
+    def test_raises_value_error_without_media_type(self, project, tmp_path, monkeypatch):
+        media_file = tmp_path / "clip.mov"
+        media_file.write_bytes(b"\x00")
+        # Force _parse_with_pymediainfo to return None
+        import camtasia.media_bin.media_bin as mb_mod
+        monkeypatch.setattr(mb_mod, '_parse_with_pymediainfo', lambda fp: None)
+        with pytest.raises(ValueError, match="Cannot determine media type"):
+            project.media_bin.import_media(media_file, validate_format=False)
+
+    def test_sample_rate_string_converted(self, project, tmp_path, monkeypatch):
+        media_file = tmp_path / "clip.mov"
+        media_file.write_bytes(b"\x00")
+        import camtasia.media_bin.media_bin as mb_mod
+        monkeypatch.setattr(mb_mod, '_parse_with_pymediainfo', lambda fp: {
+            'track_type': 'Audio',
+            'width': None, 'height': None,
+            'frame_rate': None, 'duration': 1000,
+            'channel_s': 2,
+            'sampling_rate': '44100.0',  # string, not int
+            'bit_depth': 16,
+        })
+        monkeypatch.setattr(mb_mod, '_get_media_type', lambda t: MediaType.Audio)
+        media = project.media_bin.import_media(media_file, validate_format=False)
+        assert media is not None
+
+    def test_sample_rate_invalid_string_becomes_none(self, project, tmp_path, monkeypatch):
+        media_file = tmp_path / "clip.mov"
+        media_file.write_bytes(b"\x00")
+        import camtasia.media_bin.media_bin as mb_mod
+        monkeypatch.setattr(mb_mod, '_parse_with_pymediainfo', lambda fp: {
+            'track_type': 'Audio',
+            'width': None, 'height': None,
+            'frame_rate': None, 'duration': 1000,
+            'channel_s': 2,
+            'sampling_rate': 'invalid',  # can't convert to float
+            'bit_depth': 16,
+        })
+        monkeypatch.setattr(mb_mod, '_get_media_type', lambda t: MediaType.Audio)
+        media = project.media_bin.import_media(media_file, validate_format=False)
+        assert media is not None
+
+
+# ── import_media num_channels parsing ────────────────────────────────
+
+
+class TestImportMediaNumChannels:
+    def test_num_channels_parsed_from_track(self, project, tmp_path, monkeypatch):
+        media_file = tmp_path / "clip.mov"
+        media_file.write_bytes(b"\x00")
+        import camtasia.media_bin.media_bin as mb_mod
+        monkeypatch.setattr(mb_mod, '_parse_with_pymediainfo', lambda fp: {
+            'track_type': 'Video',
+            'width': 1920, 'height': 1080,
+            'frame_rate': 30, 'duration': 1000,
+            'channel_s': '2 / 1',
+            'sampling_rate': None, 'bit_depth': 0,
+        })
+        monkeypatch.setattr(mb_mod, '_get_media_type', lambda t: MediaType.Video)
+        media = project.media_bin.import_media(media_file, validate_format=False)
+        assert media is not None
+
+
+# ── _parse_with_pymediainfo ──────────────────────────────────────────
+
+
+class TestParseWithPymediainfo:
+    def test_returns_track_data(self, monkeypatch):
+        from camtasia.media_bin.media_bin import _parse_with_pymediainfo
+
+        class FakeTrack:
+            def to_data(self):
+                return {'width': 1920, 'height': 1080}
+
+        class FakeGeneral:
+            def to_data(self):
+                return {}
+
+        class FakeInfo:
+            tracks = [FakeGeneral(), FakeTrack()]
+
+        class FakeMediaInfo:
+            @staticmethod
+            def parse(path):
+                return FakeInfo()
+
+        import sys
+        fake_mod = type(sys)('pymediainfo')
+        fake_mod.MediaInfo = FakeMediaInfo
+        monkeypatch.setitem(sys.modules, 'pymediainfo', fake_mod)
+
+        result = _parse_with_pymediainfo(Path('/fake/video.mp4'))
+        assert result == {'width': 1920, 'height': 1080}
+
+    def test_returns_none_on_parse_error(self, monkeypatch):
+        from camtasia.media_bin.media_bin import _parse_with_pymediainfo
+
+        class FakeMediaInfo:
+            @staticmethod
+            def parse(path):
+                raise RuntimeError('parse failed')
+
+        import sys
+        fake_mod = type(sys)('pymediainfo')
+        fake_mod.MediaInfo = FakeMediaInfo
+        monkeypatch.setitem(sys.modules, 'pymediainfo', fake_mod)
+
+        result = _parse_with_pymediainfo(Path('/fake/video.mp4'))
+        assert result is None
+
+    def test_returns_none_when_too_few_tracks(self, monkeypatch):
+        from camtasia.media_bin.media_bin import _parse_with_pymediainfo
+
+        class FakeInfo:
+            tracks = [type('T', (), {'to_data': lambda self: {}})()]
+
+        class FakeMediaInfo:
+            @staticmethod
+            def parse(path):
+                return FakeInfo()
+
+        import sys
+        fake_mod = type(sys)('pymediainfo')
+        fake_mod.MediaInfo = FakeMediaInfo
+        monkeypatch.setitem(sys.modules, 'pymediainfo', fake_mod)
+
+        result = _parse_with_pymediainfo(Path('/fake/video.mp4'))
+        assert result is None
+
+    def test_returns_none_when_import_fails(self, monkeypatch):
+        import camtasia.media_bin.media_bin as mb_mod
+        import sys
+
+        # Remove pymediainfo from sys.modules so the import inside the function is re-attempted
+        monkeypatch.delitem(sys.modules, 'pymediainfo', raising=False)
+        real_import = __builtins__['__import__'] if isinstance(__builtins__, dict) else __builtins__.__import__
+        def _fail_pymediainfo(name, *a, **kw):
+            if name == 'pymediainfo':
+                raise ImportError('mocked')
+            return real_import(name, *a, **kw)
+        monkeypatch.setattr('builtins.__import__', _fail_pymediainfo)
+
+        result = mb_mod._parse_with_pymediainfo(Path('/fake/video.mp4'))
+        assert result is None

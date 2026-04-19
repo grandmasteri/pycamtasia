@@ -825,3 +825,58 @@ class TestTimelineFindClip:
     def test_empty_timeline(self):
         tl = Timeline(_protocols_timeline_data(0))
         assert tl.find_clip(1) is None
+
+
+# ── all_effects with Group / StitchedMedia / UnifiedMedia ────────────
+
+
+class TestAllEffectsNestedClips:
+    def test_group_effects_collected(self):
+        group_clip = {
+            "id": 1, "_type": "Group", "start": 0, "duration": 100,
+            "effects": [{"effectName": "outer"}],
+            "tracks": [{
+                "medias": [{
+                    "id": 2, "_type": "VMFile", "start": 0, "duration": 100,
+                    "effects": [{"effectName": "inner"}],
+                }],
+            }],
+        }
+        tl = Timeline(_make_timeline_data([{"medias": [group_clip]}]))
+        effs = tl.all_effects
+        names = [e[2]["effectName"] for e in effs]
+        assert "outer" in names
+        assert "inner" in names
+
+    def test_stitched_media_effects_collected(self):
+        clip = {
+            "id": 1, "_type": "StitchedMedia", "start": 0, "duration": 100,
+            "effects": [],
+            "medias": [{
+                "id": 2, "_type": "VMFile", "start": 0, "duration": 50,
+                "effects": [{"effectName": "nested_eff"}],
+            }],
+        }
+        tl = Timeline(_make_timeline_data([{"medias": [clip]}]))
+        effs = tl.all_effects
+        names = [e[2]["effectName"] for e in effs]
+        assert "nested_eff" in names
+
+    def test_unified_media_effects_collected(self):
+        clip = {
+            "id": 1, "_type": "UnifiedMedia", "start": 0, "duration": 100,
+            "effects": [],
+            "video": {
+                "id": 2, "_type": "VMFile", "start": 0, "duration": 100,
+                "effects": [{"effectName": "vid_eff"}],
+            },
+            "audio": {
+                "id": 3, "_type": "AMFile", "start": 0, "duration": 100,
+                "effects": [{"effectName": "aud_eff"}],
+            },
+        }
+        tl = Timeline(_make_timeline_data([{"medias": [clip]}]))
+        effs = tl.all_effects
+        names = [e[2]["effectName"] for e in effs]
+        assert "vid_eff" in names
+        assert "aud_eff" in names
