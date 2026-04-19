@@ -89,6 +89,11 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                     effect['start'] = _scale_tick(effect['start'], factor)
                 if 'duration' in effect:
                     effect['duration'] = _scale_tick(effect['duration'], factor)
+            if inner.get('_type') == 'UnifiedMedia':
+                for child_key in ('video', 'audio'):
+                    child = inner.get(child_key)
+                    if child:
+                        _process_clip(child, factor)
 
     elif ctype == "Group":
         if "mediaDuration" in clip:

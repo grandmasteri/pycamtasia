@@ -127,14 +127,14 @@ def test_apply_sync():
     internal_medias = group._data['tracks'][1]['medias']
     assert [m['_type'] for m in internal_medias] == ['ScreenVMFile', 'ScreenVMFile']
 
-    # First clip: source 0-18s, timeline duration 20s
+    # First clip: source 0-20s (video), timeline duration 18s (audio)
     first = internal_medias[0]
-    assert abs(ticks_to_seconds(first['duration']) - 20.0) < 0.01
+    assert abs(ticks_to_seconds(first['duration']) - 18.0) < 0.01
     assert abs(ticks_to_seconds(first['mediaStart'])) < 0.01
-    assert abs(ticks_to_seconds(first['mediaDuration']) - 18.0) < 0.01
+    assert abs(ticks_to_seconds(first['mediaDuration']) - 20.0) < 0.01
 
-    # Second clip: source 18-55s, timeline duration 40s
+    # Second clip: source 20-60s (video), timeline duration 37s (audio)
     second = internal_medias[1]
-    assert abs(ticks_to_seconds(second['duration']) - 40.0) < 0.01
-    assert abs(ticks_to_seconds(second['mediaStart']) - 18.0) < 0.01
-    assert abs(ticks_to_seconds(second['mediaDuration']) - 37.0) < 0.01
+    assert abs(ticks_to_seconds(second['duration']) - 37.0) < 0.01
+    assert abs(ticks_to_seconds(second['mediaStart']) - 20.0) < 0.01
+    assert abs(ticks_to_seconds(second['mediaDuration']) - 40.0) < 0.01

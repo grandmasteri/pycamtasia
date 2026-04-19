@@ -163,6 +163,9 @@ def apply_sync(
     from camtasia.timing import ticks_to_seconds
     tuples = []
     for seg in segments:
-        tl_dur = ticks_to_seconds(seg.video_end_ticks - seg.video_start_ticks)
-        tuples.append((seg.audio_start_seconds, seg.audio_end_seconds, tl_dur))
+        tuples.append((
+            ticks_to_seconds(seg.video_start_ticks),
+            ticks_to_seconds(seg.video_end_ticks),
+            seg.audio_end_seconds - seg.audio_start_seconds,
+        ))
     group.set_internal_segment_speeds(tuples)

@@ -689,7 +689,7 @@ class Track:
         if builder._fill_color:
             clip.fill_color = tuple(c / 255 for c in builder._fill_color)  # type: ignore[assignment]
         if builder._font_color:
-            clip.set_colors(font_color=tuple(c / 255 for c in builder._font_color[:3]))  # type: ignore[arg-type]
+            clip.set_colors(font_color=tuple(c / 255 for c in builder._font_color))  # type: ignore[arg-type]
         if builder._stroke_color:
             clip.stroke_color = tuple(c / 255 for c in builder._stroke_color)  # type: ignore[assignment]
         clip.set_alignment(builder._alignment, 'center')
@@ -1167,6 +1167,10 @@ class Track:
         """
         if transition_seconds >= duration_per_image_seconds:
             raise ValueError(f'transition_seconds ({transition_seconds}) must be less than duration_per_image_seconds ({duration_per_image_seconds})')
+        if transition_seconds < 0:
+            raise ValueError(f'transition_seconds must be non-negative, got {transition_seconds}')
+        if duration_per_image_seconds <= 0:
+            raise ValueError(f'duration_per_image_seconds must be positive, got {duration_per_image_seconds}')
         clips: list[IMFile] = []
         offset = start_seconds
         for src_id in source_ids:
@@ -1217,6 +1221,8 @@ class Track:
                 f'at_seconds ({at_seconds}) is before source_clip start '
                 f'({source_clip.start_seconds}), resulting in negative offset'
             )
+        if at_seconds >= source_clip.start_seconds + source_clip.duration_seconds:
+            raise ValueError(f'at_seconds ({at_seconds}) is past the end of the clip ({source_clip.start_seconds + source_clip.duration_seconds})')
         freeze_start_ticks: int = seconds_to_ticks(at_seconds)
         freeze_duration_ticks: int = seconds_to_ticks(freeze_duration_seconds)
         timeline_offset_ticks: int = freeze_start_ticks - source_clip.start
