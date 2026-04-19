@@ -420,7 +420,8 @@ class TestPlanSyncSkipsZeroDuration:
         ]
         segments = plan_sync(markers, words)
         # The first segment (start→middle) has zero audio duration and should be skipped
-        assert all(s.scalar > 0 for s in segments)
+        assert len(segments) == 1
+        assert segments[0].scalar == Fraction(757, 4410)
 
 
 class TestAdjustScalar:

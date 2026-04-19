@@ -1,9 +1,13 @@
 """Tests for Track convenience methods."""
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
+from camtasia.project import Project, load_project
+from camtasia.timeline.clips import clip_from_dict
 from camtasia.timeline.track import Track
 from camtasia.timeline.timeline import Timeline
 from camtasia.timing import seconds_to_ticks
@@ -114,8 +118,6 @@ def test_total_clip_count():
 
 
 def test_has_screen_recording_true():
-    from camtasia.project import Project
-    from unittest.mock import MagicMock
     group_media = {
         'id': 1, '_type': 'Group', 'start': 0, 'duration': 100,
         'tracks': [{'trackIndex': 0, 'medias': [{'id': 2, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100, 'video': {'_type': 'ScreenVMFile'}}]}],
@@ -128,8 +130,6 @@ def test_has_screen_recording_true():
 
 
 def test_has_screen_recording_false():
-    from camtasia.project import Project
-    from unittest.mock import MagicMock
     plain_media = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
     proj = MagicMock(spec=Project)
     proj._data = _make_project_data([[plain_media]])
@@ -373,8 +373,6 @@ def test_filter_clips():
 # ---------------------------------------------------------------------------
 
 def test_all_clips():
-    from camtasia.project import Project
-    from unittest.mock import MagicMock
 
     proj = MagicMock(spec=Project)
     proj._data = _make_project_data([
@@ -512,7 +510,6 @@ def test_track_describe_with_overlaps():
         {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 200},
         {'id': 2, '_type': 'AMFile', 'start': 100, 'duration': 200},
     ], 'transitions': []}
-    from camtasia.timeline.track import Track
     t = Track({'ident': 'Overlap'}, data)
     actual = t.describe()
     assert 'Overlaps: 1' in actual
@@ -556,8 +553,6 @@ def test_clear_all():
 # ---------------------------------------------------------------------------
 
 def test_to_dict():
-    from camtasia.project import load_project
-    from pathlib import Path
     fixture = Path(__file__).parent / 'fixtures' / 'test_project_c.tscproj'
     proj = load_project(fixture)
     d = proj.to_dict()
@@ -735,8 +730,6 @@ def test_track_transition_count():
 # ---------------------------------------------------------------------------
 
 def test_find_clips_by_type():
-    from camtasia.project import Project
-    from unittest.mock import MagicMock
 
     vm = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
     am = {'id': 2, '_type': 'AMFile', 'start': 0, 'duration': 200}
@@ -777,7 +770,6 @@ def test_track_rename():
 # ---------------------------------------------------------------------------
 
 def test_track_set_opacity():
-    from camtasia.timeline.clips import clip_from_dict
     medias = [
         {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 100},
         {'_type': 'VMFile', 'id': 2, 'start': 100, 'duration': 100},
@@ -890,7 +882,6 @@ def test_split_at_time():
 
 def test_strip_audio():
     """strip_audio removes all AMFile clips from all tracks."""
-    from camtasia.project import Project
     tl_data = {
         'sceneTrack': {'scenes': [{'csml': {'tracks': [
             {'trackIndex': 0, 'medias': [
@@ -915,8 +906,6 @@ def test_strip_audio():
 
 def test_split_at_time_at_boundary():
     """split_at_time at exact clip start should not crash."""
-    from camtasia.timeline.track import Track
-    from camtasia.timing import seconds_to_ticks
     data = {'trackIndex': 0, 'medias': [
         {'id': 1, '_type': 'AMFile', 'start': 0, 'duration': seconds_to_ticks(5.0)},
     ], 'transitions': []}
@@ -1306,7 +1295,6 @@ def test_normalize_all_tracks():
 
 
 def test_normalize_timing_empty_track():
-    from camtasia.timeline.track import Track
     data: dict[str, Any] = {'trackIndex': 0, 'medias': [], 'transitions': []}
     track = Track({'ident': 'empty'}, data)
     track.normalize_timing()  # should not raise
@@ -1345,7 +1333,6 @@ def test_align_clips_to_start():
 # ---------------------------------------------------------------------------
 
 def test_total_media_duration_seconds():
-    from camtasia.timing import seconds_to_ticks
     one_sec: int = seconds_to_ticks(1.0)
     two_sec: int = seconds_to_ticks(2.0)
     medias: list[dict[str, Any]] = [
@@ -1398,7 +1385,6 @@ def test_distribute_evenly_with_gap():
 # ---------------------------------------------------------------------------
 
 def test_total_keyframe_count():
-    from camtasia.project import Project
     medias: list[dict[str, Any]] = [
         {
             'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,

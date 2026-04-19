@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import struct
 import subprocess
 import sys
 import warnings as w
+import zlib
 from fractions import Fraction
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -32,6 +34,7 @@ from camtasia.timeline import Timeline
 from camtasia.timeline.clips import clip_from_dict
 from camtasia.timeline.clips.group import Group
 from camtasia.timeline.track import Track
+from camtasia.timeline.clips import BaseClip
 from camtasia.timing import seconds_to_ticks
 from camtasia.validation import ValidationIssue, _check_group_required_fields, _check_timing_consistency
 
@@ -110,8 +113,7 @@ class TestProjectProperties:
         project = Project(_create_cmproj(tmp_path, data))
         assert project.edit_rate == 705_600_000
 
-    def test_media_bin_returns_media_bin(self, tmp_path: Path):
-        project = Project(_create_cmproj(tmp_path))
+    def test_media_bin_returns_media_bin(self, project):
         assert isinstance(project.media_bin, MediaBin)
         assert list(project.media_bin) == []
 
@@ -202,9 +204,7 @@ class TestNewProject:
 
 
 class TestProjectRepr:
-    def test_project_repr(self, tmp_path: Path):
-        proj_dir = _create_cmproj(tmp_path)
-        project = Project(proj_dir)
+    def test_project_repr(self, project):
         r = repr(project)
         assert r.startswith("<Project ")
         assert "tracks=" in r
@@ -406,7 +406,7 @@ class TestWalkClipsUnified:
         }]
         clips = list(_walk_clips(tracks))
         types = {c.get('_type') for c in clips}
-        assert types >= {'UnifiedMedia', 'ScreenVMFile', 'AMFile'}
+        assert types == {'UnifiedMedia', 'ScreenVMFile', 'AMFile'}
 
     def test_replace_media_source_in_unified(self):
         data = {
@@ -965,15 +965,13 @@ class TestRemapSrcRecursive:
 
 
 class TestHasScreenRecordingDirect:
-    def test_screen_vmfile_clip(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        track = proj.timeline.add_track('Screen')
+    def test_screen_vmfile_clip(self, project):
+        track = project.timeline.add_track('Screen')
         track._data.setdefault('medias', []).append({
             'id': 99, '_type': 'ScreenVMFile', 'src': 0, 'start': 0, 'duration': 100,
             'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
         })
-        assert proj.has_screen_recording is True
+        assert project.has_screen_recording is True
 
 
 
@@ -1010,43 +1008,37 @@ class TestSwapTracksShortAttrs:
 
 
 class TestAllClipsNested:
-    def test_stitched_media_nested(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        track = proj.timeline.tracks[0]
+    def test_stitched_media_nested(self, project):
+        track = project.timeline.tracks[0]
         track._data['medias'] = [{
             'id': 1, '_type': 'StitchedMedia', 'start': 0, 'duration': 100,
             'medias': [{'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 50}],
         }]
-        clips = proj.all_clips
+        clips = project.all_clips
         types = {c.clip_type for _, c in clips}
-        assert types >= {'StitchedMedia', 'VMFile'}
+        assert types == {'StitchedMedia', 'VMFile'}
 
-    def test_unified_media_nested(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        track = proj.timeline.tracks[0]
+    def test_unified_media_nested(self, project):
+        track = project.timeline.tracks[0]
         track._data['medias'] = [{
             'id': 1, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100,
             'video': {'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 100},
             'audio': {'id': 3, '_type': 'AMFile', 'start': 0, 'duration': 100},
         }]
-        clips = proj.all_clips
+        clips = project.all_clips
         types = {c.clip_type for _, c in clips}
-        assert types >= {'UnifiedMedia', 'VMFile', 'AMFile'}
+        assert types == {'UnifiedMedia', 'VMFile', 'AMFile'}
 
 
 
 class TestValidateOverlaps:
-    def test_overlapping_clips_reported(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        track = proj.timeline.tracks[0]
+    def test_overlapping_clips_reported(self, project):
+        track = project.timeline.tracks[0]
         track._data['medias'] = [
             {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 200},
             {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200},
         ]
-        issues = proj.validate()
+        issues = project.validate()
         overlap_issues = [i for i in issues if 'Overlapping' in i.message]
         assert 'clip 1' in overlap_issues[0].message
         assert 'clip 2' in overlap_issues[0].message
@@ -1054,84 +1046,68 @@ class TestValidateOverlaps:
 
 
 class TestValidateAndReport:
-    def test_no_issues(self, tmp_path):
-        data = json.loads(json.dumps(MINIMAL_PROJECT_DATA))
-        data['editRate'] = 705600000
-        proj_dir = _create_cmproj(tmp_path, data)
-        proj = Project(proj_dir)
-        report = proj.validate_and_report()
+    def test_no_issues(self, project):
+        report = project.validate_and_report()
         assert 'No issues found' in report
 
-    def test_with_issues(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        track = proj.timeline.tracks[0]
+    def test_with_issues(self, project):
+        track = project.timeline.tracks[0]
         track._data['medias'] = [
             {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 200},
             {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200},
         ]
-        report = proj.validate_and_report()
+        report = project.validate_and_report()
         assert 'issue(s) found' in report
 
 
 
 class TestSaveSpecialFloats:
-    def test_infinity_replaced(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        proj._data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'] = [{
+    def test_infinity_replaced(self, project):
+        project._data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'] = [{
             'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
             'parameters': {'scale': float('inf'), 'neg': float('-inf'), 'bad': float('nan')},
         }]
-        proj.save()
-        text = (proj_dir / 'project.tscproj').read_text()
+        project.save()
+        text = (project.file_path / 'project.tscproj').read_text()
         assert '-Infinity' not in text
         assert 'NaN' not in text
 
 
 
 class TestImportMediaUnknownExtension:
-    def test_raises_for_unknown_extension(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
+    def test_raises_for_unknown_extension(self, project, tmp_path):
         bad_file = tmp_path / 'file.xyz'
         bad_file.write_bytes(b'\x00')
         with pytest.raises(ValueError, match="Cannot determine media type"):
-            proj.import_media(bad_file)
+            project.import_media(bad_file)
 
 
 
 class TestImportMediaDurationDefaults:
-    def test_audio_duration_from_probe(self, tmp_path, monkeypatch):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
+    def test_audio_duration_from_probe(self, project, tmp_path, monkeypatch):
         wav = tmp_path / 'test.wav'
         wav.write_bytes(b'\x00')
         monkeypatch.setattr(proj_mod, '_probe_media', lambda p: {
             '_backend': 'ffprobe', 'duration_seconds': 2.0, 'sample_rate': 44100,
         })
-        media = proj.import_media(wav)
+        media = project.import_media(wav)
         assert media is not None
 
-    def test_video_duration_from_probe(self, tmp_path, monkeypatch):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
+    def test_video_duration_from_probe(self, project, tmp_path, monkeypatch):
         mp4 = tmp_path / 'test.mp4'
         mp4.write_bytes(b'\x00')
         monkeypatch.setattr(proj_mod, '_probe_media', lambda p: {
             '_backend': 'ffprobe', 'duration_seconds': 3.0, 'frame_rate': 30,
         })
-        media = proj.import_media(mp4)
+        media = project.import_media(mp4)
         assert media is not None
 
 
 
 class TestMediaSummary:
-    def test_media_summary_counts_extensions(self, tmp_path, monkeypatch):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
+    def test_media_summary_counts_extensions(self, project, tmp_path, monkeypatch):
         # Add some media entries directly
-        proj._data['sourceBin'] = [
+        project._data['sourceBin'] = [
             {'id': 1, 'src': './media/a.mov', 'rect': [0,0,1920,1080], 'lastMod': '20200101T000000',
              'sourceTracks': [{'type': 0, 'editRate': 30, 'range': [0, 100], 'trackRect': [0,0,1920,1080],
                                'sampleRate': 0, 'bitDepth': 0, 'numChannels': 0}]},
@@ -1142,68 +1118,58 @@ class TestMediaSummary:
              'sourceTracks': [{'type': 2, 'editRate': 44100, 'range': [0, 44100], 'trackRect': [0,0,0,0],
                                'sampleRate': 44100, 'bitDepth': 16, 'numChannels': 2}]},
         ]
-        summary = proj.media_summary
+        summary = project.media_summary
         assert summary['mov'] == 2
         assert summary['wav'] == 1
 
 
 
 class TestRescaleTimeline:
-    def test_rescale_timeline(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        track = proj.timeline.tracks[0]
+    def test_rescale_timeline(self, project):
+        track = project.timeline.tracks[0]
         track._data['medias'] = [
             {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 1000, 'mediaDuration': 1000, 'scalar': 1},
         ]
-        proj.rescale_timeline(2.0)
+        project.rescale_timeline(2.0)
         assert track._data['medias'][0]['duration'] == 2000
 
 
 
 class TestNormalizeAudio:
-    def test_normalize_unified_media(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        track = proj.timeline.tracks[0]
+    def test_normalize_unified_media(self, project):
+        track = project.timeline.tracks[0]
         track._data['medias'] = [{
             'id': 1, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100,
             'audio': {'_type': 'AMFile', 'attributes': {'gain': 0.5}},
         }]
-        count = proj.normalize_audio(target_gain=0.8)
+        count = project.normalize_audio(target_gain=0.8)
         assert count == 2
 
-    def test_normalize_amfile(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        track = proj.timeline.tracks[0]
+    def test_normalize_amfile(self, project):
+        track = project.timeline.tracks[0]
         track._data['medias'] = [{
             'id': 1, '_type': 'AMFile', 'src': 0, 'start': 0, 'duration': 100,
             'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
             'channelNumber': '0,1',
             'attributes': {'ident': '', 'gain': 0.5, 'mixToMono': False, 'loudnessNormalization': False},
         }]
-        count = proj.normalize_audio(target_gain=0.9)
+        count = project.normalize_audio(target_gain=0.9)
         assert count == 1
 
 
 
 class TestHealthReportGaps:
-    def test_gaps_in_health_report(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        track = proj.timeline.tracks[0]
+    def test_gaps_in_health_report(self, project):
+        track = project.timeline.tracks[0]
         track._data['medias'] = [
             {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
             {'id': 2, '_type': 'VMFile', 'start': 300, 'duration': 100},
         ]
-        report = proj.health_report()
+        report = project.health_report()
         assert '- Gaps:' in report
 
-    def test_transitions_in_health_report(self, tmp_path):
-        proj_dir = _create_cmproj(tmp_path)
-        proj = Project(proj_dir)
-        track = proj.timeline.tracks[0]
+    def test_transitions_in_health_report(self, project):
+        track = project.timeline.tracks[0]
         track._data['medias'] = [
             {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 200},
             {'id': 2, '_type': 'VMFile', 'start': 200, 'duration': 200},
@@ -1214,14 +1180,11 @@ class TestHealthReportGaps:
             'attributes': {'bypass': False, 'reverse': False, 'trivial': False,
                            'useAudioPreRoll': True, 'useVisualPreRoll': True},
         }]
-        report = proj.health_report()
+        report = project.health_report()
         assert '- Transitions:' in report
 
 
 # ── Helpers for video production tests ──────────────────────────────
-
-import struct
-import zlib
 
 FIXTURES = Path(__file__).parent / 'fixtures'
 EMPTY_WAV = FIXTURES / 'empty.wav'
@@ -1348,7 +1311,6 @@ class TestAddImageSequence:
 
 class TestAddWatermarkReturn:
     def test_returns_base_clip(self, project):
-        from camtasia.timeline.clips import BaseClip
         actual_clip = project.add_watermark(TEST_WAV)
         assert isinstance(actual_clip, BaseClip)
 
@@ -1397,7 +1359,6 @@ class TestAddWatermarkMedia:
 
 class TestAddWatermarkStringPath:
     def test_string_path_accepted(self, project):
-        from camtasia.timeline.clips import BaseClip
         actual_clip = project.add_watermark(str(TEST_WAV))
         assert isinstance(actual_clip, BaseClip)
 
@@ -1415,7 +1376,6 @@ class TestAddCountdownReturn:
         assert [c.text for c in actual_result] == ['3', '2', '1']
 
     def test_all_are_base_clips(self, project):
-        from camtasia.timeline.clips import BaseClip
         for clip in project.add_countdown():
             assert isinstance(clip, BaseClip)
 

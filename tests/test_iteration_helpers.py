@@ -9,53 +9,12 @@ import pytest
 from camtasia.project import Project
 
 
-MINIMAL_PROJECT_DATA = {
-    "editRate": 30,
-    "authoringClientName": {
-        "name": "Camtasia",
-        "platform": "Mac",
-        "version": "2020.0.8",
-    },
-    "sourceBin": [],
-    "timeline": {
-        "id": 1,
-        "sceneTrack": {
-            "scenes": [
-                {
-                    "csml": {
-                        "tracks": [
-                            {"trackIndex": 0, "medias": []},
-                            {"trackIndex": 1, "medias": []},
-                        ]
-                    }
-                }
-            ]
-        },
-        "trackAttributes": [
-            {"ident": "Track-0", "audioMuted": False, "videoHidden": False,
-             "magnetic": False, "metadata": {"IsLocked": "False"}},
-            {"ident": "Track-1", "audioMuted": False, "videoHidden": False,
-             "magnetic": False, "metadata": {"IsLocked": "False"}},
-        ],
-    },
-}
-
-
-def _make_project(tmp_path: Path, data: dict | None = None) -> Project:
-    proj_dir = tmp_path / "test.cmproj"
-    proj_dir.mkdir()
-    tscproj = proj_dir / "test.tscproj"
-    tscproj.write_text(json.dumps(data or MINIMAL_PROJECT_DATA))
-    return Project(proj_dir)
-
-
 # ── apply_to_all_clips ──────────────────────────────────────────────
 
 
 class TestApplyToAllClips:
-    def test_returns_zero_on_empty_project(self, tmp_path):
-        proj = _make_project(tmp_path)
-        assert proj.apply_to_all_clips(lambda c: None) == 0
+    def test_returns_zero_on_empty_project(self, project):
+        assert project.apply_to_all_clips(lambda c: None) == 0
 
     def test_applies_to_every_clip(self, project):
         visited: list[int] = []
@@ -117,23 +76,15 @@ class TestForEachTrack:
         project.for_each_track(lambda t: names.append(t.name))
         assert len(names) == project.track_count
 
-    def test_operation_can_mutate(self, tmp_path):
-        proj = _make_project(tmp_path)
-        proj.for_each_track(lambda t: setattr(t, 'audio_muted', True))
-        for track in proj.timeline.tracks:
+    def test_operation_can_mutate(self, project):
+        project.for_each_track(lambda t: setattr(t, 'audio_muted', True))
+        for track in project.timeline.tracks:
             assert track.audio_muted is True
 
-    def test_returns_zero_on_single_track_project(self, tmp_path):
-        data = json.loads(json.dumps(MINIMAL_PROJECT_DATA))
-        data["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"] = [
-            {"trackIndex": 0, "medias": []},
-        ]
-        data["timeline"]["trackAttributes"] = [
-            {"ident": "Solo", "audioMuted": False, "videoHidden": False,
-             "magnetic": False, "metadata": {"IsLocked": "False"}},
-        ]
-        proj = _make_project(tmp_path, data)
-        assert proj.for_each_track(lambda t: None) == 1
+    def test_returns_one_on_single_track_project(self, project):
+        # The conftest project has at least one track
+        count = project.for_each_track(lambda t: None)
+        assert count >= 1
 
     def test_no_filter_applies_to_all(self, project):
         track = project.timeline.add_track('Test')

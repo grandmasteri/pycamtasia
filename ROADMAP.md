@@ -255,3 +255,9 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - `UnifiedMedia` inherits `remove_all_effects()`, `remove_effect_by_name()`, `is_effect_applied()` from BaseClip — these operate on the wrapper's empty effects list. Feature gap: should redirect to children or raise TypeError.
 - `swap_clips()` only swaps `start` times, not positions — clips of different durations will create gaps. This is the documented behavior.
 - `group_clips()` ID counter is not incremented after Group ID assignment — safe because `_next_clip_id()` scans all medias on next call.
+
+## Tooling
+
+### Linting with Ruff
+
+Add [ruff](https://docs.astral.sh/ruff/) as the linter and formatter. Ruff replaces flake8 + black + isort as a single tool. Configure via `ruff.toml` or `pyproject.toml` `[tool.ruff]` section. Selected rules: `E` (pycodestyle errors), `F` (pyflakes), `I` (isort), `UP` (pyupgrade — enforce `X | Y` over `Union[X, Y]`), `W` (pycodestyle warnings). Add to CI workflow.
