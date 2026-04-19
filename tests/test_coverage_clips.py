@@ -52,10 +52,14 @@ def _callout_data(**overrides):
         'parameters': {}, 'effects': [],
         'def': {
             'text': 'Hello', 'kind': 'remix', 'shape': 'text', 'style': 'basic',
-            'font': {'name': 'Arial', 'weight': 400, 'size': 24},
+            'font': {'name': 'Arial', 'weight': 'Regular', 'size': 24.0},
             'width': 200, 'height': 100,
             'textAttributes': {
+                'type': 'textAttributeList',
                 'keyframes': [{
+                    'endTime': 0,
+                    'time': 0,
+                    'duration': 0,
                     'value': [
                         {'name': 'fontName', 'value': 'Arial', 'rangeEnd': 5, 'rangeStart': 0, 'valueType': 'string'},
                         {'name': 'fontWeight', 'value': 400, 'rangeEnd': 5, 'rangeStart': 0, 'valueType': 'int'},

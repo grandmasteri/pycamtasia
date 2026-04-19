@@ -120,7 +120,7 @@ class TestOpacityEmptyKeyframes:
 
 def _group_with_unified_media():
     return {
-        'id': 1, '_type': 'Group', 'src': 0,
+        'id': 1, '_type': 'Group',
         'start': 0, 'duration': seconds_to_ticks(100),
         'mediaStart': 0, 'mediaDuration': seconds_to_ticks(100),
         'scalar': 1, 'metadata': {}, 'parameters': {}, 'effects': [],
@@ -167,7 +167,7 @@ class TestGroupSetInternalSegmentSpeeds:
     def test_no_unified_media_raises(self):
         from camtasia.timeline.clips.group import Group
         data = {
-            'id': 1, '_type': 'Group', 'src': 0,
+            'id': 1, '_type': 'Group',
             'start': 0, 'duration': 100, 'mediaStart': 0,
             'mediaDuration': 100, 'scalar': 1,
             'tracks': [{'medias': [{'id': 10, '_type': 'AMFile'}]}],

@@ -64,7 +64,7 @@ def _callout_data(
         "text": text,
         "height": 250.0,
         "width": 400.0,
-        "font": {"name": "Arial", "weight": "Normal", "size": 96.0},
+        "font": {"name": "Arial", "weight": "Regular", "size": 96.0},
     }
     return data
 

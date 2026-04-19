@@ -14,7 +14,7 @@ def _make_track(*medias):
 
 def _group_clip(clip_id=1, start_s=10.0, dur_s=100.0, source_s=120.0):
     return {
-        'id': clip_id, '_type': 'Group', 'src': 0,
+        'id': clip_id, '_type': 'Group',
         'start': seconds_to_ticks(start_s),
         'duration': seconds_to_ticks(dur_s),
         'mediaStart': 0,
@@ -92,7 +92,7 @@ def test_media_start_accumulates():
 def test_set_internal_segment_speeds_clears_transitions():
     """Internal transitions must be cleared when segment speeds are applied."""
     clip_data = {
-        'id': 1, '_type': 'Group', 'src': 0,
+        'id': 1, '_type': 'Group',
         'start': seconds_to_ticks(0.0),
         'duration': seconds_to_ticks(100.0),
         'mediaStart': 0,

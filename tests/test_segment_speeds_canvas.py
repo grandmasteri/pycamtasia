@@ -7,7 +7,7 @@ from camtasia.timing import seconds_to_ticks
 
 def _group_with_unified_media() -> dict:
     return {
-        'id': 1, '_type': 'Group', 'src': 0,
+        'id': 1, '_type': 'Group',
         'start': 0,
         'duration': seconds_to_ticks(100.0),
         'mediaStart': 0,

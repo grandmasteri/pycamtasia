@@ -12,7 +12,7 @@ from camtasia.timeline.clips.group import Group
 
 def _group_dict(**overrides):
     base = {
-        'id': 1, '_type': 'Group', 'src': 0,
+        'id': 1, '_type': 'Group',
         'start': 0, 'duration': 100, 'mediaStart': 0,
         'mediaDuration': 100, 'scalar': 1,
         'metadata': {}, 'parameters': {}, 'effects': [],

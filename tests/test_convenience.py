@@ -1083,7 +1083,7 @@ def test_track_has_transitions():
     track_yes = Track({'ident': 'T'}, {
         'trackIndex': 0,
         'medias': [],
-        'transitions': [{'start': 0, 'end': 100, 'duration': 50}],
+        'transitions': [{'name': 'Fade', 'duration': 50, 'leftMedia': 1, 'rightMedia': 2, 'attributes': {}}],
     })
     assert track_yes.has_transitions is True
 

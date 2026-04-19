@@ -56,7 +56,7 @@ def test_normalize_audio_speed(project):
 def _make_group_data(dur_s=60.0, source_s=60.0):
     """Build a minimal Group dict with a UnifiedMedia on its internal track."""
     return {
-        'id': 1, '_type': 'Group', 'src': 0,
+        'id': 1, '_type': 'Group',
         'start': 0,
         'duration': seconds_to_ticks(dur_s),
         'mediaStart': 0,

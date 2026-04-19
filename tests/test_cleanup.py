@@ -61,7 +61,7 @@ class TestRemoveOrphanedMedia:
         # Add a Group clip whose internal tracks reference src 10 and 20
         tracks = project._data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
         tracks[0]['medias'].append({
-            '_type': 'Group', 'id': 1, 'src': 10,
+            '_type': 'Group', 'id': 1,
             'start': 0, 'duration': seconds_to_ticks(5.0),
             'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
             'scalar': 1, 'metadata': {}, 'parameters': {},
@@ -69,6 +69,13 @@ class TestRemoveOrphanedMedia:
             'tracks': [
                 {'medias': [{
                     '_type': 'VMFile', 'id': 2, 'src': 20,
+                    'start': 0, 'duration': seconds_to_ticks(5.0),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+                    'scalar': 1, 'metadata': {}, 'parameters': {},
+                    'effects': [], 'attributes': {}, 'animationTracks': {},
+                }]},
+                {'medias': [{
+                    '_type': 'AMFile', 'id': 3, 'src': 10,
                     'start': 0, 'duration': seconds_to_ticks(5.0),
                     'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
                     'scalar': 1, 'metadata': {}, 'parameters': {},
