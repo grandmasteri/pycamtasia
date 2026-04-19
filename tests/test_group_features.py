@@ -3,9 +3,12 @@ has_audio, has_video, internal_duration_seconds, find_internal_clips_by_type.
 """
 from __future__ import annotations
 
+import copy
+from fractions import Fraction
+
 import pytest
 
-from camtasia.timeline.clips import BaseClip, Group, GroupTrack
+from camtasia.timeline.clips import AMFile, BaseClip, Group, GroupTrack, IMFile
 from camtasia.timing import seconds_to_ticks
 from camtasia.types import ClipType
 
@@ -272,11 +275,6 @@ class TestGroupEdgeCases:
 # ==================================================================
 # Group basic properties (from test_clips.py)
 # ==================================================================
-
-import copy
-from fractions import Fraction
-
-from camtasia.timeline.clips import AMFile, IMFile
 
 
 def _base_clip_dict(**overrides) -> dict:

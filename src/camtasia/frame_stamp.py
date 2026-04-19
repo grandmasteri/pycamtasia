@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Tuple
 
 
 @dataclass
@@ -18,7 +17,7 @@ class FrameStamp:
     frame_rate: int
 
     @property
-    def frame_time(self) -> Tuple[timedelta, int]:
+    def frame_time(self) -> tuple[timedelta, int]:
         """A tuple of seconds-resolution-time and sub-second frames.
 
         This matches the typical Camtasia UI time reporting where time is only reported at second resolution, and

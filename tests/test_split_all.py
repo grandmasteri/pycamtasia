@@ -1,8 +1,6 @@
 """Tests for Track.split_all_clips_at()."""
 from __future__ import annotations
 
-import pytest
-
 from camtasia.timeline.track import Track
 from camtasia.timing import seconds_to_ticks
 

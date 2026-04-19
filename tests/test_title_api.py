@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from camtasia.timing import EDIT_RATE
 from camtasia.timeline.track import Track
 
 

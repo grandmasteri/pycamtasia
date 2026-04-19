@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from camtasia.media_bin import Media, MediaBin, MediaType
+from camtasia.media_bin import MediaBin, MediaType
 from camtasia.operations.speed import rescale_project, set_audio_speed
 from camtasia.timeline.clips import (
     AMFile,
@@ -16,12 +16,9 @@ from camtasia.timeline.clips import (
     IMFile,
     ScreenVMFile,
     StitchedMedia,
-    VMFile,
     clip_from_dict,
 )
-from camtasia.timeline.markers import MarkerList
 from camtasia.timeline.timeline import Timeline
-from camtasia.timeline.transitions import Transition
 from camtasia.timing import EDIT_RATE
 
 # ---------------------------------------------------------------------------
@@ -189,7 +186,7 @@ class TestTransitions:
         assert [t.name for t in actual_transitions] == ['FadeThroughBlack']
 
     def test_track_1_transition_duration(self, test_project_a_data):
-        actual_transition = list(_timeline(test_project_a_data).tracks[1].transitions)[0]
+        actual_transition = next(iter(_timeline(test_project_a_data).tracks[1].transitions))
         assert actual_transition.duration_seconds == pytest.approx(1.0)
 
     def test_track_2_transition_names(self, test_project_a_data):
@@ -203,7 +200,7 @@ class TestTransitions:
         assert actual_durations == pytest.approx(expected_durations)
 
     def test_track_2_first_transition_media_ids(self, test_project_a_data):
-        actual_transition = list(_timeline(test_project_a_data).tracks[2].transitions)[0]
+        actual_transition = next(iter(_timeline(test_project_a_data).tracks[2].transitions))
         assert actual_transition.left_media_id == 32
         assert actual_transition.right_media_id == 33
 
@@ -225,7 +222,7 @@ class TestMarkers:
         ]
 
     def test_first_marker_time(self, test_project_a_data):
-        actual_first = list(_timeline(test_project_a_data).markers)[0]
+        actual_first = next(iter(_timeline(test_project_a_data).markers))
         actual_seconds = actual_first.time / EDIT_RATE
         # ~2:44.83 = 164.83s
         assert actual_seconds == pytest.approx(164.83, abs=0.01)

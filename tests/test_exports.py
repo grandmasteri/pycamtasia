@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import camtasia
 
-
 CLIP_TYPES = [
     "UnifiedMedia",
     "GroupTrack",

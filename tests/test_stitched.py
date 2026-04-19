@@ -4,8 +4,7 @@ from __future__ import annotations
 import pytest
 
 from camtasia.timeline.clips import AMFile, BaseClip, StitchedMedia, clip_from_dict
-from camtasia.timing import EDIT_RATE, seconds_to_ticks
-
+from camtasia.timing import seconds_to_ticks
 
 # ------------------------------------------------------------------
 # Helpers

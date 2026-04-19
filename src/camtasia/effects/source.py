@@ -101,7 +101,7 @@ class SourceEffect(Effect):
             x = float(self.get_parameter('MidPointX'))
             y = float(self.get_parameter('MidPointY'))
             return (x, y)
-        elif 'MidPoint' in params:
+        if 'MidPoint' in params:
             return float(self.get_parameter('MidPoint'))
         return (0.5, 0.5)
 
@@ -154,7 +154,7 @@ class SourceEffect(Effect):
         Alpha is set to 1.0 for all colours.
 
         Args:
-            colors: ``(r, g, b)`` tuples with values 0–255.
+            colors: ``(r, g, b)`` tuples with values 0-255.
         """
         if len(colors) not in (2, 4):
             raise ValueError('Expected 2 or 4 colors')

@@ -1,5 +1,6 @@
 """Behavior effect preset templates from real Camtasia projects."""
 from __future__ import annotations
+
 import copy
 from typing import Any
 
@@ -226,14 +227,14 @@ PRESETS = {k: copy.deepcopy(v) for k, v in PRESETS.items()}  # Break shared refe
 
 def get_behavior_preset(preset_name: str, duration_ticks: int) -> dict:
     """Get a complete behavior effect dict for a preset.
-    
+
     Args:
         preset_name: Preset name (e.g. 'reveal', 'sliding').
         duration_ticks: Clip duration in ticks.
-    
+
     Returns:
         Complete GenericBehaviorEffect dict ready to append to effects.
-    
+
     Raises:
         ValueError: Unknown preset name.
     """

@@ -31,7 +31,7 @@ def _make_mediainfo_result(tracks):
 
 class TestProbeWithPymediainfo:
 
-    @pytest.mark.parametrize("width,height", [(1920, 1080), (3840, 2160), (640, 480)])
+    @pytest.mark.parametrize(('width', 'height'), [(1920, 1080), (3840, 2160), (640, 480)])
     def test_probe_image_dimensions_with_pymediainfo(self, width, height):
         tracks = [
             _make_track('General'),
@@ -47,7 +47,7 @@ class TestProbeWithPymediainfo:
         assert (actual_metadata['width'], actual_metadata['height']) == expected_dimensions
         assert actual_metadata['_backend'] == 'pymediainfo'
 
-    @pytest.mark.parametrize("duration_ms,expected_seconds", [
+    @pytest.mark.parametrize(('duration_ms', 'expected_seconds'), [
         (5000, 5.0), (12345, 12.345), (500, 0.5),
     ])
     def test_probe_audio_duration_with_pymediainfo(self, duration_ms, expected_seconds):
@@ -84,7 +84,7 @@ class TestProbeWithPymediainfo:
 
 class TestProbeFallbackToFfprobe:
 
-    @pytest.mark.parametrize("width,height", [(1920, 1080), (640, 480)])
+    @pytest.mark.parametrize(('width', 'height'), [(1920, 1080), (640, 480)])
     def test_probe_image_dimensions_fallback_to_ffprobe(self, width, height):
         stream_out = MagicMock(stdout=f'{width},{height}\n', returncode=0)
         dur_out = MagicMock(stdout='', returncode=1)
@@ -97,7 +97,7 @@ class TestProbeFallbackToFfprobe:
         assert (actual_metadata['width'], actual_metadata['height']) == expected_dimensions
         assert actual_metadata['_backend'] == 'ffprobe'
 
-    @pytest.mark.parametrize("duration_str,expected_seconds", [
+    @pytest.mark.parametrize(('duration_str', 'expected_seconds'), [
         ('5.000000', 5.0), ('12.345000', 12.345),
     ])
     def test_probe_audio_duration_fallback_to_ffprobe(self, duration_str, expected_seconds):

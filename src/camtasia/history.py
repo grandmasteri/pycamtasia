@@ -18,12 +18,15 @@ Usage::
 from __future__ import annotations
 
 import copy
+from dataclasses import dataclass
 import functools
 import json
-from dataclasses import dataclass
-from typing import Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import jsonpatch
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 T = TypeVar("T")
 

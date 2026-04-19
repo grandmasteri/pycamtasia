@@ -28,7 +28,7 @@ class TestAddFadeToWhite:
 
 
 class TestAddSlide:
-    @pytest.mark.parametrize("direction,expected_name", [
+    @pytest.mark.parametrize(("direction", "expected_name"), [
         ("left", "SlideLeft"),
         ("right", "SlideRight"),
         ("up", "SlideUp"),
@@ -58,7 +58,7 @@ class TestAddWipe:
 
 
 class TestAllTransitionsReturnTransitionType:
-    @pytest.mark.parametrize("method, args", [
+    @pytest.mark.parametrize(("method", "args"), [
         ("add_dissolve", (1, 2)),
         ("add_fade_to_white", (1, 2)),
         ("add_slide", (1, 2)),

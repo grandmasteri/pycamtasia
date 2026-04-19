@@ -1,5 +1,5 @@
-from __future__ import annotations
 """Tests for camtasia.annotations.shapes module — rectangle function."""
+from __future__ import annotations
 
 import pytest
 

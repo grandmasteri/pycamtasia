@@ -5,7 +5,6 @@ import pytest
 from camtasia.media_bin.media_bin import Media
 from camtasia.timeline.clips.group import Group
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

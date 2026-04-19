@@ -1,12 +1,14 @@
 """Batch operations — apply the same transformation to multiple clips at once."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
     from camtasia.timeline.clips.base import BaseClip
-    from camtasia.timeline.track import Track
     from camtasia.timeline.timeline import Timeline
+    from camtasia.timeline.track import Track
 
 
 def apply_to_clips(

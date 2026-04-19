@@ -5,9 +5,9 @@ from typing import Any
 import pytest
 
 from camtasia.project import Project
-from camtasia.timeline.transitions import EDIT_RATE, Transition, TransitionList
 from camtasia.timeline.timeline import Timeline
 from camtasia.timeline.track import Track
+from camtasia.timeline.transitions import EDIT_RATE, Transition, TransitionList
 
 
 def _make_track_data(*transitions: dict) -> dict:

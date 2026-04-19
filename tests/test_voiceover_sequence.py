@@ -1,8 +1,9 @@
 """Tests for Project.add_voiceover_sequence()."""
 from __future__ import annotations
-import pytest
 
 from pathlib import Path
+
+import pytest
 
 from camtasia.timeline.clips import AMFile
 

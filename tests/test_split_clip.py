@@ -1,10 +1,8 @@
 """Tests for Track.split_clip()."""
 from __future__ import annotations
 
-import pytest
-
 from camtasia.timeline.track import Track
-from camtasia.timing import seconds_to_ticks, EDIT_RATE
+from camtasia.timing import seconds_to_ticks
 
 
 def _make_track(*medias):
@@ -118,13 +116,13 @@ class TestSplitClip:
 
     def test_split_durations_add_up(self):
         orig_dur = seconds_to_ticks(10.0)
-        track, data = _make_track(_simple_clip())
+        track, _data = _make_track(_simple_clip())
         left, right = track.split_clip(1, 15.0)
         assert left.duration + right.duration == orig_dur
 
     def test_split_right_media_start(self):
         track, _ = _make_track(_simple_clip())
-        left, right = track.split_clip(1, 15.0)
+        _left, right = track.split_clip(1, 15.0)
         expected_offset = seconds_to_ticks(15.0) - seconds_to_ticks(10.0)
         assert right.media_start == expected_offset
 
@@ -133,7 +131,7 @@ class TestSplitClip:
         clip = _simple_clip(clip_id=1, start_s=10.0, dur_s=10.0)
         clip['mediaStart'] = seconds_to_ticks(5.0)  # non-zero original offset
         track, _ = _make_track(clip)
-        left, right = track.split_clip(1, 15.0)
+        _left, right = track.split_clip(1, 15.0)
         split_offset = seconds_to_ticks(15.0) - seconds_to_ticks(10.0)
         assert right.media_start == seconds_to_ticks(5.0) + split_offset
 
@@ -174,8 +172,8 @@ class TestSplitClipRemapsAssetProperties:
         clip['assetProperties'] = {
             'objects': [{'id': 1, 'name': 'test'}],
         }
-        track, data = _make_track(clip)
-        left, right = track.split_clip(1, 15.0)
+        track, _data = _make_track(clip)
+        _left, right = track.split_clip(1, 15.0)
         # The right half's assetProperties should have remapped IDs
         right_asset_ids = [o['id'] for o in right._data.get('assetProperties', {}).get('objects', [])]
         assert all(rid != 1 for rid in right_asset_ids)

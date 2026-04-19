@@ -1,13 +1,7 @@
 """Tests for Project.apply_to_all_clips() and Project.for_each_track()."""
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 import pytest
-
-from camtasia.project import Project
-
 
 # ── apply_to_all_clips ──────────────────────────────────────────────
 

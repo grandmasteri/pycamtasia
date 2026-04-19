@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-import json
 from fractions import Fraction
+import json
 from pathlib import Path
 
 import pytest
 
-from camtasia.timeline.clips import clip_from_dict, UnifiedMedia
+from camtasia.timeline.clips import UnifiedMedia, clip_from_dict
 from camtasia.timeline.clips.audio import AMFile
 from camtasia.timeline.clips.base import BaseClip
 from camtasia.timeline.clips.screen_recording import ScreenVMFile
 from camtasia.timing import seconds_to_ticks
-
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

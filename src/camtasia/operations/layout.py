@@ -1,15 +1,17 @@
 from __future__ import annotations
-from camtasia.timing import seconds_to_ticks
+
+from typing import TYPE_CHECKING
 
 from camtasia.timeline.track import _propagate_start_to_unified
-from typing import TYPE_CHECKING
+from camtasia.timing import seconds_to_ticks
+
 if TYPE_CHECKING:
     from camtasia.timeline.track import Track
 
 
 def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
     """Remove gaps between clips, packing them end-to-end.
-    
+
     Sorts clips by start time, then repositions each to start
     immediately after the previous clip (plus optional gap).
     """
@@ -30,7 +32,7 @@ def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
 
 def ripple_insert(track: Track, position_seconds: float, duration_seconds: float) -> None:
     """Shift all clips at or after position forward by duration.
-    
+
     Creates a gap at the insertion point.
     """
     pos_ticks = seconds_to_ticks(position_seconds)

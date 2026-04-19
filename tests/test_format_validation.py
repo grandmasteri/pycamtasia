@@ -2,20 +2,18 @@
 from __future__ import annotations
 
 import json
-import subprocess
 from pathlib import Path
+import subprocess
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from camtasia.media_bin.media_bin import (
     _CODEC_TO_EXTENSIONS,
+    MediaBin,
     _detect_codec,
     _validate_media_format,
-    MediaBin,
-    MediaType,
 )
-
 
 # ---------------------------------------------------------------------------
 # _detect_codec
@@ -71,9 +69,8 @@ class TestValidateMediaFormat:
     def test_warns_on_mismatch(self):
         with patch(
             "camtasia.media_bin.media_bin._detect_codec", return_value="mp3"
-        ):
-            with pytest.warns(UserWarning, match="Format mismatch"):
-                _validate_media_format(Path("audio.wav"))
+        ), pytest.warns(UserWarning, match="Format mismatch"):
+            _validate_media_format(Path("audio.wav"))
 
     def test_skips_validation_when_ffprobe_unavailable(self):
         with patch(
@@ -86,12 +83,12 @@ class TestValidateMediaFormat:
         with (
             patch("camtasia.media_bin.media_bin._detect_codec", return_value="mp3"),
             patch("camtasia.media_bin.media_bin.subprocess.run") as mock_run,
-            pytest.warns(UserWarning, match="Format mismatch"),
         ):
             mock_run.return_value = MagicMock(returncode=0)
-            result = _validate_media_format(
-                Path("audio.wav"), auto_convert=True,
-            )
+            with pytest.warns(UserWarning, match="Format mismatch"):
+                result = _validate_media_format(
+                    Path("audio.wav"), auto_convert=True,
+                )
             assert result == Path("audio.converted.wav")
             mock_run.assert_called_once()
             args = mock_run.call_args[0][0]
@@ -104,11 +101,11 @@ class TestValidateMediaFormat:
                 "camtasia.media_bin.media_bin.subprocess.run",
                 side_effect=FileNotFoundError,
             ),
-            pytest.warns(UserWarning, match="Format mismatch"),
         ):
-            result = _validate_media_format(
-                Path("audio.wav"), auto_convert=True,
-            )
+            with pytest.warns(UserWarning, match="Format mismatch"):
+                result = _validate_media_format(
+                    Path("audio.wav"), auto_convert=True,
+                )
             assert result == Path("audio.wav")
 
     def test_unknown_codec_skips_validation(self):
@@ -200,10 +197,9 @@ class TestImportMediaValidateFormat:
             patch(
                 "camtasia.media_bin.media_bin._parse_with_pymediainfo",
                 return_value=None,
-            ),
+            ),pytest.raises(ValueError)
         ):
-            with pytest.raises(ValueError):
-                media_bin.import_media(str(audio), validate_format=True)
+            media_bin.import_media(str(audio), validate_format=True)
 
 
 # ---------------------------------------------------------------------------

@@ -4,7 +4,6 @@ from __future__ import annotations
 from camtasia.timeline.clips import AMFile
 from camtasia.timing import EDIT_RATE
 
-
 # ------------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------------

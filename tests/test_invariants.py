@@ -1,10 +1,11 @@
 """Property-based tests verifying structural invariants after random operation sequences."""
 from __future__ import annotations
 
+import contextlib
 import copy
+from pathlib import Path
 import shutil
 import tempfile
-from pathlib import Path
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -81,12 +82,10 @@ def test_no_stale_transitions_after_operations(operations):
         elif op == 'remove' and clip_ids:
             track.remove_clip(clip_ids.pop(0))
         elif op == 'add_transition' and len(clip_ids) >= 2:
-            try:
+            with contextlib.suppress(Exception):
                 track.transitions.add_fade_through_black(
                     clip_ids[-2], clip_ids[-1], TICK // 2,
                 )
-            except Exception:
-                pass
 
     existing_ids = {m['id'] for m in data.get('medias', [])}
     for trans in data.get('transitions', []):
@@ -569,7 +568,7 @@ def test_distribute_evenly_no_gaps(num_clips):
 def test_align_always_starts_at_zero(start_offsets):
     """align_clips_to_start should always result in first clip at 0."""
     track, data = _make_track()
-    for i, offset in enumerate(start_offsets):
+    for _i, offset in enumerate(start_offsets):
         track.add_clip('AMFile', 1, offset * TICK, TICK)
     track.align_clips_to_start()
     if data['medias']:
@@ -590,14 +589,14 @@ def test_remove_short_clips_preserves_long_clips(threshold_seconds):
     track.add_clip('AMFile', 1, 0, TICK)                    # 1s
     track.add_clip('AMFile', 1, TICK * 2, TICK * 3)         # 3s
     track.add_clip('AMFile', 1, TICK * 6, TICK * 10)        # 10s
-    
+
     original_long_clip_count = sum(
         1 for m in data['medias']
         if m.get('duration', 0) >= threshold_seconds * TICK
     )
-    
+
     track.remove_short_clips(threshold_seconds)
-    
+
     remaining_count = len(data['medias'])
     assert remaining_count == original_long_clip_count
 
@@ -649,10 +648,10 @@ def test_group_clips_preserves_content(num_clips):
     for clip_index in range(num_clips):
         clip = track.add_clip('AMFile', 1, clip_index * TICK, TICK)
         clip_ids.append(clip.id)
-    
+
     # Group all clips
     group = track.group_clips(clip_ids)
-    
+
     # The Group should contain all the clips
     assert group.clip_count == num_clips
     # The track should now have exactly 1 clip (the Group)
@@ -697,7 +696,7 @@ def test_clone_track_preserves_clip_count(num_clips):
     track = proj.timeline.add_track('Source')
     for i in range(num_clips):
         track.add_clip('AMFile', 1, i * TICK, TICK)
-    
+
     cloned = proj.clone_track('Source', 'Cloned')
     assert len(cloned) == num_clips
 
@@ -715,9 +714,9 @@ def test_remove_all_effects_zeroes_count(num_clips):
     for i in range(num_clips):
         clip = track.add_clip('VMFile', 1, i * TICK, TICK)
         clip.add_drop_shadow()
-    
+
     proj.remove_all_effects()
-    
+
     for _, clip in proj.all_clips:
         assert clip._data.get('effects', []) == []
 
@@ -735,9 +734,9 @@ def test_normalize_audio_equalizes_gain(target_gain):
     for i in range(3):
         clip = track.add_audio(1, start_seconds=float(i), duration_seconds=1.0)
         clip.gain = float(i + 1) * 0.5  # different gains
-    
+
     proj.normalize_audio(target_gain)
-    
+
     for _, clip in proj.all_clips:
         if clip.is_audio:
             assert abs(clip.gain - target_gain) < 0.001
@@ -755,9 +754,9 @@ def test_replace_all_media_changes_all(num_clips):
     track = proj.timeline.add_track('Test')
     for i in range(num_clips):
         track.add_clip('VMFile', 42, i * TICK, TICK)
-    
+
     count = proj.replace_all_media(42, 99)
-    
+
     assert count == num_clips
     for _, clip in proj.all_clips:
         assert clip._data.get('src') != 42

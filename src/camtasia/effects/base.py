@@ -1,9 +1,12 @@
 """Base effect class wrapping Camtasia effect dicts."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
-from camtasia.types import _EffectData
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from camtasia.types import _EffectData
 
 
 class Effect:

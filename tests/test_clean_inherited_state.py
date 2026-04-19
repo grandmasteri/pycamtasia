@@ -1,10 +1,7 @@
 """Tests for MarkerList.clear, Project.remove_orphaned_media, and Project.clean_inherited_state."""
 from __future__ import annotations
 
-import pytest
-
 from camtasia.timeline.markers import MarkerList
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -53,7 +50,7 @@ class TestMarkerListClear:
         ml.clear()
         ml.add("New", 500)
         assert len(ml) == 1
-        assert list(ml)[0].name == "New"
+        assert next(iter(ml)).name == "New"
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +92,7 @@ class TestRemoveOrphanedMedia:
         })
         track = project.timeline.tracks[0]
         track.add_clip('IMFile', 42, 0, 705_600_000)
-        count = project.remove_orphaned_media()
+        project.remove_orphaned_media()
         remaining_ids = [e['id'] for e in project._data['sourceBin']]
         assert 42 in remaining_ids
 

@@ -1,8 +1,6 @@
 """Tests for Project.health_report()."""
 from __future__ import annotations
 
-import pytest
-
 
 class TestHealthReportEmpty:
     """health_report on an empty project."""

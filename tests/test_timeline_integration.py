@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import copy
-
 import pytest
 
+from camtasia.timeline.marker import Marker
 from camtasia.timeline.timeline import Timeline
 from camtasia.timeline.track import Track
-from camtasia.timeline.markers import MarkerList
-from camtasia.timeline.marker import Marker
 
 
 def _make_timeline_data(

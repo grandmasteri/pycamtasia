@@ -1,11 +1,11 @@
-from __future__ import annotations
 """Tests for the legacy camtasia/operations.py — add_media_to_track and remove_media."""
+from __future__ import annotations
 
 import importlib.util
 import pathlib
+from unittest.mock import MagicMock
 
 import pytest
-from unittest.mock import MagicMock
 
 # Load the legacy operations.py directly (it coexists with the operations/ package)
 _legacy_path = pathlib.Path(__file__).parent.parent / "src" / "camtasia" / "operations.py"

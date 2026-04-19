@@ -18,5 +18,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e '.[test]'
+      - run: ruff check src/ tests/
       - run: mypy src/camtasia/
       - run: pytest tests/ --cov=camtasia --cov-report=xml --cov-report=term-missing

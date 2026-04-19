@@ -1,7 +1,13 @@
 """Tests for duplicate clip ID and track index consistency validation rules."""
 from __future__ import annotations
 
-from camtasia.validation import _check_duplicate_clip_ids, _check_track_indices, _check_transition_references, _check_transition_completeness, _check_track_attributes_count
+from camtasia.validation import (
+    _check_duplicate_clip_ids,
+    _check_track_attributes_count,
+    _check_track_indices,
+    _check_transition_completeness,
+    _check_transition_references,
+)
 
 
 def _make_data(tracks):

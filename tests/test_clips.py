@@ -1,12 +1,12 @@
 """Tests for camtasia.timeline.clips.base — BaseClip and clip_from_dict factory."""
 from __future__ import annotations
 
-import math
-import warnings
 from fractions import Fraction
+import math
 from pathlib import Path
 from typing import Any
 from unittest.mock import PropertyMock, patch
+import warnings
 
 import pytest
 
@@ -24,11 +24,9 @@ from camtasia.timeline.clips import (
     VMFile,
     clip_from_dict,
 )
-from camtasia.timeline.clips.unified import UnifiedMedia
 from camtasia.timeline.track import Track
 from camtasia.timing import seconds_to_ticks
 from camtasia.types import CalloutShape, ClipType, EffectName
-
 
 # ------------------------------------------------------------------
 # Helpers: realistic clip dicts based on the Camtasia format spec
@@ -82,7 +80,7 @@ def _coverage_clip(extra=None, **kw):
 # ------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "type_str, expected_class",
+    ("type_str", "expected_class"),
     [
         ("AMFile", AMFile),
         ("VMFile", VMFile),
@@ -161,7 +159,7 @@ def test_baseclip_duration_seconds() -> None:
 
 
 @pytest.mark.parametrize(
-    "input_seconds, expected_ticks",
+    ("input_seconds", "expected_ticks"),
     [
         (0.0, 0),
         (1.0, EDIT_RATE),
@@ -177,7 +175,7 @@ def test_set_start_seconds(input_seconds: float, expected_ticks: int) -> None:
 
 
 @pytest.mark.parametrize(
-    "input_seconds, expected_ticks",
+    ("input_seconds", "expected_ticks"),
     [
         (0.0, 0),
         (1.0, EDIT_RATE),
@@ -350,7 +348,7 @@ def test_clip_describe():
 # Clip type-check properties
 # ------------------------------------------------------------------
 
-@pytest.mark.parametrize('type_str, prop, expected', [
+@pytest.mark.parametrize(("type_str", "prop", "expected"), [
     ('AMFile', 'is_audio', True),
     ('VMFile', 'is_video', True),
     ('ScreenVMFile', 'is_video', True),
@@ -456,9 +454,9 @@ def test_clip_opacity_get_set():
 
 def test_clip_opacity_validation():
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 100})
-    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+    with pytest.raises(ValueError, match=r'opacity must be 0\.0-1\.0'):
         clip.opacity = 1.5
-    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+    with pytest.raises(ValueError, match=r'opacity must be 0\.0-1\.0'):
         clip.opacity = -0.1
 
 
@@ -478,7 +476,7 @@ def test_clip_volume_get_set():
 
 def test_clip_volume_validation():
     clip = clip_from_dict({'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100})
-    with pytest.raises(ValueError, match='volume must be >= 0.0'):
+    with pytest.raises(ValueError, match=r'volume must be >= 0\.0'):
         clip.volume = -0.5
 
 
@@ -540,7 +538,7 @@ def test_set_position_keyframes():
     t = seconds_to_ticks
     media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
     track = _make_track(medias=[media])
-    clip = list(track.clips)[0]
+    clip = next(iter(track.clips))
     result = clip.set_position_keyframes([(0.0, 100, 200), (2.0, 300, 400)])
     assert result is clip
     params = clip._data['parameters']
@@ -561,7 +559,7 @@ def test_set_scale_keyframes():
     t = seconds_to_ticks
     media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
     track = _make_track(medias=[media])
-    clip = list(track.clips)[0]
+    clip = next(iter(track.clips))
     result = clip.set_scale_keyframes([(0.0, 1.0), (3.0, 2.5)])
     assert result is clip
     params = clip._data['parameters']
@@ -582,7 +580,7 @@ def test_set_rotation_keyframes():
     t = seconds_to_ticks
     media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
     track = _make_track(medias=[media])
-    clip = list(track.clips)[0]
+    clip = next(iter(track.clips))
     result = clip.set_rotation_keyframes([(0.0, 0), (2.0, 90), (5.0, 180)])
     assert result is clip
     params = clip._data['parameters']
@@ -602,7 +600,7 @@ def test_set_crop_keyframes():
     t = seconds_to_ticks
     media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
     track = _make_track(medias=[media])
-    clip = list(track.clips)[0]
+    clip = next(iter(track.clips))
     result = clip.set_crop_keyframes([
         (0.0, 0.0, 0.0, 0.0, 0.0),
         (3.0, 0.1, 0.2, 0.3, 0.4),
@@ -685,7 +683,7 @@ def test_animate_fade_out():
 def test_clip_speed_get_set():
     media = {'id': 1, 'start': 0, 'duration': 100}
     t = _make_track([media])
-    clip = list(t.clips)[0]
+    clip = next(iter(t.clips))
     assert clip.speed == 1
     result = clip.set_speed(2.0)
     assert clip.speed == 2.0
@@ -695,7 +693,7 @@ def test_clip_speed_get_set():
 def test_clip_speed_validation():
     media = {'id': 1, 'start': 0, 'duration': 100}
     t = _make_track([media])
-    clip = list(t.clips)[0]
+    clip = next(iter(t.clips))
     with pytest.raises(ValueError):
         clip.set_speed(0)
     with pytest.raises(ValueError):
@@ -727,8 +725,8 @@ def test_clip_effect_names():
 def test_is_visible():
     audio = _make_track([{'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100}])
     video = _make_track([{'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 100}])
-    assert list(audio.clips)[0].is_visible is False
-    assert list(video.clips)[0].is_visible is True
+    assert next(iter(audio.clips)).is_visible is False
+    assert next(iter(video.clips)).is_visible is True
 
 
 def test_visible_clips():
@@ -909,7 +907,7 @@ def test_has_keyframes_true():
         },
     }
     track = _make_track(medias=[media])
-    clip = list(track.clips)[0]
+    clip = next(iter(track.clips))
     assert clip.has_keyframes is True
 
 
@@ -921,7 +919,7 @@ def test_has_keyframes_false():
         },
     }
     track = _make_track(medias=[media])
-    clip = list(track.clips)[0]
+    clip = next(iter(track.clips))
     assert clip.has_keyframes is False
 
 
@@ -945,7 +943,7 @@ def test_keyframe_count():
         },
     }
     track = _make_track(medias=[media])
-    clip = list(track.clips)[0]
+    clip = next(iter(track.clips))
     assert clip.keyframe_count == 3
 
 
@@ -1062,12 +1060,12 @@ def test_clip_ids_sorted():
 def test_clip_is_muted():
     media = {'id': 1, 'start': 0, 'duration': 100, 'attributes': {'gain': 0.0}}
     track = _make_track(medias=[media])
-    muted_clip = list(track.clips)[0]
+    muted_clip = next(iter(track.clips))
     assert muted_clip.is_muted is True
 
     audible_media = {'id': 2, 'start': 200, 'duration': 100, 'attributes': {'gain': 0.75}}
     audible_track = _make_track(medias=[audible_media])
-    audible_clip = list(audible_track.clips)[0]
+    audible_clip = next(iter(audible_track.clips))
     assert audible_clip.is_muted is False
 
 
@@ -1146,7 +1144,7 @@ def test_clear_metadata_removes_all():
         'metadata': {'presetName': 'Intro', 'author': 'Test'},
     }
     clip = BaseClip(clip_data)
-    result = clip.clear_metadata()
+    clip.clear_metadata()
     assert clip.metadata == {}
     assert clip_data['metadata'] == {}
 

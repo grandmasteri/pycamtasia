@@ -1,8 +1,12 @@
 """Tests for Project.search_clips."""
 from __future__ import annotations
 
-from camtasia.project import Project
+from typing import TYPE_CHECKING
+
 from camtasia.types import ClipType
+
+if TYPE_CHECKING:
+    from camtasia.project import Project
 
 
 class TestSearchClips:

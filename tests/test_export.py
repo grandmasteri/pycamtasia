@@ -3,8 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import shutil
-
 import pytest
 
 from camtasia.export.csv_export import export_csv
@@ -83,7 +81,7 @@ def test_report_json_has_tracks(project, tmp_path):
     assert {'id', 'type', 'start_seconds', 'duration_seconds'}.issubset(clip)
 
 
-@pytest.mark.parametrize('seconds, expected', [
+@pytest.mark.parametrize(('seconds', 'expected'), [
     (0.0, '00:00:00,000'),
     (61.5, '00:01:01,500'),
     (3661.123, '01:01:01,123'),
@@ -137,7 +135,7 @@ def test_edl_timecodes(project, tmp_path):
     assert '00:00:03:00' in event_lines[0]  # rec_out
 
 
-@pytest.mark.parametrize('seconds, expected', [
+@pytest.mark.parametrize(('seconds', 'expected'), [
     (0.0, '00:00:00:00'),
     (1.5, '00:00:01:15'),
     (61.0, '00:01:01:00'),
@@ -374,7 +372,7 @@ class TestFormatTimecodeCarry:
 class TestEdlSourceResolution:
     def test_format_timecode_carry(self):
         actual_result = _format_timecode(59.99, 30)
-        assert actual_result.startswith('00:01:00') or actual_result.startswith('00:00:59')
+        assert actual_result.startswith(('00:01:00', '00:00:59'))
 
     def test_export_edl_basic(self, project, tmp_path):
         track = project.timeline.tracks[0]

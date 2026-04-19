@@ -6,15 +6,18 @@ to imported media entries (video, image, audio).
 from __future__ import annotations
 
 import datetime
+from fractions import Fraction
 import json
+from pathlib import Path
 import shutil
 import subprocess
+from typing import TYPE_CHECKING, Any
 import warnings
-from fractions import Fraction
-from pathlib import Path
-from typing import Any, Iterator
 
 from camtasia.types import MediaType
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 # Shader/Lottie assets use INT64_MAX to signal unbounded duration.
 _INT64_MAX = 9223372036854775807

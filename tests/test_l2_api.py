@@ -5,17 +5,9 @@ from typing import Any
 
 import pytest
 
-from camtasia.timing import EDIT_RATE, seconds_to_ticks, ticks_to_seconds
-from camtasia.timeline.clips.base import BaseClip
 from camtasia.timeline.clips.image import IMFile
-from camtasia.timeline.clips.callout import Callout
-from camtasia.timeline.clips import clip_from_dict, AMFile
 from camtasia.timeline.track import Track
-from camtasia.timeline.timeline import Timeline
-from camtasia.effects.base import Effect
-from camtasia.effects.visual import DropShadow, Glow, RoundCorners
-from camtasia.effects.behaviors import GenericBehaviorEffect
-
+from camtasia.timing import EDIT_RATE, seconds_to_ticks
 
 # ---------------------------------------------------------------------------
 # Helpers — minimal data builders
@@ -137,7 +129,7 @@ class TestFade:
         # v10: 2 visual segments — fade-in, fade-out
         visual = clip._data["animationTracks"]["visual"]
         fade_in_ticks = seconds_to_ticks(1.0)
-        fade_out_ticks = seconds_to_ticks(1.0)
+        seconds_to_ticks(1.0)
         assert visual[0]["endTime"] == fade_in_ticks
         assert visual[1]["endTime"] == dur
 
@@ -190,7 +182,7 @@ class TestClearAnimations:
 class TestClipMetadataDefaults:
     """Tests for default metadata fields set by add_clip() and add_image()."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def track(self) -> Track:
         attrs, data = _track_data()
         return Track(attrs, data)

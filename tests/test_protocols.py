@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from camtasia.media_bin.media_bin import Media, MediaBin
 from camtasia.effects.base import Effect
+from camtasia.media_bin.media_bin import Media, MediaBin
+from camtasia.timeline.marker import Marker
 from camtasia.timeline.markers import MarkerList
 from camtasia.timeline.transitions import Transition, TransitionList
-from camtasia.timeline.marker import Marker
 
 
 def _media(id: int) -> Media:

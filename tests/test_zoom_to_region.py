@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import pytest
 from unittest.mock import MagicMock
 
-from camtasia.timing import seconds_to_ticks
+import pytest
 
 
 @pytest.fixture
@@ -36,7 +35,8 @@ class TestAddZoomToRegion:
         pos_kfs = mock_clip.set_position_keyframes.call_args[0][0]
         # All positions should be (0.0, 0.0) when centering on 0.5, 0.5
         for _, x, y in pos_kfs:
-            assert x == 0.0 and y == 0.0
+            assert x == 0.0
+            assert y == 0.0
 
     def test_custom_scale(self, project, mock_clip):
         project.add_zoom_to_region(mock_clip, start_seconds=0.0, duration_seconds=3.0, scale=3.0)
@@ -54,11 +54,15 @@ class TestAddZoomToRegion:
         expected_tx = (0.5 - 0.25) * (2.0 - 1) * w
         expected_ty = (0.5 - 0.75) * (2.0 - 1) * h
         # Zoomed-in keyframes should have the translation
-        assert pos_kfs[2][1] == expected_tx and pos_kfs[2][2] == expected_ty
-        assert pos_kfs[3][1] == expected_tx and pos_kfs[3][2] == expected_ty
+        assert pos_kfs[2][1] == expected_tx
+        assert pos_kfs[2][2] == expected_ty
+        assert pos_kfs[3][1] == expected_tx
+        assert pos_kfs[3][2] == expected_ty
         # Start/end should be zero
-        assert pos_kfs[0][1] == 0.0 and pos_kfs[0][2] == 0.0
-        assert pos_kfs[4][1] == 0.0 and pos_kfs[4][2] == 0.0
+        assert pos_kfs[0][1] == 0.0
+        assert pos_kfs[0][2] == 0.0
+        assert pos_kfs[4][1] == 0.0
+        assert pos_kfs[4][2] == 0.0
 
     def test_uses_project_dimensions(self, project, mock_clip):
         project.width = 3840
@@ -70,7 +74,8 @@ class TestAddZoomToRegion:
         pos_kfs = mock_clip.set_position_keyframes.call_args[0][0]
         expected_tx = 0.5 * 1.0 * 3840  # (0.5 - 0.0) * (2-1) * 3840
         expected_ty = 0.5 * 1.0 * 2160
-        assert pos_kfs[2][1] == expected_tx and pos_kfs[2][2] == expected_ty
+        assert pos_kfs[2][1] == expected_tx
+        assert pos_kfs[2][2] == expected_ty
 
     def test_keyframe_timing(self, project, mock_clip):
         project.add_zoom_to_region(mock_clip, start_seconds=5.0, duration_seconds=10.0, scale=1.5)

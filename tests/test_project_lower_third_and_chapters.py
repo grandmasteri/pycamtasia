@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
+from typing import TYPE_CHECKING
 
 from camtasia.project import Project
 from camtasia.timing import seconds_to_ticks
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 MINIMAL_PROJECT_DATA = {
     "editRate": 30,

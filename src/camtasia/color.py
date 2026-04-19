@@ -14,32 +14,31 @@ def hex_rgb(argument: str) -> tuple[int, ...]:
             int(h[1]*2, 16),
             int(h[2]*2, 16),
         )
-    elif num_digits == 4:
+    if num_digits == 4:
         return (
             int(h[0]*2, 16),
             int(h[1]*2, 16),
             int(h[2]*2, 16),
             int(h[3]*2, 16),
         )
-    elif num_digits == 6:
+    if num_digits == 6:
         return (
             int(h[0:2], 16),
             int(h[2:4], 16),
             int(h[4:6], 16),
         )
-    elif num_digits == 8:
+    if num_digits == 8:
         return (
             int(h[0:2], 16),
             int(h[2:4], 16),
             int(h[4:6], 16),
             int(h[6:8], 16),
         )
-    else:
-        raise ValueError(f"Could not interpret {argument!r} as RGB or RGBA hex color")
+    raise ValueError(f"Could not interpret {argument!r} as RGB or RGBA hex color")
 
 
 class RGBA:
-    """RGBA color value with channel range 0–255."""
+    """RGBA color value with channel range 0-255."""
 
     MINIMUM_CHANNEL: int = 0
     MAXIMUM_CHANNEL: int = 255
@@ -54,7 +53,7 @@ class RGBA:
 
     @classmethod
     def from_floats(cls, red: float, green: float, blue: float, alpha: float) -> RGBA:
-        """Create an RGBA instance from 0.0–1.0 float channel values."""
+        """Create an RGBA instance from 0.0-1.0 float channel values."""
         def _clamp(channel: float) -> int:
             return max(0, min(255, round(channel * 255)))
         return cls(_clamp(red), _clamp(green), _clamp(blue), _clamp(alpha))
@@ -93,29 +92,29 @@ class RGBA:
 
     @property
     def red(self) -> int:
-        """Red channel value (0–255)."""
+        """Red channel value (0-255)."""
         return self._red
 
     @property
     def green(self) -> int:
-        """Green channel value (0–255)."""
+        """Green channel value (0-255)."""
         return self._green
 
     @property
     def blue(self) -> int:
-        """Blue channel value (0–255)."""
+        """Blue channel value (0-255)."""
         return self._blue
 
     @property
     def alpha(self) -> int:
-        """Alpha channel value (0–255)."""
+        """Alpha channel value (0-255)."""
         return self._alpha
 
     def to_hex(self) -> str:
         return f'#{self.red:02x}{self.green:02x}{self.blue:02x}{self.alpha:02x}'
 
     def to_floats(self) -> tuple[float, float, float, float]:
-        """Return the color as 0.0–1.0 float channels ``(r, g, b, a)``."""
+        """Return the color as 0.0-1.0 float channels ``(r, g, b, a)``."""
         return (self.red / 255.0, self.green / 255.0, self.blue / 255.0, self.alpha / 255.0)
 
     def as_tuple(self) -> tuple[int, int, int, int]:

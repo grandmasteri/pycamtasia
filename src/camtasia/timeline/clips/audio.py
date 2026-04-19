@@ -1,8 +1,9 @@
 """Audio media clip (AMFile)."""
 from __future__ import annotations
 
-from typing import Any
 import sys
+from typing import Any
+
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover

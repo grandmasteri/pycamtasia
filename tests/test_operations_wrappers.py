@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from fractions import Fraction
 
-from camtasia.operations.speed import rescale, normalize_audio_speed
+from camtasia.operations.speed import normalize_audio_speed, rescale
 from camtasia.operations.sync import SyncSegment, apply_sync
 from camtasia.timeline.clips.group import Group
-from camtasia.timing import EDIT_RATE, seconds_to_ticks, ticks_to_seconds
+from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 
 
 def test_rescale_doubles_timing(project):

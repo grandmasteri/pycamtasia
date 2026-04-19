@@ -15,13 +15,12 @@ from camtasia.timing import (
     ticks_to_seconds,
 )
 
-
 # ------------------------------------------------------------------
 # seconds_to_ticks / ticks_to_seconds round-trip
 # ------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "seconds, expected_ticks",
+    ("seconds", "expected_ticks"),
     [
         (0.0, 0),
         (1.0, EDIT_RATE),
@@ -36,7 +35,7 @@ def test_seconds_to_ticks(seconds: float, expected_ticks: int) -> None:
 
 
 @pytest.mark.parametrize(
-    "ticks, expected_seconds",
+    ("ticks", "expected_seconds"),
     [
         (0, 0.0),
         (EDIT_RATE, 1.0),
@@ -64,7 +63,7 @@ def test_round_trip(seconds: float) -> None:
 # ------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "ticks, expected_formatted",
+    ("ticks", "expected_formatted"),
     [
         (0, "0:00.00"),
         (seconds_to_ticks(90.5), "1:30.50"),
@@ -84,7 +83,7 @@ def test_format_duration(ticks: int, expected_formatted: str) -> None:
 # ------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "input_value, expected_fraction",
+    ("input_value", "expected_fraction"),
     [
         (1, Fraction(1)),
         (0.5, Fraction(1, 2)),
@@ -117,7 +116,7 @@ def test_scalar_to_string_returns_fraction_string() -> None:
 # ------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "speed, expected_scalar",
+    ("speed", "expected_scalar"),
     [
         (1.0, Fraction(1)),
         (2.0, Fraction(1, 2)),
@@ -131,7 +130,7 @@ def test_speed_to_scalar(speed: float, expected_scalar: Fraction) -> None:
 
 
 @pytest.mark.parametrize(
-    "scalar, expected_speed",
+    ("scalar", "expected_speed"),
     [
         (Fraction(1), 1.0),
         (Fraction(1, 2), 2.0),

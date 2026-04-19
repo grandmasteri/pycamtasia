@@ -54,7 +54,7 @@ class TestClipHash:
 
 class TestCropValidation:
     @pytest.mark.parametrize(
-        'kwargs, expected_fragment',
+        ('kwargs', 'expected_fragment'),
         [
             pytest.param({'top': -0.1}, 'Crop top', id='top-negative'),
             pytest.param({'bottom': -1.0}, 'Crop bottom', id='bottom-negative'),
@@ -89,7 +89,7 @@ class TestSetOpacityValidation:
     )
     def test_set_opacity_out_of_range_raises(self, opacity: float) -> None:
         clip = _make_clip()
-        with pytest.raises(ValueError, match='Opacity must be 0.0-1.0'):
+        with pytest.raises(ValueError, match=r'Opacity must be 0\.0-1\.0'):
             clip.set_opacity(opacity)
 
     def test_set_opacity_valid_boundary(self) -> None:

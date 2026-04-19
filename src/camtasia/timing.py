@@ -80,7 +80,7 @@ def parse_scalar(value: int | float | str | Fraction) -> Fraction:
         try:
             return Fraction(value)
         except ZeroDivisionError:
-            raise ValueError('Invalid scalar: division by zero')
+            raise ValueError('Invalid scalar: division by zero') from None
     return Fraction(value).limit_denominator(10_000)
 
 

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import re
-
-import json
 from dataclasses import dataclass
+import json
+import re
 
 from camtasia.timing import EDIT_RATE
 
@@ -141,7 +140,7 @@ class Transcript:
         """
         words: list[Word] = []
         for seg in result.get("segments", []):
-            for i, w in enumerate(seg.get("words", [])):
+            for _i, w in enumerate(seg.get("words", [])):
                 words.append(Word(
                     text=w["word"],
                     start=w.get("start", 0.0),

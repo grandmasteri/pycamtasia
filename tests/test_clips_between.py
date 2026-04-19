@@ -1,7 +1,10 @@
 """Tests for is_between, intersects, Track.clips_between, and Project.clips_between."""
 from __future__ import annotations
 
-from camtasia.project import Project
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from camtasia.project import Project
 
 EDIT_RATE = 705600000
 

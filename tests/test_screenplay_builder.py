@@ -1,12 +1,11 @@
 """Tests for screenplay builder."""
 from __future__ import annotations
+
 from pathlib import Path
 import warnings
 
-import pytest
-
-from camtasia.builders.screenplay_builder import build_from_screenplay, _find_audio_file
-from camtasia.screenplay import Screenplay, ScreenplaySection, VOBlock, PauseMarker
+from camtasia.builders.screenplay_builder import _find_audio_file, build_from_screenplay
+from camtasia.screenplay import PauseMarker, Screenplay, ScreenplaySection, VOBlock
 
 
 def _make_screenplay(vo_ids, pauses=None):

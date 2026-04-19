@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from camtasia.effects.base import Effect, effect_from_dict
+from camtasia.effects.base import effect_from_dict
 from camtasia.effects.visual import Glow
-from camtasia.timeline.clips import StitchedMedia, Group, clip_from_dict
+from camtasia.timeline.clips import Group, StitchedMedia
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -171,7 +171,7 @@ class TestTimeBoundedEffects:
         assert actual_mod == expected_mod
 
     @pytest.mark.parametrize(
-        "has_start, has_duration, expected",
+        ("has_start", "has_duration", "expected"),
         [
             (True, True, True),
             (True, False, False),

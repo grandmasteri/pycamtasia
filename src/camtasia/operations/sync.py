@@ -7,16 +7,15 @@ adjustments to align video with audio.
 
 from __future__ import annotations
 
-import re
-
 from dataclasses import dataclass
 from fractions import Fraction
+import re
 from typing import TYPE_CHECKING
 
 from camtasia.timing import EDIT_RATE
-from camtasia.audiate.transcript import Word
 
 if TYPE_CHECKING:
+    from camtasia.audiate.transcript import Word
     from camtasia.timeline.clips.group import Group
 
 
@@ -153,7 +152,7 @@ def plan_sync(
 
 
 def apply_sync(
-    group: 'Group',
+    group: Group,
     segments: list[SyncSegment],
 ) -> None:
     """Apply sync segments to a Group's internal track.

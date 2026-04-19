@@ -2,191 +2,191 @@
 
 from __future__ import annotations
 
+# Audiate
+from camtasia.audiate import AudiateProject, Transcript, Word
+
+# Builders
+from camtasia.builders import TimelineBuilder, build_from_screenplay
+
+# Color
+from camtasia.color import RGBA, hex_rgb
+
+# Effects
+from camtasia.effects import (
+    CursorMotionBlur,
+    CursorPhysics,
+    CursorShadow,
+    DropShadow,
+    Effect,
+    Glow,
+    LeftClickScaling,
+    RoundCorners,
+    SourceEffect,
+    effect_from_dict,
+)
+
+# Export utilities
+from camtasia.export import export_csv, export_edl, export_markers_as_srt
+
+# Types / enums
+from camtasia.history import ChangeHistory, ChangeRecord, with_undo
+
+# Operations
+from camtasia.operations import (
+    SyncSegment,
+    clone_project_structure,
+    match_marker_to_transcript,
+    plan_sync,
+    replace_media_source,
+    rescale_project,
+    set_audio_speed,
+)
+
 # Project management
-from camtasia.project import Project, load_project, use_project, new_project
-from camtasia.validation import ValidationIssue, validate_all
+from camtasia.project import Project, load_project, new_project, use_project
+
+# Screenplay parsing
+from camtasia.screenplay import parse_screenplay
 
 # Timeline
 from camtasia.timeline import (
-    Timeline,
-    Track,
-    BaseClip,
     AMFile,
-    VMFile,
-    IMFile,
-    ScreenVMFile,
-    ScreenIMFile,
-    StitchedMedia,
-    PlaceholderMedia,
+    BaseClip,
+    Callout,
     Group,
     GroupTrack,
-    Callout,
-    UnifiedMedia,
-    clip_from_dict,
-    Transition,
-    TransitionList,
+    IMFile,
     Marker,
     MarkerList,
+    PlaceholderMedia,
+    ScreenIMFile,
+    ScreenVMFile,
+    StitchedMedia,
+    Timeline,
+    Track,
+    Transition,
+    TransitionList,
+    UnifiedMedia,
+    VMFile,
+    clip_from_dict,
 )
 
 # Callout builder (lives in timeline.clips.callout)
 from camtasia.timeline.clips.callout import CalloutBuilder
 
-# Effects
-from camtasia.effects import (
-    Effect,
-    effect_from_dict,
-    Glow,
-    RoundCorners,
-    DropShadow,
-    CursorMotionBlur,
-    CursorPhysics,
-    CursorShadow,
-    LeftClickScaling,
-    SourceEffect,
-)
-
-# Audiate
-from camtasia.audiate import AudiateProject, Transcript, Word
-
 # Timing
 from camtasia.timing import (
     EDIT_RATE,
-    seconds_to_ticks,
-    ticks_to_seconds,
     format_duration,
     parse_scalar,
-    scalar_to_string,
-    speed_to_scalar,
     scalar_to_speed,
+    scalar_to_string,
+    seconds_to_ticks,
+    speed_to_scalar,
+    ticks_to_seconds,
 )
-
-# Types / enums
-from camtasia.history import ChangeHistory, ChangeRecord, with_undo
 from camtasia.types import (
-    ClipType,
-    EffectName,
-    TransitionType,
     BehaviorPreset,
     BlendMode,
     CalloutKind,
     CalloutShape,
-    MaskShape,
+    ClipType,
+    EffectName,
     InterpolationType,
-    ValidationLevel,
+    MaskShape,
     MediaType,
+    TransitionType,
+    ValidationLevel,
 )
-
-# Color
-from camtasia.color import RGBA, hex_rgb
-
-# Operations
-from camtasia.operations import (
-    rescale_project,
-    set_audio_speed,
-    SyncSegment,
-    match_marker_to_transcript,
-    plan_sync,
-    clone_project_structure,
-    replace_media_source,
-)
-
-# Builders
-from camtasia.builders import TimelineBuilder, build_from_screenplay
-
-# Screenplay parsing
-from camtasia.screenplay import parse_screenplay
-
-# Export utilities
-from camtasia.export import export_edl, export_csv, export_markers_as_srt
+from camtasia.validation import ValidationIssue, validate_all
 
 __all__ = [
-    # Project
-    "Project",
-    "load_project",
-    "use_project",
-    "new_project",
-    "ValidationIssue",
-    "validate_all",
-    # Timeline
-    "Timeline",
-    "Track",
-    "BaseClip",
-    "AMFile",
-    "VMFile",
-    "IMFile",
-    "ScreenVMFile",
-    "ScreenIMFile",
-    "StitchedMedia",
-    "PlaceholderMedia",
-    "Group",
-    "GroupTrack",
-    "Callout",
-    "UnifiedMedia",
-    "clip_from_dict",
-    "Transition",
-    "TransitionList",
-    "Marker",
-    "MarkerList",
-    # Effects
-    "Effect",
-    "effect_from_dict",
-    "Glow",
-    "RoundCorners",
-    "DropShadow",
-    "CursorMotionBlur",
-    "CursorPhysics",
-    "CursorShadow",
-    "LeftClickScaling",
-    "SourceEffect",
-    # Audiate
-    "AudiateProject",
-    "Transcript",
-    "Word",
     # Timing
     "EDIT_RATE",
-    "seconds_to_ticks",
-    "ticks_to_seconds",
-    "format_duration",
-    "parse_scalar",
-    "scalar_to_string",
-    "speed_to_scalar",
-    "scalar_to_speed",
-    # Types / enums
-    "ClipType",
-    "EffectName",
-    "TransitionType",
+    # Color
+    "RGBA",
+    "AMFile",
+    # Audiate
+    "AudiateProject",
+    "BaseClip",
     "BehaviorPreset",
     "BlendMode",
+    "Callout",
+    "CalloutBuilder",
     "CalloutKind",
     "CalloutShape",
-    "MaskShape",
-    "InterpolationType",
-    "ValidationLevel",
-    "MediaType",
     # History
     "ChangeHistory",
     "ChangeRecord",
-    "with_undo",
-    # Color
-    "RGBA",
-    "hex_rgb",
-    # Operations
-    "rescale_project",
-    "set_audio_speed",
+    # Types / enums
+    "ClipType",
+    "CursorMotionBlur",
+    "CursorPhysics",
+    "CursorShadow",
+    "DropShadow",
+    # Effects
+    "Effect",
+    "EffectName",
+    "Glow",
+    "Group",
+    "GroupTrack",
+    "IMFile",
+    "InterpolationType",
+    "LeftClickScaling",
+    "Marker",
+    "MarkerList",
+    "MaskShape",
+    "MediaType",
+    "PlaceholderMedia",
+    # Project
+    "Project",
+    "RoundCorners",
+    "ScreenIMFile",
+    "ScreenVMFile",
+    "SourceEffect",
+    "StitchedMedia",
     "SyncSegment",
-    "match_marker_to_transcript",
-    "plan_sync",
-    "clone_project_structure",
-    "replace_media_source",
+    # Timeline
+    "Timeline",
     # Builders
     "TimelineBuilder",
-    "CalloutBuilder",
+    "Track",
+    "Transcript",
+    "Transition",
+    "TransitionList",
+    "TransitionType",
+    "UnifiedMedia",
+    "VMFile",
+    "ValidationIssue",
+    "ValidationLevel",
+    "Word",
     "build_from_screenplay",
-    # Screenplay
-    "parse_screenplay",
+    "clip_from_dict",
+    "clone_project_structure",
+    "effect_from_dict",
+    "export_csv",
     # Export
     "export_edl",
-    "export_csv",
     "export_markers_as_srt",
+    "format_duration",
+    "hex_rgb",
+    "load_project",
+    "match_marker_to_transcript",
+    "new_project",
+    "parse_scalar",
+    # Screenplay
+    "parse_screenplay",
+    "plan_sync",
+    "replace_media_source",
+    # Operations
+    "rescale_project",
+    "scalar_to_speed",
+    "scalar_to_string",
+    "seconds_to_ticks",
+    "set_audio_speed",
+    "speed_to_scalar",
+    "ticks_to_seconds",
+    "use_project",
+    "validate_all",
+    "with_undo",
 ]

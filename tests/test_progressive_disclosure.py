@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import struct
+from typing import TYPE_CHECKING
 import zlib
-from pathlib import Path
 
 import pytest
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _make_minimal_png(path: Path) -> None:
@@ -25,7 +28,7 @@ def _png_chunk(chunk_type: bytes, data: bytes) -> bytes:
     return length + chunk_type + data + crc
 
 
-@pytest.fixture()
+@pytest.fixture
 def images(tmp_path: Path) -> list[Path]:
     paths = [tmp_path / f'step_{i}.png' for i in range(3)]
     for p in paths:
@@ -43,7 +46,7 @@ def test_progressive_disclosure_creates_separate_tracks(project, images: list[Pa
     # Each clip lives on a different track
     clip_track_names = set()
     for t in project.timeline.tracks:
-        for c in t:
+        for _c in t:
             clip_track_names.add(t.name)
     assert clip_track_names >= {'Prog-0', 'Prog-1', 'Prog-2'}
 

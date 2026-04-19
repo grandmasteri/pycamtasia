@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
-
 from pathlib import Path
+
+import pytest
 
 from camtasia.timing import seconds_to_ticks
 
@@ -26,7 +26,7 @@ def test_timeline_to_dict_top_level_keys(project):
 
 def test_timeline_to_dict_with_clip(project):
     track = project.timeline.add_track('TestTrack')
-    clip = track.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
+    track.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
 
     actual_result = project.timeline_to_dict()
     track_data = [t for t in actual_result['tracks'] if t['name'] == 'TestTrack']
@@ -46,7 +46,7 @@ def test_timeline_to_dict_clip_effects(project):
     clip._data.setdefault('effects', []).append({'effectName': 'DropShadow'})
 
     actual_result = project.timeline_to_dict()
-    fx_track = [t for t in actual_result['tracks'] if t['name'] == 'FX'][0]
+    fx_track = next(t for t in actual_result['tracks'] if t['name'] == 'FX')
     assert fx_track['clips'][0]['effects'] == ['DropShadow']
 
 
@@ -57,7 +57,7 @@ def test_timeline_to_dict_multiple_tracks(project):
     t2.add_clip('AMFile', 3, seconds_to_ticks(2.0), seconds_to_ticks(1.0))
 
     actual_result = project.timeline_to_dict()
-    b_track = [t for t in actual_result['tracks'] if t['name'] == 'B'][0]
+    b_track = next(t for t in actual_result['tracks'] if t['name'] == 'B')
     assert b_track['clip_count'] == 2
     assert len(b_track['clips']) == 2
 

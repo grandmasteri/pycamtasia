@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import sys
 from pathlib import Path
+import sys
+from typing import ClassVar
 
 import pytest
 
-import camtasia.media_bin.media_bin as mb_mod
 from camtasia.media_bin import Media, MediaBin, MediaType
+import camtasia.media_bin.media_bin as mb_mod
 from camtasia.media_bin.media_bin import _get_media_type, _parse_with_pymediainfo
 
 
@@ -331,7 +332,7 @@ class TestParseWithPymediainfo:
                 return {}
 
         class FakeInfo:
-            tracks = [FakeGeneral(), FakeTrack()]
+            tracks: ClassVar[list] = [FakeGeneral(), FakeTrack()]
 
         class FakeMediaInfo:
             @staticmethod
@@ -362,7 +363,7 @@ class TestParseWithPymediainfo:
     def test_returns_none_when_too_few_tracks(self, monkeypatch):
 
         class FakeInfo:
-            tracks = [type('T', (), {'to_data': lambda self: {}})()]
+            tracks: ClassVar[list] = [type('T', (), {'to_data': lambda self: {}})()]
 
         class FakeMediaInfo:
             @staticmethod

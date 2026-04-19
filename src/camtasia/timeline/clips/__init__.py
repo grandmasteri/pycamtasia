@@ -10,16 +10,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import BaseClip, EDIT_RATE
 from .audio import AMFile
-from .video import VMFile
-from .image import IMFile
-from .screen_recording import ScreenVMFile, ScreenIMFile
-from .stitched import StitchedMedia
-from .placeholder import PlaceholderMedia
-from .group import Group, GroupTrack
+from .base import EDIT_RATE, BaseClip
 from .callout import Callout, CalloutBuilder
+from .group import Group, GroupTrack
+from .image import IMFile
+from .placeholder import PlaceholderMedia
+from .screen_recording import ScreenIMFile, ScreenVMFile
+from .stitched import StitchedMedia
 from .unified import UnifiedMedia
+from .video import VMFile
 
 _TYPE_MAP: dict[str, type[BaseClip]] = {
     'AMFile': AMFile,
@@ -51,18 +51,18 @@ def clip_from_dict(data: dict[str, Any]) -> BaseClip:
 
 __all__ = [
     'EDIT_RATE',
-    'BaseClip',
     'AMFile',
-    'VMFile',
-    'IMFile',
-    'ScreenVMFile',
-    'ScreenIMFile',
-    'StitchedMedia',
-    'PlaceholderMedia',
-    'Group',
-    'GroupTrack',
+    'BaseClip',
     'Callout',
     'CalloutBuilder',
+    'Group',
+    'GroupTrack',
+    'IMFile',
+    'PlaceholderMedia',
+    'ScreenIMFile',
+    'ScreenVMFile',
+    'StitchedMedia',
     'UnifiedMedia',
+    'VMFile',
     'clip_from_dict',
 ]

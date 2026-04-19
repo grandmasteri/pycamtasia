@@ -1,5 +1,4 @@
 """Tests for Project.normalize_audio, mute_track, and solo_track."""
-import pytest
 
 
 class TestNormalizeAudio:

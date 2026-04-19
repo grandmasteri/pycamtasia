@@ -1,13 +1,10 @@
 """Tests for Project.add_title_card and Project.add_subtitle_track."""
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from camtasia.timeline.clips import BaseClip
 from camtasia.timing import ticks_to_seconds
-
 
 # ── add_title_card ──────────────────────────────────────────────────
 

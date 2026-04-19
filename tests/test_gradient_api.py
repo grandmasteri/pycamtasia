@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import pytest
-
-from camtasia.project import Project
+if TYPE_CHECKING:
+    from camtasia.project import Project
 
 
 def _make_shader(tmp_path: Path) -> Path:
@@ -27,7 +27,7 @@ class TestAddFourCornerGradient:
 
     def test_reuses_existing_shader(self, tmp_path: Path, project: Project):
         shader = _make_shader(tmp_path)
-        clip1 = project.add_four_corner_gradient(shader, duration_seconds=5.0)
+        project.add_four_corner_gradient(shader, duration_seconds=5.0)
         source_id = project.find_media_by_suffix('.tscshadervid')[0].id
 
         clip2 = project.add_four_corner_gradient(shader, duration_seconds=10.0)

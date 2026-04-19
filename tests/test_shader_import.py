@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
-from camtasia.project import Project
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from camtasia.project import Project
 
 
 def _create_test_shader(tmp_path: Path) -> Path:

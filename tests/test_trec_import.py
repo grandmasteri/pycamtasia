@@ -1,10 +1,12 @@
 from __future__ import annotations
-import pytest
+
 from pathlib import Path
+
+import pytest
 
 pymediainfo = pytest.importorskip('pymediainfo')
 
-from camtasia.media_bin.trec_probe import probe_trec
+from camtasia.media_bin.trec_probe import probe_trec  # noqa: E402 — must be after importorskip guard
 
 
 class TestProbeTrec:

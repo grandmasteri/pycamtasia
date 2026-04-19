@@ -1,7 +1,8 @@
-from __future__ import annotations
 """Tests for camtasia.extras module — media_markers utility."""
+from __future__ import annotations
 
 from unittest.mock import MagicMock
+
 from camtasia.extras import media_markers
 from camtasia.timeline.marker import Marker
 

@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Tests for SourceEffect flat-scalar color handling and set_shader_colors."""
+from __future__ import annotations
+
 from camtasia.effects.source import SourceEffect
 from camtasia.effects.visual import _color_rgba, _set_color_rgba
 from camtasia.timeline.clips.video import VMFile
@@ -45,7 +46,7 @@ def test_set_shader_colors():
     assert effect.color0 == (1.0, 0.0, 0.0, 1.0)
     assert effect.color1 == (0.0, 1.0, 0.0, 1.0)
     assert effect.color2 == (0.0, 0.0, 1.0, 1.0)
-    r, g, b, a = effect.color3
+    r, _g, _b, a = effect.color3
     assert abs(r - 128 / 255) < 1e-9
     assert a == 1.0
 

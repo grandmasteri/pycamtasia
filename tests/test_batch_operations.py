@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 from camtasia.operations.batch import (
     apply_to_all_tracks,
     apply_to_clips,

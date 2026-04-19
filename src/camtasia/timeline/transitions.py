@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any
 
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 from camtasia.types import TransitionType, _TransitionData
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 class Transition:

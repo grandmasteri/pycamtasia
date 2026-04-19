@@ -83,9 +83,9 @@ def test_caption_opacity_validation():
     assert attrs.opacity == 0.0
     attrs.opacity = 1.0
     assert attrs.opacity == 1.0
-    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+    with pytest.raises(ValueError, match=r'opacity must be 0\.0-1\.0'):
         attrs.opacity = -0.1
-    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+    with pytest.raises(ValueError, match=r'opacity must be 0\.0-1\.0'):
         attrs.opacity = 1.1
 
 

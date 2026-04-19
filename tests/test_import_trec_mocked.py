@@ -1,9 +1,7 @@
 """Tests for import_trec that work without pymediainfo."""
 from __future__ import annotations
-from unittest.mock import patch, MagicMock
-from pathlib import Path
 
-import pytest
+from unittest.mock import MagicMock, patch
 
 
 class TestImportTrecReusesExisting:
@@ -37,10 +35,10 @@ class TestImportTrecFullPath:
             mock_media.id = 999
             return mock_media
 
-        with patch('camtasia.media_bin.trec_probe.probe_trec', return_value=mock_probe_result):
-            with patch.object(project, 'import_media', side_effect=fake_import):
-                result = project.import_trec(str(trec))
-                assert result.id == 999
-                sb = next(s for s in project._data['sourceBin'] if s['id'] == 999)
-                assert sb['rect'] == [0, 0, 1920, 1080]
-                assert sb['loudnessNormalization'] is True
+        with patch('camtasia.media_bin.trec_probe.probe_trec', return_value=mock_probe_result), \
+             patch.object(project, 'import_media', side_effect=fake_import):
+            result = project.import_trec(str(trec))
+            assert result.id == 999
+            sb = next(s for s in project._data['sourceBin'] if s['id'] == 999)
+            assert sb['rect'] == [0, 0, 1920, 1080]
+            assert sb['loudnessNormalization'] is True

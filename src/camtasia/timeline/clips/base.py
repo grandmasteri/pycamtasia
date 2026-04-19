@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import copy
 from fractions import Fraction
-from collections.abc import Callable
-from typing import Any, TYPE_CHECKING
-import warnings
 import sys
+from typing import TYPE_CHECKING, Any
+import warnings
+
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover
@@ -15,11 +15,13 @@ else:  # pragma: no cover
 from camtasia.effects.base import Effect, effect_from_dict
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from camtasia.timeline.track import Track
 
 from camtasia.effects.visual import Glow
 from camtasia.timing import seconds_to_ticks
-from camtasia.types import BlendMode, ClipSummary, ClipType, EffectName, _ClipData
+from camtasia.types import BlendMode, ClipType, EffectName, _ClipData
 
 EDIT_RATE = 705_600_000
 """Ticks per second. Divisible by 30fps, 60fps, 44100Hz, 48000Hz."""
@@ -403,7 +405,7 @@ class BaseClip:
 
     @property
     def opacity(self) -> float:
-        """Clip opacity (0.0–1.0)."""
+        """Clip opacity (0.0-1.0)."""
         params = self._data.get('parameters', {})
         val = params.get('opacity', 1.0)
         return float(val['defaultValue'] if isinstance(val, dict) else val)
@@ -592,7 +594,7 @@ class BaseClip:
         Returns:
             Self for method chaining.
         """
-        from camtasia.timing import seconds_to_ticks, parse_scalar
+        from camtasia.timing import parse_scalar, seconds_to_ticks
         self._data['duration'] = seconds_to_ticks(duration_seconds)
         scalar = parse_scalar(self._data.get('scalar', 1))
         if scalar != 0:
@@ -893,7 +895,7 @@ class BaseClip:
         """Set a static opacity for the entire clip.
 
         Args:
-            opacity: Opacity value (0.0–1.0).
+            opacity: Opacity value (0.0-1.0).
 
         Returns:
             ``self`` for chaining.
@@ -954,7 +956,7 @@ class BaseClip:
         Args:
             offset: Shadow offset distance.
             blur: Blur radius.
-            opacity: Shadow opacity (0.0–1.0).
+            opacity: Shadow opacity (0.0-1.0).
             angle: Shadow angle in radians.
             color: RGB colour tuple.
             enabled: Whether the shadow is enabled (1=on, 0=off).
@@ -1519,8 +1521,9 @@ class BaseClip:
         Args:
             keyframes: List of (time_seconds, rotation_degrees) tuples.
         """
-        from camtasia.timing import seconds_to_ticks
         import math
+
+        from camtasia.timing import seconds_to_ticks
         params = self._data.setdefault('parameters', {})
         kfs = []
         for i, (t, deg) in enumerate(keyframes):
@@ -1664,7 +1667,7 @@ class BaseClip:
     def clear_all_keyframes(self) -> Self:
         """Remove keyframes from ALL parameters, keeping default values."""
         parameters: dict[str, Any] = self._data.get('parameters', {})
-        for parameter_name, parameter_value in parameters.items():
+        for _parameter_name, parameter_value in parameters.items():
             if isinstance(parameter_value, dict) and 'keyframes' in parameter_value:
                 parameter_value.pop('keyframes')
         return self

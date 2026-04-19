@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from camtasia.audiate.project import AudiateProject
 from camtasia.timing import EDIT_RATE
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _make_audiate_data(
@@ -46,7 +49,7 @@ def _make_audiate_data(
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def audiate_file(tmp_path: Path) -> Path:
     data = _make_audiate_data()
     fp = tmp_path / "test.audiate"
@@ -54,7 +57,7 @@ def audiate_file(tmp_path: Path) -> Path:
     return fp
 
 
-@pytest.fixture()
+@pytest.fixture
 def audiate_dir(tmp_path: Path) -> Path:
     data = _make_audiate_data()
     fp = tmp_path / "recording.audiate"
@@ -72,7 +75,7 @@ class TestAudiateProjectInit:
         assert proj.language == "en"
 
     def test_directory_without_audiate_raises(self, tmp_path: Path):
-        with pytest.raises(FileNotFoundError, match="No .audiate file"):
+        with pytest.raises(FileNotFoundError, match=r"No .audiate file"):
             AudiateProject(tmp_path)
 
 

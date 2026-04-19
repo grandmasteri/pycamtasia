@@ -1,14 +1,15 @@
-from __future__ import annotations
 """Tests for camtasia.color module — hex_rgb function and RGBA class."""
+from __future__ import annotations
 
 import pytest
-from camtasia.color import hex_rgb, RGBA
+
+from camtasia.color import RGBA, hex_rgb
 
 
 class TestHexRgbParsing:
     """Tests for hex_rgb parsing of various hex color formats."""
 
-    @pytest.mark.parametrize("hex_input, expected", [
+    @pytest.mark.parametrize(("hex_input", "expected"), [
         ("#abc", (0xaa, 0xbb, 0xcc)),
         ("abc", (0xaa, 0xbb, 0xcc)),
         ("#abcd", (0xaa, 0xbb, 0xcc, 0xdd)),
@@ -57,7 +58,7 @@ class TestRGBAConstruction:
         assert color.blue == 0
         assert color.alpha == 255
 
-    @pytest.mark.parametrize("channel, args", [
+    @pytest.mark.parametrize(("channel", "args"), [
         ("red", (-1, 0, 0, 0)),
         ("red", (256, 0, 0, 0)),
         ("green", (0, -1, 0, 0)),

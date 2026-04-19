@@ -1,10 +1,12 @@
 """Visual effects: RoundCorners, DropShadow."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from camtasia.effects.base import Effect, register_effect
-from camtasia.types import MaskShape
+
+if TYPE_CHECKING:
+    from camtasia.types import MaskShape
 
 
 @register_effect("RoundCorners")

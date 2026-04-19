@@ -6,11 +6,12 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+
 from camtasia.project import Project, load_project
-from camtasia.timeline.clips import clip_from_dict
-from camtasia.timeline.track import Track
 from camtasia.timeline.timeline import Timeline
+from camtasia.timeline.track import Track
 from camtasia.timing import seconds_to_ticks
+
 
 def _make_track(medias=None, name='T'):
     """Build a minimal Track from raw dicts."""
@@ -501,7 +502,8 @@ def test_track_describe():
     desc = track.describe()
     assert 'Track 0: Narration' in desc
     assert 'Clips: 2' in desc
-    assert 'AMFile' in desc and 'VMFile' in desc
+    assert 'AMFile' in desc
+    assert 'VMFile' in desc
     assert 'Duration: 5.0s' in desc
     assert 'Gaps: 1' in desc
 
@@ -598,7 +600,7 @@ def test_remove_clips_by_type():
     removed = t.remove_clips_by_type('AMFile')
     assert removed == 2
     assert len(list(t.clips)) == 1
-    assert list(t.clips)[0].id == 2
+    assert next(iter(t.clips)).id == 2
 
 
 def test_remove_clips_by_type_none_found():
@@ -622,7 +624,7 @@ def test_remove_tracks_by_name():
     removed = tl.remove_tracks_by_name('Audio')
     assert removed == 2
     assert len(list(tl.tracks)) == 1
-    assert list(tl.tracks)[0].name == 'Video'
+    assert next(iter(tl.tracks)).name == 'Video'
 
 
 def test_remove_tracks_by_name_none_found():
@@ -766,9 +768,9 @@ def test_track_set_opacity():
     track.set_opacity(0.5)
     for clip in track.clips:
         assert clip.opacity == 0.5
-    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+    with pytest.raises(ValueError, match=r'opacity must be 0\.0-1\.0'):
         track.set_opacity(1.5)
-    with pytest.raises(ValueError, match='opacity must be 0.0-1.0'):
+    with pytest.raises(ValueError, match=r'opacity must be 0\.0-1\.0'):
         track.set_opacity(-0.1)
 
 
@@ -787,7 +789,7 @@ def test_track_set_volume():
     track.set_volume(0.75)
     for clip in track.clips:
         assert clip.volume == 0.75
-    with pytest.raises(ValueError, match='volume must be >= 0.0'):
+    with pytest.raises(ValueError, match=r'volume must be >= 0\.0'):
         track.set_volume(-1.0)
 
 
@@ -1226,7 +1228,7 @@ def test_clear_all_keyframes():
         },
     }
     track = _make_track(medias=[media])
-    clip = list(track.clips)[0]
+    clip = next(iter(track.clips))
     result = clip.clear_all_keyframes()
     assert result is clip
     assert media['parameters']['scale0'] == {'type': 'double', 'defaultValue': 1.0}
@@ -1275,10 +1277,10 @@ def test_normalize_all_tracks():
     ]
     timeline = _make_timeline(track_specs)
     timeline.normalize_all_tracks()
-    track_a = list(timeline.tracks)[0]
+    track_a = next(iter(timeline.tracks))
     track_b = list(timeline.tracks)[1]
-    assert list(track_a.clips)[0].start == 0
-    assert list(track_b.clips)[0].start == 0
+    assert next(iter(track_a.clips)).start == 0
+    assert next(iter(track_b.clips)).start == 0
     assert list(track_b.clips)[1].start == 1000
 
 
@@ -1562,7 +1564,7 @@ def test_duplicate_track_remaps_ids():
         ('Track1', [{'id': 5, 'start': 0, 'duration': 100},
                      {'id': 8, 'start': 100, 'duration': 200}]),
     ])
-    new_track: Track = tl.duplicate_track(0)
+    tl.duplicate_track(0)
     original_ids: set[int] = {m['id'] for m in tl._data['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias']}
     duplicated_ids: set[int] = {m['id'] for m in tl._data['sceneTrack']['scenes'][0]['csml']['tracks'][1]['medias']}
     assert original_ids.isdisjoint(duplicated_ids), 'Duplicated clip IDs must not collide with originals'

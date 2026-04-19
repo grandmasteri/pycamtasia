@@ -6,7 +6,6 @@ import pytest
 from camtasia.timeline.clips import ScreenIMFile, ScreenVMFile
 from camtasia.timing import EDIT_RATE
 
-
 # ------------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------------
@@ -152,7 +151,7 @@ class TestScreenVMFileCoverage:
         clip = ScreenVMFile(data)
         assert clip.cursor_motion_blur_intensity == 1.0
 
-    @pytest.mark.parametrize("attr,expected", [
+    @pytest.mark.parametrize(("attr", "expected"), [
         ("cursor_motion_blur_intensity", 0.0),
         ("cursor_shadow", {}),
         ("cursor_physics", {}),

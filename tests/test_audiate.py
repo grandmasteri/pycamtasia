@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 from camtasia.audiate.transcript import Transcript, Word
 from camtasia.timing import EDIT_RATE
 

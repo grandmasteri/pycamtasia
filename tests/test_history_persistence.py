@@ -1,8 +1,8 @@
 """Tests for Project.save_with_history and Project.load_history."""
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
+import shutil
 
 import pytest
 

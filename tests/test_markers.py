@@ -23,7 +23,7 @@ class TestMarkerDataclass:
         assert actual_result.time == 116_306_400_000
 
     @pytest.mark.parametrize(
-        "ticks, expected_seconds",
+        ("ticks", "expected_seconds"),
         [
             (0, 0.0),
             (705_600_000, 1.0),

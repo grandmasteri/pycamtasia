@@ -4,9 +4,9 @@ from __future__ import annotations
 from camtasia import validate_all as va
 from camtasia.validation import (
     ValidationIssue,
-    validate_all,
-    _check_transition_completeness,
     _check_track_attributes_count,
+    _check_transition_completeness,
+    validate_all,
 )
 
 
@@ -79,7 +79,8 @@ class TestTrackAttributesCount:
         issues = _check_track_attributes_count(data)
         assert len(issues) == 1
         assert issues[0].level == 'warning'
-        assert '1' in issues[0].message and '2' in issues[0].message
+        assert '1' in issues[0].message
+        assert '2' in issues[0].message
 
 
 # --- validate_all ---

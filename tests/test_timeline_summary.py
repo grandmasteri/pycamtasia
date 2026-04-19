@@ -35,7 +35,7 @@ def _add_clip(data: dict, track_idx: int, clip_id: int, start_sec: float, dur_se
 
 
 class TestTotalDurationFormatted:
-    @pytest.mark.parametrize("dur_seconds,expected", [
+    @pytest.mark.parametrize(("dur_seconds", "expected"), [
         (0, "0:00"),
         (45, "0:45"),
         (125, "2:05"),

@@ -6,8 +6,7 @@ import sys
 import docopt_subcommands as dsc  # type: ignore[import-not-found]
 from exit_codes import ExitCode, ExitCodeError  # type: ignore[import-not-found]
 
-from camtasia import new_project, use_project
-from camtasia import operations
+from camtasia import new_project, operations, use_project
 from camtasia.frame_stamp import FrameStamp
 
 
@@ -38,12 +37,12 @@ def media_bin_ls(_, args):
 def media_bin_rm(_, args):
     """usage: {program} media-bin-rm [options] <project> <media-id>
 
-    Remove a media from the media bin by ID. 
+    Remove a media from the media bin by ID.
 
     By default this will abort if there are track references to the media. Use the --force flag to remove any track
     references as well.
 
-    Options: 
+    Options:
         --force  Remove track references as well.
     """
     project_dir = args['<project>']
@@ -57,7 +56,7 @@ def media_bin_rm(_, args):
         try:
             operations.remove_media(proj, media_id, clear_tracks=args['--force'])
         except KeyError as exc:
-            raise ExitCodeError(str(exc), ExitCode.DATA_ERR)
+            raise ExitCodeError(str(exc), ExitCode.DATA_ERR) from exc
 
     return ExitCode.OK
 
@@ -141,7 +140,7 @@ def timeline_markers_ls(_, args):
 
     List the timeline markers.
     """
- 
+
     project_dir = args['<project>']
 
     with use_project(project_dir, save_on_exit=False) as proj:

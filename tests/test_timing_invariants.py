@@ -10,8 +10,7 @@ from fractions import Fraction
 import pytest
 
 from camtasia.timeline.clips import clip_from_dict
-from camtasia.timing import EDIT_RATE, parse_scalar, seconds_to_ticks
-
+from camtasia.timing import parse_scalar, seconds_to_ticks
 
 # ---------------------------------------------------------------------------
 # Helper

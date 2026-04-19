@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch, MagicMock
-
-import pytest
+from unittest.mock import patch
 
 from camtasia.project import load_project
 from camtasia.screenplay import Screenplay, ScreenplaySection, VOBlock
-
 
 FIXTURES = Path(__file__).parent / 'fixtures'
 

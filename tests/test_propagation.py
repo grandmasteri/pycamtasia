@@ -3,9 +3,7 @@ from __future__ import annotations
 
 from fractions import Fraction
 
-import pytest
-
-from camtasia.timeline.clips import UnifiedMedia, StitchedMedia
+from camtasia.timeline.clips import StitchedMedia, UnifiedMedia
 
 EDIT_RATE = 705_600_000
 

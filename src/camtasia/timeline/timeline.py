@@ -2,19 +2,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from camtasia.timeline.captions import CaptionAttributes
-    from camtasia.timeline.clips.group import Group
+    from collections.abc import Iterable, Iterator
 
-from camtasia.timeline.clips import BaseClip
+    from camtasia.timeline.captions import CaptionAttributes
+    from camtasia.timeline.clips import BaseClip
+    from camtasia.timeline.clips.group import Group
+    from camtasia.types import TimelineSummary
+
 from camtasia.timeline.markers import Marker, MarkerList
-from camtasia.timeline.track import Track
-from camtasia.timeline.track import _GROUP_DEFAULT_PARAMETERS, _GROUP_DEFAULT_METADATA
-from camtasia.timeline.track import _propagate_start_to_unified
+from camtasia.timeline.track import (
+    _GROUP_DEFAULT_PARAMETERS,
+    Track,
+    _propagate_start_to_unified,
+)
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
-from camtasia.types import TimelineSummary
 
 
 @dataclass
@@ -347,7 +351,6 @@ class Timeline:
 
     def all_clips(self) -> list[BaseClip]:
         """All clips across all tracks, including nested clips inside Groups/StitchedMedia/UnifiedMedia."""
-        from typing import Iterable
         result: list[BaseClip] = []
 
         def _collect(clips: Iterable[BaseClip]) -> None:
@@ -426,7 +429,6 @@ class Timeline:
     @property
     def all_effects(self) -> list[tuple[Track, BaseClip, dict]]:
         """All effects across all tracks as (track, clip, effect_dict) tuples."""
-        from typing import Iterable
         results: list[tuple[Track, BaseClip, dict]] = []
 
         def _collect(track: Track, clips: Iterable[BaseClip]) -> None:
@@ -824,7 +826,7 @@ class Timeline:
             attrs.append({})
         pairs = list(zip(tracks, attrs))
         pairs.sort(key=lambda p: p[1].get('ident', ''))
-        for i, (t, a) in enumerate(pairs):
+        for i, (t, _a) in enumerate(pairs):
             t['trackIndex'] = i
         tracks[:] = [p[0] for p in pairs]
         attrs[:] = [p[1] for p in pairs]
@@ -909,7 +911,7 @@ class Timeline:
             The newly created Group clip.
         """
         import copy
-        from camtasia.timeline.clips.group import Group
+
 
         clip_id_set = set(clip_ids)
 
@@ -977,8 +979,9 @@ class Timeline:
 
         # Create the Group on the target track directly with tick values
         # to avoid ticks→seconds→ticks roundtrip
-        from camtasia.timeline.clips import clip_from_dict
         from typing import cast
+
+        from camtasia.timeline.clips import clip_from_dict
         target_track = self.tracks[target_track_index]
         group_record: dict[str, Any] = {
             'id': id_counter[0],
@@ -1011,7 +1014,7 @@ class Timeline:
         }
         id_counter[0] += 1
         target_track._data.setdefault('medias', []).append(group_record)
-        group = cast(Group, clip_from_dict(group_record))
+        group = cast('Group', clip_from_dict(group_record))
 
         return group
 
@@ -1023,7 +1026,7 @@ class Timeline:
         group_name: str = '',
         width: int = 1920,
         height: int = 1080,
-    ) -> 'Group':
+    ) -> Group:
         """Group all clips overlapping [start, end) across all tracks into a single Group."""
         from camtasia.timing import seconds_to_ticks
         start_ticks = seconds_to_ticks(start_seconds)
@@ -1072,7 +1075,8 @@ class Timeline:
                     break
             else:
                 raise KeyError(f'Clip {clip_id} not found on any track')
-            assert found_track is not None and found_media is not None
+            assert found_track is not None
+            assert found_media is not None
             # Move clip to target track (after iteration is complete)
             if found_track.index != target_track_index:
                 found_track._data['medias'].remove(found_media)

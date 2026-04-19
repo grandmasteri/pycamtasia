@@ -1,7 +1,7 @@
 """Tests for BaseClip.summary()."""
 from __future__ import annotations
 
-from camtasia.timeline.clips import BaseClip, EDIT_RATE
+from camtasia.timeline.clips import EDIT_RATE, BaseClip
 
 
 def _clip(**overrides) -> BaseClip:

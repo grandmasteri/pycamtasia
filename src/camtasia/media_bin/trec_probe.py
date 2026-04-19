@@ -1,8 +1,9 @@
 """Probe .trec files using pymediainfo to extract stream metadata."""
 from __future__ import annotations
+
 import datetime
-import os
 from fractions import Fraction
+import os
 from pathlib import Path
 from typing import Any
 
@@ -46,7 +47,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
         raise ImportError(
             'pymediainfo is required for .trec import. '
             'Install with: pip install pymediainfo'
-        )
+        ) from None
 
     path = Path(path)
     if not path.exists():

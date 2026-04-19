@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 
 from camtasia.timeline.track import Track
-from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+from camtasia.timing import seconds_to_ticks
 
 
 def _make_track() -> Track:
@@ -65,7 +65,7 @@ class TestMoveClip:
 
         track.move_clip(clip.id, 10.0)
 
-        moved = list(track.clips)[0]
+        moved = next(iter(track.clips))
         assert moved.start == seconds_to_ticks(10.0)
 
     def test_move_clip_nonexistent_raises(self):
@@ -96,7 +96,7 @@ class TestDuplicateGroupClip:
             }],
         }
         t = Track({'ident': 'test'}, data)
-        actual_clip = t.duplicate_clip(1)
+        t.duplicate_clip(1)
         # The nested clip should have a different ID than the original
         inner_id = data['medias'][1]['tracks'][0]['medias'][0]['id']
         assert inner_id != 2
@@ -110,7 +110,7 @@ class TestExtendClip:
 
         track.extend_clip(clip.id, extend_seconds=3.0)
 
-        updated = list(track.clips)[0]
+        updated = next(iter(track.clips))
         assert updated.duration == original_dur + seconds_to_ticks(3.0)
 
     def test_extend_clip_negative(self):
@@ -120,7 +120,7 @@ class TestExtendClip:
 
         track.extend_clip(clip.id, extend_seconds=-2.0)
 
-        updated = list(track.clips)[0]
+        updated = next(iter(track.clips))
         assert updated.duration == original_dur + seconds_to_ticks(-2.0)
 
     def test_extend_clip_too_much_raises(self):

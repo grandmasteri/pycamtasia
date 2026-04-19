@@ -108,7 +108,7 @@ class TestToMarkdownReport:
 class TestInfoUsesNewStatistics:
     """Ensure info() returns the comprehensive dict."""
 
-    @pytest.mark.parametrize("key,expected_fn", [
+    @pytest.mark.parametrize(('key', 'expected_fn'), [
         ('clip_count', None),
         ('resolution', None),
         ('file_path', lambda v: isinstance(v, str)),

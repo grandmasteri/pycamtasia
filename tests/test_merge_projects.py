@@ -1,9 +1,9 @@
 """Tests for Project.merge_projects classmethod."""
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
 
+import pytest
 
 from camtasia.project import Project
 

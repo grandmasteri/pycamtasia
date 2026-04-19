@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from camtasia.project import Project
 
-from camtasia.timing import EDIT_RATE, parse_scalar, scalar_to_string
+from camtasia.timing import parse_scalar, scalar_to_string
 
 
 def _frac(value: int | float | str) -> Fraction:
@@ -27,7 +27,7 @@ def _scale_tick(value: int | float | str, factor: Fraction) -> int | str:
     f = _frac(value) * factor
     if isinstance(value, str) and "/" in value:
         return f"{f.numerator}/{f.denominator}" if f.denominator != 1 else int(f)
-    return int(round(float(f)))
+    return round(float(f))
 
 
 def _scale_clip_timing(clip: dict[str, Any], factor: Fraction) -> None:
@@ -35,9 +35,8 @@ def _scale_clip_timing(clip: dict[str, Any], factor: Fraction) -> None:
     clip["start"] = _scale_tick(clip["start"], factor)
     clip["duration"] = _scale_tick(clip["duration"], factor)
     # Scale mediaDuration for regular clips (StitchedMedia/Group handle their own)
-    if clip.get("_type") not in ("StitchedMedia", "Group", "UnifiedMedia", "IMFile", "ScreenIMFile"):
-        if "mediaDuration" in clip:
-            clip["mediaDuration"] = _scale_tick(clip["mediaDuration"], factor)
+    if clip.get("_type") not in ("StitchedMedia", "Group", "UnifiedMedia", "IMFile", "ScreenIMFile") and "mediaDuration" in clip:
+        clip["mediaDuration"] = _scale_tick(clip["mediaDuration"], factor)
     # Scale effect start/duration times
     for effect in clip.get("effects", []):
         if "start" in effect:
@@ -131,14 +130,14 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
         for clip in track.get("medias", []):
             _process_clip(clip, factor)
         for tr in track.get("transitions", []):
-            tr["duration"] = int(round(float(Fraction(tr["duration"]) * factor)))
+            tr["duration"] = round(float(Fraction(tr["duration"]) * factor))
 
     # Scale timeline markers
     toc = project_data["timeline"].get("parameters", {}).get("toc", {})
     for kf in toc.get("keyframes", []):
-        kf["time"] = int(round(float(Fraction(kf["time"]) * factor)))
+        kf["time"] = round(float(Fraction(kf["time"]) * factor))
         if "endTime" in kf:
-            kf["endTime"] = int(round(float(Fraction(kf["endTime"]) * factor)))
+            kf["endTime"] = round(float(Fraction(kf["endTime"]) * factor))
 
     # Post-rescale: fix 1-tick overlaps caused by independent rounding
     for track in scene["tracks"]:
@@ -246,7 +245,7 @@ def set_audio_speed(
     raise ValueError("No speed-changed audio clips found")
 
 
-def rescale(project: 'Project', factor: float | Fraction) -> None:
+def rescale(project: Project, factor: float | Fraction) -> None:
     """Scale all timing in a project by factor.
 
     This is a convenience wrapper around rescale_project() that
@@ -255,7 +254,7 @@ def rescale(project: 'Project', factor: float | Fraction) -> None:
     rescale_project(project._data, Fraction(factor).limit_denominator(100000))
 
 
-def normalize_audio_speed(project: 'Project', target_speed: float = 1.0) -> Fraction:
+def normalize_audio_speed(project: Project, target_speed: float = 1.0) -> Fraction:
     """Rescale project so audio plays at target_speed.
 
     Returns the stretch factor applied.

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import copy
-import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator
+import shutil
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from camtasia.project import Project
 
 
@@ -93,7 +95,7 @@ def duplicate_project(
     dest_path: str | Path,
     *,
     clear_media: bool = False,
-) -> 'Project':
+) -> Project:
     """Duplicate a Camtasia project to a new location.
 
     Copies the entire .cmproj bundle (including media files) to dest_path.

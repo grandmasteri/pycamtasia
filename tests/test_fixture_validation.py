@@ -1,7 +1,10 @@
 from __future__ import annotations
+
 import json
-import pytest
 from pathlib import Path
+
+import pytest
+
 from camtasia.timeline.clips import clip_from_dict
 from camtasia.validation import (
     _check_duplicate_clip_ids,

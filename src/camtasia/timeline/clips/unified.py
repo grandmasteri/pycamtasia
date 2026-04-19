@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import sys
 from typing import Any, NoReturn
+
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover
     from typing_extensions import Self
 
-from camtasia.effects.base import Effect
-from camtasia.effects.visual import Glow
 from camtasia.timeline.clips.base import BaseClip
-
 
 _EFFECT_MSG = 'Effects must be added to .video or .audio, not the UnifiedMedia wrapper'
 
@@ -104,7 +102,7 @@ class UnifiedMedia(BaseClip):
     def copy_effects_from(self, source: Any) -> NoReturn:
         raise TypeError(_EFFECT_MSG)
 
-    def duplicate_effects_to(self, target: 'BaseClip') -> NoReturn:
+    def duplicate_effects_to(self, target: BaseClip) -> NoReturn:
         raise TypeError('Cannot duplicate effects from UnifiedMedia wrapper; access .video or .audio effects directly')
 
     def mute_audio(self) -> Self:

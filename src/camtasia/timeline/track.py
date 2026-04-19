@@ -2,20 +2,21 @@
 from __future__ import annotations
 
 import copy
-import json
 from fractions import Fraction
-from typing import Any, Callable, cast, Iterator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
     from camtasia.timeline.clips.callout import CalloutBuilder
+    from camtasia.types import ClipType, EffectName
 
 from camtasia.annotations import callouts
 from camtasia.timeline.clips import AMFile, BaseClip, Callout, Group, IMFile, VMFile, clip_from_dict
-from camtasia.timeline.transitions import Transition, TransitionList
-from camtasia.timeline.markers import MarkerList
 from camtasia.timeline.marker import Marker
+from camtasia.timeline.markers import MarkerList
+from camtasia.timeline.transitions import Transition, TransitionList
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
-from camtasia.types import ClipType, EffectName
 
 
 def _parse_scalar(value: Any) -> Fraction:
@@ -391,7 +392,9 @@ class Track:
         if source_id is not None:
             record['src'] = source_id
         elif clip_type in _MEDIA_FILE_TYPES:
-            import warnings; warnings.warn('source_id is None for media file clip; using src=0', stacklevel=2); record['src'] = 0
+            import warnings
+            warnings.warn('source_id is None for media file clip; using src=0', stacklevel=2)
+            record['src'] = 0
         record.update(kwargs)
 
         if clip_type in ('IMFile', 'ScreenIMFile'):
@@ -415,8 +418,8 @@ class Track:
 
         Combines add_clip with ripple_insert behavior.
         """
-        from camtasia.timing import seconds_to_ticks
         from camtasia.operations.layout import ripple_insert
+        from camtasia.timing import seconds_to_ticks
         ripple_insert(self, position_seconds, duration_seconds)
         return self.add_clip(
             clip_type, source_id,
@@ -489,10 +492,10 @@ class Track:
         placed_clips: list[BaseClip] = []
         for clip in extracted_clips:
             from camtasia.timeline.timeline import _remap_clip_ids_with_map
-            old_id = clip._data.get('id', -1)
+            clip._data.get('id', -1)
             id_counter = [self._next_clip_id()]
             id_map: dict[int, int] = {}
-            _remap_clip_ids_with_map(cast(dict[str, Any], clip._data), id_counter, id_map)
+            _remap_clip_ids_with_map(cast('dict[str, Any]', clip._data), id_counter, id_map)
             self._data.setdefault('medias', []).append(clip._data)
             placed_clips.append(clip)
         return placed_clips
@@ -672,7 +675,7 @@ class Track:
 
     def add_callout_from_builder(
         self,
-        builder: 'CalloutBuilder',
+        builder: CalloutBuilder,
         start_seconds: float,
         duration_seconds: float,
     ) -> Callout:
@@ -1000,7 +1003,7 @@ class Track:
             }],
         }
         self._data.setdefault('medias', []).append(group_record)
-        group = cast(Group, clip_from_dict(group_record))
+        group = cast('Group', clip_from_dict(group_record))
         return group
 
     def add_screen_recording(
@@ -1643,10 +1646,10 @@ class Track:
         if clip is None:
             raise KeyError(f'No clip with id={clip_id} on this track')
 
-        total_dur = ticks_to_seconds(clip.duration)
+        ticks_to_seconds(clip.duration)
         md = clip._data.get('mediaDuration', clip.duration)
         md_frac = Fraction(str(md))
-        source_dur = ticks_to_seconds(int(md_frac))
+        ticks_to_seconds(int(md_frac))
         original_scalar = Fraction(clip.duration) / md_frac
         vmfile_scalar = (_Frac(1) / original_scalar).limit_denominator(100000)
 
@@ -2067,7 +2070,6 @@ class Track:
         if not self.is_empty:
             types = sorted({c.clip_type for c in self.clips})
             lines.append(f'  Types: {", ".join(types)}')
-            from camtasia.timing import ticks_to_seconds
             lines.append(f'  Duration: {self.total_duration_seconds:.1f}s')
             gaps = self.gaps()
             if gaps:

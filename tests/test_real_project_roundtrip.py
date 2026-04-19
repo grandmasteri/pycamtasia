@@ -1,8 +1,11 @@
 from __future__ import annotations
+
 import json
-import shutil
-import pytest
 from pathlib import Path
+import shutil
+
+import pytest
+
 from camtasia import load_project
 
 REAL_PROJECTS = [
@@ -103,4 +106,5 @@ class TestRoundTrip:
 
         proj = load_project(str(dst))
         actual_summary = proj.summary()
-        assert 'Tracks:' in actual_summary and 'Duration:' in actual_summary
+        assert 'Tracks:' in actual_summary
+        assert 'Duration:' in actual_summary

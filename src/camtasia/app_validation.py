@@ -1,12 +1,12 @@
 """Launch Camtasia and check for exceptions — integration test harness."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from pathlib import Path
 import re
 import subprocess
 import tempfile
 import time
-from dataclasses import dataclass
-from pathlib import Path
 
 CAMTASIA_PATH = Path('/Applications/Camtasia.app/Contents/MacOS/Camtasia')
 
@@ -49,7 +49,7 @@ def camtasia_validate(
         log_path = Path(log_file.name)
 
     with open(log_path, 'w') as stderr_file:
-        proc = subprocess.Popen(
+        subprocess.Popen(
             [str(camtasia_path), str(project_path)],
             stderr=stderr_file,
         )

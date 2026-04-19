@@ -1,7 +1,10 @@
 """Tests for Project.width and Project.height properties."""
 from __future__ import annotations
 
-from camtasia.project import Project
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from camtasia.project import Project
 
 
 class TestWidth:

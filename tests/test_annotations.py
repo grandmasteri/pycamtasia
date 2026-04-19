@@ -1,4 +1,4 @@
-from camtasia.annotations.callouts import arrow, highlight, keystroke_callout
+from camtasia.annotations.callouts import arrow, highlight, keystroke_callout, square
 
 
 def test_arrow_default_values():
@@ -67,9 +67,6 @@ def test_keystroke_callout_custom_font_size():
     assert result['text'] == 'Cmd+Shift+S'
     assert result['font']['size'] == 36.0
 
-
-from camtasia.annotations.callouts import square
-from camtasia.annotations.types import Color, HorizontalAlignment, VerticalAlignment
 
 
 def test_square_callout_line_spacing():

@@ -8,12 +8,15 @@ invalid output.
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from camtasia import load_project, new_project
-from camtasia.validation import validate_against_schema, ValidationIssue
+from camtasia.validation import ValidationIssue, validate_against_schema
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 try:
     import jsonschema  # noqa: F401
@@ -24,7 +27,7 @@ except ImportError:
 pytestmark = pytest.mark.skipif(not HAS_JSONSCHEMA, reason="jsonschema not installed")
 
 
-@pytest.fixture()
+@pytest.fixture
 def built_project(tmp_path: Path) -> dict:
     """Create a project using the high-level API, save it, and return the saved JSON."""
     proj_path = tmp_path / "schema_test.cmproj"

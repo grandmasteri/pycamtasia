@@ -1,8 +1,6 @@
 """Tests for Project.add_callout_sequence()."""
 from __future__ import annotations
 
-import pytest
-
 
 class TestAddCalloutSequenceBasic:
     def test_returns_correct_count(self, project):
@@ -23,7 +21,7 @@ class TestAddCalloutSequenceBasic:
         track = project.timeline.find_track_by_name('MyCallouts')
         assert track is not None
         assert len(track) == 1
-        assert list(track.clips)[0].text == 'Hello'
+        assert next(iter(track.clips)).text == 'Hello'
 
     def test_default_track_name(self, project):
         entries = [(0.0, 2.0, 'Hello')]

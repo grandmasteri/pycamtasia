@@ -4,7 +4,7 @@ import pytest
 
 from camtasia.operations.layout import pack_track, ripple_delete, ripple_insert, snap_to_grid
 from camtasia.timeline.track import Track
-from camtasia.timing import EDIT_RATE, seconds_to_ticks
+from camtasia.timing import seconds_to_ticks
 
 
 def _make_track(medias: list[dict] | None = None) -> Track:
@@ -163,7 +163,7 @@ class TestRippleDelete:
 
 class TestSnapToGrid:
     @pytest.mark.parametrize(
-        'actual_start, expected_start',
+        ('actual_start', 'expected_start'),
         [
             (0.3, 0.0),
             (0.7, 1.0),

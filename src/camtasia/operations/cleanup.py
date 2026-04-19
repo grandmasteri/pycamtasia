@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from camtasia.project import Project
+    from camtasia.types import CompactResult
 
-from camtasia.types import CompactResult
 
 
 def _collect_source_ids(clip_data: dict) -> set[int]:

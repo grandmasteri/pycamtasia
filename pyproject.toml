@@ -58,7 +58,39 @@ markers = [
 
 [tool.ruff]
 target-version = "py310"
-line-length = 100
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "I",      # isort
+    "W",      # pycodestyle warnings
+    "UP",     # pyupgrade (modern Python syntax)
+    "B",      # flake8-bugbear (common bugs)
+    "SIM",    # flake8-simplify
+    "RUF",    # ruff-specific rules
+    "C4",     # flake8-comprehensions
+    "PIE",    # flake8-pie (misc lints)
+    "PT",     # flake8-pytest-style
+    "RET",    # flake8-return
+    "TCH",    # flake8-type-checking
+]
+ignore = [
+    "E501",   # line too long (formatter handles this)
+    "E741",   # ambiguous variable name (l, O, I) — common in math code
+    "UP007",  # X | None vs Optional — already using this style
+    "B905",   # zip without strict= — not needed for our use cases
+    "SIM108", # ternary instead of if/else — readability preference
+    "RET504", # unnecessary assignment before return — readability preference
+    "PT011",  # pytest.raises too broad — we use specific match strings
+]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011", "B018", "PT004", "PT012", "SIM300"]
 
 [tool.coverage.run]
 source = ["camtasia"]
@@ -73,3 +105,4 @@ python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+

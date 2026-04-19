@@ -3,7 +3,6 @@ from __future__ import annotations
 import shutil
 
 import pytest
-from pathlib import Path
 
 from camtasia.operations.template import _walk_clips, duplicate_project
 from camtasia.project import load_project

@@ -38,12 +38,12 @@ class ScreenVMFile(BaseClip):
 
     @property
     def cursor_opacity(self) -> float:
-        """Cursor opacity (0.0–1.0)."""
+        """Cursor opacity (0.0-1.0)."""
         return self._get_param_value('cursorOpacity', 1.0)
 
     @cursor_opacity.setter
     def cursor_opacity(self, value: float) -> None:
-        """Set the cursor opacity (0.0–1.0)."""
+        """Set the cursor opacity (0.0-1.0)."""
         self._set_cursor_param('cursorOpacity', value)
 
     @property

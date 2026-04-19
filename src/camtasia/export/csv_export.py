@@ -1,15 +1,17 @@
 """Export timeline data as CSV."""
 from __future__ import annotations
+
 import csv
 from pathlib import Path
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from camtasia.project import Project
 
 
 def export_csv(project: Project, output_path: str | Path) -> Path:
     """Export timeline clip data as CSV.
-    
+
     Columns: track_name, track_index, clip_id, clip_type, start_seconds,
     duration_seconds, end_seconds, source_id, effect_count, effects
     """

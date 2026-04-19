@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pytest
-
 from camtasia.timeline.timeline import Timeline
 from camtasia.timeline.track import Track
 

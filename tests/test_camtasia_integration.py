@@ -7,12 +7,12 @@ Run with: pytest -m integration
 """
 from __future__ import annotations
 
+from pathlib import Path
 import struct
 import subprocess
 import time
 import uuid
 import zlib
-from pathlib import Path
 
 import pytest
 
@@ -259,7 +259,7 @@ class TestAdvancedOperations:
 
 class TestNewTransitions:
     @pytest.mark.integration
-    @pytest.mark.parametrize("method, use_ticks", [
+    @pytest.mark.parametrize(('method', 'use_ticks'), [
         ('add_card_flip', True),
         ('add_glitch', True),
         ('add_linear_blur', True),

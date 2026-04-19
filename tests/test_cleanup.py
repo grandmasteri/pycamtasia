@@ -136,7 +136,7 @@ class TestCollectSourceIdsFromUnifiedMedia:
         # Add source bin entries for 50 and 51
         project._data['sourceBin'].append({'id': 50, 'src': 'video.trec'})
         project._data['sourceBin'].append({'id': 51, 'src': 'audio.trec'})
-        removed = remove_orphaned_media(project)
+        remove_orphaned_media(project)
         # Sources 50 and 51 should NOT be removed
         remaining_ids = {s['id'] for s in project._data['sourceBin']}
         assert 50 in remaining_ids

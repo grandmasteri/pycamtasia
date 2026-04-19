@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+from camtasia.timeline.clips import AMFile, IMFile, VMFile
 from camtasia.timeline.track import Track
-from camtasia.timeline.clips import BaseClip, AMFile, VMFile, IMFile
 from camtasia.timeline.transitions import TransitionList
 
 

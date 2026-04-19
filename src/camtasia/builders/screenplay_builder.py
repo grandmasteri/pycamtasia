@@ -1,25 +1,27 @@
 """Build a timeline from a parsed screenplay."""
 from __future__ import annotations
 
-import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
+import warnings
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from camtasia.project import Project
     from camtasia.screenplay import Screenplay, VOBlock
+    from camtasia.types import ScreenplayBuildResult
 
-from camtasia.types import ScreenplayBuildResult
 
 
 def build_from_screenplay(
     project: Project,
-    screenplay: 'Screenplay',
+    screenplay: Screenplay,
     audio_dir: str | Path,
     *,
     audio_track_name: str = 'Audio',
     default_pause: float = 1.0,
-    vo_file_resolver: Callable[['VOBlock'], str | Path | None] | None = None,
+    vo_file_resolver: Callable[[VOBlock], str | Path | None] | None = None,
 ) -> ScreenplayBuildResult:
     """Build a timeline from a parsed screenplay.
 
@@ -71,9 +73,9 @@ def build_from_screenplay(
                 vo_placed = True
             else:
                 if audio_path:
-                    warnings.warn(f'Audio file not found: {audio_path}')
+                    warnings.warn(f'Audio file not found: {audio_path}', stacklevel=2)
                 else:
-                    warnings.warn(f'No audio file found for VO block {vo.id}')
+                    warnings.warn(f'No audio file found for VO block {vo.id}', stacklevel=2)
                 vo_placed = False
 
             # Insert interleaved explicit pauses that follow this VO block
@@ -82,10 +84,9 @@ def build_from_screenplay(
                     for dur in pauses_after.get(vi, []):
                         builder.add_pause(dur)
                         pauses_added += 1
-            elif default_pause > 0 and vi < len(vo_blocks) - 1:
-                if vo_placed:
-                    builder.add_pause(default_pause)
-                    pauses_added += 1
+            elif default_pause > 0 and vi < len(vo_blocks) - 1 and vo_placed:
+                builder.add_pause(default_pause)
+                pauses_added += 1
 
         # Add any trailing pauses (before any VO or unpositioned)
         for dur in trailing_pauses:

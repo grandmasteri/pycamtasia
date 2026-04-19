@@ -1,8 +1,6 @@
 """Tests for BaseClip.copy_effects_from()."""
 from __future__ import annotations
 
-import pytest
-
 from camtasia.timeline.clips.base import BaseClip
 
 

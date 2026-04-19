@@ -7,7 +7,6 @@ from camtasia.timeline.clips import clip_from_dict
 from camtasia.timeline.clips.placeholder import PlaceholderMedia
 from camtasia.timing import seconds_to_ticks
 
-
 _S5 = seconds_to_ticks(5.0)
 
 

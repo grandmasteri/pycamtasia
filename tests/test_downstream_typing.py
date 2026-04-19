@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import subprocess
 import sys
-import tempfile
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 SAMPLE_CONSUMER_SCRIPT: str = '''
 from camtasia import load_project, Project

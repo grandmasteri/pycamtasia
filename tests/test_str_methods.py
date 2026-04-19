@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from camtasia.timeline.clips import BaseClip, EDIT_RATE
+from camtasia.timeline.clips import EDIT_RATE, BaseClip
 from camtasia.timeline.track import Track
 
 
@@ -29,7 +29,7 @@ def _track(name: str = "Track 1", medias: list | None = None) -> Track:
 
 
 class TestBaseClipStr:
-    @pytest.mark.parametrize("overrides,expected", [
+    @pytest.mark.parametrize(("overrides", "expected"), [
         ({}, "VMFile(id=1, 10.0s)"),
         ({"_type": "AMFile", "id": 42, "duration": int(5.5 * EDIT_RATE)}, "AMFile(id=42, 5.5s)"),
         ({"duration": int(0.3 * EDIT_RATE)}, "VMFile(id=1, 0.3s)"),

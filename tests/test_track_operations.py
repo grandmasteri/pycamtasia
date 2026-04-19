@@ -1,19 +1,17 @@
 """Tests for track operations, attributes, protocols, and clip helpers."""
 from __future__ import annotations
 
-import warnings
-from fractions import Fraction
 from typing import Any
+import warnings
 
 import pytest
 
 from camtasia.timeline.clips import AMFile, Callout, IMFile, VMFile
 from camtasia.timeline.clips.base import BaseClip
 from camtasia.timeline.track import (
+    _VALID_CLIP_TYPES,
     Track,
     _PerMediaMarkers,
-    _propagate_start_to_unified,
-    _VALID_CLIP_TYPES,
 )
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 
@@ -214,7 +212,7 @@ class TestMarkerFiltering:
         ]}
         t = _track([m])
         # Access markers through the Track's clips iterator which attaches _PerMediaMarkers
-        clip = list(t.clips)[0]
+        clip = next(iter(t.clips))
         markers = list(clip.markers)
         names = [mk.name for mk in markers]
         assert 'before' not in names
@@ -280,7 +278,7 @@ class TestAddClipIdSentinel:
 class TestAddImageSequenceValidation:
     def test_transition_ge_duration_raises(self):
         t = _track()
-        with pytest.raises(ValueError, match='transition_seconds.*must be less than'):
+        with pytest.raises(ValueError, match=r'transition_seconds.*must be less than'):
             t.add_image_sequence([1, 2], 0, duration_per_image_seconds=5.0, transition_seconds=5.0)
 
     def test_negative_transition_raises(self):
@@ -300,13 +298,13 @@ class TestAddFreezeFrameValidation:
     def test_before_clip_start_raises(self):
         t = _track()
         clip = t.add_clip('VMFile', 1, seconds_to_ticks(5.0), seconds_to_ticks(10.0))
-        with pytest.raises(ValueError, match='at_seconds.*is before source_clip start'):
+        with pytest.raises(ValueError, match=r'at_seconds.*is before source_clip start'):
             t.add_freeze_frame(clip, at_seconds=3.0, freeze_duration_seconds=2.0)
 
     def test_past_clip_end_raises(self):
         t = _track()
         clip = t.add_clip('VMFile', 1, seconds_to_ticks(5.0), seconds_to_ticks(10.0))
-        with pytest.raises(ValueError, match='at_seconds.*is past the end'):
+        with pytest.raises(ValueError, match=r'at_seconds.*is past the end'):
             t.add_freeze_frame(clip, at_seconds=16.0, freeze_duration_seconds=2.0)
 
 
@@ -552,7 +550,7 @@ class TestClipAccessorMarkers:
             "transitions": [],
         }
         track = Track(attrs, data)
-        actual_clip = list(track.clips)[0]
+        actual_clip = next(iter(track.clips))
         actual_markers = list(actual_clip.markers)
         assert actual_markers[0].name == "Mark"
 
@@ -774,7 +772,7 @@ class TestTrackContains:
 
     def test_track_contains_by_clip(self):
         t = _proto_track_with_clips(2)
-        clip = list(t.clips)[0]
+        clip = next(iter(t.clips))
         assert clip in t
 
     def test_track_not_contains(self):

@@ -2,21 +2,24 @@
 from __future__ import annotations
 
 import copy
-import sys
-import warnings
 from fractions import Fraction
+import sys
 from typing import TYPE_CHECKING
+import warnings
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterator
+
     from camtasia.timeline.transitions import TransitionList
+    from camtasia.types import ClipType
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover
     from typing_extensions import Self
-from typing import Any, Iterator, NoReturn
+from typing import Any, NoReturn
 
-from camtasia.timing import EDIT_RATE, parse_scalar as _parse_scalar, seconds_to_ticks, ticks_to_seconds
-from camtasia.types import ClipType
+from camtasia.timing import parse_scalar as _parse_scalar
+from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 
 from .base import BaseClip
 
@@ -52,7 +55,7 @@ class GroupTrack:
         return self._data.get('parameters', {})  # type: ignore[no-any-return]
 
     @property
-    def transitions(self) -> 'TransitionList':
+    def transitions(self) -> TransitionList:
         """Transitions are not supported on internal Group tracks."""
         raise AttributeError('Internal Group tracks do not support transitions')
 
@@ -528,8 +531,8 @@ class Group(BaseClip):
                 if abs(sv - sv2) > 0.01:
                     import warnings
                     warnings.warn(
-                        f'Source aspect ratio ({source_w}×{source_h}) differs from canvas '
-                        f'({canvas_width}×{canvas_height}): scale0={sv:.4f}, scale1={sv2:.4f}. '
+                        f'Source aspect ratio ({source_w}x{source_h}) differs from canvas '
+                        f'({canvas_width}x{canvas_height}): scale0={sv:.4f}, scale1={sv2:.4f}. '
                         f'Using uniform scale {min(sv, sv2):.4f} (best fit).',
                         UserWarning, stacklevel=2,
                     )

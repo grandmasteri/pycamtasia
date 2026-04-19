@@ -1,7 +1,6 @@
 """Tests for Timeline operations: pack, remove, duration, grouping, duplication, remap."""
 from __future__ import annotations
 
-import copy
 from typing import Any
 
 import pytest
@@ -11,8 +10,6 @@ from camtasia.timeline.timeline import (
     _remap_clip_ids_recursive,
     _remap_clip_ids_with_map,
 )
-from camtasia.timeline.track import Track
-from camtasia.timeline.marker import Marker
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 
 

@@ -1,8 +1,9 @@
 """Callout (text overlay) clip."""
 from __future__ import annotations
 
-from typing import Any, NoReturn
 import sys
+from typing import Any, NoReturn
+
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover

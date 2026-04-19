@@ -2,30 +2,31 @@
 
 from __future__ import annotations
 
-import copy
-import json
-import shutil
-import warnings
 from contextlib import contextmanager
+import copy
 from importlib import resources as importlib_resources
+import json
 from pathlib import Path
-from typing import Any, Callable, Iterator, TYPE_CHECKING
+import shutil
+from typing import TYPE_CHECKING, Any, ClassVar
+import warnings
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Iterator
+
     from camtasia.history import ChangeHistory
+    from camtasia.timeline.clips import BaseClip
     from camtasia.timeline.clips.group import Group
+    from camtasia.timeline.track import Track
+    from camtasia.types import ClipType, CompactResult, EffectName, HealthCheckResult
+
+import subprocess as _sp
 
 from camtasia.authoring_client import AuthoringClient
 from camtasia.media_bin import Media, MediaBin, MediaType
 from camtasia.timeline import Timeline
-from camtasia.timeline.track import Track
-from camtasia.timeline.clips import BaseClip
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
-from camtasia.types import ClipType, CompactResult, EffectName, HealthCheckResult
-from camtasia.validation import ValidationIssue, validate_all, validate_against_schema
-
-
-import subprocess as _sp
+from camtasia.validation import ValidationIssue, validate_against_schema, validate_all
 
 
 def _probe_media(path: Path) -> dict:
@@ -518,7 +519,6 @@ class Project:
     @property
     def all_clips(self) -> list[tuple[Track, BaseClip]]:
         """All clips across all tracks as (track, clip) tuples, including nested clips."""
-        from typing import Iterable
         results: list[tuple[Track, BaseClip]] = []
 
         def _collect(track: Track, clips: Iterable[BaseClip]) -> None:
@@ -720,7 +720,7 @@ class Project:
 
         Each project's tracks are appended sequentially. Media bins are merged.
         """
-        from camtasia.timeline.timeline import _remap_clip_ids_recursive, _remap_clip_ids_with_map
+        from camtasia.timeline.timeline import _remap_clip_ids_with_map
 
         merged = cls.new(output_path, title=title)
         cursor_seconds: float = 0.0
@@ -966,10 +966,9 @@ class Project:
             token = m.group(0)
             if token == '-Infinity':
                 return '-1.79769313486232e+308'
-            elif token == 'Infinity':
+            if token == 'Infinity':
                 return '1.79769313486232e+308'
-            else:
-                return '0.0'
+            return '0.0'
         text = re.sub(r'("(?:[^"\\]|\\.)*")|-?Infinity\b|NaN\b', _replace_special, text)
 
         # Step 2: Add space before colon (NSJSONSerialization style)
@@ -1016,7 +1015,7 @@ class Project:
     # L2 convenience methods
     # ------------------------------------------------------------------
 
-    _EXTENSION_TYPE_MAP: dict[str, MediaType] = {
+    _EXTENSION_TYPE_MAP: ClassVar[dict[str, MediaType]] = {
         '.png': MediaType.Image, '.jpg': MediaType.Image,
         '.jpeg': MediaType.Image, '.gif': MediaType.Image,
         '.bmp': MediaType.Image, '.tiff': MediaType.Image,
@@ -1136,7 +1135,7 @@ class Project:
 
         return media
 
-    def import_trec(self, trec_path: str | Path) -> 'Media':
+    def import_trec(self, trec_path: str | Path) -> Media:
         """Import a .trec screen recording with full stream metadata.
 
         Uses pymediainfo to probe the multi-track container and build
@@ -1205,8 +1204,8 @@ class Project:
             '',
             '## Overview',
             '',
-            f'| Metric | Value |',
-            f'|--------|-------|',
+            '| Metric | Value |',
+            '|--------|-------|',
             f'| Duration | {stats["duration_formatted"]} ({stats["duration_seconds"]:.1f}s) |',
             f'| Resolution | {stats["resolution"]} |',
             f'| Tracks | {stats["track_count"]} |',
@@ -1595,7 +1594,7 @@ class Project:
         shader_path: str | Path,
         duration_seconds: float,
         track_name: str = 'Background',
-    ) -> 'BaseClip':
+    ) -> BaseClip:
         """Import and place a 4-corner animated gradient shader background.
 
         Reuses an existing ``.tscshadervid`` source if one is already in the
@@ -1683,7 +1682,7 @@ class Project:
         Returns:
             The list of placed audio clips.
         """
-        from camtasia.timing import seconds_to_ticks, ticks_to_seconds, EDIT_RATE
+        from camtasia.timing import EDIT_RATE, seconds_to_ticks, ticks_to_seconds
 
         track = self.timeline.get_or_create_track(track_name)
         cursor_seconds: float = start_seconds
@@ -1756,7 +1755,7 @@ class Project:
 
         return placed_clips
 
-    def copy_to(self, dest_path: str | Path) -> 'Project':
+    def copy_to(self, dest_path: str | Path) -> Project:
         """Copy this project to a new location.
 
         Args:
@@ -1792,9 +1791,9 @@ class Project:
         Returns dict mapping format name to output path.
         """
         from camtasia.export import (
-            export_project_report,
-            export_markers_as_srt,
             export_edl,
+            export_markers_as_srt,
+            export_project_report,
         )
         from camtasia.export.timeline_json import export_timeline_json
 
@@ -2169,7 +2168,7 @@ class Project:
         fade_seconds: float = 0.5,
     ) -> BaseClip:
         """Add a section divider title card at the specified time.
-        
+
         Creates a full-screen text callout that serves as a visual
         separator between sections of the video.
         """
@@ -2355,6 +2354,7 @@ class Project:
         Automatically repairs any 1-tick overlaps caused by rounding.
         """
         from fractions import Fraction
+
         from camtasia.operations.speed import rescale_project
         rescale_project(self._data, Fraction(factor).limit_denominator(100000))
         self.repair()

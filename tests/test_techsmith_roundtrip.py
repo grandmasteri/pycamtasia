@@ -7,8 +7,8 @@ ultimate proof that pycamtasia does not corrupt data.
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
+import shutil
 
 import pytest
 

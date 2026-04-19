@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 
 from camtasia.timeline.clips.group import Group
-from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+from camtasia.timing import seconds_to_ticks
 
 
 class TestGroupClipsAcrossTracks:
@@ -206,7 +206,7 @@ class TestProjectGroupClipsAcrossTracks:
         """Project wrapper resolves track by name."""
         tl = project.timeline
         t0 = tl.add_track('Source')
-        t1 = tl.add_track('Target')
+        tl.add_track('Target')
         c0 = t0.add_video(1, start_seconds=0.0, duration_seconds=1.0)
 
         group = project.group_clips_across_tracks(

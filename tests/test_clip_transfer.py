@@ -1,10 +1,13 @@
 """Tests for copy_to_track, move_clip_to_track, and move_all_clips_to_track."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 
-from camtasia.project import Project
-from camtasia.timeline.clips import BaseClip
+if TYPE_CHECKING:
+    from camtasia.project import Project
+    from camtasia.timeline.clips import BaseClip
 
 EDIT_RATE = 705_600_000
 

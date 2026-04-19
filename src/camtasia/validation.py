@@ -1,10 +1,10 @@
 """Project validation — checks for common issues before save."""
 from __future__ import annotations
 
-import json
 from collections import Counter
 from dataclasses import dataclass
 from importlib import resources as importlib_resources
+import json
 from typing import Any
 
 

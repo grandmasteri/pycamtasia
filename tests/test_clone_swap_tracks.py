@@ -6,7 +6,7 @@ import pytest
 def test_clone_track_creates_new_track_with_name(project):
     """clone_track duplicates a track and assigns the new name."""
     # Create a source track with a clip
-    track = project.timeline.get_or_create_track('Source')
+    project.timeline.get_or_create_track('Source')
     original_count = project.track_count
 
     cloned = project.clone_track('Source', 'Cloned')

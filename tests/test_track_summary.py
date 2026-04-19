@@ -3,10 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-import pytest
-
 from camtasia.timeline.track import Track
-from camtasia.timing import EDIT_RATE, seconds_to_ticks
+from camtasia.timing import seconds_to_ticks
 
 
 def _track(

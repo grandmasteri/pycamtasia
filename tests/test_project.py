@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+from fractions import Fraction
 import json
+from pathlib import Path
 import struct
 import subprocess
 import sys
+from typing import ClassVar
+from unittest.mock import MagicMock, patch
 import warnings as w
 import zlib
-from fractions import Fraction
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -17,9 +18,9 @@ from camtasia.operations.diff import diff_projects
 from camtasia.operations.speed import _process_clip, _scale_clip_timing
 from camtasia.operations.template import (
     _walk_clips,
-    clone_project_structure,
     replace_media_source,
 )
+import camtasia.project as proj_mod
 from camtasia.project import (
     Project,
     _probe_media,
@@ -29,15 +30,12 @@ from camtasia.project import (
     new_project,
     use_project,
 )
-import camtasia.project as proj_mod
 from camtasia.timeline import Timeline
-from camtasia.timeline.clips import clip_from_dict
+from camtasia.timeline.clips import BaseClip, clip_from_dict
 from camtasia.timeline.clips.group import Group
 from camtasia.timeline.track import Track
-from camtasia.timeline.clips import BaseClip
 from camtasia.timing import seconds_to_ticks
 from camtasia.validation import ValidationIssue, _check_group_required_fields, _check_timing_consistency
-
 
 MINIMAL_PROJECT_DATA = {
     "editRate": 30,
@@ -267,7 +265,8 @@ class TestMergeProjectsTransitions:
             if t._data.get('transitions'):
                 found_trans = True
                 for tr in t._data['transitions']:
-                    assert 'leftMedia' in tr and 'rightMedia' in tr
+                    assert 'leftMedia' in tr
+                    assert 'rightMedia' in tr
         assert found_trans
 
 
@@ -381,7 +380,7 @@ class TestValidationVersionParseError:
     def test_invalid_version(self):
         data = {'version': 'not-a-number',
                 'sceneTrack': {'scenes': [{'csml': {'tracks': []}}]}}
-        issues = _check_group_required_fields(data)
+        _check_group_required_fields(data)
 
 
 class TestValidationScalarParseError:
@@ -392,7 +391,7 @@ class TestValidationScalarParseError:
                  'duration': 100, 'mediaDuration': 100}
             ]}
         ]}}]}}}
-        issues = _check_timing_consistency(data)
+        _check_timing_consistency(data)
 
 
 class TestWalkClipsUnified:
@@ -442,7 +441,7 @@ class TestRepairOverlapFix:
         result = project.repair()
         assert result.get('overlaps_fixed', 0) == 1
         # First clip's duration should be trimmed to 50 (no overlap)
-        clip1 = [m for m in track._data['medias'] if m['id'] == 10][0]
+        clip1 = next(m for m in track._data['medias'] if m['id'] == 10)
         assert clip1['duration'] == 50
         assert clip1['mediaDuration'] == 50  # recalculated: 50 / 1 = 50
 
@@ -482,7 +481,7 @@ def test_project_has_screen_recording_with_real_data():
     fixture = Path(__file__).parent / 'fixtures' / 'techsmith_sample.tscproj'
     data = json.loads(fixture.read_text())
     tracks = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
-    
+
     has_screen = False
     for t in tracks:
         for m in t.get('medias', []):
@@ -576,7 +575,7 @@ def test_find_media_by_extension(project):
 
 def test_project_remove_all_effects(project):
     # Add a clip with effects to the project
-    track = list(project.timeline.tracks)[0]
+    track = next(iter(project.timeline.tracks))
     media = {
         '_type': 'VMFile', 'id': 999, 'start': 0, 'duration': seconds_to_ticks(5.0),
         'effects': [{'effectName': 'FakeEffect1'}, {'effectName': 'FakeEffect2'}],
@@ -676,7 +675,7 @@ def test_source_bin_paths(tmp_path):
 
     project = Project(project_dir)
     source_paths: list[str] = project.source_bin_paths
-    assert set(Path(p).name for p in source_paths) == {'clip_a.mp4', 'clip_b.wav'}
+    assert {Path(p).name for p in source_paths} == {'clip_a.mp4', 'clip_b.wav'}
 
 
 
@@ -813,7 +812,7 @@ class TestProbeMediaPymediainfo:
                 self.bit_depth = kw.get('bit_depth')
 
         class FakeInfo:
-            tracks = [
+            tracks: ClassVar[list] = [
                 FakeTrack('General'),
                 FakeTrack('Video', width=1920, height=1080, duration=5000, frame_rate='30.0'),
             ]
@@ -1221,7 +1220,7 @@ class TestAddVoiceoverSequenceV2:
     def test_custom_track_name(self, project):
         project.add_voiceover_sequence_v2([EMPTY_WAV], track_name='Narration')
         track = project.timeline.get_or_create_track('Narration')
-        assert list(track)[0].clip_type == 'AMFile'
+        assert next(iter(track)).clip_type == 'AMFile'
 
     def test_empty_list_returns_empty(self, project):
         assert project.add_voiceover_sequence_v2([]) == []
@@ -1268,12 +1267,13 @@ class TestAddImageSequence:
     def test_custom_track_name(self, project):
         project.add_image_sequence([self.image_a], track_name='Slides')
         track = project.timeline.get_or_create_track('Slides')
-        assert list(track)[0].clip_type == 'IMFile'
+        assert next(iter(track)).clip_type == 'IMFile'
 
     def test_fade_applied_by_default(self, project):
         placed = project.add_image_sequence([self.image_a], fade_seconds=0.5)
         anim = placed[0]._data.get('animationTracks', {})
-        assert 'visual' in anim and len(anim.get('visual', [])) == 2
+        assert 'visual' in anim
+        assert len(anim.get('visual', [])) == 2
 
     def test_no_fade_when_zero(self, project):
         placed = project.add_image_sequence([self.image_a], fade_seconds=0)
@@ -1312,13 +1312,13 @@ class TestAddWatermarkTrack:
         project.add_watermark(TEST_WAV)
         track = project.timeline.find_track_by_name('Watermark')
         assert track is not None
-        assert list(track)[0].clip_type == 'IMFile'
+        assert next(iter(track)).clip_type == 'IMFile'
 
     def test_custom_track_name(self, project):
         project.add_watermark(TEST_WAV, track_name='Logo')
         track = project.timeline.find_track_by_name('Logo')
         assert track is not None
-        assert list(track)[0].clip_type == 'IMFile'
+        assert next(iter(track)).clip_type == 'IMFile'
 
 
 class TestAddWatermarkDuration:
@@ -1429,7 +1429,7 @@ class TestAddSectionDividerBasic:
         project.add_section_divider('Part 1', at_seconds=5.0)
         track = project.timeline.find_track_by_name('Section Dividers')
         assert track is not None
-        assert list(track)[0].clip_type == 'Callout'
+        assert next(iter(track)).clip_type == 'Callout'
 
     def test_custom_track_name(self, project):
         project.add_section_divider('Part 1', at_seconds=5.0, track_name='Dividers')
@@ -1501,7 +1501,7 @@ class TestAddEndCardBasic:
         project.add_end_card()
         track = project.timeline.find_track_by_name('End Card')
         assert track is not None
-        assert list(track)[0].clip_type == 'Callout'
+        assert next(iter(track)).clip_type == 'Callout'
 
     def test_custom_track_name(self, project):
         project.add_end_card(track_name='Outro')

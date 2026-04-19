@@ -8,7 +8,7 @@ def text(text,
          font_name,
          font_weight,
          font_size=96.0,
-         font_color=Color(1.0, 1.0, 1.0),
+         font_color=None,
          height=250.0,
          width=400.0,
          horizontal_alignment=HorizontalAlignment.Center,
@@ -16,6 +16,8 @@ def text(text,
          line_spacing=0.0
          ):
     """Create a text callout annotation dict."""
+    if font_color is None:
+        font_color = Color(1.0, 1.0, 1.0)
     return {
         "kind": "remix",
         "shape": "text",
@@ -56,10 +58,10 @@ def square(text,
            font_name,
            font_weight,
            font_size=64.0,
-           font_color=Color(0.0, 0.0, 0.0),
-           fill_color=Color(1.0, 1.0, 1.0),
+           font_color=None,
+           fill_color=None,
            fill_style=FillStyle.Solid,
-           stroke_color=Color(0, 0.5, 0.5),
+           stroke_color=None,
            stroke_width=2.0,
            stroke_style=StrokeStyle.Solid,
            height=150.0,
@@ -68,6 +70,12 @@ def square(text,
            vertical_alignment=VerticalAlignment.Center,
            line_spacing=0.0):
     """Create a square text callout annotation dict."""
+    if font_color is None:
+        font_color = Color(0.0, 0.0, 0.0)
+    if fill_color is None:
+        fill_color = Color(1.0, 1.0, 1.0)
+    if stroke_color is None:
+        stroke_color = Color(0, 0.5, 0.5)
     return {
         "kind": "remix",
         "shape": "text-rectangle",
@@ -122,10 +130,12 @@ def arrow(
     tail: tuple[float, float] = (0, 0),
     head: tuple[float, float] = (100, 0),
     color: tuple[float, float, float] | None = None,
-    stroke_color: Color = Color(1.0, 0.0, 0.0),
+    stroke_color: Color | None = None,
     width: float = 3.0,
 ) -> dict:
     """Create an arrow annotation dict."""
+    if stroke_color is None:
+        stroke_color = Color(1.0, 0.0, 0.0)
     if color is not None:
         stroke_color = Color(color[0], color[1], color[2])
     return {

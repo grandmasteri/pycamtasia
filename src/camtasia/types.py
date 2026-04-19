@@ -1,16 +1,37 @@
 """Strong types for the pycamtasia library."""
 from __future__ import annotations
+
 from enum import Enum, IntEnum
 from typing import Literal
 
 __all__ = [
-    'ClipType', 'EffectName', 'TransitionType', 'BehaviorPreset',
-    'BehaviorInnerName', 'BlendMode', 'ValidationLevel', 'MediaType',
-    'MaskShape', 'CalloutShape', 'CalloutKind', 'InterpolationType',
-    'TrackType', 'EffectCategory', 'Alignment', 'ReportFormat',
-    '_RGBADict', 'DropShadowParams', 'RoundCornersParams', 'ColorAdjustmentParams',
-    'EffectDict', 'TransitionDict', 'ClipSummary', 'HealthCheckResult',
-    'CompactResult', 'TimelineSummary', 'ScreenplayBuildResult',
+    'Alignment',
+    'BehaviorInnerName',
+    'BehaviorPreset',
+    'BlendMode',
+    'CalloutKind',
+    'CalloutShape',
+    'ClipSummary',
+    'ClipType',
+    'ColorAdjustmentParams',
+    'CompactResult',
+    'DropShadowParams',
+    'EffectCategory',
+    'EffectDict',
+    'EffectName',
+    'HealthCheckResult',
+    'InterpolationType',
+    'MaskShape',
+    'MediaType',
+    'ReportFormat',
+    'RoundCornersParams',
+    'ScreenplayBuildResult',
+    'TimelineSummary',
+    'TrackType',
+    'TransitionDict',
+    'TransitionType',
+    'ValidationLevel',
+    '_RGBADict',
 ]
 
 # Effect categories
@@ -166,15 +187,15 @@ class MediaType(IntEnum):
 
 
 # ---------------------------------------------------------------------------
-# Internal TypedDicts – raw JSON data shapes (total=False: all keys optional)
+# Internal TypedDicts - raw JSON data shapes (total=False: all keys optional)
 # ---------------------------------------------------------------------------
-from typing import Any, TypedDict
-import sys
+import sys  # noqa: E402 — must follow class definitions above
+from typing import Any, TypedDict  # noqa: E402
+
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import NotRequired
 else:  # pragma: no cover
     from typing_extensions import NotRequired
-from fractions import Fraction
 
 
 class _ClipData(TypedDict, total=False):
@@ -260,7 +281,7 @@ class _CaptionData(TypedDict, total=False):
 
 
 # ---------------------------------------------------------------------------
-# TypedDicts – structured data returned / consumed by the library
+# TypedDicts - structured data returned / consumed by the library
 # ---------------------------------------------------------------------------
 
 

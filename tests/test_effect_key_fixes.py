@@ -1,6 +1,6 @@
 """Tests for hyphenated parameter key fixes and radial gradient compatibility."""
-from camtasia.effects.visual import Mask, RoundCorners
 from camtasia.effects.source import SourceEffect
+from camtasia.effects.visual import Mask, RoundCorners
 
 
 def _make_effect(cls, params):

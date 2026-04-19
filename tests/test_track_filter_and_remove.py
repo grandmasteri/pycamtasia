@@ -23,7 +23,7 @@ class TestFilterAndRemove:
 
         assert removed == 2
         assert len(track) == 1
-        assert list(track.clips)[0].clip_type == "VMFile"
+        assert next(iter(track.clips)).clip_type == "VMFile"
 
     def test_returns_zero_when_none_match(self):
         track = _make_track()

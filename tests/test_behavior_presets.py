@@ -3,11 +3,10 @@ import pytest
 
 from camtasia.templates.behavior_presets import get_behavior_preset
 
-
 REQUIRED_FIELDS = {'_type', 'effectName', 'bypassed', 'start', 'duration', 'in', 'center', 'out'}
 
 
-@pytest.mark.parametrize("preset_name, in_name, out_name, meta_key", [
+@pytest.mark.parametrize(('preset_name', 'in_name', 'out_name', 'meta_key'), [
     ('reveal', 'reveal', 'reveal', None),
     ('sliding', 'sliding', 'sliding', None),
     ('fade', 'fadeIn', None, 'Fade'),

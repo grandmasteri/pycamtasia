@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import copy
+from typing import TYPE_CHECKING
 
-from camtasia.project import Project
+if TYPE_CHECKING:
+    from camtasia.project import Project
 
 
 def test_project_eq_same_data(project: Project):

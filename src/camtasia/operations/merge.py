@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import copy
-from camtasia.timeline.track import _propagate_start_to_unified
 from typing import TYPE_CHECKING
+
+from camtasia.timeline.track import _propagate_start_to_unified
 
 if TYPE_CHECKING:
     from camtasia.project import Project

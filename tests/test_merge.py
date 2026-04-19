@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from camtasia import load_project
-from camtasia.operations.merge import merge_tracks, _remap_clip_ids
+from camtasia.operations.merge import _remap_clip_ids, merge_tracks
 from camtasia.timing import seconds_to_ticks
 
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
@@ -106,16 +106,16 @@ class TestMergeReusesExistingMedia:
         wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
         # Import same media into both source and target
         target_media = project.import_media(wav)
-        
+
         source = load_project(str(project.file_path))
         source_media = source.import_media(wav)
         track = source.timeline.add_track('Audio')
         track.add_clip('AMFile', source_media.id, 0, 705600000)
-        
+
         merge_tracks(source, project)
         # The merged clip should reference the target's existing media ID
         merged_track = list(project.timeline.tracks)[-1]
-        actual_src = list(merged_track.clips)[0].source_id
+        actual_src = next(iter(merged_track.clips)).source_id
         assert actual_src == target_media.id
 
 

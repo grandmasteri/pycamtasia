@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 
 from camtasia.timeline.timeline import Timeline
-from camtasia.timing import EDIT_RATE, seconds_to_ticks
+from camtasia.timing import seconds_to_ticks
 
 
 def _make_clip(clip_id: int, clip_type: str, start_seconds: float, duration_seconds: float) -> dict[str, Any]:

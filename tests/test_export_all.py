@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from typing import Any
-
-import pytest
+from typing import TYPE_CHECKING, Any
 
 from camtasia.project import Project
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 MINIMAL_PROJECT_DATA: dict[str, Any] = {
     "editRate": 30,
@@ -46,5 +45,5 @@ class TestExportAll:
         out_dir = tmp_path / "exports"
         results = proj.export_all(out_dir)
         assert set(results.keys()) == {"report_md", "report_json", "timeline_json", "markers_srt", "edl"}
-        for key, path in results.items():
+        for _key, path in results.items():
             assert path.exists()

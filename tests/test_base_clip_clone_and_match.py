@@ -1,7 +1,7 @@
 """Tests for BaseClip.clone() and BaseClip.matches_any_type()."""
 from __future__ import annotations
 
-from camtasia.timeline.clips import clip_from_dict, BaseClip
+from camtasia.timeline.clips import BaseClip, clip_from_dict
 from camtasia.types import ClipType
 
 

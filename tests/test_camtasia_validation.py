@@ -1,12 +1,11 @@
 """Tests for camtasia.app_validation — Camtasia open-in-app integration harness."""
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import MagicMock, call, mock_open, patch
 
 import pytest
 
-from camtasia.app_validation import CamtasiaValidationResult, camtasia_validate
+from camtasia.app_validation import camtasia_validate
 from camtasia.timing import seconds_to_ticks as _s2t
 from camtasia.validation import (
     _check_edit_rate,

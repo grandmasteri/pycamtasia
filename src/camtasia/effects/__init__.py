@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from camtasia.effects.base import Effect, effect_from_dict
-from camtasia.effects.visual import BlurRegion, DropShadow, Glow, Mask, MotionBlur, RoundCorners
+from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
 from camtasia.effects.cursor import (
     CursorMotionBlur,
     CursorPhysics,
@@ -10,7 +10,8 @@ from camtasia.effects.cursor import (
     LeftClickScaling,
 )
 from camtasia.effects.source import SourceEffect
-from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
+from camtasia.effects.visual import BlurRegion, DropShadow, Glow, Mask, MotionBlur, RoundCorners
+
 
 class EffectSchema:
     """Stub for legacy marshmallow-based EffectSchema.
@@ -26,20 +27,20 @@ class EffectSchema:
         )
 
 __all__ = [
-    "Effect",
-    "EffectSchema",
-    "effect_from_dict",
-    "RoundCorners",
-    "DropShadow",
-    "MotionBlur",
-    "Mask",
+    "BehaviorPhase",
     "BlurRegion",
-    "Glow",
     "CursorMotionBlur",
     "CursorPhysics",
     "CursorShadow",
-    "LeftClickScaling",
-    "SourceEffect",
-    "BehaviorPhase",
+    "DropShadow",
+    "Effect",
+    "EffectSchema",
     "GenericBehaviorEffect",
+    "Glow",
+    "LeftClickScaling",
+    "Mask",
+    "MotionBlur",
+    "RoundCorners",
+    "SourceEffect",
+    "effect_from_dict",
 ]

@@ -6,9 +6,9 @@ from typing import Any
 from unittest.mock import patch
 
 from camtasia.templates import lower_third
-from camtasia.timing import seconds_to_ticks
-from camtasia.timeline.track import Track
 from camtasia.timeline.clips.group import Group
+from camtasia.timeline.track import Track
+from camtasia.timing import seconds_to_ticks
 
 
 def _make_track() -> Track:

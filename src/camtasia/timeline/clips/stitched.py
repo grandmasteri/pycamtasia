@@ -1,12 +1,9 @@
 """Stitched (spliced) media clip."""
 from __future__ import annotations
 
-from typing import Any, NoReturn, TYPE_CHECKING
+from typing import Any, NoReturn
 
 from .base import BaseClip
-
-if TYPE_CHECKING:
-    pass
 
 
 class StitchedMedia(BaseClip):

@@ -4,6 +4,7 @@ from __future__ import annotations
 import math
 
 from camtasia.timeline.clips import IMFile, ScreenVMFile, VMFile
+from camtasia.timing import EDIT_RATE, format_duration
 
 
 def _vmfile_dict(**overrides) -> dict:
@@ -176,7 +177,6 @@ def test_chaining_multiple_calls() -> None:
 # timing.py: format_duration centisecond overflow
 # ------------------------------------------------------------------
 
-from camtasia.timing import EDIT_RATE, format_duration
 
 
 class TestFormatDurationCsOverflow:

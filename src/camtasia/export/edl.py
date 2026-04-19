@@ -4,6 +4,7 @@ from __future__ import annotations
 from fractions import Fraction
 from pathlib import Path
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from camtasia.project import Project
 

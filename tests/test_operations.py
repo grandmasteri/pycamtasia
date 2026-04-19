@@ -2,19 +2,19 @@ from __future__ import annotations
 
 import copy
 from fractions import Fraction
+from typing import ClassVar
 
 import pytest
 
+from camtasia.audiate.transcript import Word
 from camtasia.operations.diff import diff_projects
 from camtasia.operations.merge import _remap_clip_ids
 from camtasia.operations.speed import _adjust_scalar, rescale_project, set_audio_speed
-from camtasia.operations.sync import SyncSegment, match_marker_to_transcript, plan_sync
+from camtasia.operations.sync import match_marker_to_transcript, plan_sync
 from camtasia.operations.template import (
-    _walk_clips,
     clone_project_structure,
     replace_media_source,
 )
-from camtasia.audiate.transcript import Word
 from camtasia.project import Project
 from camtasia.timing import EDIT_RATE, parse_scalar, seconds_to_ticks
 
@@ -222,7 +222,7 @@ class TestSetAudioSpeed:
 
 
 class TestMatchMarkerToTranscript:
-    WORDS = [
+    WORDS: ClassVar[list] = [
         Word(word_id='', text="selecting", start=0.75, end=1.0),
         Word(word_id='', text="a", start=1.0, end=1.1),
         Word(word_id='', text="recent", start=1.25, end=1.5),

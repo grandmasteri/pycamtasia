@@ -1,10 +1,12 @@
 """GenericBehaviorEffect — Camtasia's text animation/behaviors system."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from camtasia.effects.base import Effect
-from camtasia.types import _BehaviorEffectData, _BehaviorPhaseData
+
+if TYPE_CHECKING:
+    from camtasia.types import _BehaviorPhaseData
 
 
 class BehaviorPhase:

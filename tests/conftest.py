@@ -1,14 +1,12 @@
 from __future__ import annotations
 
+import importlib.util
 import json
-import pytest
 from pathlib import Path
 
-try:
-    import pymediainfo
-    HAS_PYMEDIAINFO = True
-except ImportError:
-    HAS_PYMEDIAINFO = False
+import pytest
+
+HAS_PYMEDIAINFO = importlib.util.find_spec("pymediainfo") is not None
 
 pymediainfo_required = pytest.mark.skipif(
     not HAS_PYMEDIAINFO,

@@ -1,6 +1,7 @@
 """Tests for MediaBin convenience methods and Media.__repr__."""
-from camtasia.media_bin.media_bin import Media, MediaBin, MediaType
 from pathlib import Path
+
+from camtasia.media_bin.media_bin import Media, MediaBin, MediaType
 
 
 def _make_media(media_id, media_type_val, src="./media/test.mp4"):

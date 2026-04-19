@@ -1,11 +1,9 @@
 """Tests for Project.import_and_convert_audio and convert_audio_to_wav."""
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
+import subprocess
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 
 class TestImportAndConvertAudio:
@@ -14,7 +12,7 @@ class TestImportAndConvertAudio:
     def test_skips_conversion_for_pcm_wav(self, project):
         """Already-PCM files should be imported directly without conversion."""
         mock_result = MagicMock(stdout='pcm_s16le\n', returncode=0)
-        with patch('subprocess.run', return_value=mock_result) as mock_run, \
+        with patch('subprocess.run', return_value=mock_result), \
              patch.object(project, 'import_media', return_value='imported') as mock_import, \
              patch.object(project, 'convert_audio_to_wav') as mock_convert:
             result = project.import_and_convert_audio('/tmp/voice.wav')

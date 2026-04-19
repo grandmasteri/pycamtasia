@@ -1,10 +1,18 @@
 """Tests for camtasia.types enums."""
-import camtasia.types as types_module
 from camtasia.timeline.clips.callout import Callout
+import camtasia.types as types_module
 from camtasia.types import (
-    ClipType, EffectName, BlendMode, MaskShape, CalloutShape,
-    TransitionType, CalloutKind, BehaviorInnerName, BehaviorPreset,
-    InterpolationType, _RGBADict,
+    BehaviorInnerName,
+    BehaviorPreset,
+    BlendMode,
+    CalloutKind,
+    CalloutShape,
+    ClipType,
+    EffectName,
+    InterpolationType,
+    MaskShape,
+    TransitionType,
+    _RGBADict,
 )
 
 

@@ -1,4 +1,5 @@
 import pytest
+
 from camtasia.screenplay import parse_screenplay
 
 SAMPLE = """\

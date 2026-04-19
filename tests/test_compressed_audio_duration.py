@@ -16,7 +16,7 @@ from camtasia.media_bin.media_bin import _compute_audio_duration
 class TestComputeAudioDuration:
     """Unit tests for _compute_audio_duration."""
 
-    @pytest.mark.parametrize("fmt, duration_ms, sample_rate, expected", [
+    @pytest.mark.parametrize(("fmt", "duration_ms", "sample_rate", "expected"), [
         ("MPEG Audio", 5000.0, 44100, 220500),
         ("AAC", 3000.0, 48000, 144000),
         ("Vorbis", 2000.0, 44100, 88200),

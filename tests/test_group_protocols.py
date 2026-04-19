@@ -1,7 +1,7 @@
 """Tests for GroupTrack container protocols and Group.set_internal_segment_speeds auto-id."""
 from __future__ import annotations
 
-from camtasia.timeline.clips.group import Group, GroupTrack
+from camtasia.timeline.clips.group import Group
 
 
 def _make_group_data(media_ids=(1, 2, 3)):

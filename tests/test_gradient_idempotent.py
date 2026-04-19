@@ -1,7 +1,10 @@
 """Tests for idempotent gradient background shader reuse."""
 from __future__ import annotations
 
-from camtasia.project import Project
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from camtasia.project import Project
 
 
 class TestAddGradientBackgroundIdempotent:

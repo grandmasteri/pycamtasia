@@ -1,5 +1,5 @@
-from __future__ import annotations
 """Tests for Project._flatten_parameters() parameter flattening."""
+from __future__ import annotations
 
 from camtasia.project import Project
 

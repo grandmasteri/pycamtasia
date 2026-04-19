@@ -1,10 +1,7 @@
 """Tests for Project.load, Project.from_template, and Project.new classmethods."""
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
-
-import pytest
 
 from camtasia.project import Project
 

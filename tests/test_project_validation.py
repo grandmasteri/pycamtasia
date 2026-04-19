@@ -1,15 +1,13 @@
 """Tests for Project.validate() — pre-save validation checks."""
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
+import shutil
 from unittest.mock import patch
 
-import pytest
-
+from camtasia.media_bin import MediaType
 from camtasia.project import load_project
 from camtasia.validation import ValidationIssue
-from camtasia.media_bin import MediaType
 
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 

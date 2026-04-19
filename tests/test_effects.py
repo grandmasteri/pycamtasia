@@ -13,7 +13,6 @@ from camtasia.effects.source import SourceEffect
 from camtasia.effects.visual import BlurRegion, DropShadow, Mask, MotionBlur, RoundCorners
 from camtasia.timing import seconds_to_ticks
 
-
 # ------------------------------------------------------------------
 # Helpers: realistic effect dicts based on the Camtasia format spec
 # ------------------------------------------------------------------
@@ -92,7 +91,7 @@ def _left_click_scaling_dict(**overrides) -> dict:
 # ------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "effect_name, expected_class",
+    ("effect_name", "expected_class"),
     [
         ("RoundCorners", RoundCorners),
         ("DropShadow", DropShadow),
@@ -634,7 +633,7 @@ def test_round_corners_properties():
     assert rc.bottom_right is True
 
 
-def test_drop_shadow_properties():
+def test_drop_shadow_flat_scalar_properties():
     data = {
         'effectName': 'DropShadow',
         'parameters': {
@@ -832,7 +831,7 @@ class TestCursorShadowSetters:
         }
         return CursorShadow(data)
 
-    @pytest.mark.parametrize("attr, new_value", [
+    @pytest.mark.parametrize(("attr", "new_value"), [
         ("enabled", 0),
         ("angle", 1.5),
         ("offset", 5.0),
@@ -860,7 +859,7 @@ class TestCursorPhysicsSetters:
             },
         })
 
-    @pytest.mark.parametrize("attr, new_value", [
+    @pytest.mark.parametrize(("attr", "new_value"), [
         ("intensity", 0.9),
         ("tilt", 0.7),
     ])
@@ -880,7 +879,7 @@ class TestLeftClickScalingSetters:
             },
         })
 
-    @pytest.mark.parametrize("attr, new_value", [
+    @pytest.mark.parametrize(("attr", "new_value"), [
         ("scale", 2.0),
         ("speed", 0.5),
     ])
@@ -1029,7 +1028,7 @@ BLUR_REGION_DICT = {
 
 class TestEffectFromDictDispatchNewFeatures:
     @pytest.mark.parametrize(
-        "effect_dict, expected_type",
+        ("effect_dict", "expected_type"),
         [
             (MOTION_BLUR_DICT, MotionBlur),
             (MASK_DICT, Mask),
@@ -1325,7 +1324,7 @@ def test_set_shader_colors_four_colors():
     assert effect.color0 == (1.0, 0.0, 0.0, 1.0)
     assert effect.color1 == (0.0, 1.0, 0.0, 1.0)
     assert effect.color2 == (0.0, 0.0, 1.0, 1.0)
-    r, g, b, a = effect.color3
+    r, _g, _b, a = effect.color3
     assert abs(r - 128 / 255) < 1e-9
     assert a == 1.0
 

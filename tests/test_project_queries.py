@@ -1,10 +1,12 @@
 """Tests for Project.find_clips_with_effect, find_clips_by_source, replace_all_media."""
 from __future__ import annotations
 
-import pytest
+from typing import TYPE_CHECKING
 
-from camtasia.project import Project
 from camtasia.types import EffectName
+
+if TYPE_CHECKING:
+    from camtasia.project import Project
 
 
 def _clip(clip_id: int, src: int = 1, effects: list[dict] | None = None) -> dict:
@@ -24,7 +26,7 @@ def _clip(clip_id: int, src: int = 1, effects: list[dict] | None = None) -> dict
 
 def _add_clips(project: Project, clips: list[dict]) -> None:
     """Add clip dicts to the first track of a project."""
-    track = list(project.timeline.tracks)[0]
+    track = next(iter(project.timeline.tracks))
     track._data['medias'] = clips
 
 
@@ -56,7 +58,7 @@ class TestFindClipsWithEffect:
         clips = [_clip(1, effects=[{"effectName": "Glow", "parameters": {}}])]
         _add_clips(project, clips)
         result = project.find_clips_with_effect("Glow")
-        track, clip = result[0]
+        _track, clip = result[0]
         assert clip.id == 1
 
 

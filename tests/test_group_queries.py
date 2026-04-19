@@ -35,7 +35,7 @@ class TestAllGroups:
         assert project.all_groups == []
 
     def test_all_groups_is_subset_of_all_clips(self, complex_project: Project) -> None:
-        all_clip_set = set(clip.id for _, clip in complex_project.all_clips)
+        all_clip_set = {clip.id for _, clip in complex_project.all_clips}
         for _, group in complex_project.all_groups:
             assert group.id in all_clip_set
 
@@ -73,7 +73,7 @@ class TestScreenRecordingGroups:
             assert group.is_screen_recording is True
 
     def test_is_subset_of_all_groups(self, complex_project: Project) -> None:
-        all_group_ids = set(group.id for _, group in complex_project.all_groups)
+        all_group_ids = {group.id for _, group in complex_project.all_groups}
         for _, group in complex_project.screen_recording_groups:
             assert group.id in all_group_ids
 
@@ -102,6 +102,6 @@ class TestTimelineGroups:
         assert len(complex_project.timeline.groups) == complex_project.group_count
 
     def test_same_groups_as_project_all_groups(self, complex_project: Project) -> None:
-        timeline_group_ids = set(g.id for g in complex_project.timeline.groups)
-        project_group_ids = set(g.id for _, g in complex_project.all_groups)
+        timeline_group_ids = {g.id for g in complex_project.timeline.groups}
+        project_group_ids = {g.id for _, g in complex_project.all_groups}
         assert timeline_group_ids == project_group_ids

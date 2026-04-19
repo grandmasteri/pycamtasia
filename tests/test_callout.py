@@ -6,7 +6,6 @@ import pytest
 from camtasia.timeline.clips import Callout
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 
-
 # ------------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------------
@@ -451,7 +450,7 @@ class TestCalloutStrokeColorAnimatedGetter:
             },
         }
         callout = Callout(data)
-        r, g, b, a = callout.stroke_color
+        r, _g, _b, _a = callout.stroke_color
         assert r == 0.5
 
 

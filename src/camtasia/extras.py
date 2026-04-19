@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from camtasia.media_bin import Media
     from camtasia.project import Project
     from camtasia.timeline.marker import Marker
-    from camtasia.media_bin import Media
     from camtasia.timeline.track import Track
 
 

@@ -1,11 +1,13 @@
 """Tests for Track.set_segment_speeds()."""
 from __future__ import annotations
 
+from fractions import Fraction
+
 import pytest
 
-from camtasia.timeline.track import Track
-from fractions import Fraction
+from camtasia.operations.speed import rescale_project, set_audio_speed
 from camtasia.timeline.clips.group import Group
+from camtasia.timeline.track import Track
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 
 
@@ -136,9 +138,6 @@ def test_set_internal_segment_speeds_clears_transitions():
 
 # ── from test_coverage_phase4b: operations/speed.py tests ──
 
-from fractions import Fraction
-from camtasia.operations.speed import rescale_project, set_audio_speed
-
 
 def _make_project_data_with_unified_audio(scalar="1/2"):
     return {
@@ -195,7 +194,7 @@ class TestSetAudioSpeedUnifiedMedia:
 
     def test_set_audio_speed_non_unity_target(self):
         data = _make_project_data_with_unified_audio("1/2")
-        factor = set_audio_speed(data, target_speed=0.5)
+        set_audio_speed(data, target_speed=0.5)
         audio = data["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]["audio"]
         assert audio["metadata"]["clipSpeedAttribute"]["value"] is True
         assert audio["scalar"] != 1

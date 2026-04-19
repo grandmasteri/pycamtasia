@@ -5,9 +5,9 @@ import warnings
 
 import pytest
 
-from camtasia.timeline.clips import BaseClip, Group, GroupTrack, clip_from_dict
+from camtasia.timeline.clips import BaseClip, Group, GroupTrack
 from camtasia.timeline.track import Track
-from camtasia.timing import EDIT_RATE, seconds_to_ticks
+from camtasia.timing import seconds_to_ticks
 
 
 @pytest.fixture

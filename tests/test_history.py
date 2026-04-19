@@ -144,10 +144,9 @@ class TestProjectUndoRedo:
         assert project.title == "New Title"
 
     def test_track_changes_on_exception_does_not_record(self, project) -> None:
-        with pytest.raises(ValueError):
-            with project.track_changes("should not record"):
-                project.title = "oops"
-                raise ValueError("abort")
+        with pytest.raises(ValueError), project.track_changes("should not record"):
+            project.title = "oops"
+            raise ValueError("abort")
         assert not project.history.can_undo
 
     def test_history_descriptions(self, project) -> None:
@@ -198,7 +197,8 @@ class TestTotalPatchSizeBytes:
         history.undo(project_data)  # moves "second" to redo stack
 
         total_size: int = history.total_patch_size_bytes
-        assert isinstance(total_size, int) and total_size > 0  # patch size depends on jsonpatch internals
+        assert isinstance(total_size, int)
+        assert total_size > 0
         # Both undo (1 entry) and redo (1 entry) contribute
         assert history.undo_count == 1
         assert history.redo_count == 1

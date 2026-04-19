@@ -1,10 +1,12 @@
 from __future__ import annotations
+
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING
-from camtasia.types import ReportFormat
+
 if TYPE_CHECKING:
     from camtasia.project import Project
+    from camtasia.types import ReportFormat
 
 
 def export_project_report(
@@ -63,7 +65,7 @@ def _build_markdown_report(project: Project) -> str:
     lines = [
         f'# Project Report: {project.file_path.name}',
         '',
-        f'**Canvas:** {project.width}×{project.height}',
+        f'**Canvas:** {project.width}x{project.height}',
         f'**Duration:** {project.total_duration_seconds():.1f}s',
         f'**Tracks:** {project.timeline.track_count}',
         f'**Media:** {len(project.media_bin)} items',
