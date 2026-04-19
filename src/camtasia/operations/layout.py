@@ -13,6 +13,8 @@ def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
     Sorts clips by start time, then repositions each to start
     immediately after the previous clip (plus optional gap).
     """
+    if gap_seconds < 0:
+        raise ValueError(f'gap_seconds must be non-negative, got {gap_seconds}')
     medias = track._data.get('medias', [])
     if not medias:
         return

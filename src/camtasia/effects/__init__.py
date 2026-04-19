@@ -20,7 +20,7 @@ class EffectSchema:
     """
 
     def __init__(self) -> None:
-        raise ImportError(
+        raise RuntimeError(
             "EffectSchema requires marshmallow and marshmallow-oneofschema. "
             "Install them or use the new dict-wrapper API (effect_from_dict)."
         )

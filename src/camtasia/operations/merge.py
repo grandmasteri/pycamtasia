@@ -76,9 +76,9 @@ def merge_tracks(
         new_track = target.timeline.add_track(track.name)
         id_counter = [target.timeline.next_clip_id()]
 
+        clip_id_map: dict[int, int] = {}
         for clip_data in track._data.get('medias', []):
             new_clip = copy.deepcopy(clip_data)
-            clip_id_map: dict[int, int] = {}
             _remap_clip_ids(new_clip, id_counter, clip_id_map, src_id_map)
             new_clip['start'] = new_clip.get('start', 0) + offset_ticks
             _propagate_start_to_unified(new_clip)

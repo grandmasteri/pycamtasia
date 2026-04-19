@@ -199,6 +199,8 @@ def set_audio_speed(
         ValueError: No speed-changed audio clips found.
     """
     target = Fraction(target_speed).limit_denominator(10_000)
+    if target <= 0:
+        raise ValueError(f'target_speed must be positive, got {target_speed}')
     scene = project_data["timeline"]["sceneTrack"]["scenes"][0]["csml"]
 
     # Find the first audio clip with a speed change
