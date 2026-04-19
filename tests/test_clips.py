@@ -2400,3 +2400,43 @@ class TestClipPredicates:
         called = []
         clip.apply_if(lambda c: False, lambda c: called.append(c))
         assert len(called) == 0
+
+
+class TestRemoveEffectByName:
+    def test_removes_matching_effects(self, project):
+        track = project.timeline.tracks[0]
+        clip = track.add_video(0, 0, 5.0)
+        clip._data['effects'] = [
+            {'effectName': 'Glow', 'parameters': {}},
+            {'effectName': 'Border', 'parameters': {}},
+            {'effectName': 'Glow', 'parameters': {}},
+        ]
+        actual_removed = clip.remove_effect_by_name('Glow')
+        assert actual_removed == 2
+        assert len(clip._data['effects']) == 1
+        assert clip._data['effects'][0]['effectName'] == 'Border'
+
+
+class TestDuplicateEffectsTo:
+    def test_copies_effects_to_target(self, project):
+        track = project.timeline.tracks[0]
+        source = track.add_video(0, 0, 5.0)
+        target = track.add_video(0, 5.0, 5.0)
+        source._data['effects'] = [{'effectName': 'Glow', 'parameters': {}}]
+        source.duplicate_effects_to(target)
+        assert len(target._data.get('effects', [])) == 1
+        assert target._data['effects'][0]['effectName'] == 'Glow'
+
+
+class TestResetTransforms:
+    def test_resets_position_scale_rotation(self, project):
+        track = project.timeline.tracks[0]
+        clip = track.add_video(0, 0, 5.0)
+        clip.move_to(100, 200)
+        clip.scale_to(2.0)
+        clip.rotation = 45.0
+        actual_result = clip.reset_transforms()
+        assert actual_result is clip
+        assert clip.translation == (0, 0)
+        assert clip.scale == (1.0, 1.0)
+        assert clip.rotation == 0.0
