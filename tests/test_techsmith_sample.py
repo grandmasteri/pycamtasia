@@ -31,9 +31,9 @@ class TestTechSmithSampleStructure:
 
     def test_track_count(self, sample_data):
         tracks = sample_data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
-        assert len(tracks) == 5
+        assert [t['trackIndex'] for t in tracks] == [0, 1, 2, 3, 4]
         attrs = sample_data['timeline'].get('trackAttributes', [])
-        assert len(attrs) == 5
+        assert len(attrs) == len(tracks)
 
 
 class TestTechSmithSampleClips:
@@ -64,9 +64,7 @@ class TestTechSmithSampleClips:
                     _collect(t.get('medias', []))
         for track in tracks:
             _collect(track.get('medias', []))
-        assert 'Callout' in types
-        assert 'Group' in types
-        assert 'VMFile' in types
+        assert types >= {'Callout', 'Group', 'VMFile'}
 
 
 class TestTechSmithSampleValidation:

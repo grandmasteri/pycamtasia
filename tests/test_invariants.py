@@ -599,7 +599,7 @@ def test_remove_short_clips_preserves_long_clips(threshold_seconds):
     track.remove_short_clips(threshold_seconds)
     
     remaining_count = len(data['medias'])
-    assert remaining_count >= original_long_clip_count
+    assert remaining_count == original_long_clip_count
 
 
 # ---------------------------------------------------------------------------
@@ -656,7 +656,7 @@ def test_group_clips_preserves_content(num_clips):
     # The Group should contain all the clips
     assert group.clip_count == num_clips
     # The track should now have exactly 1 clip (the Group)
-    assert len(data['medias']) == 1
+    assert [m['_type'] for m in data['medias']] == ['Group']
 
 
 # ---------------------------------------------------------------------------
@@ -719,7 +719,7 @@ def test_remove_all_effects_zeroes_count(num_clips):
     proj.remove_all_effects()
     
     for _, clip in proj.all_clips:
-        assert len(clip._data.get('effects', [])) == 0
+        assert clip._data.get('effects', []) == []
 
 
 # ---------------------------------------------------------------------------

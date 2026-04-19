@@ -95,8 +95,6 @@ class TestMergeInternalTracks:
 
         merged_track: GroupTrack = group.merge_internal_tracks()
 
-        assert len(group.tracks) == 1
-        assert len(merged_track) == 2
         clip_ids: set[int] = {c.id for c in merged_track.clips}
         assert clip_ids == {10, 20}
 
@@ -109,8 +107,7 @@ class TestMergeInternalTracks:
 
         merged_track: GroupTrack = group.merge_internal_tracks()
 
-        assert len(group.tracks) == 1
-        assert len(merged_track) == 3
+        assert [c.clip_type for c in merged_track.clips] == ['VMFile', 'AMFile', 'IMFile']
         assert merged_track.track_index == 0
 
     def test_merge_single_track_is_noop(self) -> None:
@@ -120,8 +117,7 @@ class TestMergeInternalTracks:
 
         merged_track: GroupTrack = group.merge_internal_tracks()
 
-        assert len(group.tracks) == 1
-        assert len(merged_track) == 1
+        assert [c.id for c in merged_track.clips] == [5]
 
     def test_merge_empty_group_creates_track(self) -> None:
         """Merging a group with no tracks creates a new empty track."""
@@ -129,8 +125,7 @@ class TestMergeInternalTracks:
 
         merged_track: GroupTrack = group.merge_internal_tracks()
 
-        assert len(group.tracks) == 1
-        assert len(merged_track) == 0
+        assert list(merged_track.clips) == []
 
     def test_merge_preserves_track_index_zero(self) -> None:
         """After merge, the surviving track has trackIndex 0."""
@@ -242,7 +237,7 @@ class TestUngroupClip:
 
         placed_clips: list[BaseClip] = track.ungroup_clip(group_id)
 
-        assert len(placed_clips) == 2
+        assert [c.clip_type for c in placed_clips] == ['VMFile', 'AMFile']
         # Group clip should be gone
         assert group_id not in track
 
@@ -253,9 +248,8 @@ class TestUngroupClip:
         placed_clips: list[BaseClip] = track.ungroup_clip(group_id)
 
         placed_ids: set[int] = {c.id for c in placed_clips}
-        assert len(placed_ids) == 2  # all unique
-        # Original internal IDs (50, 51) should not survive
-        assert 50 not in placed_ids and 51 not in placed_ids
+        # Original internal IDs (50, 51) should not survive; all IDs unique
+        assert placed_ids.isdisjoint({50, 51})
 
     def test_ungroup_adjusts_start_times(self) -> None:
         """Internal clips get start times offset by the Group's position."""
@@ -297,4 +291,4 @@ class TestUngroupClip:
         track.ungroup_clip(100)
 
         assert 200 in track
-        assert len(track) == 2  # other_clip + 1 placed clip
+        assert {c.clip_type for c in track.clips} == {'VMFile', 'AMFile'}

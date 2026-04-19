@@ -29,9 +29,7 @@ class TestCopyEffectsFrom:
 
         target.copy_effects_from(source)
 
-        assert len(target.effects) == 2
-        assert target.effects[0]['effectName'] == 'Glow'
-        assert target.effects[1]['effectName'] == 'DropShadow'
+        assert [e['effectName'] for e in target.effects] == ['Glow', 'DropShadow']
 
     def test_copy_effects_from_appends(self):
         source = _make_clip(id=1, effects=[
@@ -43,9 +41,7 @@ class TestCopyEffectsFrom:
 
         target.copy_effects_from(source)
 
-        assert len(target.effects) == 2
-        assert target.effects[0]['effectName'] == 'Border'
-        assert target.effects[1]['effectName'] == 'Glow'
+        assert [e['effectName'] for e in target.effects] == ['Border', 'Glow']
 
     def test_copy_effects_from_deep_copies(self):
         source = _make_clip(id=1, effects=[

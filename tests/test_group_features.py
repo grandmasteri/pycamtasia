@@ -91,7 +91,7 @@ class TestAllInternalClips:
 
     def test_returns_all_clips_across_tracks(self, video_audio_group: Group) -> None:
         all_clips: list[BaseClip] = video_audio_group.all_internal_clips
-        assert len(all_clips) == 2
+        assert [c.clip_type for c in all_clips] == ['VMFile', 'AMFile']
 
     def test_returns_correct_types(self, video_audio_group: Group) -> None:
         clip_types: list[str] = [c.clip_type for c in video_audio_group.all_internal_clips]
@@ -101,7 +101,7 @@ class TestAllInternalClips:
         assert empty_group.all_internal_clips == []
 
     def test_multi_type_group_count(self, multi_type_group: Group) -> None:
-        assert len(multi_type_group.all_internal_clips) == 3
+        assert [c.clip_type for c in multi_type_group.all_internal_clips] == ['VMFile', 'IMFile', 'AMFile']
 
     def test_returns_base_clip_instances(self, video_audio_group: Group) -> None:
         for clip in video_audio_group.all_internal_clips:
@@ -187,12 +187,11 @@ class TestFindInternalClipsByType:
 
     def test_find_by_string(self, multi_type_group: Group) -> None:
         video_clips: list[BaseClip] = multi_type_group.find_internal_clips_by_type('VMFile')
-        assert len(video_clips) == 1
-        assert all(c.clip_type == 'VMFile' for c in video_clips)
+        assert [c.clip_type for c in video_clips] == ['VMFile']
 
     def test_find_by_clip_type_enum(self, multi_type_group: Group) -> None:
         audio_clips: list[BaseClip] = multi_type_group.find_internal_clips_by_type(ClipType.AUDIO)
-        assert len(audio_clips) == 1
+        assert [c.clip_type for c in audio_clips] == ['AMFile']
 
     def test_no_matches_returns_empty(self, video_only_group: Group) -> None:
         assert video_only_group.find_internal_clips_by_type('AMFile') == []
@@ -202,12 +201,11 @@ class TestFindInternalClipsByType:
 
     def test_multiple_matches(self, video_only_group: Group) -> None:
         video_clips: list[BaseClip] = video_only_group.find_internal_clips_by_type('VMFile')
-        assert len(video_clips) == 2
+        assert [c.clip_type for c in video_clips] == ['VMFile', 'VMFile']
 
     def test_find_image_clips(self, multi_type_group: Group) -> None:
         image_clips: list[BaseClip] = multi_type_group.find_internal_clips_by_type(ClipType.IMAGE)
-        assert len(image_clips) == 1
-        assert image_clips[0].clip_type == 'IMFile'
+        assert [c.clip_type for c in image_clips] == ['IMFile']
 
 
 class TestGroupDescribe:
@@ -238,7 +236,7 @@ class TestGroupTrackOperations:
         ], 'transitions': [], 'parameters': {}, 'ident': '',
            'audioMuted': False, 'videoHidden': False, 'magnetic': False, 'matte': 0, 'solo': False}
         gt = GroupTrack(track_data)
-        assert len(gt) == 2
+        assert [c.id for c in gt] == [1, 2]
 
     def test_group_track_iter(self):
         track_data = {'trackIndex': 0, 'medias': [
@@ -247,8 +245,7 @@ class TestGroupTrackOperations:
            'audioMuted': False, 'videoHidden': False, 'magnetic': False, 'matte': 0, 'solo': False}
         gt = GroupTrack(track_data)
         clips = list(gt)
-        assert len(clips) == 1
-        assert clips[0].id == 1
+        assert [c.id for c in clips] == [1]
 
     def test_group_track_repr(self):
         track_data = {'trackIndex': 0, 'medias': [], 'transitions': [], 'parameters': {}, 'ident': '',
@@ -317,3 +314,212 @@ class TestGroupEdgeCases:
         group = _make_group([[]])
         extracted = group.ungroup()
         assert extracted == []
+
+
+# ==================================================================
+# Group basic properties (from test_clips.py)
+# ==================================================================
+
+import copy
+from fractions import Fraction
+
+from camtasia.timeline.clips import AMFile, IMFile
+
+
+def _base_clip_dict(**overrides) -> dict:
+    base = {
+        "id": 14,
+        "_type": "AMFile",
+        "src": 3,
+        "start": 0,
+        "duration": 106051680000,
+        "mediaStart": 0,
+        "mediaDuration": 113484000000,
+        "scalar": 1,
+    }
+    base.update(overrides)
+    return base
+
+
+def _group_dict(**overrides) -> dict:
+    d = _base_clip_dict(
+        _type="Group",
+        id=70,
+        tracks=[
+            {
+                "trackIndex": 0,
+                "medias": [_base_clip_dict(_type="IMFile", id=71)],
+                "parameters": {},
+            },
+            {
+                "trackIndex": 1,
+                "medias": [_base_clip_dict(_type="AMFile", id=72)],
+                "parameters": {},
+            },
+        ],
+        attributes={"ident": "Group 1", "widthAttr": 1900.0, "heightAttr": 1060.0},
+    )
+    d.update(overrides)
+    return d
+
+
+_S1 = seconds_to_ticks(1.0)
+_S5 = seconds_to_ticks(5.0)
+_S10 = seconds_to_ticks(10.0)
+
+
+def _um_data():
+    return {
+        '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': _S10,
+        'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
+        'parameters': {}, 'effects': [],
+        'video': {
+            '_type': 'ScreenVMFile', 'id': 2, 'src': 5, 'start': 0,
+            'duration': _S10, 'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'attributes': {'ident': 'rec'},
+            'trackNumber': 0,
+        },
+        'audio': {
+            '_type': 'AMFile', 'id': 3, 'src': 5, 'start': 0,
+            'duration': _S10, 'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
+            'attributes': {'gain': 1.0},
+        },
+    }
+
+
+def _cov_group_data(inner=None, duration=None):
+    dur = duration or _S10
+    return {
+        '_type': 'Group', 'id': 100, 'start': _S1, 'duration': dur,
+        'mediaDuration': dur, 'mediaStart': 0, 'scalar': 1,
+        'parameters': {}, 'effects': [],
+        'attributes': {'ident': 'grp', 'widthAttr': 1920, 'heightAttr': 1080},
+        'tracks': [{'trackIndex': 0, 'medias': inner or [], 'transitions': []}],
+    }
+
+
+def test_group_tracks_returns_group_track_objects() -> None:
+    clip = Group(_group_dict())
+    actual_tracks = clip.tracks
+    assert [type(t) for t in actual_tracks] == [GroupTrack, GroupTrack]
+
+
+def test_group_track_clips_are_typed() -> None:
+    clip = Group(_group_dict())
+    track0_clips = clip.tracks[0].clips
+    assert type(track0_clips[0]) is IMFile
+
+    track1_clips = clip.tracks[1].clips
+    assert type(track1_clips[0]) is AMFile
+
+
+def test_group_track_index() -> None:
+    clip = Group(_group_dict())
+    assert clip.tracks[0].track_index == 0
+    assert clip.tracks[1].track_index == 1
+
+
+def test_group_attributes() -> None:
+    clip = Group(_group_dict())
+    assert clip.ident == "Group 1"
+    assert clip.width == 1900.0
+    assert clip.height == 1060.0
+
+
+def test_group_tracks_empty_when_no_tracks() -> None:
+    data = _base_clip_dict(_type="Group")
+    clip = Group(data)
+    assert clip.tracks == []
+
+
+class TestGroupSyncInternalDurations:
+    def test_sync_with_fractional_scalar(self):
+        inner = {
+            '_type': 'VMFile', 'id': 10, 'src': 1,
+            'start': 0, 'duration': _S10 * 2,
+            'mediaDuration': _S10 * 2, 'mediaStart': 0, 'scalar': '1/2',
+            'parameters': {}, 'effects': [],
+        }
+        data = _cov_group_data([inner], duration=_S10)
+        g = Group(data)
+        g.sync_internal_durations()
+        assert inner['duration'] == _S10
+        expected_md = int(Fraction(_S10) / Fraction(1, 2))
+        assert inner['mediaDuration'] == expected_md
+
+    def test_sync_propagates_to_unified(self):
+        inner = copy.deepcopy(_um_data())
+        inner['duration'] = _S10 * 3
+        inner['mediaDuration'] = _S10 * 3
+        data = _cov_group_data([inner], duration=_S10)
+        g = Group(data)
+        g.sync_internal_durations()
+        assert inner['duration'] == _S10
+
+
+class TestGroupUngroup:
+    def test_ungroup_adjusts_start_and_propagates(self):
+        inner_um = copy.deepcopy(_um_data())
+        inner_um['start'] = 0
+        data = _cov_group_data([inner_um])
+        data['start'] = _S5
+        g = Group(data)
+        clips = g.ungroup()
+        assert clips[0].start == _S5
+
+
+class TestGroupSetInternalSegmentSpeedsCanvasWidthOnly:
+    def test_canvas_width_only(self):
+        inner = copy.deepcopy(_um_data())
+        data = _cov_group_data([inner], duration=_S10)
+        g = Group(data)
+        g.set_internal_segment_speeds(
+            segments=[(0.0, 5.0, 5.0)],
+            canvas_width=1920,
+        )
+        clip = data['tracks'][0]['medias'][0]
+        assert clip['parameters']['scale0']['defaultValue'] == 1.0
+
+    def test_canvas_height_only(self):
+        inner = copy.deepcopy(_um_data())
+        data = _cov_group_data([inner], duration=_S10)
+        g = Group(data)
+        g.set_internal_segment_speeds(
+            segments=[(0.0, 5.0, 5.0)],
+            canvas_height=1080,
+        )
+        clip = data['tracks'][0]['medias'][0]
+        assert clip['parameters']['scale1']['defaultValue'] == 1.0
+
+    def test_source_bin_lookup_miss(self):
+        inner = copy.deepcopy(_um_data())
+        data = _cov_group_data([inner], duration=_S10)
+        g = Group(data)
+        g.set_internal_segment_speeds(
+            segments=[(0.0, 5.0, 5.0)],
+            source_bin=[{'id': 999, 'sourceTracks': []}],
+            canvas_width=1920,
+            canvas_height=1080,
+        )
+        medias = data['tracks'][0]['medias']
+        assert medias[0]['_type'] in ('UnifiedMedia', 'ScreenVMFile', 'VMFile')
+
+    def test_no_internal_track_raises(self):
+        data = _cov_group_data()
+        data['tracks'][0]['medias'] = []
+        g = Group(data)
+        with pytest.raises(ValueError, match='No internal track'):
+            g.set_internal_segment_speeds(segments=[(0.0, 1.0, 1.0)])
+
+    def test_stitched_media_template(self):
+        stitched = {
+            '_type': 'StitchedMedia', 'id': 50, 'start': 0, 'duration': _S10,
+            'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'trackNumber': 0,
+            'attributes': {'ident': 'stitch'},
+            'medias': [{'_type': 'ScreenVMFile', 'id': 51, 'src': 5}],
+        }
+        data = _cov_group_data([stitched], duration=_S10)
+        g = Group(data)
+        g.set_internal_segment_speeds(segments=[(0.0, 5.0, 5.0)])
+        assert data['tracks'][0]['medias'][0]['_type'] == 'ScreenVMFile'

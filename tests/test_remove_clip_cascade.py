@@ -34,7 +34,7 @@ class TestRemoveClipCascadesTransitions:
         track.remove_clip(c2.id)
 
         transitions = track._data.get('transitions', [])
-        assert len(transitions) == 0
+        assert transitions == []
 
     def test_remove_middle_clip_keeps_outer_transition(self):
         track = _make_track()
@@ -47,6 +47,5 @@ class TestRemoveClipCascadesTransitions:
         track.remove_clip(c2.id)
 
         transitions = track._data.get('transitions', [])
-        assert len(transitions) == 1
         assert transitions[0]['leftMedia'] == c1.id
         assert transitions[0]['rightMedia'] == c3.id

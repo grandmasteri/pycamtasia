@@ -630,3 +630,186 @@ class TestRescaleUnifiedMedia:
         assert um['video']['duration'] == 200
         assert um['audio']['start'] == 0
         assert um['audio']['duration'] == 200
+
+
+# ==================================================================
+# Tests from test_clips.py — operations/speed.py
+# ==================================================================
+
+
+def _um_data_ops():
+    _S10 = seconds_to_ticks(10.0)
+    return {
+        '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': _S10,
+        'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
+        'parameters': {}, 'effects': [],
+        'video': {
+            '_type': 'ScreenVMFile', 'id': 2, 'src': 5, 'start': 0,
+            'duration': _S10, 'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'attributes': {'ident': 'rec'},
+            'trackNumber': 0,
+        },
+        'audio': {
+            '_type': 'AMFile', 'id': 3, 'src': 5, 'start': 0,
+            'duration': _S10, 'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
+            'attributes': {'gain': 1.0},
+        },
+    }
+
+
+_S1 = seconds_to_ticks(1.0)
+_S5 = seconds_to_ticks(5.0)
+_S10 = seconds_to_ticks(10.0)
+
+
+def _cov_group_data_ops(inner=None, duration=None):
+    dur = duration or _S10
+    return {
+        '_type': 'Group', 'id': 100, 'start': _S1, 'duration': dur,
+        'mediaDuration': dur, 'mediaStart': 0, 'scalar': 1,
+        'parameters': {}, 'effects': [],
+        'attributes': {'ident': 'grp', 'widthAttr': 1920, 'heightAttr': 1080},
+        'tracks': [{'trackIndex': 0, 'medias': inner or [], 'transitions': []}],
+    }
+
+
+class TestAdjustScalar:
+    def test_adjust_scalar_modifies_clip(self):
+        clip = {'scalar': '1/2', 'metadata': {}}
+        _adjust_scalar(clip, Fraction(2))
+        assert Fraction(clip['scalar']) == Fraction(1)
+
+    def test_adjust_scalar_unity(self):
+        clip = {'scalar': 1}
+        _adjust_scalar(clip, Fraction(3, 2))
+        assert Fraction(clip['scalar']) == Fraction(3, 2)
+
+
+class TestMarkSpeedChangedExclusions:
+    def test_imfile_excluded(self):
+        data = {
+            'timeline': {
+                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+                    'trackIndex': 0,
+                    'medias': [
+                        {'_type': 'IMFile', 'id': 1, 'start': 0, 'duration': _S5,
+                         'mediaDuration': 1, 'mediaStart': 0, 'scalar': 1,
+                         'parameters': {}, 'effects': [], 'metadata': {}},
+                    ],
+                    'transitions': [],
+                }]}}]},
+                'parameters': {},
+            },
+        }
+        rescale_project(data, Fraction(2))
+        clip = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        assert clip.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is not True
+
+    def test_callout_excluded(self):
+        data = {
+            'timeline': {
+                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+                    'trackIndex': 0,
+                    'medias': [
+                        {'_type': 'Callout', 'id': 1, 'start': 0, 'duration': _S5,
+                         'mediaDuration': _S5, 'mediaStart': 0, 'scalar': 1,
+                         'parameters': {}, 'effects': [], 'metadata': {},
+                         'def': {}},
+                    ],
+                    'transitions': [],
+                }]}}]},
+                'parameters': {},
+            },
+        }
+        rescale_project(data, Fraction(2))
+        clip = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        assert clip.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is not True
+
+    def test_mark_speed_recurses_into_unified_children(self):
+        um = _um_data_ops()
+        um['metadata'] = {}
+        um['video']['metadata'] = {}
+        um['audio']['metadata'] = {}
+        data = {
+            'timeline': {
+                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+                    'trackIndex': 0, 'medias': [um], 'transitions': [],
+                }]}}]},
+                'parameters': {},
+            },
+        }
+        rescale_project(data, Fraction(2))
+        vid = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['video']
+        assert vid.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
+
+    def test_mark_speed_recurses_into_group_tracks(self):
+        inner_vm = {
+            '_type': 'VMFile', 'id': 10, 'src': 1,
+            'start': 0, 'duration': _S5, 'mediaDuration': _S5,
+            'mediaStart': 0, 'scalar': 1, 'parameters': {}, 'effects': [],
+            'metadata': {},
+        }
+        group = _cov_group_data_ops([inner_vm], duration=_S5)
+        group['metadata'] = {}
+        data = {
+            'timeline': {
+                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+                    'trackIndex': 0, 'medias': [group], 'transitions': [],
+                }]}}]},
+                'parameters': {},
+            },
+        }
+        rescale_project(data, Fraction(2))
+        inner = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['tracks'][0]['medias'][0]
+        assert inner.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
+
+    def test_mark_speed_recurses_into_stitched_medias(self):
+        stitched = {
+            '_type': 'StitchedMedia', 'id': 20, 'start': 0, 'duration': _S5,
+            'mediaDuration': _S5, 'mediaStart': 0, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'medias': [{
+                '_type': 'VMFile', 'id': 21, 'src': 1,
+                'start': 0, 'duration': _S5, 'mediaDuration': _S5,
+                'mediaStart': 0, 'scalar': 1, 'parameters': {}, 'effects': [],
+                'metadata': {},
+            }],
+        }
+        data = {
+            'timeline': {
+                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+                    'trackIndex': 0, 'medias': [stitched], 'transitions': [],
+                }]}}]},
+                'parameters': {},
+            },
+        }
+        rescale_project(data, Fraction(2))
+        inner = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['medias'][0]
+        assert inner.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
+
+
+class TestOverlapFixWithUnified:
+    def test_overlap_fix_propagates_to_unified(self):
+        um1 = _um_data_ops()
+        um1['id'] = 1
+        um1['start'] = 0
+        um1['duration'] = _S5 + 2
+        um2 = copy.deepcopy(_um_data_ops())
+        um2['id'] = 4
+        um2['video']['id'] = 5
+        um2['audio']['id'] = 6
+        um2['start'] = _S5
+        um2['duration'] = _S5
+        data = {
+            'timeline': {
+                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+                    'trackIndex': 0, 'medias': [um1, um2], 'transitions': [],
+                }]}}]},
+                'parameters': {},
+            },
+        }
+        rescale_project(data, Fraction(1))
+        medias = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias']
+        a_end = medias[0]['start'] + medias[0]['duration']
+        b_start = medias[1]['start']
+        assert a_end <= b_start

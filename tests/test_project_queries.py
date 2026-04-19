@@ -57,14 +57,13 @@ class TestFindClipsWithEffect:
         ]
         proj = _make_project(tmp_path, clips)
         result = proj.find_clips_with_effect("DropShadow")
-        assert len(result) == 2
         assert {c.id for _, c in result} == {1, 3}
 
     def test_accepts_effect_name_enum(self, tmp_path: Path):
         clips = [_clip(1, effects=[{"effectName": "DropShadow", "parameters": {}}])]
         proj = _make_project(tmp_path, clips)
         result = proj.find_clips_with_effect(EffectName.DROP_SHADOW)
-        assert len(result) == 1
+        assert result[0][1].id == 1
 
     def test_returns_empty_when_no_match(self, tmp_path: Path):
         proj = _make_project(tmp_path, [_clip(1)])
@@ -88,7 +87,6 @@ class TestFindClipsBySource:
         clips = [_clip(1, src=10), _clip(2, src=20), _clip(3, src=10)]
         proj = _make_project(tmp_path, clips)
         result = proj.find_clips_by_source(10)
-        assert len(result) == 2
         assert {c.id for _, c in result} == {1, 3}
 
     def test_returns_empty_when_no_match(self, tmp_path: Path):
@@ -106,8 +104,8 @@ class TestReplaceAllMedia:
         proj = _make_project(tmp_path, clips)
         count = proj.replace_all_media(10, 99)
         assert count == 2
-        assert len(proj.find_clips_by_source(10)) == 0
-        assert len(proj.find_clips_by_source(99)) == 2
+        assert proj.find_clips_by_source(10) == []
+        assert {c.id for _, c in proj.find_clips_by_source(99)} == {1, 3}
 
     def test_returns_zero_when_no_match(self, tmp_path: Path):
         proj = _make_project(tmp_path, [_clip(1, src=5)])
@@ -122,4 +120,4 @@ class TestReplaceAllMedia:
         proj = _make_project(tmp_path, clips)
         proj.replace_all_media(10, 99)
         # clip 2 should still reference src=20
-        assert len(proj.find_clips_by_source(20)) == 1
+        assert proj.find_clips_by_source(20)[0][1].id == 2

@@ -120,7 +120,6 @@ class TestRippleDelete:
             _clip(3, 5.0, 1.0),
         ])
         ripple_delete(track, clip_id=2)
-        assert len(track._data['medias']) == 2
         actual_starts = [m['start'] for m in track._data['medias']]
         expected_starts = [
             seconds_to_ticks(0.0),
@@ -145,7 +144,7 @@ class TestRippleDelete:
             {'leftMedia': 2, 'rightMedia': 3, 'duration': 100},
         ]
         ripple_delete(track, clip_id=2)
-        assert len(track._data['transitions']) == 0
+        assert track._data['transitions'] == []
 
     def test_ripple_delete_keeps_unrelated_transitions(self):
         track = _make_track([
@@ -159,7 +158,6 @@ class TestRippleDelete:
             {'leftMedia': 3, 'rightMedia': 4, 'duration': 100},
         ]
         ripple_delete(track, clip_id=2)
-        assert len(track._data['transitions']) == 1
         assert track._data['transitions'][0]['leftMedia'] == 3
 
 

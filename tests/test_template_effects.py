@@ -116,11 +116,8 @@ class TestWalkClipsEdgeCases:
             "video": {"_type": "VMFile", "src": 1},
             "audio": {"_type": "AMFile", "src": 2},
         }]}]}]
-        types = [c.get("_type") for c in _walk_clips(tracks)]
-        assert "StitchedMedia" in types
-        assert "UnifiedMedia" in types
-        assert "VMFile" in types
-        assert "AMFile" in types
+        types = {c.get("_type") for c in _walk_clips(tracks)}
+        assert types >= {"StitchedMedia", "UnifiedMedia", "VMFile", "AMFile"}
 
     def test_top_level_unified_media(self):
         tracks = [{"medias": [{
@@ -128,10 +125,8 @@ class TestWalkClipsEdgeCases:
             "video": {"_type": "VMFile", "src": 1},
             "audio": {"_type": "AMFile", "src": 2},
         }]}]
-        types = [c.get("_type") for c in _walk_clips(tracks)]
-        assert "UnifiedMedia" in types
-        assert "VMFile" in types
-        assert "AMFile" in types
+        types = {c.get("_type") for c in _walk_clips(tracks)}
+        assert types >= {"UnifiedMedia", "VMFile", "AMFile"}
 
     def test_duplicate_project_clear_media_with_keyframes(self, tmp_path):
         from camtasia.operations.template import duplicate_project

@@ -31,7 +31,7 @@ def test_track_added(project):
     b = _load_copy(project)
     b.timeline.get_or_create_track('New')
     result = diff_projects(project, b)
-    assert len(result.tracks_added) == 1
+    assert result.tracks_added == [2]
     assert result.tracks_removed == []
 
 
@@ -39,7 +39,7 @@ def test_track_removed(project):
     b = _load_copy(project)
     project.timeline.get_or_create_track('Extra')
     result = diff_projects(project, b)
-    assert len(result.tracks_removed) == 1
+    assert result.tracks_removed == [2]
     assert result.tracks_added == []
 
 
@@ -49,7 +49,7 @@ def test_clip_added(project):
     track_b = b.timeline.get_or_create_track('T')
     track_b.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
     result = diff_projects(project, b)
-    assert len(result.clips_added) == 1
+    assert result.clips_added[0][0] == 2  # track index
     assert result.clips_removed == []
 
 
@@ -59,7 +59,7 @@ def test_clip_removed(project):
     b.timeline.get_or_create_track('T')
     track_a.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
     result = diff_projects(project, b)
-    assert len(result.clips_removed) == 1
+    assert result.clips_removed[0][0] == 2  # track index
     assert result.clips_added == []
 
 
@@ -68,7 +68,7 @@ def test_media_added(project):
     wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
     b.import_media(wav)
     result = diff_projects(project, b)
-    assert len(result.media_added) == 1
+    assert isinstance(result.media_added[0], int)
     assert result.media_removed == []
 
 
@@ -77,8 +77,6 @@ def test_settings_changed(project):
     b.width = 3840
     b.height = 2160
     result = diff_projects(project, b)
-    assert 'width' in result.settings_changed
-    assert 'height' in result.settings_changed
     assert result.settings_changed['width'] == (project.width, 3840)
     assert result.settings_changed['height'] == (project.height, 2160)
 

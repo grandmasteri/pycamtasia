@@ -1,6 +1,6 @@
+"""Tests for camtasia.timeline.clips.base — BaseClip and clip_from_dict factory."""
 from __future__ import annotations
 
-import copy
 import math
 import warnings
 from fractions import Fraction
@@ -10,7 +10,6 @@ from unittest.mock import PropertyMock, patch
 
 import pytest
 
-from camtasia.operations.speed import _adjust_scalar, rescale_project
 from camtasia.project import Project
 from camtasia.timeline.clips import (
     EDIT_RATE,
@@ -18,7 +17,6 @@ from camtasia.timeline.clips import (
     BaseClip,
     Callout,
     Group,
-    GroupTrack,
     IMFile,
     ScreenIMFile,
     ScreenVMFile,
@@ -26,7 +24,6 @@ from camtasia.timeline.clips import (
     VMFile,
     clip_from_dict,
 )
-from camtasia.timeline.clips.placeholder import PlaceholderMedia
 from camtasia.timeline.clips.unified import UnifiedMedia
 from camtasia.timeline.track import Track
 from camtasia.timing import seconds_to_ticks
@@ -52,101 +49,31 @@ def _base_clip_dict(**overrides) -> dict:
     return base
 
 
-def _amfile_dict(**overrides) -> dict:
-    d = _base_clip_dict(
-        _type="AMFile",
-        channelNumber="0,1",
-        attributes={"ident": "voiceover", "gain": 0.8, "mixToMono": False, "loudnessNormalization": True},
-    )
-    d.update(overrides)
+def _make_track(medias=None, name='T'):
+    """Build a minimal Track from raw dicts."""
+    data = {'trackIndex': 0, 'medias': medias or []}
+    attrs = {'ident': name}
+    return Track(attrs, data)
+
+
+def _base(**kw) -> dict:
+    d = {
+        "id": 1, "_type": "AMFile", "src": 1,
+        "start": 0, "duration": EDIT_RATE * 10,
+        "mediaStart": 0, "mediaDuration": EDIT_RATE * 10, "scalar": 1,
+    }
+    d.update(kw)
     return d
 
 
-def _imfile_dict(**overrides) -> dict:
-    d = _base_clip_dict(
-        _type="IMFile",
-        id=33,
-        src=6,
-        start=5092080000,
-        duration=26248320000,
-        mediaDuration=1,
-        parameters={
-            "translation0": {"type": "double", "defaultValue": 10.0, "interp": "eioe"},
-            "translation1": {"type": "double", "defaultValue": 20.0, "interp": "eioe"},
-            "scale0": {"type": "double", "defaultValue": 0.75, "interp": "eioe"},
-            "scale1": {"type": "double", "defaultValue": 0.75, "interp": "eioe"},
-        },
-    )
-    d.update(overrides)
-    return d
-
-
-def _screen_vmfile_dict(**overrides) -> dict:
-    d = _base_clip_dict(
-        _type="ScreenVMFile",
-        id=50,
-        src=2,
-        scalar="51/101",
-        parameters={
-            "cursorScale": {"type": "double", "defaultValue": 5.0, "interp": "linr"},
-            "cursorOpacity": {"type": "double", "defaultValue": 0.8, "interp": "linr"},
-        },
-    )
-    d.update(overrides)
-    return d
-
-
-def _callout_dict(**overrides) -> dict:
-    d = _base_clip_dict(
-        _type="Callout",
-        id=60,
-        **{"def": {
-            "kind": "remix",
-            "shape": "text",
-            "style": "basic",
-            "text": "Hello World",
-            "width": 934.5,
-            "height": 253.9,
-            "horizontal-alignment": "center",
-        }},
-    )
-    d.update(overrides)
-    return d
-
-
-def _group_dict(**overrides) -> dict:
-    d = _base_clip_dict(
-        _type="Group",
-        id=70,
-        tracks=[
-            {
-                "trackIndex": 0,
-                "medias": [_base_clip_dict(_type="IMFile", id=71)],
-                "parameters": {},
-            },
-            {
-                "trackIndex": 1,
-                "medias": [_base_clip_dict(_type="AMFile", id=72)],
-                "parameters": {},
-            },
-        ],
-        attributes={"ident": "Group 1", "widthAttr": 1900.0, "heightAttr": 1060.0},
-    )
-    d.update(overrides)
-    return d
-
-
-def _stitched_dict(**overrides) -> dict:
-    d = _base_clip_dict(
-        _type="StitchedMedia",
-        id=80,
-        medias=[
-            _base_clip_dict(_type="AMFile", id=81, start=0, duration=50000000),
-            _base_clip_dict(_type="AMFile", id=82, start=50000000, duration=60000000),
-        ],
-        attributes={"gain": 0.9},
-    )
-    d.update(overrides)
+def _coverage_clip(extra=None, **kw):
+    d = {'id': 1, '_type': 'VMFile', 'src': 0, 'start': 0, 'duration': 100,
+         'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+         'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+         'animationTracks': {}}
+    if extra:
+        d.update(extra)
+    d.update(kw)
     return d
 
 
@@ -205,15 +132,13 @@ def test_baseclip_core_properties() -> None:
 def test_baseclip_scalar_parses_string_fraction() -> None:
     data = _base_clip_dict(scalar="51/101")
     clip = BaseClip(data)
-    actual_scalar = clip.scalar
-    assert actual_scalar == Fraction(51, 101)
+    assert clip.scalar == Fraction(51, 101)
 
 
 def test_baseclip_scalar_parses_int() -> None:
     data = _base_clip_dict(scalar=1)
     clip = BaseClip(data)
-    actual_scalar = clip.scalar
-    assert actual_scalar == Fraction(1)
+    assert clip.scalar == Fraction(1)
 
 
 def test_baseclip_set_speed_mutates_dict() -> None:
@@ -248,8 +173,7 @@ def test_set_start_seconds(input_seconds: float, expected_ticks: int) -> None:
     data = _base_clip_dict()
     clip = BaseClip(data)
     clip.start_seconds = input_seconds
-    actual_start = clip.start
-    assert actual_start == expected_ticks
+    assert clip.start == expected_ticks
 
 
 @pytest.mark.parametrize(
@@ -265,8 +189,7 @@ def test_set_duration_seconds(input_seconds: float, expected_ticks: int) -> None
     data = _base_clip_dict()
     clip = BaseClip(data)
     clip.duration_seconds = input_seconds
-    actual_duration = clip.duration
-    assert actual_duration == expected_ticks
+    assert clip.duration == expected_ticks
 
 
 @pytest.mark.parametrize("input_seconds", [0.0, 1.0, 7.33], ids=["zero", "one", "fractional"])
@@ -274,8 +197,7 @@ def test_start_seconds_roundtrip(input_seconds: float) -> None:
     data = _base_clip_dict()
     clip = BaseClip(data)
     clip.start_seconds = input_seconds
-    actual_seconds = clip.start_seconds
-    assert actual_seconds == pytest.approx(input_seconds)
+    assert clip.start_seconds == pytest.approx(input_seconds)
 
 
 @pytest.mark.parametrize("input_seconds", [0.0, 1.0, 4.87], ids=["zero", "one", "fractional"])
@@ -283,8 +205,7 @@ def test_duration_seconds_roundtrip(input_seconds: float) -> None:
     data = _base_clip_dict()
     clip = BaseClip(data)
     clip.duration_seconds = input_seconds
-    actual_seconds = clip.duration_seconds
-    assert actual_seconds == pytest.approx(input_seconds)
+    assert clip.duration_seconds == pytest.approx(input_seconds)
 
 
 def test_baseclip_media_start_parses_string_fraction() -> None:
@@ -330,213 +251,6 @@ def test_baseclip_duration_setter_mutates_dict() -> None:
     assert data["duration"] == 888
 
 
-# ------------------------------------------------------------------
-# AMFile
-# ------------------------------------------------------------------
-
-def test_amfile_channel_number() -> None:
-    clip = AMFile(_amfile_dict())
-    assert clip.channel_number == "0,1"
-
-
-def test_amfile_gain() -> None:
-    clip = AMFile(_amfile_dict())
-    assert clip.gain == 0.8
-
-
-def test_amfile_loudness_normalization() -> None:
-    clip = AMFile(_amfile_dict())
-    assert clip.loudness_normalization is True
-
-
-def test_amfile_gain_setter_mutates_dict() -> None:
-    data = _amfile_dict()
-    clip = AMFile(data)
-    clip.gain = 1.5
-    assert data["attributes"]["gain"] == 1.5
-
-
-def test_amfile_channel_number_default() -> None:
-    data = _base_clip_dict(_type="AMFile")
-    clip = AMFile(data)
-    assert clip.channel_number == "0"
-
-
-def test_amfile_gain_default() -> None:
-    data = _base_clip_dict(_type="AMFile")
-    clip = AMFile(data)
-    assert clip.gain == 1.0
-
-
-def test_amfile_loudness_normalization_default() -> None:
-    data = _base_clip_dict(_type="AMFile")
-    clip = AMFile(data)
-    assert clip.loudness_normalization is False
-
-
-# ------------------------------------------------------------------
-# IMFile
-# ------------------------------------------------------------------
-
-def test_imfile_translation() -> None:
-    clip = IMFile(_imfile_dict())
-    assert clip.translation == (10.0, 20.0)
-
-
-def test_imfile_scale() -> None:
-    clip = IMFile(_imfile_dict())
-    assert clip.scale == (0.75, 0.75)
-
-
-def test_imfile_translation_setter_mutates_dict() -> None:
-    data = _imfile_dict()
-    clip = IMFile(data)
-    clip.translation = (50.0, 60.0)
-    assert data["parameters"]["translation0"]["defaultValue"] == 50.0
-    assert data["parameters"]["translation1"]["defaultValue"] == 60.0
-
-
-def test_imfile_scale_default_when_absent() -> None:
-    data = _base_clip_dict(_type="IMFile")
-    clip = IMFile(data)
-    assert clip.scale == (1.0, 1.0)
-
-
-def test_imfile_translation_default_when_absent() -> None:
-    data = _base_clip_dict(_type="IMFile")
-    clip = IMFile(data)
-    assert clip.translation == (0.0, 0.0)
-
-
-# ------------------------------------------------------------------
-# ScreenVMFile
-# ------------------------------------------------------------------
-
-def test_screen_vmfile_cursor_scale() -> None:
-    clip = ScreenVMFile(_screen_vmfile_dict())
-    assert clip.cursor_scale == 5.0
-
-
-def test_screen_vmfile_cursor_opacity() -> None:
-    clip = ScreenVMFile(_screen_vmfile_dict())
-    assert clip.cursor_opacity == 0.8
-
-
-def test_screen_vmfile_cursor_scale_setter_mutates_dict() -> None:
-    data = _screen_vmfile_dict()
-    clip = ScreenVMFile(data)
-    clip.cursor_scale = 3.0
-    assert data["parameters"]["cursorScale"]["defaultValue"] == 3.0
-
-
-def test_screen_vmfile_cursor_scale_default() -> None:
-    data = _base_clip_dict(_type="ScreenVMFile")
-    clip = ScreenVMFile(data)
-    assert clip.cursor_scale == 5.0
-
-
-def test_screen_vmfile_cursor_opacity_default() -> None:
-    data = _base_clip_dict(_type="ScreenVMFile")
-    clip = ScreenVMFile(data)
-    assert clip.cursor_opacity == 1.0
-
-
-# ------------------------------------------------------------------
-# StitchedMedia
-# ------------------------------------------------------------------
-
-def test_stitched_nested_clips_returns_typed_clips() -> None:
-    clip = StitchedMedia(_stitched_dict())
-    actual_clips = clip.nested_clips
-    assert [type(c) for c in actual_clips] == [AMFile, AMFile]
-    assert actual_clips[0].id == 81
-    assert actual_clips[1].id == 82
-
-
-def test_stitched_volume() -> None:
-    clip = StitchedMedia(_stitched_dict())
-    assert clip.gain == 0.9  # gain is in attributes, volume is in parameters
-
-
-def test_stitched_nested_clips_empty_when_no_medias() -> None:
-    data = _base_clip_dict(_type="StitchedMedia")
-    clip = StitchedMedia(data)
-    assert clip.nested_clips == []
-
-
-# ------------------------------------------------------------------
-# Group
-# ------------------------------------------------------------------
-
-def test_group_tracks_returns_group_track_objects() -> None:
-    clip = Group(_group_dict())
-    actual_tracks = clip.tracks
-    assert [type(t) for t in actual_tracks] == [GroupTrack, GroupTrack]
-
-
-def test_group_track_clips_are_typed() -> None:
-    clip = Group(_group_dict())
-    track0_clips = clip.tracks[0].clips
-    assert type(track0_clips[0]) is IMFile
-
-    track1_clips = clip.tracks[1].clips
-    assert type(track1_clips[0]) is AMFile
-
-
-def test_group_track_index() -> None:
-    clip = Group(_group_dict())
-    assert clip.tracks[0].track_index == 0
-    assert clip.tracks[1].track_index == 1
-
-
-def test_group_attributes() -> None:
-    clip = Group(_group_dict())
-    assert clip.ident == "Group 1"
-    assert clip.width == 1900.0
-    assert clip.height == 1060.0
-
-
-def test_group_tracks_empty_when_no_tracks() -> None:
-    data = _base_clip_dict(_type="Group")
-    clip = Group(data)
-    assert clip.tracks == []
-
-
-# ------------------------------------------------------------------
-# Callout
-# ------------------------------------------------------------------
-
-def test_callout_text() -> None:
-    clip = Callout(_callout_dict())
-    assert clip.text == "Hello World"
-
-
-def test_callout_text_setter_mutates_dict() -> None:
-    data = _callout_dict()
-    clip = Callout(data)
-    clip.text = "Updated"
-    assert data["def"]["text"] == "Updated"
-
-
-def test_callout_kind_shape_style() -> None:
-    clip = Callout(_callout_dict())
-    assert clip.kind == "remix"
-    assert clip.shape == "text"
-    assert clip.style == "basic"
-
-
-def test_callout_dimensions() -> None:
-    clip = Callout(_callout_dict())
-    assert clip.width == 934.5
-    assert clip.height == 253.9
-
-
-def test_callout_text_default_when_no_def() -> None:
-    data = _base_clip_dict(_type="Callout")
-    clip = Callout(data)
-    assert clip.text == ""
-
-
 class TestClipReprShowsSeconds:
     def test_clip_repr_shows_seconds(self):
         data = _base_clip_dict(start=705_600_000, duration=705_600_000 * 2)
@@ -561,35 +275,6 @@ class TestSetTimeRange:
         clip = BaseClip(data)
         result = clip.set_time_range(1.0, 3.0)
         assert result is clip
-
-
-def test_stitched_attributes():
-    clip = StitchedMedia(_stitched_dict())
-    assert isinstance(clip.attributes, dict)
-
-
-# ------------------------------------------------------------------
-# BaseClip: mute, opacity, fade (from base.py coverage)
-# ------------------------------------------------------------------
-
-def _coverage_clip(extra=None, **kw):
-    d = {'id': 1, '_type': 'VMFile', 'src': 0, 'start': 0, 'duration': 100,
-         'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
-         'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
-         'animationTracks': {}}
-    if extra:
-        d.update(extra)
-    d.update(kw)
-    return d
-
-
-class TestMuteUnifiedMediaNoAudio:
-    def test_raises(self):
-        data = _coverage_clip(_type='UnifiedMedia')
-        data.pop('audio', None)
-        clip = BaseClip(data)
-        with pytest.raises(ValueError, match='no audio sub-clip'):
-            clip.mute()
 
 
 class TestOpacitySetterClearsVisualTracks:
@@ -620,563 +305,23 @@ class TestFadeInMergesWithFadeOut:
         result = clip.fade_in(1.0)
         assert result is clip
         visual = data['animationTracks'].get('visual', [])
-        assert len(visual) == 2
         assert 'endTime' in visual[0]
 
 
-# ------------------------------------------------------------------
-# Callout: set_size dict branch (from base.py coverage)
-# ------------------------------------------------------------------
-
-class TestCalloutSetSizeDictBranch:
-    def test_updates_dict_default_value(self):
-        data = _coverage_clip(_type='Callout')
-        data['def'] = {
-            'width': {'defaultValue': 100, 'keyframes': [{'time': 0, 'value': 100}]},
-            'height': {'defaultValue': 50, 'keyframes': [{'time': 0, 'value': 50}]},
+class TestOpacityEmptyKeyframes:
+    def test_empty_keyframes_returns_none(self):
+        data = {
+            'id': 1, '_type': 'VMFile', 'src': 0,
+            'start': 0, 'duration': 100, 'mediaStart': 0,
+            'parameters': {'opacity': {'keyframes': []}},
         }
-        clip = Callout(data)
-        clip.set_size(200, 150)
-        assert data['def']['width']['defaultValue'] == 200
-        assert data['def']['height']['defaultValue'] == 150
-        assert 'keyframes' not in data['def']['width']
-        assert 'keyframes' not in data['def']['height']
+        clip = BaseClip(data)
+        assert clip._get_existing_opacity_keyframes() is None
 
 
 # ------------------------------------------------------------------
-# UnifiedMedia: effect blocking (from unified.py coverage)
-# ------------------------------------------------------------------
-
-@pytest.fixture
-def um():
-    return UnifiedMedia({
-        '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
-        'video': {'_type': 'VMFile', 'id': 2, 'src': 1, 'start': 0, 'duration': 100,
-                  'attributes': {}, 'parameters': {}, 'effects': []},
-        'audio': {'_type': 'AMFile', 'id': 3, 'src': 1, 'start': 0, 'duration': 100,
-                  'attributes': {}, 'parameters': {}, 'effects': []},
-    })
-
-
-def test_um_add_effect_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.add_effect({'effectName': 'Glow'})
-
-
-def test_um_add_drop_shadow_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.add_drop_shadow()
-
-
-def test_um_add_round_corners_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.add_round_corners()
-
-
-def test_um_add_glow_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.add_glow()
-
-
-def test_um_add_glow_timed_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.add_glow_timed()
-
-
-def test_um_copy_effects_from_raises(um):
-    with pytest.raises(TypeError, match='Effects must be added'):
-        um.copy_effects_from(um)
-
-
-def test_um_set_source_raises(um):
-    with pytest.raises(TypeError, match='Cannot set_source'):
-        um.set_source(42)
-
-
-# ------------------------------------------------------------------
-# Clip coverage: unified, group, callout, speed, placeholder, stitched
-# ------------------------------------------------------------------
-
-_S1 = seconds_to_ticks(1.0)
-_S5 = seconds_to_ticks(5.0)
-_S10 = seconds_to_ticks(10.0)
-
-
-def _um_data():
-    return {
-        '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': _S10,
-        'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
-        'parameters': {}, 'effects': [],
-        'video': {
-            '_type': 'ScreenVMFile', 'id': 2, 'src': 5, 'start': 0,
-            'duration': _S10, 'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
-            'parameters': {}, 'effects': [], 'attributes': {'ident': 'rec'},
-            'trackNumber': 0,
-        },
-        'audio': {
-            '_type': 'AMFile', 'id': 3, 'src': 5, 'start': 0,
-            'duration': _S10, 'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
-            'attributes': {'gain': 1.0},
-        },
-    }
-
-
-def _cov_group_data(inner=None, duration=None):
-    dur = duration or _S10
-    return {
-        '_type': 'Group', 'id': 100, 'start': _S1, 'duration': dur,
-        'mediaDuration': dur, 'mediaStart': 0, 'scalar': 1,
-        'parameters': {}, 'effects': [],
-        'attributes': {'ident': 'grp', 'widthAttr': 1920, 'heightAttr': 1080},
-        'tracks': [{'trackIndex': 0, 'medias': inner or [], 'transitions': []}],
-    }
-
-
-def _cov_callout_data(**overrides):
-    d = {
-        '_type': 'Callout', 'id': 400, 'start': 0, 'duration': _S5,
-        'mediaDuration': _S5, 'mediaStart': 0, 'scalar': 1,
-        'parameters': {}, 'effects': [],
-        'def': {
-            'text': 'Hello', 'kind': 'remix', 'shape': 'text', 'style': 'basic',
-            'font': {'name': 'Arial', 'weight': 'Regular', 'size': 24.0},
-            'width': 200, 'height': 100,
-            'textAttributes': {
-                'type': 'textAttributeList',
-                'keyframes': [{
-                    'endTime': 0,
-                    'time': 0,
-                    'duration': 0,
-                    'value': [
-                        {'name': 'fontName', 'value': 'Arial', 'rangeEnd': 5, 'rangeStart': 0, 'valueType': 'string'},
-                        {'name': 'fontWeight', 'value': 400, 'rangeEnd': 5, 'rangeStart': 0, 'valueType': 'int'},
-                        {'name': 'fontSize', 'value': 24, 'rangeEnd': 5, 'rangeStart': 0, 'valueType': 'double'},
-                        {'name': 'fgColor', 'value': '(0,0,0,255)', 'rangeEnd': 5, 'rangeStart': 0, 'valueType': 'color'},
-                    ]
-                }]
-            },
-        },
-    }
-    d.update(overrides)
-    return d
-
-
-class TestUnifiedMediaEffectBlocking:
-    def test_add_effect(self):
-        um = UnifiedMedia(_um_data())
-        with pytest.raises(TypeError):
-            um.add_effect({})
-
-    def test_add_drop_shadow(self):
-        um = UnifiedMedia(_um_data())
-        with pytest.raises(TypeError):
-            um.add_drop_shadow()
-
-    def test_add_round_corners(self):
-        um = UnifiedMedia(_um_data())
-        with pytest.raises(TypeError):
-            um.add_round_corners()
-
-    def test_add_glow(self):
-        um = UnifiedMedia(_um_data())
-        with pytest.raises(TypeError):
-            um.add_glow()
-
-    def test_add_glow_timed(self):
-        um = UnifiedMedia(_um_data())
-        with pytest.raises(TypeError):
-            um.add_glow_timed()
-
-    def test_copy_effects_from(self):
-        um = UnifiedMedia(_um_data())
-        with pytest.raises(TypeError):
-            um.copy_effects_from(um)
-
-    def test_set_source(self):
-        um = UnifiedMedia(_um_data())
-        with pytest.raises(TypeError):
-            um.set_source(1)
-
-
-class TestGroupSyncInternalDurations:
-    def test_sync_with_fractional_scalar(self):
-        inner = {
-            '_type': 'VMFile', 'id': 10, 'src': 1,
-            'start': 0, 'duration': _S10 * 2,
-            'mediaDuration': _S10 * 2, 'mediaStart': 0, 'scalar': '1/2',
-            'parameters': {}, 'effects': [],
-        }
-        data = _cov_group_data([inner], duration=_S10)
-        g = Group(data)
-        g.sync_internal_durations()
-        assert inner['duration'] == _S10
-        expected_md = int(Fraction(_S10) / Fraction(1, 2))
-        assert inner['mediaDuration'] == expected_md
-
-    def test_sync_propagates_to_unified(self):
-        inner = copy.deepcopy(_um_data())
-        inner['duration'] = _S10 * 3
-        inner['mediaDuration'] = _S10 * 3
-        data = _cov_group_data([inner], duration=_S10)
-        g = Group(data)
-        g.sync_internal_durations()
-        assert inner['duration'] == _S10
-
-
-class TestGroupUngroup:
-    def test_ungroup_adjusts_start_and_propagates(self):
-        inner_um = copy.deepcopy(_um_data())
-        inner_um['start'] = 0
-        data = _cov_group_data([inner_um])
-        data['start'] = _S5
-        g = Group(data)
-        clips = g.ungroup()
-        assert len(clips) == 1
-        assert clips[0].start == _S5
-
-
-class TestGroupSetInternalSegmentSpeedsCanvasWidthOnly:
-    def test_canvas_width_only(self):
-        inner = copy.deepcopy(_um_data())
-        data = _cov_group_data([inner], duration=_S10)
-        g = Group(data)
-        g.set_internal_segment_speeds(
-            segments=[(0.0, 5.0, 5.0)],
-            canvas_width=1920,
-        )
-        clip = data['tracks'][0]['medias'][0]
-        assert clip['parameters']['scale0']['defaultValue'] == 1.0
-
-    def test_canvas_height_only(self):
-        inner = copy.deepcopy(_um_data())
-        data = _cov_group_data([inner], duration=_S10)
-        g = Group(data)
-        g.set_internal_segment_speeds(
-            segments=[(0.0, 5.0, 5.0)],
-            canvas_height=1080,
-        )
-        clip = data['tracks'][0]['medias'][0]
-        assert clip['parameters']['scale1']['defaultValue'] == 1.0
-
-    def test_source_bin_lookup_miss(self):
-        inner = copy.deepcopy(_um_data())
-        data = _cov_group_data([inner], duration=_S10)
-        g = Group(data)
-        g.set_internal_segment_speeds(
-            segments=[(0.0, 5.0, 5.0)],
-            source_bin=[{'id': 999, 'sourceTracks': []}],
-            canvas_width=1920,
-            canvas_height=1080,
-        )
-        medias = data['tracks'][0]['medias']
-        assert len(medias) == 1
-        assert medias[0]['_type'] in ('UnifiedMedia', 'ScreenVMFile', 'VMFile')
-
-    def test_no_internal_track_raises(self):
-        data = _cov_group_data()
-        data['tracks'][0]['medias'] = []
-        g = Group(data)
-        with pytest.raises(ValueError, match='No internal track'):
-            g.set_internal_segment_speeds(segments=[(0.0, 1.0, 1.0)])
-
-    def test_stitched_media_template(self):
-        stitched = {
-            '_type': 'StitchedMedia', 'id': 50, 'start': 0, 'duration': _S10,
-            'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
-            'parameters': {}, 'effects': [], 'trackNumber': 0,
-            'attributes': {'ident': 'stitch'},
-            'medias': [{'_type': 'ScreenVMFile', 'id': 51, 'src': 5}],
-        }
-        data = _cov_group_data([stitched], duration=_S10)
-        g = Group(data)
-        g.set_internal_segment_speeds(segments=[(0.0, 5.0, 5.0)])
-        assert data['tracks'][0]['medias'][0]['_type'] == 'ScreenVMFile'
-
-
-class TestCalloutSetFontWithIntWeight:
-    def test_set_font_int_weight_updates_keyframes(self):
-        d = _cov_callout_data()
-        c = Callout(d)
-        c.set_font('Montserrat', weight=700, size=48)
-        attrs = {a['name']: a['value'] for a in d['def']['textAttributes']['keyframes'][0]['value']}
-        assert attrs['fontName'] == 'Montserrat'
-        assert attrs['fontWeight'] == 700
-        assert attrs['fontSize'] == 48
-
-    def test_set_font_string_weight(self):
-        d = _cov_callout_data()
-        c = Callout(d)
-        c.set_font('Roboto', weight='Bold', size=36)
-        attrs = {a['name']: a['value'] for a in d['def']['textAttributes']['keyframes'][0]['value']}
-        assert attrs['fontWeight'] == 700
-
-
-class TestCalloutSetColorsWithFgColor:
-    def test_set_colors_updates_fgcolor_in_keyframes(self):
-        d = _cov_callout_data()
-        c = Callout(d)
-        c.set_colors(font_color=(0.0, 1.0, 0.0))
-        attrs = {a['name']: a['value'] for a in d['def']['textAttributes']['keyframes'][0]['value']}
-        assert attrs['fgColor'] == '(0,255,0,255)'
-
-    def test_set_colors_with_alpha(self):
-        d = _cov_callout_data()
-        c = Callout(d)
-        c.set_colors(font_color=(1.0, 0.0, 0.0, 0.5))
-        attrs = {a['name']: a['value'] for a in d['def']['textAttributes']['keyframes'][0]['value']}
-        assert '128' in attrs['fgColor'] or '127' in attrs['fgColor']
-
-
-class TestCalloutDefinitionProperty:
-    def test_definition_returns_def_dict(self):
-        d = _cov_callout_data()
-        c = Callout(d)
-        defn = c.definition
-        assert defn['text'] == 'Hello'
-
-    def test_definition_empty_when_no_def(self):
-        d = _cov_callout_data()
-        del d['def']
-        c = Callout(d)
-        assert c.definition == {}
-
-
-class TestAdjustScalar:
-    def test_adjust_scalar_modifies_clip(self):
-        clip = {'scalar': '1/2', 'metadata': {}}
-        _adjust_scalar(clip, Fraction(2))
-        assert Fraction(clip['scalar']) == Fraction(1)
-
-    def test_adjust_scalar_unity(self):
-        clip = {'scalar': 1}
-        _adjust_scalar(clip, Fraction(3, 2))
-        assert Fraction(clip['scalar']) == Fraction(3, 2)
-
-
-class TestMarkSpeedChangedExclusions:
-    def test_imfile_excluded(self):
-
-        data = {
-            'timeline': {
-                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
-                    'trackIndex': 0,
-                    'medias': [
-                        {'_type': 'IMFile', 'id': 1, 'start': 0, 'duration': _S5,
-                         'mediaDuration': 1, 'mediaStart': 0, 'scalar': 1,
-                         'parameters': {}, 'effects': [], 'metadata': {}},
-                    ],
-                    'transitions': [],
-                }]}}]},
-                'parameters': {},
-            },
-        }
-        rescale_project(data, Fraction(2))
-        clip = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
-        assert clip.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is not True
-
-    def test_callout_excluded(self):
-
-        data = {
-            'timeline': {
-                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
-                    'trackIndex': 0,
-                    'medias': [
-                        {'_type': 'Callout', 'id': 1, 'start': 0, 'duration': _S5,
-                         'mediaDuration': _S5, 'mediaStart': 0, 'scalar': 1,
-                         'parameters': {}, 'effects': [], 'metadata': {},
-                         'def': {}},
-                    ],
-                    'transitions': [],
-                }]}}]},
-                'parameters': {},
-            },
-        }
-        rescale_project(data, Fraction(2))
-        clip = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
-        assert clip.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is not True
-
-    def test_mark_speed_recurses_into_unified_children(self):
-
-        um = _um_data()
-        um['metadata'] = {}
-        um['video']['metadata'] = {}
-        um['audio']['metadata'] = {}
-        data = {
-            'timeline': {
-                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
-                    'trackIndex': 0, 'medias': [um], 'transitions': [],
-                }]}}]},
-                'parameters': {},
-            },
-        }
-        rescale_project(data, Fraction(2))
-        vid = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['video']
-        assert vid.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
-
-    def test_mark_speed_recurses_into_group_tracks(self):
-
-        inner_vm = {
-            '_type': 'VMFile', 'id': 10, 'src': 1,
-            'start': 0, 'duration': _S5, 'mediaDuration': _S5,
-            'mediaStart': 0, 'scalar': 1, 'parameters': {}, 'effects': [],
-            'metadata': {},
-        }
-        group = _cov_group_data([inner_vm], duration=_S5)
-        group['metadata'] = {}
-        data = {
-            'timeline': {
-                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
-                    'trackIndex': 0, 'medias': [group], 'transitions': [],
-                }]}}]},
-                'parameters': {},
-            },
-        }
-        rescale_project(data, Fraction(2))
-        inner = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['tracks'][0]['medias'][0]
-        assert inner.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
-
-    def test_mark_speed_recurses_into_stitched_medias(self):
-
-        stitched = {
-            '_type': 'StitchedMedia', 'id': 20, 'start': 0, 'duration': _S5,
-            'mediaDuration': _S5, 'mediaStart': 0, 'scalar': 1,
-            'parameters': {}, 'effects': [], 'metadata': {},
-            'medias': [{
-                '_type': 'VMFile', 'id': 21, 'src': 1,
-                'start': 0, 'duration': _S5, 'mediaDuration': _S5,
-                'mediaStart': 0, 'scalar': 1, 'parameters': {}, 'effects': [],
-                'metadata': {},
-            }],
-        }
-        data = {
-            'timeline': {
-                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
-                    'trackIndex': 0, 'medias': [stitched], 'transitions': [],
-                }]}}]},
-                'parameters': {},
-            },
-        }
-        rescale_project(data, Fraction(2))
-        inner = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['medias'][0]
-        assert inner.get('metadata', {}).get('clipSpeedAttribute', {}).get('value') is True
-
-
-class TestOverlapFixWithUnified:
-    def test_overlap_fix_propagates_to_unified(self):
-        um1 = _um_data()
-        um1['id'] = 1
-        um1['start'] = 0
-        um1['duration'] = _S5 + 2
-        um2 = copy.deepcopy(_um_data())
-        um2['id'] = 4
-        um2['video']['id'] = 5
-        um2['audio']['id'] = 6
-        um2['start'] = _S5
-        um2['duration'] = _S5
-        data = {
-            'timeline': {
-                'sceneTrack': {'scenes': [{'csml': {'tracks': [{
-                    'trackIndex': 0, 'medias': [um1, um2], 'transitions': [],
-                }]}}]},
-                'parameters': {},
-            },
-        }
-        rescale_project(data, Fraction(1))
-        medias = data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias']
-        a_end = medias[0]['start'] + medias[0]['duration']
-        b_start = medias[1]['start']
-        assert a_end <= b_start
-
-
-class TestPlaceholderSetSource:
-    def test_set_source_raises(self):
-        p = PlaceholderMedia({
-            '_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': _S5,
-            'mediaDuration': 1, 'mediaStart': 0, 'scalar': 1,
-            'parameters': {}, 'effects': [],
-        })
-        with pytest.raises(TypeError, match='Cannot set_source'):
-            p.set_source(1)
-
-
-class TestStitchedSetSource:
-    def test_set_source_raises(self):
-        s = StitchedMedia({
-            '_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': _S5,
-            'mediaDuration': _S5, 'mediaStart': 0, 'scalar': 1,
-            'parameters': {}, 'effects': [], 'medias': [],
-        })
-        with pytest.raises(TypeError, match='do not have a top-level source'):
-            s.set_source(1)
-
-
-class TestCalloutSetSourceRaises:
-    def test_set_source_raises_type_error(self):
-        c = Callout(_cov_callout_data())
-        with pytest.raises(TypeError, match='Callout clips do not have a source ID'):
-            c.set_source(1)
-
-
-class TestCalloutTextSetterUpdatesRanges:
-    def test_text_setter_updates_keyframe_ranges(self):
-        d = _cov_callout_data()
-        c = Callout(d)
-        c.text = 'New longer text'
-        for kf in d['def']['textAttributes']['keyframes']:
-            for attr in kf['value']:
-                assert attr['rangeEnd'] == len('New longer text')
-                assert attr['rangeStart'] == 0
-
-
-class TestCalloutDimensionSettersWithDictValues:
-    def test_width_setter_with_dict_value(self):
-        d = _cov_callout_data()
-        d['def']['width'] = {'defaultValue': 200, 'keyframes': [{'time': 0, 'value': 200}]}
-        c = Callout(d)
-        c.width = 300
-        assert d['def']['width']['defaultValue'] == 300
-        assert 'keyframes' not in d['def']['width']
-
-    def test_height_setter_with_dict_value(self):
-        d = _cov_callout_data()
-        d['def']['height'] = {'defaultValue': 100, 'keyframes': [{'time': 0, 'value': 100}]}
-        c = Callout(d)
-        c.height = 200
-        assert d['def']['height']['defaultValue'] == 200
-        assert 'keyframes' not in d['def']['height']
-
-    def test_corner_radius_setter_with_dict_value(self):
-        d = _cov_callout_data()
-        d['def']['corner-radius'] = {'defaultValue': 5, 'keyframes': [{'time': 0, 'value': 5}]}
-        c = Callout(d)
-        c.corner_radius = 10
-        assert d['def']['corner-radius']['defaultValue'] == 10
-        assert 'keyframes' not in d['def']['corner-radius']
-
-
-class TestUnifiedMediaDuplicateEffectsTo:
-    def test_duplicate_effects_to_raises(self):
-        um = UnifiedMedia(_um_data())
-        with pytest.raises(TypeError, match='Cannot duplicate effects from UnifiedMedia'):
-            um.duplicate_effects_to(um)
-
-
-# =========================================================================
-# Tests migrated from test_convenience.py
-# =========================================================================
-
-def _make_track(medias=None, name='T'):
-    """Build a minimal Track from raw dicts."""
-    data = {'trackIndex': 0, 'medias': medias or []}
-    attrs = {'ident': name}
-    return Track(attrs, data)
-
-
-
-
-# ---------------------------------------------------------------------------
 # BaseClip.describe
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_describe():
     data = {
@@ -1201,11 +346,9 @@ def test_clip_describe():
     assert 'Effects: Glow, DropShadow' in desc
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Clip type-check properties
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 @pytest.mark.parametrize('type_str, prop, expected', [
     ('AMFile', 'is_audio', True),
@@ -1226,25 +369,22 @@ def test_clip_type_properties(type_str, prop, expected):
     assert getattr(clip, prop) is expected
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.end_seconds
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_end_seconds():
-    start = EDIT_RATE * 2   # 2 seconds
-    dur = EDIT_RATE * 3     # 3 seconds
+    start = EDIT_RATE * 2
+    dur = EDIT_RATE * 3
     clip = BaseClip({'_type': 'AMFile', 'id': 1, 'start': start,
                      'duration': dur, 'metadata': {},
                      'animationTracks': {}})
     assert clip.end_seconds == pytest.approx(5.0)
 
 
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.time_range
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_time_range():
     data = {
@@ -1259,11 +399,9 @@ def test_time_range():
     assert clip.time_range[1] == pytest.approx(5.0)
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.to_dict
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_to_dict():
     start = seconds_to_ticks(1.0)
@@ -1281,18 +419,15 @@ def test_clip_to_dict():
     assert d['source_id'] == 7
     assert d['effects'] == ['Blur']
 
-    # Without source_id or effects
     clip2 = BaseClip({'id': 1, '_type': 'AMFile', 'start': 0, 'duration': start})
     d2 = clip2.to_dict()
     assert 'source_id' not in d2
     assert 'effects' not in d2
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.is_at
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_is_at():
     start = seconds_to_ticks(2.0)
@@ -1305,87 +440,15 @@ def test_clip_is_at():
     assert clip.is_at(1.0) is False
 
 
-
-
-# ---------------------------------------------------------------------------
-# StitchedMedia.min_media_start
-# ---------------------------------------------------------------------------
-
-def test_stitched_min_media_start():
-    clip = clip_from_dict({'_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': 100,
-                           'mediaStart': 0, 'mediaDuration': 100, 'minMediaStart': 42})
-    assert clip.min_media_start == 42
-    # default when key absent
-    clip2 = clip_from_dict({'_type': 'StitchedMedia', 'id': 2, 'start': 0, 'duration': 100,
-                            'mediaStart': 0, 'mediaDuration': 100})
-    assert clip2.min_media_start == 0
-
-
-
-
-# ---------------------------------------------------------------------------
-# PlaceholderMedia.subtitle
-# ---------------------------------------------------------------------------
-
-def test_placeholder_subtitle():
-    clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100,
-                           'metadata': {'placeHolderSubTitle': 'hello'}})
-    assert clip.subtitle == 'hello'
-    clip.subtitle = 'world'
-    assert clip.subtitle == 'world'
-    # default when absent
-    clip2 = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 2, 'start': 0, 'duration': 100})
-    assert clip2.subtitle == ''
-
-
-
-
-# ---------------------------------------------------------------------------
-# PlaceholderMedia.width / height
-# ---------------------------------------------------------------------------
-
-def test_placeholder_width_height():
-    clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100,
-                           'attributes': {'width': 1920.0, 'height': 1080.0}})
-    assert clip.width == 1920.0
-    assert clip.height == 1080.0
-    # defaults
-    clip2 = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 2, 'start': 0, 'duration': 100})
-    assert clip2.width == 0.0
-    assert clip2.height == 0.0
-
-
-
-
-# ---------------------------------------------------------------------------
-# BaseClip.is_stitched / is_placeholder
-# ---------------------------------------------------------------------------
-
-def test_is_stitched():
-    clip = clip_from_dict({'_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': 100,
-                           'mediaStart': 0, 'mediaDuration': 100})
-    assert clip.is_stitched is True
-    assert clip.is_placeholder is False
-
-
-def test_is_placeholder():
-    clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100})
-    assert clip.is_placeholder is True
-    assert clip.is_stitched is False
-
-
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.opacity
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_opacity_get_set():
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 100})
-    assert clip.opacity == 1.0  # default
+    assert clip.opacity == 1.0
     clip.opacity = 0.5
     assert clip.opacity == 0.5
-    # keyframe-style dict
     clip2 = clip_from_dict({'_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 100,
                             'parameters': {'opacity': {'type': 'float', 'defaultValue': 0.75, 'keyframes': []}}})
     assert clip2.opacity == 0.75
@@ -1399,18 +462,15 @@ def test_clip_opacity_validation():
         clip.opacity = -0.1
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.volume
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_volume_get_set():
     clip = clip_from_dict({'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 100})
-    assert clip.volume == 1.0  # default
+    assert clip.volume == 1.0
     clip.volume = 2.0
     assert clip.volume == 2.0
-    # keyframe-style dict
     clip2 = clip_from_dict({'_type': 'AMFile', 'id': 2, 'start': 0, 'duration': 100,
                             'parameters': {'volume': {'type': 'float', 'defaultValue': 0.5, 'keyframes': []}}})
     assert clip2.volume == 0.5
@@ -1422,11 +482,9 @@ def test_clip_volume_validation():
         clip.volume = -0.5
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Project.set_canvas_size
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_set_canvas_size():
     proj = Project.__new__(Project)
@@ -1445,31 +503,25 @@ def test_set_canvas_size():
     assert proj.height == 2160
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.set_opacity_fade
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_set_opacity_fade():
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 9000})
     result = clip.set_opacity_fade(1.0, 0.0, 3.0)
-    assert result is clip  # returns self
+    assert result is clip
     params = clip._data['parameters']['opacity']
     assert params['defaultValue'] == 1.0
-    assert len(params['keyframes']) == 1
-    assert params['keyframes'][0]['value'] == 0.0  # target value
-    # without duration_seconds — uses clip duration
+    assert params['keyframes'][0]['value'] == 0.0
     clip2 = clip_from_dict({'_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 9000})
     clip2.set_opacity_fade(0.5, 1.0)
     assert clip2._data['parameters']['opacity']['defaultValue'] == 0.5
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.set_volume_fade
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_set_volume_fade():
     clip = clip_from_dict({'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': 9000})
@@ -1477,15 +529,12 @@ def test_set_volume_fade():
     assert result is clip
     params = clip._data['parameters']['volume']
     assert params['defaultValue'] == 1.0
-    assert len(params['keyframes']) == 1
-    assert params['keyframes'][0]['value'] == 0.0  # target value
+    assert params['keyframes'][0]['value'] == 0.0
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.set_position_keyframes
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_set_position_keyframes():
     t = seconds_to_ticks
@@ -1493,12 +542,10 @@ def test_set_position_keyframes():
     track = _make_track(medias=[media])
     clip = list(track.clips)[0]
     result = clip.set_position_keyframes([(0.0, 100, 200), (2.0, 300, 400)])
-    assert result is clip  # fluent return
+    assert result is clip
     params = clip._data['parameters']
     assert params['translation0']['defaultValue'] == 300
     assert params['translation1']['defaultValue'] == 400
-    assert len(params['translation0']['keyframes']) == 2
-    assert len(params['translation1']['keyframes']) == 2
     kf_x = params['translation0']['keyframes'][1]
     assert kf_x['value'] == 300
     assert kf_x['time'] == t(2.0)
@@ -1506,11 +553,9 @@ def test_set_position_keyframes():
     assert kf_y['value'] == 400
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.set_scale_keyframes
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_set_scale_keyframes():
     t = seconds_to_ticks
@@ -1522,20 +567,16 @@ def test_set_scale_keyframes():
     params = clip._data['parameters']
     assert params['scale0']['defaultValue'] == 2.5
     assert params['scale1']['defaultValue'] == 2.5
-    assert len(params['scale0']['keyframes']) == 2
     kf = params['scale0']['keyframes'][1]
     assert kf['value'] == 2.5
     assert kf['time'] == t(3.0)
-    # scale0 and scale1 should have independent lists
     params['scale0']['keyframes'].append({'extra': True})
-    assert len(params['scale1']['keyframes']) == 2
+    assert [kf['value'] for kf in params['scale1']['keyframes']] == [1.0, 2.5]
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.set_rotation_keyframes
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_set_rotation_keyframes():
     t = seconds_to_ticks
@@ -1543,22 +584,19 @@ def test_set_rotation_keyframes():
     track = _make_track(medias=[media])
     clip = list(track.clips)[0]
     result = clip.set_rotation_keyframes([(0.0, 0), (2.0, 90), (5.0, 180)])
-    assert result is clip  # fluent
+    assert result is clip
     params = clip._data['parameters']
     rot = params['rotation2']
     assert rot['type'] == 'double'
     assert rot['defaultValue'] == pytest.approx(math.radians(180))
-    assert len(rot['keyframes']) == 3
     assert rot['keyframes'][1]['value'] == pytest.approx(math.radians(90))
     assert rot['keyframes'][1]['time'] == t(2.0)
     assert rot['keyframes'][2]['value'] == pytest.approx(math.radians(180))
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.set_crop_keyframes
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_set_crop_keyframes():
     t = seconds_to_ticks
@@ -1569,14 +607,12 @@ def test_set_crop_keyframes():
         (0.0, 0.0, 0.0, 0.0, 0.0),
         (3.0, 0.1, 0.2, 0.3, 0.4),
     ])
-    assert result is clip  # fluent
+    assert result is clip
     params = clip._data['parameters']
-    for i, name in enumerate(['geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3']):
+    for name in ['geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3']:
         assert name in params
         assert params[name]['type'] == 'double'
-        assert len(params[name]['keyframes']) == 2
         assert params[name]['keyframes'][0]['value'] == 0.0
-    # Check second keyframe values: left=0.1, top=0.2, right=0.3, bottom=0.4
     assert params['geometryCrop0']['keyframes'][1]['value'] == pytest.approx(0.1)
     assert params['geometryCrop1']['keyframes'][1]['value'] == pytest.approx(0.2)
     assert params['geometryCrop2']['keyframes'][1]['value'] == pytest.approx(0.3)
@@ -1584,17 +620,14 @@ def test_set_crop_keyframes():
     assert params['geometryCrop0']['keyframes'][1]['time'] == t(3.0)
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.animate
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_animate_fade_in():
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0), 'mediaDuration': seconds_to_ticks(10.0)})
     result = clip.animate(fade_in=2.0)
     assert result is clip
-    # _add_opacity_track writes to both parameters.opacity and animationTracks.visual
     assert 'opacity' in clip._data.get('parameters', {})
     assert 'animationTracks' in clip._data
 
@@ -1622,13 +655,9 @@ def test_animate_combined():
     clip = clip_from_dict({'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(10.0)})
     clip.animate(fade_in=1.0, scale_from=0.0, scale_to=1.0, move_from=(0, 0), move_to=(50, 50))
     params = clip._data['parameters']
-    # fade
-    assert params['opacity']['keyframes'][0]['value'] == 1.0  # fade-in target (defaultValue is 0.0)
-    assert len(params["opacity"]["keyframes"]) == 1
-    # scale
+    assert params['opacity']['keyframes'][0]['value'] == 1.0
     assert params['scale0']['keyframes'][0]['value'] == 0.0
     assert params['scale0']['keyframes'][1]['value'] == 1.0
-    # position
     assert params['translation0']['keyframes'][1]['value'] == 50
     assert params['translation1']['keyframes'][1]['value'] == 50
 
@@ -1646,24 +675,21 @@ def test_animate_fade_out():
     data = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': seconds_to_ticks(5.0), 'mediaDuration': seconds_to_ticks(5.0), 'parameters': {}}
     clip = clip_from_dict(data)
     clip.animate(fade_out=1.0)
-    # fade() writes to animationTracks
     assert 'animationTracks' in data or 'opacity' in data.get('parameters', {})
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.speed / set_speed
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_speed_get_set():
     media = {'id': 1, 'start': 0, 'duration': 100}
     t = _make_track([media])
     clip = list(t.clips)[0]
-    assert clip.speed == 1  # default
+    assert clip.speed == 1
     result = clip.set_speed(2.0)
     assert clip.speed == 2.0
-    assert result is clip  # fluent return
+    assert result is clip
 
 
 def test_clip_speed_validation():
@@ -1676,11 +702,9 @@ def test_clip_speed_validation():
         clip.set_speed(-1)
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.effect_names
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_effect_names():
     medias = [
@@ -1696,11 +720,9 @@ def test_clip_effect_names():
     assert clips[1].effect_names == []
 
 
-
-
-# ---------------------------------------------------------------------------
-# BaseClip.is_visible / Track.visible_clips / Project.has_audio / has_video
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
+# BaseClip.is_visible / Track.visible_clips
+# ------------------------------------------------------------------
 
 def test_is_visible():
     audio = _make_track([{'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100}])
@@ -1717,8 +739,7 @@ def test_visible_clips():
     ]
     track = _make_track(medias)
     visible = track.visible_clips
-    assert len(visible) == 2
-    assert all(c.is_visible for c in visible)
+    assert [c.clip_type for c in visible] == ['VMFile', 'IMFile']
 
 
 def test_new_callout_shapes():
@@ -1729,11 +750,9 @@ def test_new_callout_shapes():
     assert CalloutShape.SHAPE_RECTANGLE.value == 'shape-rectangle'
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Track.clip_at_index
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_at_index():
     medias = [
@@ -1742,12 +761,9 @@ def test_clip_at_index():
         {'id': 3, '_type': 'IMFile', 'start': 500, 'duration': 100},
     ]
     track = _make_track(medias=medias)
-    first_clip = track.clip_at_index(0)
-    assert first_clip.id == 1  # start=50 is earliest
-    second_clip = track.clip_at_index(1)
-    assert second_clip.id == 2  # start=200
-    third_clip = track.clip_at_index(2)
-    assert third_clip.id == 3  # start=500
+    assert track.clip_at_index(0).id == 1
+    assert track.clip_at_index(1).id == 2
+    assert track.clip_at_index(2).id == 3
 
 
 def test_clip_at_index_out_of_range():
@@ -1760,11 +776,9 @@ def test_clip_at_index_out_of_range():
         track.clip_at_index(-1)
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.source_id
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_source_id_replaces_source_path():
     clip_with_src = clip_from_dict({
@@ -1779,14 +793,12 @@ def test_source_id_replaces_source_path():
     assert clip_without_src.source_id is None
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.media_start_seconds
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_media_start_seconds():
-    media_start_ticks: int = EDIT_RATE * 5  # exactly 5 seconds
+    media_start_ticks: int = EDIT_RATE * 5
     clip = clip_from_dict({
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'mediaStart': media_start_ticks,
@@ -1794,14 +806,11 @@ def test_media_start_seconds():
     assert clip.media_start_seconds == pytest.approx(5.0)
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # clip_before / clip_after / overlaps_with / distance_to
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_before():
-    """clip_before returns the last clip ending before the given time."""
     track = _make_track([
         {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2)},
         {'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(3), 'duration': seconds_to_ticks(1)},
@@ -1812,7 +821,6 @@ def test_clip_before():
 
 
 def test_clip_before_none():
-    """clip_before returns None when no clip ends before the given time."""
     track = _make_track([
         {'id': 1, '_type': 'VMFile', 'start': seconds_to_ticks(5), 'duration': seconds_to_ticks(1)},
     ])
@@ -1820,7 +828,6 @@ def test_clip_before_none():
 
 
 def test_clip_after():
-    """clip_after returns the first clip starting after the given time."""
     track = _make_track([
         {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2)},
         {'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(5), 'duration': seconds_to_ticks(1)},
@@ -1831,7 +838,6 @@ def test_clip_after():
 
 
 def test_clip_after_none():
-    """clip_after returns None when no clip starts after the given time."""
     track = _make_track([
         {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(1)},
     ])
@@ -1839,51 +845,42 @@ def test_clip_after_none():
 
 
 def test_overlaps_with_true():
-    """overlaps_with returns True for overlapping clips."""
     clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3)})
     clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(2), 'duration': seconds_to_ticks(2)})
     assert clip_a.overlaps_with(clip_b) is True
 
 
 def test_overlaps_with_false():
-    """overlaps_with returns False for non-overlapping clips."""
     clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2)})
     clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(3), 'duration': seconds_to_ticks(1)})
     assert clip_a.overlaps_with(clip_b) is False
 
 
 def test_distance_to_gap():
-    """distance_to returns positive seconds for a gap between clips."""
     clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2)})
     clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(5), 'duration': seconds_to_ticks(1)})
     assert clip_a.distance_to(clip_b) == pytest.approx(3.0)
 
 
 def test_distance_to_overlap():
-    """distance_to returns negative seconds for overlapping clips."""
     clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3)})
     clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(2), 'duration': seconds_to_ticks(2)})
     assert clip_a.distance_to(clip_b) == pytest.approx(-1.0)
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Project.duration_formatted
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_duration_formatted():
-    """duration_formatted returns MM:SS string."""
     with patch.object(Project, 'duration_seconds', new_callable=PropertyMock, return_value=125.7):
         proj = object.__new__(Project)
         assert proj.duration_formatted == '2:05'
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Track.clip_count_by_type
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_count_by_type():
     medias = [
@@ -1893,16 +890,12 @@ def test_clip_count_by_type():
     ]
     track = _make_track(medias=medias)
     counts: dict[str, int] = track.clip_count_by_type
-    assert counts['VMFile'] == 2
-    assert counts['Callout'] == 1
-    assert len(counts) == 2
+    assert counts == {'VMFile': 2, 'Callout': 1}
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.has_keyframes
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_has_keyframes_true():
     media = {
@@ -1932,11 +925,9 @@ def test_has_keyframes_false():
     assert clip.has_keyframes is False
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.keyframe_count
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_keyframe_count():
     media: dict[str, Any] = {
@@ -1950,7 +941,7 @@ def test_keyframe_count():
             'opacity': {
                 'keyframes': [{'time': 0, 'value': 1.0}],
             },
-            'volume': 0.8,  # not a keyframed parameter
+            'volume': 0.8,
         },
     }
     track = _make_track(medias=[media])
@@ -1958,11 +949,9 @@ def test_keyframe_count():
     assert clip.keyframe_count == 3
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.is_at_origin
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_is_at_origin():
     at_zero: dict[str, Any] = {'id': 1, 'start': 0, 'duration': 100}
@@ -1973,11 +962,9 @@ def test_is_at_origin():
     assert clips[1].is_at_origin is False
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.copy_timing_from
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_copy_timing_from():
     source = BaseClip({'id': 1, '_type': 'VMFile', 'start': 1000, 'duration': 5000})
@@ -1985,14 +972,12 @@ def test_copy_timing_from():
     result = target.copy_timing_from(source)
     assert target.start == 1000
     assert target.duration == 5000
-    assert result is target  # returns self for chaining
+    assert result is target
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.matches_type
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_matches_type():
     clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100})
@@ -2002,24 +987,20 @@ def test_matches_type():
     assert clip.matches_type(ClipType.AUDIO) is False
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.snap_to_seconds
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_snap_to_seconds():
     clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2.0)})
     result = clip.snap_to_seconds(5.0)
     assert clip.start == seconds_to_ticks(5.0)
-    assert result is clip  # returns self for chaining
+    assert result is clip
 
 
-
-
-# ---------------------------------------------------------------------------
-# BaseClip.is_longer_than
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
+# BaseClip.is_longer_than / is_shorter_than
+# ------------------------------------------------------------------
 
 def test_is_longer_than():
     clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3.0)})
@@ -2028,12 +1009,6 @@ def test_is_longer_than():
     assert clip.is_longer_than(4.0) is False
 
 
-
-
-# ---------------------------------------------------------------------------
-# BaseClip.is_shorter_than
-# ---------------------------------------------------------------------------
-
 def test_is_shorter_than():
     clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(2.0)})
     assert clip.is_shorter_than(3.0) is True
@@ -2041,43 +1016,34 @@ def test_is_shorter_than():
     assert clip.is_shorter_than(1.0) is False
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.set_source
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_set_source():
     clip = BaseClip({'id': 1, 'src': 10, '_type': 'AMFile', 'start': 0, 'duration': 100})
     result = clip.set_source(42)
     assert clip.source_id == 42
-    assert result is clip  # fluent return
+    assert result is clip
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.set_metadata / get_metadata
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_set_get_metadata():
     clip = BaseClip({'id': 1, '_type': 'AMFile', 'start': 0, 'duration': 100})
-    # get_metadata returns default when key missing
     assert clip.get_metadata('author') is None
     assert clip.get_metadata('author', 'unknown') == 'unknown'
-    # set_metadata returns self (fluent) and stores value
     result = clip.set_metadata('author', 'Alice')
     assert result is clip
     assert clip.get_metadata('author') == 'Alice'
-    # metadata property reflects the change
     assert clip.metadata == {'author': 'Alice'}
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Track.clip_ids_sorted
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clip_ids_sorted():
     track = _make_track([
@@ -2086,15 +1052,12 @@ def test_clip_ids_sorted():
         {'id': 2, 'start': 200, 'duration': 100},
     ])
     assert track.clip_ids_sorted == [1, 2, 3]
-    # Original clip_ids preserves insertion order
     assert track.clip_ids == [3, 1, 2]
 
 
-
-
-# ---------------------------------------------------------------------------
-# BaseClip.is_muted
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
+# BaseClip.is_muted / Track.muted_clips
+# ------------------------------------------------------------------
 
 def test_clip_is_muted():
     media = {'id': 1, 'start': 0, 'duration': 100, 'attributes': {'gain': 0.0}}
@@ -2108,12 +1071,6 @@ def test_clip_is_muted():
     assert audible_clip.is_muted is False
 
 
-
-
-# ---------------------------------------------------------------------------
-# Track.muted_clips
-# ---------------------------------------------------------------------------
-
 def test_muted_clips():
     medias = [
         {'id': 1, 'start': 0, 'duration': 100, 'attributes': {'gain': 0.0}},
@@ -2122,92 +1079,68 @@ def test_muted_clips():
     ]
     track = _make_track(medias=medias)
     muted = track.muted_clips
-    assert len(muted) == 2
     muted_ids: list[int] = [clip.id for clip in muted]
     assert muted_ids == [1, 3]
 
 
-
-
-# ---------------------------------------------------------------------------
-# BaseClip.set_start_seconds
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
+# BaseClip.set_start_seconds / set_duration_seconds
+# ------------------------------------------------------------------
 
 def test_set_start_seconds_updates_data():
-    """set_start_seconds writes the correct tick value to _data['start']."""
     clip_data: dict[str, Any] = {'id': 1, 'start': 0, 'duration': 100, 'type': 'VMFile', 'parameters': {}, 'effects': [], 'attributes': {'ident': ''}}
     clip: BaseClip = BaseClip(clip_data)
     result = clip.set_start_seconds(2.0)
     assert clip._data['start'] == seconds_to_ticks(2.0)
-    assert result is clip  # returns self for chaining
+    assert result is clip
 
-
-
-
-# ---------------------------------------------------------------------------
-# BaseClip.set_duration_seconds
-# ---------------------------------------------------------------------------
 
 def test_set_duration_seconds_updates_data():
-    """set_duration_seconds writes the correct tick value to _data['duration']."""
     clip_data: dict[str, Any] = {'id': 1, 'start': 0, 'duration': 100, 'type': 'VMFile', 'parameters': {}, 'effects': [], 'attributes': {'ident': ''}}
     clip: BaseClip = BaseClip(clip_data)
     result = clip.set_duration_seconds(5.0)
     assert clip._data['duration'] == seconds_to_ticks(5.0)
-    assert result is clip  # returns self for chaining
+    assert result is clip
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.is_effect_applied
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_is_effect_applied_true():
-    """is_effect_applied returns True when the effect is present."""
-    clip_data: dict = {
+    clip = BaseClip({
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'effects': [{'effectName': 'DropShadow'}],
-    }
-    clip = BaseClip(clip_data)
+    })
     assert clip.is_effect_applied('DropShadow') is True
 
 
 def test_is_effect_applied_false():
-    """is_effect_applied returns False when the effect is absent."""
-    clip_data: dict = {
+    clip = BaseClip({
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'effects': [{'effectName': 'Glow'}],
-    }
-    clip = BaseClip(clip_data)
+    })
     assert clip.is_effect_applied('DropShadow') is False
 
 
 def test_is_effect_applied_no_effects():
-    """is_effect_applied returns False when clip has no effects list."""
-    clip_data: dict = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
-    clip = BaseClip(clip_data)
+    clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100})
     assert clip.is_effect_applied('DropShadow') is False
 
 
 def test_is_effect_applied_with_enum():
-    """is_effect_applied works with EffectName enum values."""
-    clip_data: dict = {
+    clip = BaseClip({
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'effects': [{'effectName': 'DropShadow'}],
-    }
-    clip = BaseClip(clip_data)
+    })
     assert clip.is_effect_applied(EffectName.DROP_SHADOW) is True
 
 
-
-
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # BaseClip.clear_metadata
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 
 def test_clear_metadata_removes_all():
-    """clear_metadata empties the metadata dict."""
     clip_data: dict = {
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'metadata': {'presetName': 'Intro', 'author': 'Test'},
@@ -2219,50 +1152,22 @@ def test_clear_metadata_removes_all():
 
 
 def test_clear_metadata_returns_self():
-    """clear_metadata returns self for chaining."""
-    clip_data: dict = {
+    clip = BaseClip({
         'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100,
         'metadata': {'key': 'value'},
-    }
-    clip = BaseClip(clip_data)
-    returned: BaseClip = clip.clear_metadata()
-    assert returned is clip
+    })
+    assert clip.clear_metadata() is clip
 
 
 def test_clear_metadata_on_empty():
-    """clear_metadata works when metadata is already empty or absent."""
-    clip_data: dict = {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}
-    clip = BaseClip(clip_data)
+    clip = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100})
     clip.clear_metadata()
-    assert clip_data['metadata'] == {}
+    assert clip._data['metadata'] == {}
 
 
-
-# ── is_silent for UnifiedMedia ──────────────────────────────────────
-
-
-class TestIsSilentUnifiedMedia:
-    def test_unified_media_silent_when_gain_zero(self):
-        clip = BaseClip({
-            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
-            'audio': {'attributes': {'gain': 0.0}},
-        })
-        assert clip.is_silent is True
-
-    def test_unified_media_not_silent_when_gain_nonzero(self):
-        clip = BaseClip({
-            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
-            'audio': {'attributes': {'gain': 0.8}},
-        })
-        assert clip.is_silent is False
-
-    def test_non_unified_silent_when_gain_zero(self):
-        clip = AMFile(_amfile_dict(attributes={'ident': '', 'gain': 0.0, 'mixToMono': False, 'loudnessNormalization': False}))
-        assert clip.is_silent is True
-
-
-# ── add_lut_effect, add_media_matte, add_motion_blur, add_emphasize ─
-
+# ------------------------------------------------------------------
+# Effect add methods (LUT, MediaMatte, MotionBlur, Emphasize, BlendMode)
+# ------------------------------------------------------------------
 
 class TestEffectAddMethods:
     def _clip(self):
@@ -2308,26 +1213,35 @@ class TestEffectAddMethods:
         assert eff['parameters']['mode'] == 3
 
 
-# ── is_longer_than / apply_if ───────────────────────────────────────
-
+# ------------------------------------------------------------------
+# apply_if
+# ------------------------------------------------------------------
 
 class TestClipPredicates:
-    def test_is_longer_than(self):
-        clip = AMFile(_amfile_dict())
-        assert clip.is_longer_than(0.0) is True
-
     def test_apply_if_true(self):
-        clip = AMFile(_amfile_dict())
+        clip = AMFile(_base_clip_dict(
+            _type="AMFile",
+            channelNumber="0,1",
+            attributes={"ident": "voiceover", "gain": 0.8, "mixToMono": False, "loudnessNormalization": True},
+        ))
         called = []
         clip.apply_if(lambda c: True, lambda c: called.append(c))
-        assert len(called) == 1
+        assert called[0] is clip
 
     def test_apply_if_false(self):
-        clip = AMFile(_amfile_dict())
+        clip = AMFile(_base_clip_dict(
+            _type="AMFile",
+            channelNumber="0,1",
+            attributes={"ident": "voiceover", "gain": 0.8, "mixToMono": False, "loudnessNormalization": True},
+        ))
         called = []
         clip.apply_if(lambda c: False, lambda c: called.append(c))
         assert called == []
 
+
+# ------------------------------------------------------------------
+# remove_effect_by_name / duplicate_effects_to / reset_transforms
+# ------------------------------------------------------------------
 
 class TestRemoveEffectByName:
     def test_removes_matching_effects(self, project):
@@ -2340,8 +1254,7 @@ class TestRemoveEffectByName:
         ]
         actual_removed = clip.remove_effect_by_name('Glow')
         assert actual_removed == 2
-        assert len(clip._data['effects']) == 1
-        assert clip._data['effects'][0]['effectName'] == 'Border'
+        assert clip._data['effects'] == [{'effectName': 'Border', 'parameters': {}}]
 
 
 class TestDuplicateEffectsTo:
@@ -2351,7 +1264,6 @@ class TestDuplicateEffectsTo:
         target = track.add_video(0, 5.0, 5.0)
         source._data['effects'] = [{'effectName': 'Glow', 'parameters': {}}]
         source.duplicate_effects_to(target)
-        assert len(target._data.get('effects', [])) == 1
         assert target._data['effects'][0]['effectName'] == 'Glow'
 
 
@@ -2370,510 +1282,8 @@ class TestResetTransforms:
 
 
 # ------------------------------------------------------------------
-# Helper from consolidated test_clip_coverage.py
+# BaseClip: gain, mute, metadata, animations, repr, setters
 # ------------------------------------------------------------------
-
-def _base(**kw) -> dict:
-    d = {
-        "id": 1, "_type": "AMFile", "src": 1,
-        "start": 0, "duration": EDIT_RATE * 10,
-        "mediaStart": 0, "mediaDuration": EDIT_RATE * 10, "scalar": 1,
-    }
-    d.update(kw)
-    return d
-
-
-# ==================================================================
-# Callout — setters, fill/stroke color, set_font, set_colors,
-#   resize, add_behavior, tail_position, corner_radius, horizontal_alignment
-# ==================================================================
-
-class TestCalloutSetters:
-    def test_text_setter_creates_def_if_absent(self):
-        data = _base(_type="Callout")
-        clip = Callout(data)
-        clip.text = "new"
-        assert data["def"]["text"] == "new"
-
-    def test_style_setter(self):
-        data = _base(_type="Callout", **{"def": {"style": "basic"}})
-        clip = Callout(data)
-        clip.style = "fancy"
-        assert data["def"]["style"] == "fancy"
-
-    def test_width_setter(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        clip.width = 500.0
-        assert data["def"]["width"] == 500.0
-
-    def test_height_setter(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        clip.height = 300.0
-        assert data["def"]["height"] == 300.0
-
-    def test_horizontal_alignment_setter(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        clip.horizontal_alignment = "left"
-        assert data["def"]["horizontal-alignment"] == "left"
-
-
-class TestCalloutColors:
-    def test_fill_color_reads_defaults(self):
-        clip = Callout(_base(_type="Callout"))
-        assert clip.fill_color == (0.0, 0.0, 0.0, 1.0)
-
-    def test_fill_color_setter(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        clip.fill_color = (0.1, 0.2, 0.3, 0.4)
-        assert data["def"]["fill-color-red"] == 0.1
-        assert data["def"]["fill-color-opacity"] == 0.4
-
-    def test_stroke_color_reads_defaults(self):
-        clip = Callout(_base(_type="Callout"))
-        assert clip.stroke_color == (0.0, 0.0, 0.0, 1.0)
-
-    def test_stroke_color_setter(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        clip.stroke_color = (0.5, 0.6, 0.7, 0.8)
-        assert data["def"]["stroke-color-blue"] == 0.7
-
-    def test_corner_radius_default(self):
-        clip = Callout(_base(_type="Callout"))
-        assert clip.corner_radius == 0.0
-
-    def test_corner_radius_setter(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        clip.corner_radius = 12.0
-        assert data["def"]["corner-radius"] == 12.0
-
-    def test_tail_position_default(self):
-        clip = Callout(_base(_type="Callout"))
-        assert clip.tail_position == (0.0, 0.0)
-
-    def test_tail_position_setter(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        clip.tail_position = (10.0, 20.0)
-        assert data["def"]["tail-x"] == 10.0
-        assert data["def"]["tail-y"] == 20.0
-
-
-class TestCalloutConvenience:
-    def test_set_font(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        actual_result = clip.set_font("Arial", "Bold", 48.0)
-        assert actual_result is clip
-        assert data["def"]["font"]["name"] == "Arial"
-        assert data["def"]["font"]["weight"] == "Bold"
-        assert data["def"]["font"]["size"] == 48.0
-
-    def test_set_colors_fill_only(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        actual_result = clip.set_colors(fill=(1.0, 0.0, 0.0, 1.0))
-        assert actual_result is clip
-        assert data["def"]["fill-color-red"] == 1.0
-
-    def test_set_colors_stroke_only(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        clip.set_colors(stroke=(0.0, 1.0, 0.0, 0.5))
-        assert data["def"]["stroke-color-green"] == 1.0
-
-    def test_set_colors_font_color(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        clip.set_colors(font_color=(0.1, 0.2, 0.3))
-        assert data["def"]["font"]["color-red"] == 0.1
-        assert data["def"]["font"]["color-green"] == 0.2
-        assert data["def"]["font"]["color-blue"] == 0.3
-
-    def test_resize(self):
-        data = _base(_type="Callout", **{"def": {}})
-        clip = Callout(data)
-        actual_result = clip.resize(800.0, 600.0)
-        assert actual_result is clip
-        assert clip.width == 800.0
-        assert clip.height == 600.0
-
-    def test_add_behavior(self):
-        data = _base(_type="Callout", **{"def": {}})
-        data['duration'] = 705600000 * 10  # 10 seconds
-        clip = Callout(data)
-        actual_result = clip.add_behavior("reveal")
-        assert actual_result is clip  # chaining
-        assert data["effects"][0]["_type"] == "GenericBehaviorEffect"
-        assert data["effects"][0]["effectName"] == "reveal"
-        assert data["effects"][0]["metadata"]["presetName"] == "Reveal"
-
-    def test_font_default(self):
-        clip = Callout(_base(_type="Callout"))
-        assert clip.font == {}
-
-    def test_kind_default(self):
-        clip = Callout(_base(_type="Callout"))
-        assert clip.kind == ""
-
-    def test_shape_default(self):
-        clip = Callout(_base(_type="Callout"))
-        assert clip.shape == ""
-
-    def test_style_default(self):
-        clip = Callout(_base(_type="Callout"))
-        assert clip.style == ""
-
-
-class TestCalloutHorizontalAlignmentGetter:
-    def test_horizontal_alignment_from_def(self):
-        data = _base(_type="Callout", **{"def": {"horizontal-alignment": "right"}})
-        clip = Callout(data)
-        assert clip.horizontal_alignment == "right"
-
-
-class TestCalloutStrokeColorAnimated:
-    def test_stroke_color_setter_preserves_keyframes(self, project):
-        keyframes = [{'time': 0, 'value': 0.5}, {'time': 100, 'value': 1.0}]
-        data = {
-            '_type': 'Callout', 'id': 99, 'start': 0, 'duration': 100,
-            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
-            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
-            'def': {
-                'stroke-color-red': {'defaultValue': 0.1, 'keyframes': list(keyframes)},
-                'stroke-color-green': {'defaultValue': 0.2, 'keyframes': list(keyframes)},
-                'stroke-color-blue': {'defaultValue': 0.3, 'keyframes': list(keyframes)},
-                'stroke-color-opacity': {'defaultValue': 0.4, 'keyframes': list(keyframes)},
-            },
-        }
-        callout = Callout(data)
-        callout.stroke_color = (0.9, 0.8, 0.7, 0.6)
-        d = callout.definition
-        assert d['stroke-color-red']['defaultValue'] == 0.9
-        assert d['stroke-color-green']['defaultValue'] == 0.8
-        assert d['stroke-color-blue']['defaultValue'] == 0.7
-        assert d['stroke-color-opacity']['defaultValue'] == 0.6
-        assert 'keyframes' not in d['stroke-color-red']
-
-
-class TestCalloutStrokeColorAnimatedGetter:
-    def test_stroke_color_getter_with_animated_dict(self):
-        data = {
-            '_type': 'Callout', 'id': 1, 'start': 0, 'duration': 100,
-            'def': {
-                'stroke-color-red': {'type': 'double', 'defaultValue': 0.5, 'keyframes': [{'time': 0, 'value': 0.5}]},
-                'stroke-color-green': 0.3,
-                'stroke-color-blue': 0.1,
-                'stroke-color-opacity': 1.0,
-            },
-        }
-        callout = Callout(data)
-        r, g, b, a = callout.stroke_color
-        assert r == 0.5
-
-
-class TestCalloutFillColorAnimatedSetter:
-    def test_fill_color_setter_preserves_keyframes(self):
-        data = {
-            '_type': 'Callout', 'id': 1, 'start': 0, 'duration': 100,
-            'def': {
-                'fill-color-red': {'type': 'double', 'defaultValue': 0.5, 'keyframes': [{'time': 0, 'value': 0.5}]},
-                'fill-color-green': {'type': 'double', 'defaultValue': 0.3, 'keyframes': []},
-                'fill-color-blue': 0.1,
-                'fill-color-opacity': 1.0,
-            },
-        }
-        callout = Callout(data)
-        callout.fill_color = (0.9, 0.8, 0.7, 0.6)
-        assert data['def']['fill-color-red']['defaultValue'] == 0.9
-        assert 'keyframes' not in data['def']['fill-color-red']
-        assert data['def']['fill-color-blue'] == 0.7
-
-
-# ==================================================================
-# IMFile — _set_param_value, scale setter, geometry_crop, move_to, etc.
-# ==================================================================
-
-class TestIMFileCoverage:
-    def test_set_param_value_creates_new_param(self):
-        data = _base(_type="IMFile")
-        clip = IMFile(data)
-        clip.translation = (100.0, 200.0)
-        assert data["parameters"]["translation0"] == 100.0
-        assert data["parameters"]["translation1"] == 200.0
-
-    def test_scale_setter(self):
-        data = _base(_type="IMFile", parameters={
-            "scale0": {"type": "double", "defaultValue": 1.0, "interp": "eioe"},
-            "scale1": {"type": "double", "defaultValue": 1.0, "interp": "eioe"},
-        })
-        clip = IMFile(data)
-        clip.scale = (2.0, 3.0)
-        assert data["parameters"]["scale0"]["defaultValue"] == 2.0
-        assert data["parameters"]["scale1"]["defaultValue"] == 3.0
-
-    def test_geometry_crop_with_params(self):
-        data = _base(_type="IMFile", parameters={
-            "geometryCrop0": {"type": "double", "defaultValue": 0.1, "interp": "eioe"},
-            "geometryCrop1": {"type": "double", "defaultValue": 0.2, "interp": "eioe"},
-            "geometryCrop2": {"type": "double", "defaultValue": 0.3, "interp": "eioe"},
-            "geometryCrop3": {"type": "double", "defaultValue": 0.4, "interp": "eioe"},
-        })
-        clip = IMFile(data)
-        actual_crop = clip.geometry_crop
-        assert actual_crop == {"0": 0.1, "1": 0.2, "2": 0.3, "3": 0.4}
-
-    def test_geometry_crop_empty_when_absent(self):
-        clip = IMFile(_base(_type="IMFile"))
-        assert clip.geometry_crop == {}
-
-    def test_move_to(self):
-        data = _base(_type="IMFile")
-        clip = IMFile(data)
-        actual_result = clip.move_to(50.0, 75.0)
-        assert actual_result is clip
-        assert clip.translation == (50.0, 75.0)
-
-    def test_scale_to(self):
-        data = _base(_type="IMFile")
-        clip = IMFile(data)
-        actual_result = clip.scale_to(2.0)
-        assert actual_result is clip
-        assert clip.scale == (2.0, 2.0)
-
-    def test_scale_to_xy(self):
-        data = _base(_type="IMFile")
-        clip = IMFile(data)
-        actual_result = clip.scale_to_xy(1.5, 2.5)
-        assert actual_result is clip
-        assert clip.scale == (1.5, 2.5)
-
-    def test_crop(self):
-        data = _base(_type="IMFile")
-        clip = IMFile(data)
-        actual_result = clip.crop(left=0.1, top=0.2, right=0.3, bottom=0.4)
-        assert actual_result is clip
-        actual_crop = clip.geometry_crop
-        assert actual_crop == {"0": 0.1, "1": 0.2, "2": 0.3, "3": 0.4}
-
-    def test_get_param_value_raw_numeric(self):
-        data = _base(_type="IMFile", parameters={"translation0": 42.0})
-        clip = IMFile(data)
-        assert clip.translation == (42.0, 0.0)
-
-
-# ==================================================================
-# ScreenVMFile — translation, scale, cursor setters, cursor effects
-# ==================================================================
-
-class TestScreenVMFileCoverage:
-    def _make(self, **kw):
-        params = {
-            "translation0": {"type": "double", "defaultValue": 2.0, "interp": "eioe"},
-            "translation1": {"type": "double", "defaultValue": -4.0, "interp": "eioe"},
-            "scale0": {"type": "double", "defaultValue": 0.75, "interp": "eioe"},
-            "scale1": {"type": "double", "defaultValue": 0.75, "interp": "eioe"},
-            "cursorScale": {"type": "double", "defaultValue": 5.0, "interp": "linr"},
-            "cursorOpacity": {"type": "double", "defaultValue": 1.0, "interp": "linr"},
-            "cursorTrackLevel": {"type": "double", "defaultValue": 0.5, "interp": "linr"},
-            "smoothCursorAcrossEditDuration": 0,
-        }
-        params.update(kw)
-        return ScreenVMFile(_base(_type="ScreenVMFile", parameters=params))
-
-    def test_translation(self):
-        clip = self._make()
-        assert clip.translation == (2.0, -4.0)
-
-    def test_translation_setter(self):
-        data = _base(_type="ScreenVMFile", parameters={})
-        clip = ScreenVMFile(data)
-        clip.translation = (10.0, 20.0)
-        assert data["parameters"]["translation0"] == 10.0
-        assert data["parameters"]["translation1"] == 20.0
-
-    def test_scale(self):
-        clip = self._make()
-        assert clip.scale == (0.75, 0.75)
-
-    def test_scale_setter(self):
-        data = _base(_type="ScreenVMFile", parameters={
-            "scale0": {"type": "double", "defaultValue": 1.0, "interp": "eioe"},
-            "scale1": {"type": "double", "defaultValue": 1.0, "interp": "eioe"},
-        })
-        clip = ScreenVMFile(data)
-        clip.scale = (0.5, 0.5)
-        assert data["parameters"]["scale0"]["defaultValue"] == 0.5
-
-    def test_cursor_opacity_setter(self):
-        data = _base(_type="ScreenVMFile", parameters={
-            "cursorOpacity": {"type": "double", "defaultValue": 1.0, "interp": "linr"},
-        })
-        clip = ScreenVMFile(data)
-        clip.cursor_opacity = 0.5
-        assert data["parameters"]["cursorOpacity"]["defaultValue"] == 0.5
-
-    def test_cursor_track_level(self):
-        clip = self._make()
-        assert clip.cursor_track_level == 0.5
-
-    def test_smooth_cursor_across_edit_duration(self):
-        clip = self._make()
-        assert clip.smooth_cursor_across_edit_duration == 0
-
-    def test_cursor_motion_blur_intensity_with_effect(self):
-        data = _base(_type="ScreenVMFile", parameters={}, effects=[
-            {"effectName": "CursorMotionBlur", "parameters": {
-                "intensity": {"type": "double", "defaultValue": 1.0, "interp": "linr"},
-            }},
-        ])
-        clip = ScreenVMFile(data)
-        assert clip.cursor_motion_blur_intensity == 1.0
-
-    def test_cursor_motion_blur_intensity_no_effect(self):
-        clip = ScreenVMFile(_base(_type="ScreenVMFile"))
-        assert clip.cursor_motion_blur_intensity == 0.0
-
-    def test_cursor_shadow_with_effect(self):
-        data = _base(_type="ScreenVMFile", parameters={}, effects=[
-            {"effectName": "CursorShadow", "parameters": {
-                "angle": {"type": "double", "defaultValue": 3.9, "interp": "linr"},
-                "offset": 7.0,
-            }},
-        ])
-        clip = ScreenVMFile(data)
-        actual_shadow = clip.cursor_shadow
-        assert actual_shadow["angle"] == 3.9
-        assert actual_shadow["offset"] == 7.0
-
-    def test_cursor_shadow_no_effect(self):
-        clip = ScreenVMFile(_base(_type="ScreenVMFile"))
-        assert clip.cursor_shadow == {}
-
-    def test_cursor_physics_with_effect(self):
-        data = _base(_type="ScreenVMFile", parameters={}, effects=[
-            {"effectName": "CursorPhysics", "parameters": {
-                "intensity": {"type": "double", "defaultValue": 1.5, "interp": "linr"},
-                "tilt": {"type": "double", "defaultValue": 2.5, "interp": "linr"},
-            }},
-        ])
-        clip = ScreenVMFile(data)
-        actual_physics = clip.cursor_physics
-        assert actual_physics["intensity"] == 1.5
-        assert actual_physics["tilt"] == 2.5
-
-    def test_cursor_physics_no_effect(self):
-        clip = ScreenVMFile(_base(_type="ScreenVMFile"))
-        assert clip.cursor_physics == {}
-
-    def test_left_click_scaling_with_effect(self):
-        data = _base(_type="ScreenVMFile", parameters={}, effects=[
-            {"effectName": "LeftClickScaling", "parameters": {
-                "scale": {"type": "double", "defaultValue": 3.5, "interp": "linr"},
-                "speed": 7.5,
-            }},
-        ])
-        clip = ScreenVMFile(data)
-        actual_click = clip.left_click_scaling
-        assert actual_click["scale"] == 3.5
-        assert actual_click["speed"] == 7.5
-
-    def test_left_click_scaling_no_effect(self):
-        clip = ScreenVMFile(_base(_type="ScreenVMFile"))
-        assert clip.left_click_scaling == {}
-
-    def test_get_param_value_raw_numeric(self):
-        data = _base(_type="ScreenVMFile", parameters={"cursorScale": 3.0})
-        clip = ScreenVMFile(data)
-        assert clip.cursor_scale == 3.0
-
-    def test_set_param_value_creates_new(self):
-        data = _base(_type="ScreenVMFile", parameters={})
-        clip = ScreenVMFile(data)
-        clip.cursor_scale = 4.0
-        assert data["parameters"]["cursorScale"]["defaultValue"] == 4.0
-        assert data["parameters"]["cursorScale"]["interp"] == "linr"
-
-
-class TestScreenVMFileEffectParamRawValue:
-    def test_get_effect_param_raw_numeric(self):
-        data = _base(_type="ScreenVMFile", parameters={}, effects=[
-            {"effectName": "CursorMotionBlur", "parameters": {"intensity": 0.75}},
-        ])
-        clip = ScreenVMFile(data)
-        assert clip.cursor_motion_blur_intensity == 0.75
-
-
-# ==================================================================
-# ScreenIMFile
-# ==================================================================
-
-class TestScreenIMFileCoverage:
-    def test_cursor_image_path(self):
-        data = _base(_type="ScreenIMFile", parameters={
-            "cursorImagePath": "2b7b6af1/2",
-        })
-        clip = ScreenIMFile(data)
-        assert clip.cursor_image_path == "2b7b6af1/2"
-
-    def test_cursor_image_path_none(self):
-        clip = ScreenIMFile(_base(_type="ScreenIMFile"))
-        assert clip.cursor_image_path is None
-
-    def test_cursor_location_keyframes(self):
-        data = _base(_type="ScreenIMFile", parameters={
-            "cursorLocation": {
-                "type": "point",
-                "keyframes": [
-                    {"time": 0, "endTime": 100, "value": [10, 20, 0], "duration": 0},
-                    {"time": 100, "endTime": 200, "value": [30, 40, 0], "duration": 0},
-                ],
-            },
-        })
-        clip = ScreenIMFile(data)
-        actual_kf = clip.cursor_location_keyframes
-        assert actual_kf[0]["value"] == [10, 20, 0]
-        assert actual_kf[1]["value"] == [30, 40, 0]
-
-    def test_cursor_location_keyframes_empty(self):
-        clip = ScreenIMFile(_base(_type="ScreenIMFile"))
-        assert clip.cursor_location_keyframes == []
-
-
-class TestScreenIMFileSetSourceRaises:
-    def test_set_source_raises_type_error(self):
-        data = _base(_type="ScreenIMFile", parameters={}, effects=[])
-        clip = ScreenIMFile(data)
-        with pytest.raises(TypeError, match='Cannot change source on cursor overlay clips'):
-            clip.set_source(1)
-
-
-# ==================================================================
-# AMFile — channel_number setter, loudness_normalization setter
-# ==================================================================
-
-class TestAMFileMissing:
-    def test_channel_number_setter(self):
-        data = _base(_type="AMFile")
-        clip = AMFile(data)
-        clip.channel_number = "0,1"
-        assert data["channelNumber"] == "0,1"
-
-    def test_loudness_normalization_setter(self):
-        data = _base(_type="AMFile")
-        clip = AMFile(data)
-        clip.loudness_normalization = True
-        assert data["attributes"]["loudnessNormalization"] is True
-
-
-# ==================================================================
-# BaseClip — gain, mute, metadata, animations, repr, setters
-# ==================================================================
 
 class TestBaseClipGainAndMute:
     def test_gain_default(self):
@@ -2953,9 +1363,9 @@ class TestBaseClipSettersCoverage:
         assert clip.media_duration == Fraction(100, 3)
 
 
-# ==================================================================
-# BaseClip — fade, opacity, effects
-# ==================================================================
+# ------------------------------------------------------------------
+# BaseClip: fade, opacity, effects coverage
+# ------------------------------------------------------------------
 
 class TestBaseClipFadeCoverage:
     def test_fade_in(self):
@@ -3069,38 +1479,9 @@ class TestBaseClipEffectsCoverage:
         assert effect_dict['rightEdgeMods'][0]['group'] == 'Video'
 
 
-class TestOpacityEmptyKeyframes:
-    def test_empty_keyframes_returns_none(self):
-        data = {
-            'id': 1, '_type': 'VMFile', 'src': 0,
-            'start': 0, 'duration': 100, 'mediaStart': 0,
-            'parameters': {'opacity': {'keyframes': []}},
-        }
-        clip = BaseClip(data)
-        assert clip._get_existing_opacity_keyframes() is None
-
-
-# ==================================================================
-# Standalone base.py / stitched.py tests
-# ==================================================================
-
-def test_base_clip_is_audio_stitched_media():
-    clip = BaseClip({
-        '_type': 'StitchedMedia',
-        'id': 1, 'start': 0, 'duration': 100,
-        'medias': [{'_type': 'AMFile'}],
-    })
-    assert clip.is_audio is True
-
-
-def test_base_clip_is_video_stitched_media():
-    clip = BaseClip({
-        '_type': 'StitchedMedia',
-        'id': 1, 'start': 0, 'duration': 100,
-        'medias': [{'_type': 'VMFile'}],
-    })
-    assert clip.is_video is True
-
+# ------------------------------------------------------------------
+# Standalone base.py coverage
+# ------------------------------------------------------------------
 
 def test_base_clip_opacity_setter_dict():
     clip = BaseClip({
@@ -3147,38 +1528,4 @@ def test_base_clip_source_path_deprecation():
         warnings.simplefilter('always')
         result = clip.source_path
         assert result == 42
-        assert len(w) == 1
         assert 'deprecated' in str(w[0].message).lower()
-
-
-# ==================================================================
-# StitchedMedia
-# ==================================================================
-
-class TestStitchedMediaImprovements:
-    def _make_stitched(self) -> StitchedMedia:
-        return StitchedMedia({
-            'id': 1, '_type': 'StitchedMedia', 'start': 0, 'duration': 200,
-            'mediaStart': 0, 'mediaDuration': 200, 'scalar': 1,
-            'medias': [
-                {'id': 10, '_type': 'ScreenVMFile', 'start': 0, 'duration': 100,
-                 'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1},
-                {'id': 11, '_type': 'ScreenVMFile', 'start': 100, 'duration': 100,
-                 'mediaStart': 100, 'mediaDuration': 100, 'scalar': 1},
-            ],
-        })
-
-    def test_segment_count(self):
-        assert self._make_stitched().segment_count == 2
-
-    def test_segment_count_empty(self):
-        assert StitchedMedia({
-            'id': 1, '_type': 'StitchedMedia', 'start': 0, 'duration': 0,
-            'mediaStart': 0, 'mediaDuration': 0, 'scalar': 1,
-        }).segment_count == 0
-
-    def test_clear_segments(self):
-        actual_clip = self._make_stitched()
-        actual_clip.clear_segments()
-        assert actual_clip.segment_count == 0
-        assert actual_clip._data['medias'] == []

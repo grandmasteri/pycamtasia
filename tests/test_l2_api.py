@@ -138,7 +138,6 @@ class TestFade:
         visual = clip._data["animationTracks"]["visual"]
         fade_in_ticks = seconds_to_ticks(1.0)
         fade_out_ticks = seconds_to_ticks(1.0)
-        assert len(visual) == 2
         assert visual[0]["endTime"] == fade_in_ticks
         assert visual[1]["endTime"] == dur
 

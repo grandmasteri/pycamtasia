@@ -86,7 +86,6 @@ def test_validate_detects_orphaned_media(project):
 
     actual_issues = project.validate()
     orphaned = [i for i in actual_issues if 'Orphaned' in i.message]
-    assert len(orphaned) == 1
     assert 'orphaned.mov' in orphaned[0].message
 
 

@@ -20,7 +20,7 @@ def test_diff_from_with_changes(project: Project) -> None:
     other._data['title'] = original_title
 
     operations: list[dict[str, object]] = project.diff_from(other)
-    assert len(operations) >= 1
+    assert operations[0]['op'] == 'replace'
 
 
 def test_diff_summary(project: Project) -> None:

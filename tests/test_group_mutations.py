@@ -74,8 +74,7 @@ class TestRemoveInternalClip:
             [_clip_data('AMFile', 20, 0.0, 3.0)],
         ])
         group.remove_internal_clip(20)
-        assert len(group.all_internal_clips) == 1
-        assert group.all_internal_clips[0].id == 10
+        assert [c.id for c in group.all_internal_clips] == [10]
 
     def test_raises_key_error_for_missing_id(self) -> None:
         group: Group = _make_group([[_clip_data('VMFile', 10, 0.0, 5.0)]])

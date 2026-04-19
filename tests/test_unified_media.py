@@ -246,3 +246,125 @@ def test_base_clip_set_start_seconds_unified():
     assert clip._data['start'] == expected
     assert clip._data['video']['start'] == expected
     assert clip._data['audio']['start'] == expected
+
+
+# ==================================================================
+# UnifiedMedia: effect blocking (from test_clips.py)
+# ==================================================================
+
+def _um_data():
+    _S10 = seconds_to_ticks(10.0)
+    return {
+        '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': _S10,
+        'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
+        'parameters': {}, 'effects': [],
+        'video': {
+            '_type': 'ScreenVMFile', 'id': 2, 'src': 5, 'start': 0,
+            'duration': _S10, 'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'attributes': {'ident': 'rec'},
+            'trackNumber': 0,
+        },
+        'audio': {
+            '_type': 'AMFile', 'id': 3, 'src': 5, 'start': 0,
+            'duration': _S10, 'mediaDuration': _S10, 'mediaStart': 0, 'scalar': 1,
+            'attributes': {'gain': 1.0},
+        },
+    }
+
+
+@pytest.fixture
+def um():
+    return UnifiedMedia({
+        '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
+        'video': {'_type': 'VMFile', 'id': 2, 'src': 1, 'start': 0, 'duration': 100,
+                  'attributes': {}, 'parameters': {}, 'effects': []},
+        'audio': {'_type': 'AMFile', 'id': 3, 'src': 1, 'start': 0, 'duration': 100,
+                  'attributes': {}, 'parameters': {}, 'effects': []},
+    })
+
+
+def test_um_add_effect_raises(um):
+    with pytest.raises(TypeError, match='Effects must be added'):
+        um.add_effect({'effectName': 'Glow'})
+
+
+def test_um_add_drop_shadow_raises(um):
+    with pytest.raises(TypeError, match='Effects must be added'):
+        um.add_drop_shadow()
+
+
+def test_um_add_round_corners_raises(um):
+    with pytest.raises(TypeError, match='Effects must be added'):
+        um.add_round_corners()
+
+
+def test_um_add_glow_raises(um):
+    with pytest.raises(TypeError, match='Effects must be added'):
+        um.add_glow()
+
+
+def test_um_add_glow_timed_raises(um):
+    with pytest.raises(TypeError, match='Effects must be added'):
+        um.add_glow_timed()
+
+
+def test_um_copy_effects_from_raises(um):
+    with pytest.raises(TypeError, match='Effects must be added'):
+        um.copy_effects_from(um)
+
+
+def test_um_set_source_raises(um):
+    with pytest.raises(TypeError, match='Cannot set_source'):
+        um.set_source(42)
+
+
+class TestUnifiedMediaEffectBlocking:
+    def test_add_effect(self):
+        um = UnifiedMedia(_um_data())
+        with pytest.raises(TypeError):
+            um.add_effect({})
+
+    def test_add_drop_shadow(self):
+        um = UnifiedMedia(_um_data())
+        with pytest.raises(TypeError):
+            um.add_drop_shadow()
+
+    def test_add_round_corners(self):
+        um = UnifiedMedia(_um_data())
+        with pytest.raises(TypeError):
+            um.add_round_corners()
+
+    def test_add_glow(self):
+        um = UnifiedMedia(_um_data())
+        with pytest.raises(TypeError):
+            um.add_glow()
+
+    def test_add_glow_timed(self):
+        um = UnifiedMedia(_um_data())
+        with pytest.raises(TypeError):
+            um.add_glow_timed()
+
+    def test_copy_effects_from(self):
+        um = UnifiedMedia(_um_data())
+        with pytest.raises(TypeError):
+            um.copy_effects_from(um)
+
+    def test_set_source(self):
+        um = UnifiedMedia(_um_data())
+        with pytest.raises(TypeError):
+            um.set_source(1)
+
+
+class TestUnifiedMediaDuplicateEffectsTo:
+    def test_duplicate_effects_to_raises(self):
+        um = UnifiedMedia(_um_data())
+        with pytest.raises(TypeError, match='Cannot duplicate effects from UnifiedMedia'):
+            um.duplicate_effects_to(um)
+
+
+def test_unified_media_not_silent_when_gain_nonzero():
+    clip = BaseClip({
+        '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
+        'audio': {'attributes': {'gain': 0.8}},
+    })
+    assert clip.is_silent is False

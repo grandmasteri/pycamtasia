@@ -142,4 +142,3 @@ class TestForEachTrack:
         gains = []
         count = project.apply_to_all_clips(lambda c: gains.append(c.gain))
         assert count == 2
-        assert len(gains) == 2

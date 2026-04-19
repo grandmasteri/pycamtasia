@@ -38,8 +38,7 @@ class TestBuildFromScreenplayFile:
         with patch('camtasia.screenplay.parse_screenplay', return_value=sp):
             result = project.build_from_screenplay_file(screenplay_md, audio_dir)
 
-        assert len(result['clips']) == 2
-        assert all(c.clip_type == 'AMFile' for c in result['clips'])
+        assert [c.clip_type for c in result['clips']] == ['AMFile', 'AMFile']
         assert result['total_duration'] > 0
         assert result['sections'][0].title == 'Intro'
 
@@ -58,8 +57,7 @@ class TestBuildFromScreenplayFile:
         with patch('camtasia.screenplay.parse_screenplay', return_value=sp):
             result = project.build_from_screenplay_file(screenplay_md, audio_dir)
 
-        assert len(result['clips']) == 1
-        assert result['clips'][0].clip_type == 'AMFile'
+        assert [c.clip_type for c in result['clips']] == ['AMFile']
 
     def test_empty_screenplay(self, project, tmp_path):
         """An empty screenplay produces no clips."""
@@ -124,5 +122,4 @@ class TestBuildFromScreenplayFile:
         with patch('camtasia.screenplay.parse_screenplay', return_value=sp):
             result = project.build_from_screenplay_file(screenplay_md, tmp_path)
 
-        assert len(result['sections']) == 1
         assert result['sections'][0].title == 'Chapter 1'

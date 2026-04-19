@@ -68,7 +68,8 @@ class TestSummary:
     def test_is_multiline(self, project):
         text = project.summary()
         lines = text.strip().split('\n')
-        assert len(lines) >= 6
+        assert lines[0].startswith('Project:')
+        assert lines[-1] == 'Validation: clean'
 
     def test_returns_string(self, project):
         assert 'Project:' in project.summary()

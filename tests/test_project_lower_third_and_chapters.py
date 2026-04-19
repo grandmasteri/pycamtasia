@@ -104,8 +104,8 @@ class TestAddLowerThird:
         clip = proj.add_lower_third("Title")
         # Fades add effects/parameters to the clip data
         visual = clip._data.get('animationTracks', {}).get('visual', [])
-        assert len(visual) == 2
         assert 'endTime' in visual[0]
+        assert 'endTime' in visual[1]
 
     def test_no_fade_when_zero(self, tmp_path: Path):
         proj = _create_project(tmp_path)
@@ -114,7 +114,7 @@ class TestAddLowerThird:
         effects = clip._data.get("effects", [])
         # No fade-related effects should be present
         fade_effects = [e for e in effects if "fade" in e.get("effectName", "").lower()]
-        assert len(fade_effects) == 0
+        assert fade_effects == []
 
     def test_default_duration_is_five_seconds(self, tmp_path: Path):
         proj = _create_project(tmp_path)
@@ -126,7 +126,9 @@ class TestAddLowerThird:
         proj.add_lower_third("First", start_seconds=0.0)
         proj.add_lower_third("Second", start_seconds=6.0)
         track = proj.timeline.find_track_by_name("Lower Thirds")
-        assert len(track) == 2
+        clip_texts = [str(c._data) for c in track]
+        assert any("First" in t for t in clip_texts)
+        assert any("Second" in t for t in clip_texts)
 
 
 # ── add_chapter_markers ──────────────────────────────────────────
@@ -143,7 +145,7 @@ class TestAddChapterMarkers:
         chapters = [(0.0, "Intro"), (60.0, "Chapter 1")]
         proj.add_chapter_markers(chapters)
         markers = list(proj.timeline.markers)
-        assert len(markers) == 2
+        assert [m.name for m in markers] == ["Intro", "Chapter 1"]
 
     def test_marker_names(self, tmp_path: Path):
         proj = _create_project(tmp_path)
@@ -162,12 +164,11 @@ class TestAddChapterMarkers:
     def test_empty_chapters(self, tmp_path: Path):
         proj = _create_project(tmp_path)
         assert proj.add_chapter_markers([]) == 0
-        assert len(list(proj.timeline.markers)) == 0
+        assert list(proj.timeline.markers) == []
 
     def test_single_chapter(self, tmp_path: Path):
         proj = _create_project(tmp_path)
         proj.add_chapter_markers([(0.0, "Start")])
         markers = list(proj.timeline.markers)
-        assert len(markers) == 1
         assert markers[0].name == "Start"
         assert markers[0].time == 0

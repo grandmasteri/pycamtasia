@@ -278,7 +278,7 @@ class TestReverseTrackOrderPadsAttrs:
         data = _tl_make_timeline_data([t0, t1], [])
         tl = Timeline(data)
         tl.reverse_track_order()
-        assert len(data['trackAttributes']) >= 2
+        assert [type(a) for a in data['trackAttributes']] == [dict, dict]
 
 
 class TestSortTracksByNamePadsAttrs:
@@ -288,7 +288,7 @@ class TestSortTracksByNamePadsAttrs:
         data = _tl_make_timeline_data([t0, t1], [{'ident': 'B'}])
         tl = Timeline(data)
         tl.sort_tracks_by_name()
-        assert len(data['trackAttributes']) >= 2
+        assert [type(a) for a in data['trackAttributes']] == [dict, dict]
 
 
 class TestReorderTracksPadsAttrs:
@@ -298,7 +298,7 @@ class TestReorderTracksPadsAttrs:
         data = _tl_make_timeline_data([t0, t1], [])
         tl = Timeline(data)
         tl.reorder_tracks([1, 0])
-        assert len(data['trackAttributes']) >= 2
+        assert [type(a) for a in data['trackAttributes']] == [dict, dict]
 
 
 # =========================================================================
@@ -728,7 +728,7 @@ class TestDuplicateTrackRegistersIds:
         t0 = tl.tracks[0]
         t0.add_video(1, start_seconds=0, duration_seconds=3)
         tl.duplicate_track(0)
-        assert tl.track_count >= 2
+        assert tl.track_count == 3
 
 
 # ── Merged from test_timeline_protocols.py ───────────────────────────
@@ -844,9 +844,8 @@ class TestAllEffectsNestedClips:
         }
         tl = Timeline(_make_timeline_data([{"medias": [group_clip]}]))
         effs = tl.all_effects
-        names = [e[2]["effectName"] for e in effs]
-        assert "outer" in names
-        assert "inner" in names
+        names = {e[2]["effectName"] for e in effs}
+        assert names >= {"outer", "inner"}
 
     def test_stitched_media_effects_collected(self):
         clip = {
@@ -877,6 +876,5 @@ class TestAllEffectsNestedClips:
         }
         tl = Timeline(_make_timeline_data([{"medias": [clip]}]))
         effs = tl.all_effects
-        names = [e[2]["effectName"] for e in effs]
-        assert "vid_eff" in names
-        assert "aud_eff" in names
+        names = {e[2]["effectName"] for e in effs}
+        assert names >= {"vid_eff", "aud_eff"}

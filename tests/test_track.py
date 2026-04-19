@@ -1780,3 +1780,43 @@ def test_partition_by_type():
     assert 'AMFile' in result
     assert len(result['VMFile']) == 2
     assert len(result['AMFile']) == 1
+
+
+# ── Track.add_freeze_frame ──────────────────────────────────────────
+
+
+class TestAddFreezeFrame:
+    def test_creates_imfile_clip(self, project):
+        track = project.timeline.get_or_create_track('Video')
+        src = track.add_clip('VMFile', 1, seconds_to_ticks(0), seconds_to_ticks(10))
+        assert track.add_freeze_frame(src, at_seconds=5.0, freeze_duration_seconds=2.0).clip_type == 'IMFile'
+
+    def test_freeze_start_position(self, project):
+        track = project.timeline.get_or_create_track('Video')
+        src = track.add_clip('VMFile', 1, seconds_to_ticks(0), seconds_to_ticks(10))
+        freeze = track.add_freeze_frame(src, at_seconds=3.0, freeze_duration_seconds=1.0)
+        assert freeze.start == seconds_to_ticks(3.0)
+
+    def test_freeze_duration(self, project):
+        track = project.timeline.get_or_create_track('Video')
+        src = track.add_clip('VMFile', 1, seconds_to_ticks(0), seconds_to_ticks(10))
+        freeze = track.add_freeze_frame(src, at_seconds=5.0, freeze_duration_seconds=3.0)
+        assert freeze.duration == seconds_to_ticks(3.0)
+
+    def test_freeze_uses_source_id(self, project):
+        track = project.timeline.get_or_create_track('Video')
+        src = track.add_clip('VMFile', 42, seconds_to_ticks(0), seconds_to_ticks(10))
+        assert track.add_freeze_frame(src, at_seconds=2.0, freeze_duration_seconds=1.0).source_id == 42
+
+    def test_freeze_media_start_offset(self, project):
+        track = project.timeline.get_or_create_track('Video')
+        src = track.add_clip('VMFile', 1, seconds_to_ticks(2.0), seconds_to_ticks(10))
+        freeze = track.add_freeze_frame(src, at_seconds=5.0, freeze_duration_seconds=1.0)
+        assert freeze._data['mediaStart'] == seconds_to_ticks(3.0)
+
+    def test_freeze_adds_to_track_clip_count(self, project):
+        track = project.timeline.get_or_create_track('Video')
+        src = track.add_clip('VMFile', 1, seconds_to_ticks(0), seconds_to_ticks(10))
+        initial_count = len(track)
+        track.add_freeze_frame(src, at_seconds=5.0, freeze_duration_seconds=2.0)
+        assert len(track) == initial_count + 1

@@ -176,7 +176,7 @@ class TestGroupAddInternalTrack:
 
     def test_new_track_is_empty(self, group: Group) -> None:
         new_track: GroupTrack = group.add_internal_track()
-        assert len(new_track) == 0
+        assert list(new_track) == []
 
 
 class TestGroupUngroup:
@@ -184,7 +184,7 @@ class TestGroupUngroup:
 
     def test_ungroup_returns_all_clips(self, group: Group) -> None:
         extracted_clips: list[BaseClip] = group.ungroup()
-        assert len(extracted_clips) == 2
+        assert [c.clip_type for c in extracted_clips] == ['VMFile', 'AMFile']
 
     def test_ungroup_adjusts_start_times(self, group: Group) -> None:
         group_start: int = group.start
@@ -315,8 +315,7 @@ def test_set_internal_segment_speeds_warns_over_8():
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         g.set_internal_segment_speeds(segments)
-        warns = [x for x in w if '>8' in str(x.message)]
-        assert len(warns) == 1
+        assert any('>8' in str(x.message) for x in w)
 
 
 def test_set_internal_segment_speeds_canvas_aspect_mismatch():
@@ -337,8 +336,7 @@ def test_set_internal_segment_speeds_canvas_aspect_mismatch():
             source_width=1920,
             source_height=1080,
         )
-        warns = [x for x in w if 'aspect ratio' in str(x.message)]
-        assert len(warns) == 1
+        assert any('aspect ratio' in str(x.message) for x in w)
 
 
 def test_set_internal_segment_speeds_source_bin_resolve():

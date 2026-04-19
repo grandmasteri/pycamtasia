@@ -351,7 +351,7 @@ class TestDiffRemovedAddedTracks:
         t3.add_clip('VMFile', 0, 0, 100)
 
         result = diff_projects(a, b)
-        assert len(result.tracks_removed) == 2
+        assert set(result.tracks_removed) == {2, 3}
 
 
 class TestSpeedEffectScaling:
@@ -405,10 +405,8 @@ class TestWalkClipsUnified:
             }]
         }]
         clips = list(_walk_clips(tracks))
-        types = [c.get('_type') for c in clips]
-        assert 'UnifiedMedia' in types
-        assert 'ScreenVMFile' in types
-        assert 'AMFile' in types
+        types = {c.get('_type') for c in clips}
+        assert types >= {'UnifiedMedia', 'ScreenVMFile', 'AMFile'}
 
     def test_replace_media_source_in_unified(self):
         data = {
@@ -539,13 +537,17 @@ def test_project_describe():
     proj = load_project(fixture)
     desc = proj.describe()
     assert isinstance(desc, str)
-    assert f'Project: {proj.file_path.name}' in desc
-    assert f'{proj.frame_rate}fps' in desc
-    assert 'Duration:' in desc
-    assert 'Tracks:' in desc
-    assert 'Clips:' in desc
-    assert 'Media:' in desc
-    assert 'Health:' in desc
+    expected_substrings = {
+        f'Project: {proj.file_path.name}',
+        f'{proj.frame_rate}fps',
+        'Duration:',
+        'Tracks:',
+        'Clips:',
+        'Media:',
+        'Health:',
+    }
+    for s in expected_substrings:
+        assert s in desc
 
 
 def test_project_describe_unhealthy(project):
@@ -583,7 +585,7 @@ def test_find_media_by_extension(project):
     wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
     project.import_media(wav)
     actual = project.find_media_by_extension('wav')
-    assert len(actual) == 1
+    assert [Path(m.source).name for m in actual] == ['empty.wav']
     actual_none = project.find_media_by_extension('xyz')
     assert actual_none == []
 
@@ -692,9 +694,7 @@ def test_source_bin_paths(tmp_path):
 
     project = Project(project_dir)
     source_paths: list[str] = project.source_bin_paths
-    assert len(source_paths) == 2
-    assert any('clip_a.mp4' in path for path in source_paths)
-    assert any('clip_b.wav' in path for path in source_paths)
+    assert set(Path(p).name for p in source_paths) == {'clip_a.mp4', 'clip_b.wav'}
 
 
 
@@ -768,9 +768,7 @@ def test_project_empty_tracks_returns_tracks_with_no_clips():
         ('Also Empty', []),
     ])
     empty_track_names: list[str] = [t.name for t in timeline.empty_tracks]
-    assert 'Empty' in empty_track_names
-    assert 'Also Empty' in empty_track_names
-    assert 'Audio' not in empty_track_names
+    assert set(empty_track_names) == {'Empty', 'Also Empty'}
 
 
 def test_project_empty_tracks_returns_empty_list_when_all_have_clips():
@@ -1021,9 +1019,8 @@ class TestAllClipsNested:
             'medias': [{'id': 2, '_type': 'VMFile', 'start': 0, 'duration': 50}],
         }]
         clips = proj.all_clips
-        types = [c.clip_type for _, c in clips]
-        assert 'StitchedMedia' in types
-        assert 'VMFile' in types
+        types = {c.clip_type for _, c in clips}
+        assert types >= {'StitchedMedia', 'VMFile'}
 
     def test_unified_media_nested(self, tmp_path):
         proj_dir = _create_cmproj(tmp_path)
@@ -1035,10 +1032,8 @@ class TestAllClipsNested:
             'audio': {'id': 3, '_type': 'AMFile', 'start': 0, 'duration': 100},
         }]
         clips = proj.all_clips
-        types = [c.clip_type for _, c in clips]
-        assert 'UnifiedMedia' in types
-        assert 'VMFile' in types
-        assert 'AMFile' in types
+        types = {c.clip_type for _, c in clips}
+        assert types >= {'UnifiedMedia', 'VMFile', 'AMFile'}
 
 
 
@@ -1053,7 +1048,8 @@ class TestValidateOverlaps:
         ]
         issues = proj.validate()
         overlap_issues = [i for i in issues if 'Overlapping' in i.message]
-        assert len(overlap_issues) == 1
+        assert 'clip 1' in overlap_issues[0].message
+        assert 'clip 2' in overlap_issues[0].message
 
 
 
@@ -1220,3 +1216,380 @@ class TestHealthReportGaps:
         }]
         report = proj.health_report()
         assert '- Transitions:' in report
+
+
+# ── Helpers for video production tests ──────────────────────────────
+
+import struct
+import zlib
+
+FIXTURES = Path(__file__).parent / 'fixtures'
+EMPTY_WAV = FIXTURES / 'empty.wav'
+EMPTY2_WAV = FIXTURES / 'empty2.wav'
+TEST_WAV = FIXTURES / 'empty.wav'
+
+
+def _make_minimal_png(path: Path) -> None:
+    """Write a valid 1x1 white PNG file."""
+    signature = b'\x89PNG\r\n\x1a\n'
+    ihdr_data = struct.pack('>IIBBBBB', 1, 1, 8, 2, 0, 0, 0)
+    ihdr = _png_chunk(b'IHDR', ihdr_data)
+    raw_row = b'\x00\xff\xff\xff'
+    idat = _png_chunk(b'IDAT', zlib.compress(raw_row))
+    iend = _png_chunk(b'IEND', b'')
+    path.write_bytes(signature + ihdr + idat + iend)
+
+
+def _png_chunk(chunk_type: bytes, data: bytes) -> bytes:
+    length = struct.pack('>I', len(data))
+    crc = struct.pack('>I', zlib.crc32(chunk_type + data) & 0xFFFFFFFF)
+    return length + chunk_type + data + crc
+
+
+# ── Project.add_voiceover_sequence_v2 ───────────────────────────────
+
+
+class TestAddVoiceoverSequenceV2:
+    def test_single_audio_file(self, project):
+        placed = project.add_voiceover_sequence_v2([EMPTY_WAV])
+        assert placed[0].clip_type == 'AMFile'
+        assert placed[0].start == 0
+
+    def test_multiple_audio_files(self, project):
+        placed = project.add_voiceover_sequence_v2([EMPTY_WAV, EMPTY2_WAV])
+        assert [c.clip_type for c in placed] == ['AMFile', 'AMFile']
+
+    def test_clips_are_sequential(self, project):
+        placed = project.add_voiceover_sequence_v2([EMPTY_WAV, EMPTY2_WAV])
+        first_end = placed[0].start_seconds + placed[0].duration_seconds
+        assert abs(placed[1].start_seconds - first_end) < 0.01
+
+    def test_custom_start_seconds(self, project):
+        placed = project.add_voiceover_sequence_v2([EMPTY_WAV], start_seconds=10.0)
+        assert abs(placed[0].start_seconds - 10.0) < 0.01
+
+    def test_gap_between_clips(self, project):
+        placed = project.add_voiceover_sequence_v2([EMPTY_WAV, EMPTY2_WAV], gap_seconds=2.0)
+        first_end = placed[0].start_seconds + placed[0].duration_seconds
+        assert abs(placed[1].start_seconds - first_end - 2.0) < 0.01
+
+    def test_custom_track_name(self, project):
+        project.add_voiceover_sequence_v2([EMPTY_WAV], track_name='Narration')
+        track = project.timeline.get_or_create_track('Narration')
+        assert list(track)[0].clip_type == 'AMFile'
+
+    def test_empty_list_returns_empty(self, project):
+        assert project.add_voiceover_sequence_v2([]) == []
+
+    def test_string_paths_accepted(self, project):
+        placed = project.add_voiceover_sequence_v2([str(EMPTY_WAV)])
+        assert placed[0].clip_type == 'AMFile'
+
+
+# ── Project.add_image_sequence ──────────────────────────────────────
+
+
+class TestAddImageSequence:
+    @pytest.fixture(autouse=True)
+    def _create_test_images(self, tmp_path: Path):
+        self.image_a = tmp_path / 'slide_a.png'
+        self.image_b = tmp_path / 'slide_b.png'
+        _make_minimal_png(self.image_a)
+        _make_minimal_png(self.image_b)
+
+    def test_single_image(self, project):
+        placed = project.add_image_sequence([self.image_a])
+        assert placed[0].clip_type == 'IMFile'
+        assert placed[0].start_seconds == pytest.approx(0.0, abs=0.01)
+
+    def test_multiple_images(self, project):
+        placed = project.add_image_sequence([self.image_a, self.image_b])
+        assert [c.clip_type for c in placed] == ['IMFile', 'IMFile']
+
+    def test_clips_are_sequential(self, project):
+        placed = project.add_image_sequence(
+            [self.image_a, self.image_b], per_image_seconds=4.0, fade_seconds=0)
+        first_end = placed[0].start_seconds + placed[0].duration_seconds
+        assert abs(placed[1].start_seconds - first_end) < 0.01
+
+    def test_per_image_duration(self, project):
+        placed = project.add_image_sequence([self.image_a], per_image_seconds=7.0, fade_seconds=0)
+        assert abs(placed[0].duration_seconds - 7.0) < 0.01
+
+    def test_custom_start_seconds(self, project):
+        placed = project.add_image_sequence([self.image_a], start_seconds=5.0)
+        assert abs(placed[0].start_seconds - 5.0) < 0.01
+
+    def test_custom_track_name(self, project):
+        project.add_image_sequence([self.image_a], track_name='Slides')
+        track = project.timeline.get_or_create_track('Slides')
+        assert list(track)[0].clip_type == 'IMFile'
+
+    def test_fade_applied_by_default(self, project):
+        placed = project.add_image_sequence([self.image_a], fade_seconds=0.5)
+        anim = placed[0]._data.get('animationTracks', {})
+        assert 'visual' in anim and len(anim.get('visual', [])) == 2
+
+    def test_no_fade_when_zero(self, project):
+        placed = project.add_image_sequence([self.image_a], fade_seconds=0)
+        anim = placed[0]._data.get('animationTracks', {})
+        assert anim.get('visual', []) == []
+
+    def test_empty_list_returns_empty(self, project):
+        assert project.add_image_sequence([]) == []
+
+    def test_string_paths_accepted(self, project):
+        placed = project.add_image_sequence([str(self.image_a)])
+        assert placed[0].clip_type == 'IMFile'
+
+
+# ── Project.add_watermark ──────────────────────────────────────────
+
+
+class TestAddWatermarkReturn:
+    def test_returns_base_clip(self, project):
+        from camtasia.timeline.clips import BaseClip
+        actual_clip = project.add_watermark(TEST_WAV)
+        assert isinstance(actual_clip, BaseClip)
+
+
+class TestAddWatermarkOpacity:
+    def test_default_opacity(self, project):
+        actual_clip = project.add_watermark(TEST_WAV)
+        assert actual_clip.opacity == 0.3
+
+    def test_custom_opacity(self, project):
+        actual_clip = project.add_watermark(TEST_WAV, opacity=0.5)
+        assert actual_clip.opacity == 0.5
+
+
+class TestAddWatermarkTrack:
+    def test_default_track_name(self, project):
+        project.add_watermark(TEST_WAV)
+        track = project.timeline.find_track_by_name('Watermark')
+        assert track is not None
+        assert list(track)[0].clip_type == 'IMFile'
+
+    def test_custom_track_name(self, project):
+        project.add_watermark(TEST_WAV, track_name='Logo')
+        track = project.timeline.find_track_by_name('Logo')
+        assert track is not None
+        assert list(track)[0].clip_type == 'IMFile'
+
+
+class TestAddWatermarkDuration:
+    def test_empty_project_uses_fallback(self, project):
+        assert project.duration_seconds == 0
+        actual_clip = project.add_watermark(TEST_WAV)
+        assert actual_clip.duration_seconds == pytest.approx(60.0)
+
+    def test_clip_starts_at_zero(self, project):
+        actual_clip = project.add_watermark(TEST_WAV)
+        assert actual_clip.start == 0
+
+
+class TestAddWatermarkMedia:
+    def test_media_imported(self, project):
+        before = project.media_count
+        project.add_watermark(TEST_WAV)
+        assert project.media_count == before + 1
+
+
+class TestAddWatermarkStringPath:
+    def test_string_path_accepted(self, project):
+        from camtasia.timeline.clips import BaseClip
+        actual_clip = project.add_watermark(str(TEST_WAV))
+        assert isinstance(actual_clip, BaseClip)
+
+
+# ── Project.add_countdown ──────────────────────────────────────────
+
+
+class TestAddCountdownReturn:
+    def test_returns_list(self, project):
+        actual_result = project.add_countdown()
+        assert isinstance(actual_result, list)
+
+    def test_default_returns_three_clips(self, project):
+        actual_result = project.add_countdown()
+        assert [c.text for c in actual_result] == ['3', '2', '1']
+
+    def test_all_are_base_clips(self, project):
+        from camtasia.timeline.clips import BaseClip
+        for clip in project.add_countdown():
+            assert isinstance(clip, BaseClip)
+
+
+class TestAddCountdownText:
+    def test_text_is_descending(self, project):
+        clips = project.add_countdown(seconds=3)
+        assert [c.text for c in clips] == ['3', '2', '1']
+
+    def test_custom_seconds(self, project):
+        clips = project.add_countdown(seconds=5)
+        assert [c.text for c in clips] == ['5', '4', '3', '2', '1']
+
+
+class TestAddCountdownTrack:
+    def test_default_track_name(self, project):
+        project.add_countdown()
+        track = project.timeline.find_track_by_name('Countdown')
+        assert track is not None
+        assert [c.clip_type for c in track] == ['Callout', 'Callout', 'Callout']
+
+    def test_custom_track_name(self, project):
+        project.add_countdown(track_name='Timer')
+        track = project.timeline.find_track_by_name('Timer')
+        assert track is not None
+
+
+class TestAddCountdownTiming:
+    def test_clips_are_sequential(self, project):
+        clips = project.add_countdown(seconds=3, per_number_seconds=1.0)
+        starts = [c.start_seconds for c in clips]
+        assert starts[0] < starts[1] < starts[2]
+
+    def test_first_clip_starts_at_zero(self, project):
+        clips = project.add_countdown()
+        assert clips[0].start_seconds == pytest.approx(0.0, abs=0.01)
+
+    def test_custom_per_number_seconds(self, project):
+        clips = project.add_countdown(seconds=2, per_number_seconds=2.0)
+        assert clips[1].start_seconds == pytest.approx(2.0, abs=0.01)
+
+
+class TestAddCountdownFontSize:
+    def test_font_size_is_96(self, project):
+        clips = project.add_countdown()
+        assert clips[0].font['size'] == 96.0
+
+
+class TestAddCountdownFades:
+    def test_fades_applied(self, project):
+        clips = project.add_countdown()
+        for clip in clips:
+            assert clip._data.get('parameters', {}).get('opacity') is not None
+
+
+# ── Project.add_section_divider ────────────────────────────────────
+
+
+class TestAddSectionDividerBasic:
+    def test_returns_clip(self, project):
+        clip = project.add_section_divider('Chapter 1', at_seconds=10.0)
+        assert clip is not None
+
+    def test_clip_text(self, project):
+        clip = project.add_section_divider('Intro', at_seconds=0.0)
+        assert clip.text == 'Intro'
+
+    def test_default_track_name(self, project):
+        project.add_section_divider('Part 1', at_seconds=5.0)
+        track = project.timeline.find_track_by_name('Section Dividers')
+        assert track is not None
+        assert list(track)[0].clip_type == 'Callout'
+
+    def test_custom_track_name(self, project):
+        project.add_section_divider('Part 1', at_seconds=5.0, track_name='Dividers')
+        track = project.timeline.find_track_by_name('Dividers')
+        assert track is not None
+
+    def test_font_size_48(self, project):
+        clip = project.add_section_divider('Title', at_seconds=0.0)
+        assert clip.font['size'] == 48.0
+
+    def test_default_duration(self, project):
+        clip = project.add_section_divider('Title', at_seconds=0.0)
+        assert clip.duration_seconds == pytest.approx(3.0, abs=0.1)
+
+    def test_custom_duration(self, project):
+        clip = project.add_section_divider('Title', at_seconds=0.0, duration_seconds=7.0)
+        assert clip.duration_seconds == pytest.approx(7.0, abs=0.1)
+
+
+class TestAddSectionDividerFades:
+    def test_fades_applied_by_default(self, project):
+        clip = project.add_section_divider('Faded', at_seconds=0.0)
+        assert clip._data.get('parameters', {}).get('opacity') is not None
+
+    def test_no_fades_when_zero(self, project):
+        clip = project.add_section_divider('NoFade', at_seconds=0.0, fade_seconds=0.0)
+        assert clip.effect_count == 0
+
+
+class TestAddSectionDividerMarker:
+    def test_marker_added(self, project):
+        project.add_section_divider('Chapter 2', at_seconds=30.0)
+        marker_names = [m.name for m in project.timeline.markers]
+        assert 'Chapter 2' in marker_names
+
+    def test_multiple_dividers_add_multiple_markers(self, project):
+        project.add_section_divider('Part A', at_seconds=10.0)
+        project.add_section_divider('Part B', at_seconds=20.0)
+        marker_names = [m.name for m in project.timeline.markers]
+        assert 'Part A' in marker_names
+        assert 'Part B' in marker_names
+
+
+# ── Project.add_end_card ───────────────────────────────────────────
+
+
+class TestAddEndCardBasic:
+    def test_returns_clip(self, project):
+        clip = project.add_end_card()
+        assert clip is not None
+
+    def test_default_text(self, project):
+        clip = project.add_end_card()
+        assert clip.text == 'Thank You'
+
+    def test_custom_title(self, project):
+        clip = project.add_end_card(title_text='The End')
+        assert clip.text == 'The End'
+
+    def test_subtitle_combined(self, project):
+        clip = project.add_end_card(title_text='Thanks', subtitle_text='See you next time')
+        assert clip.text == 'Thanks\nSee you next time'
+
+    def test_no_subtitle_no_newline(self, project):
+        clip = project.add_end_card(title_text='Bye', subtitle_text='')
+        assert '\n' not in clip.text
+
+    def test_default_track_name(self, project):
+        project.add_end_card()
+        track = project.timeline.find_track_by_name('End Card')
+        assert track is not None
+        assert list(track)[0].clip_type == 'Callout'
+
+    def test_custom_track_name(self, project):
+        project.add_end_card(track_name='Outro')
+        track = project.timeline.find_track_by_name('Outro')
+        assert track is not None
+
+    def test_font_size_48(self, project):
+        clip = project.add_end_card()
+        assert clip.font['size'] == 48.0
+
+    def test_default_duration(self, project):
+        clip = project.add_end_card()
+        assert clip.duration_seconds == pytest.approx(5.0, abs=0.1)
+
+    def test_custom_duration(self, project):
+        clip = project.add_end_card(duration_seconds=10.0)
+        assert clip.duration_seconds == pytest.approx(10.0, abs=0.1)
+
+
+class TestAddEndCardFades:
+    def test_fades_applied_by_default(self, project):
+        clip = project.add_end_card()
+        assert clip._data.get('parameters', {}).get('opacity') is not None
+
+    def test_no_fades_when_zero(self, project):
+        clip = project.add_end_card(fade_seconds=0.0)
+        assert clip.effect_count == 0
+
+
+class TestAddEndCardPosition:
+    def test_placed_at_timeline_end(self, project):
+        clip = project.add_end_card()
+        assert clip.start_seconds == pytest.approx(0.0, abs=0.1)

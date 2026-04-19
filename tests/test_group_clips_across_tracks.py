@@ -40,7 +40,7 @@ class TestGroupClipsAcrossTracks:
         source_b = tl.tracks[t1.index]
         original_ids = {c0.id, c1.id}
         assert not any(c.id in original_ids for c in source_a.clips if not isinstance(c, Group))
-        assert len(list(source_b.clips)) == 0
+        assert list(source_b.clips) == []
 
     def test_empty_tracks_preserved(self, project):
         """Source tracks are NOT removed even when emptied."""
@@ -65,11 +65,9 @@ class TestGroupClipsAcrossTracks:
 
         group = tl.group_clips_across_tracks([c0.id, c1.id], t2.index)
 
-        assert len(group.tracks) == 2
         # Verify each internal track has the expected clip type
-        track_types = [group.tracks[i].clips[0].clip_type for i in range(2)]
-        assert 'VMFile' in track_types
-        assert 'AMFile' in track_types
+        track_types = [group.tracks[i].clips[0].clip_type for i in range(len(group.tracks))]
+        assert set(track_types) == {'VMFile', 'AMFile'}
 
     def test_clip_starts_adjusted_to_group_relative(self, project):
         """Internal clip starts are relative to the Group's start."""
@@ -174,7 +172,7 @@ class TestGroupClipsAcrossTracks:
 
         target = tl.tracks[t1.index]
         groups = [c for c in target.clips if isinstance(c, Group)]
-        assert len(groups) == 1
+        assert [type(g).__name__ for g in groups] == ['Group']
 
     def test_single_clip_grouping(self, project):
         """Grouping a single clip works (one internal track, one clip)."""
@@ -184,9 +182,7 @@ class TestGroupClipsAcrossTracks:
 
         group = tl.group_clips_across_tracks([c0.id], t0.index)
 
-        assert len(group.tracks) == 1
-        assert len(group.tracks[0].clips) == 1
-        assert group.tracks[0].clips[0].clip_type == 'VMFile'
+        assert [c.clip_type for c in group.tracks[0].clips] == ['VMFile']
         assert abs(group.start_seconds - 3.0) < 0.01
         assert abs(group.duration_seconds - 2.0) < 0.01
 
@@ -199,10 +195,8 @@ class TestGroupClipsAcrossTracks:
 
         group = tl.group_clips_across_tracks([c0.id, c1.id], t0.index)
 
-        assert len(group.tracks) == 1
         internal_clips = list(group.tracks[0].clips)
-        assert len(internal_clips) == 2
-        assert all(c.clip_type == 'VMFile' for c in internal_clips)
+        assert [c.clip_type for c in internal_clips] == ['VMFile', 'VMFile']
 
 
 class TestProjectGroupClipsAcrossTracks:

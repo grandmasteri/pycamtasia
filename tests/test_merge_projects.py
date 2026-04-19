@@ -77,8 +77,7 @@ def test_merge_preserves_tracks(tmp_path):
         tmp_path / 'merged.cmproj',
     )
     names = merged.track_names
-    assert 'Track-A' in names
-    assert 'Track-B' in names
+    assert {'Track-A', 'Track-B'}.issubset(set(names))
 
 
 
