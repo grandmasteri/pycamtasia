@@ -304,7 +304,7 @@ class MediaBin:
             media_type = _get_media_type(track)
             width = width or track.get("width")
             height = height or track.get("height")
-            sample_rate = sample_rate or track.get("sampling_rate") or track.get("frame_rate")
+            sample_rate = sample_rate or track.get("sampling_rate")
             if sample_rate is not None and not isinstance(sample_rate, int):
                 try:
                     sample_rate = int(float(sample_rate))

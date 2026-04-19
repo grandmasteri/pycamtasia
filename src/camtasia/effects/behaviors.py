@@ -151,7 +151,7 @@ class GenericBehaviorEffect(Effect):
     @property
     def effect_name(self) -> str:
         """Effect name identifier."""
-        return self._data["effectName"]
+        return self._data.get("effectName", "")
 
     @property
     def name(self) -> str:
@@ -177,9 +177,9 @@ class GenericBehaviorEffect(Effect):
         raise NotImplementedError('Behavior effects do not support flat parameters. Use entrance/center/exit phases instead.')
 
     @property
-    def start(self) -> int:
+    def start(self) -> int | None:
         """Start time in ticks."""
-        return int(self._data["start"])
+        return self._data.get("start")
 
     @start.setter
     def start(self, value: int) -> None:
@@ -187,9 +187,9 @@ class GenericBehaviorEffect(Effect):
         self._data["start"] = value
 
     @property
-    def duration(self) -> int:
+    def duration(self) -> int | None:
         """Duration in ticks."""
-        return int(self._data["duration"])
+        return self._data.get("duration")
 
     @duration.setter
     def duration(self, value: int) -> None:

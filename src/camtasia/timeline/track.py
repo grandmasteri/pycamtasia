@@ -800,6 +800,19 @@ class Track:
                         nested_media['duration'] = dur_ticks
                         nested_media['mediaDuration'] = dur_ticks
 
+        # Scale inner text group start proportionally
+        template_dur = 5809440000  # original template duration
+        scale_ratio = dur_ticks / template_dur if template_dur > 0 else 1
+        text_group['start'] = int(text_group.get('start', 0) * scale_ratio)
+        for inner_track in text_group.get('tracks', []):
+            for inner_media in inner_track.get('medias', []):
+                inner_media['mediaStart'] = int(inner_media.get('mediaStart', 0) * scale_ratio)
+                for eff in inner_media.get('effects', []):
+                    if 'start' in eff:
+                        eff['start'] = int(eff.get('start', 0) * scale_ratio)
+                    if 'duration' in eff:
+                        eff['duration'] = dur_ticks
+
         # --- Replace text ---
         # Title is clip id_map[86] on tracks[0].medias[0].tracks[1].medias[0]
         title_clip = text_group['tracks'][1]['medias'][0]
