@@ -167,7 +167,8 @@ class TestProbeAudioOnlyDuration:
             _make_track('Audio', duration=7000, sampling_rate=44100,
                         channel_s=1, bit_depth=16),
         ]
-        with patch('pymediainfo.MediaInfo.parse',
-                   return_value=_make_mediainfo_result(tracks)):
+        mock_mi = MagicMock()
+        mock_mi.MediaInfo.parse.return_value = _make_mediainfo_result(tracks)
+        with patch.dict('sys.modules', {'pymediainfo': mock_mi}):
             result = _probe_media(Path('/fake/audio_only.wav'))
         assert result['duration_seconds'] == 7.0
