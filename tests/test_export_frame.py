@@ -6,27 +6,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from camtasia.project import load_project
-
-RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-
-
-# Module-level list to prevent TemporaryDirectory from being GC'd during test
-_TEMP_DIRS: list = []
-
-def _isolated_project():
-    """Load template into an isolated temp copy (safe for parallel execution)."""
-    import shutil, tempfile
-    from camtasia.project import load_project
-    td = tempfile.TemporaryDirectory()
-    _TEMP_DIRS.append(td)  # prevent premature GC
-    dst = Path(td.name) / 'test.cmproj'
-    shutil.copytree(RESOURCES / 'new.cmproj', dst)
-    return load_project(dst)
-
-def project():
-    return _isolated_project()
-
 
 @patch('camtasia.project._sp.run')
 def test_export_frame_calls_ffmpeg_correctly(mock_run, project):

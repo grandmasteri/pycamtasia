@@ -1,6 +1,8 @@
 from __future__ import annotations
 """Tests for camtasia.annotations.shapes module — rectangle function."""
 
+import pytest
+
 from camtasia.annotations.shapes import rectangle
 from camtasia.annotations.types import Color, FillStyle, StrokeStyle
 
@@ -51,6 +53,5 @@ class TestRectangle:
 
 class TestColorValidation:
     def test_color_rejects_out_of_range_component(self):
-        import pytest
         with pytest.raises(ValueError, match='Color red component'):
             Color(red=1.5, green=0.0, blue=0.0)

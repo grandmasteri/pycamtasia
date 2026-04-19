@@ -4,14 +4,6 @@ from __future__ import annotations
 import pytest
 
 
-@pytest.fixture
-def project():
-    from camtasia.project import load_project
-    from pathlib import Path
-    resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-    return load_project(resources / 'new.cmproj')
-
-
 class TestAddCalloutSequenceBasic:
     def test_returns_correct_count(self, project):
         entries = [(0.0, 3.0, 'A'), (5.0, 2.0, 'B'), (10.0, 4.0, 'C')]

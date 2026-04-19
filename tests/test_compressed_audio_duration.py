@@ -8,29 +8,23 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
+
 from camtasia.media_bin.media_bin import _compute_audio_duration
 
 
 class TestComputeAudioDuration:
     """Unit tests for _compute_audio_duration."""
 
-    def test_compressed_mp3_uses_duration_times_sample_rate(self):
-        track = {"format": "MPEG Audio", "duration": 5000.0}
-        # 5000 ms * 44100 / 1000 = 220500 samples
-        assert _compute_audio_duration(track, 44100) == 220500  # 5000ms * 44100 / 1000
-
-    def test_compressed_aac_uses_duration_times_sample_rate(self):
-        track = {"format": "AAC", "duration": 3000.0}
-        # 3000 ms * 48000 / 1000 = 144000 samples
-        assert _compute_audio_duration(track, 48000) == 144000
-
-    def test_compressed_vorbis_uses_duration_times_sample_rate(self):
-        track = {"format": "Vorbis", "duration": 2000.0}
-        assert _compute_audio_duration(track, 44100) == 88200
-
-    def test_compressed_opus_uses_duration_times_sample_rate(self):
-        track = {"format": "Opus", "duration": 1500.0}
-        assert _compute_audio_duration(track, 48000) == 72000
+    @pytest.mark.parametrize("fmt, duration_ms, sample_rate, expected", [
+        ("MPEG Audio", 5000.0, 44100, 220500),
+        ("AAC", 3000.0, 48000, 144000),
+        ("Vorbis", 2000.0, 44100, 88200),
+        ("Opus", 1500.0, 48000, 72000),
+    ], ids=["mp3", "aac", "vorbis", "opus"])
+    def test_compressed_format_uses_duration_times_sample_rate(self, fmt, duration_ms, sample_rate, expected):
+        track = {"format": fmt, "duration": duration_ms}
+        assert _compute_audio_duration(track, sample_rate) == expected
 
     def test_uncompressed_pcm_uses_raw_duration(self):
         track = {"format": "PCM", "duration": 220500}

@@ -40,14 +40,14 @@ def test_srt_marker_count(project, tmp_path):
 
 def test_srt_timecodes(project, tmp_path):
     _add_markers(project, [('Hello', 61.5)])
-    text = export_markers_as_srt(project, tmp_path / 'out.srt').read_text()
-    assert '00:01:01,500 --> 00:01:04,500' in text
+    actual_text = export_markers_as_srt(project, tmp_path / 'out.srt').read_text()
+    assert '00:01:01,500 --> 00:01:04,500' in actual_text
 
 
 def test_srt_custom_duration(project, tmp_path):
     _add_markers(project, [('X', 0.0)])
-    text = export_markers_as_srt(project, tmp_path / 'out.srt', duration_seconds=5.0).read_text()
-    assert '00:00:00,000 --> 00:00:05,000' in text
+    actual_text = export_markers_as_srt(project, tmp_path / 'out.srt', duration_seconds=5.0).read_text()
+    assert '00:00:00,000 --> 00:00:05,000' in actual_text
 
 
 def test_srt_empty_markers(project, tmp_path):
@@ -59,31 +59,31 @@ def test_srt_empty_markers(project, tmp_path):
 
 
 def test_report_markdown_has_headers(project, tmp_path):
-    text = export_project_report(project, tmp_path / 'report.md').read_text()
-    assert '# Project Report' in text
+    actual_text = export_project_report(project, tmp_path / 'report.md').read_text()
+    assert '# Project Report' in actual_text
 
 
 def test_report_markdown_has_tracks(project, tmp_path):
     _add_clip(project)
-    text = export_project_report(project, tmp_path / 'report.md').read_text()
-    assert '## Tracks' in text
-    assert 'Test' in text
+    actual_text = export_project_report(project, tmp_path / 'report.md').read_text()
+    assert '## Tracks' in actual_text
+    assert 'Test' in actual_text
 
 
 def test_report_json_valid(project, tmp_path):
     out = export_project_report(project, tmp_path / 'report.json', format='json')
-    data = json.loads(out.read_text())
+    actual_data = json.loads(out.read_text())
     for key in ('project', 'canvas', 'duration_seconds', 'track_count', 'tracks', 'media_count', 'media'):
-        assert key in data
+        assert key in actual_data
 
 
 def test_report_json_has_tracks(project, tmp_path):
     _add_clip(project, start_seconds=0.0, duration_seconds=3.0)
     out = export_project_report(project, tmp_path / 'report.json', format='json')
-    data = json.loads(out.read_text())
-    assert isinstance(data['tracks'], list)
-    assert any(t['clip_count'] > 0 for t in data['tracks'])
-    clip = next(c for t in data['tracks'] for c in t['clips'])
+    actual_data = json.loads(out.read_text())
+    assert isinstance(actual_data['tracks'], list)
+    assert any(t['clip_count'] > 0 for t in actual_data['tracks'])
+    clip = next(c for t in actual_data['tracks'] for c in t['clips'])
     assert 'id' in clip and 'type' in clip and 'start_seconds' in clip and 'duration_seconds' in clip
 
 
@@ -132,9 +132,9 @@ from camtasia.export.edl import _format_timecode, export_edl
 
 def test_edl_header(project, tmp_path):
     out = export_edl(project, tmp_path / 'out.edl', title='My Project')
-    lines = out.read_text().splitlines()
-    assert lines[0] == 'TITLE: My Project'
-    assert lines[1] == 'FCM: NON-DROP FRAME'
+    actual_lines = out.read_text().splitlines()
+    assert actual_lines[0] == 'TITLE: My Project'
+    assert actual_lines[1] == 'FCM: NON-DROP FRAME'
 
 
 def test_edl_events(project, tmp_path):
@@ -203,10 +203,10 @@ def test_csv_export_rows(project, tmp_path):
     _add_clip(project, start_seconds=0.0, duration_seconds=5.0)
     _add_clip(project, start_seconds=5.0, duration_seconds=3.0)
     out = export_csv(project, tmp_path / 'out.csv')
-    lines = [l for l in out.read_text().splitlines() if l.strip()]
-    assert len(lines) == 3  # header + 2 data rows
-    assert lines[0].startswith('track_name')  # header row
-    row = lines[1].split(',')
+    actual_lines = [l for l in out.read_text().splitlines() if l.strip()]
+    assert len(actual_lines) == 3  # header + 2 data rows
+    assert actual_lines[0].startswith('track_name')  # header row
+    row = actual_lines[1].split(',')
     assert row[0] == 'Test'  # track_name
     assert row[4] == '0.000'  # start_seconds
     assert row[5] == '5.000'  # duration_seconds
@@ -269,11 +269,11 @@ def test_edl_unified_clip_emits_audio_event(project, tmp_path):
     }
     track._data['medias'].append(unified_data)
     out = export_edl(project, tmp_path / 'out.edl')
-    text = out.read_text()
-    lines = [l for l in text.splitlines() if l.strip() and not l.startswith('TITLE') and not l.startswith('FCM')]
+    actual_text = out.read_text()
+    actual_lines = [l for l in actual_text.splitlines() if l.strip() and not l.startswith('TITLE') and not l.startswith('FCM')]
     # Should have at least 2 events: one V and one A
-    assert any('V' in l and 'C' in l for l in lines)
-    assert any('A' in l and 'C' in l for l in lines)
+    assert any('V' in l and 'C' in l for l in actual_lines)
+    assert any('A' in l and 'C' in l for l in actual_lines)
 
 
 # ── Merged from test_coverage_project.py (EDL tests) ────────────────
@@ -281,8 +281,8 @@ def test_edl_unified_clip_emits_audio_event(project, tmp_path):
 
 class TestEdlMinuteOverflow:
     def test_minute_overflow(self):
-        result = _format_timecode(3599.999, fps=30)
-        assert result == '01:00:00:00'
+        actual_result = _format_timecode(3599.999, fps=30)
+        assert actual_result == '01:00:00:00'
 
 
 # ── Merged from test_coverage_export.py ──────────────────────────────
@@ -314,10 +314,10 @@ class TestEdlUnifiedMedia:
     def test_unified_media_generates_video_and_audio_events(self, project, tmp_path):
         _inject_unified(project)
         out = export_edl(project, tmp_path / 'out.edl')
-        lines = [l for l in out.read_text().splitlines() if l and l[0].isdigit()]
-        assert len(lines) == 2
-        assert 'V' in lines[0]
-        assert 'A' in lines[1]
+        actual_lines = [l for l in out.read_text().splitlines() if l and l[0].isdigit()]
+        assert len(actual_lines) == 2
+        assert 'V' in actual_lines[0]
+        assert 'A' in actual_lines[1]
 
     def test_unified_media_source_id_from_video(self, project, tmp_path):
         _inject_unified(project)
@@ -332,11 +332,11 @@ class TestEdlUnifiedMedia:
 class TestEdlExportMisc:
     def test_edl_basic_export(self, tmp_path, project):
         out = tmp_path / 'test.edl'
-        result = export_edl(project, out, title='Test')
-        assert result.exists()
-        content = result.read_text()
-        assert 'TITLE: Test' in content
-        assert 'FCM: NON-DROP FRAME' in content
+        actual_result = export_edl(project, out, title='Test')
+        assert actual_result.exists()
+        actual_content = actual_result.read_text()
+        assert 'TITLE: Test' in actual_content
+        assert 'FCM: NON-DROP FRAME' in actual_content
 
     def test_edl_with_unified_media(self, tmp_path, project):
         track = project.timeline.tracks[0]
@@ -358,10 +358,10 @@ class TestEdlExportMisc:
         }
         track._data.setdefault('medias', []).append(um_data)
         out = tmp_path / 'unified.edl'
-        result = export_edl(project, out)
-        content = result.read_text()
-        assert '  V  ' in content
-        assert '  A  ' in content
+        actual_result = export_edl(project, out)
+        actual_content = actual_result.read_text()
+        assert '  V  ' in actual_content
+        assert '  A  ' in actual_content
 
     def test_edl_with_audio_clip(self, tmp_path, project):
         track = project.timeline.tracks[0]
@@ -373,9 +373,9 @@ class TestEdlExportMisc:
         }
         track._data.setdefault('medias', []).append(am_data)
         out = tmp_path / 'audio.edl'
-        result = export_edl(project, out)
-        content = result.read_text()
-        assert '  A  ' in content
+        actual_result = export_edl(project, out)
+        actual_content = actual_result.read_text()
+        assert '  A  ' in actual_content
 
     def test_edl_source_name_from_media_bin(self, tmp_path, project):
         project._data.setdefault('sourceBin', []).append({
@@ -397,20 +397,20 @@ class TestEdlExportMisc:
 
 class TestFormatTimecodeCarry:
     def test_frame_carry(self):
-        result = _format_timecode(1.0, fps=30)
-        assert result == '00:00:01:00'
+        actual_result = _format_timecode(1.0, fps=30)
+        assert actual_result == '00:00:01:00'
 
     def test_second_carry(self):
-        result = _format_timecode(60.0, fps=30)
-        assert result == '00:01:00:00'
+        actual_result = _format_timecode(60.0, fps=30)
+        assert actual_result == '00:01:00:00'
 
     def test_minute_carry(self):
-        result = _format_timecode(3600.0, fps=30)
-        assert result == '01:00:00:00'
+        actual_result = _format_timecode(3600.0, fps=30)
+        assert actual_result == '01:00:00:00'
 
     def test_negative_clamped(self):
-        result = _format_timecode(-5.0, fps=30)
-        assert result == '00:00:00:00'
+        actual_result = _format_timecode(-5.0, fps=30)
+        assert actual_result == '00:00:00:00'
 
 
 # ── EDL export extras (from test_coverage_extras.py) ──
@@ -418,8 +418,8 @@ class TestFormatTimecodeCarry:
 
 class TestEdlExportExtras:
     def test_format_timecode_carry(self):
-        result = _format_timecode(59.99, 30)
-        assert result.startswith('00:01:00') or result.startswith('00:00:59')
+        actual_result = _format_timecode(59.99, 30)
+        assert actual_result.startswith('00:01:00') or actual_result.startswith('00:00:59')
 
     def test_export_edl_basic(self, project, tmp_path):
         track = project.timeline.tracks[0]
@@ -429,10 +429,10 @@ class TestEdlExportExtras:
             'parameters': {}, 'effects': [],
         })
         out = tmp_path / 'test.edl'
-        result = export_edl(project, out)
-        assert result.exists()
-        content = result.read_text()
-        assert 'TITLE' in content
+        actual_result = export_edl(project, out)
+        assert actual_result.exists()
+        actual_content = actual_result.read_text()
+        assert 'TITLE' in actual_content
 
     def test_export_edl_unified_media(self, project, tmp_path):
         track = project.timeline.tracks[0]
@@ -448,7 +448,7 @@ class TestEdlExportExtras:
                       'mediaStart': 0, 'scalar': 1, 'attributes': {'gain': 1.0}},
         })
         out = tmp_path / 'test_um.edl'
-        result = export_edl(project, out)
-        content = result.read_text()
-        assert '  V  ' in content
-        assert '  A  ' in content
+        actual_result = export_edl(project, out)
+        actual_content = actual_result.read_text()
+        assert '  V  ' in actual_content
+        assert '  A  ' in actual_content

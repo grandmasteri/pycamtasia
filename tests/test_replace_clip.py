@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from camtasia.timeline.track import Track
 
 
@@ -49,7 +51,6 @@ class TestReplaceClip:
 
     def test_replace_clip_nonexistent_raises(self):
         track = _make_track()
-        import pytest
         with pytest.raises(KeyError, match="No clip with id=999"):
             track.replace_clip(999, {"_type": "Callout"})
 

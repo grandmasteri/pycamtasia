@@ -7,28 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from camtasia.project import load_project
-
-RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-
-
-
-# Module-level list to prevent TemporaryDirectory from being GC'd during test
-_TEMP_DIRS: list = []
-
-def _isolated_project():
-    """Load template into an isolated temp copy (safe for parallel execution)."""
-    import shutil, tempfile
-    from camtasia.project import load_project
-    td = tempfile.TemporaryDirectory()
-    _TEMP_DIRS.append(td)  # prevent premature GC
-    dst = Path(td.name) / 'test.cmproj'
-    shutil.copytree(RESOURCES / 'new.cmproj', dst)
-    return load_project(dst)
-
-def _make_project():
-    return _isolated_project()
-
 
 def _make_minimal_png(path: Path) -> None:
     """Write a valid 1x1 white PNG file."""
@@ -55,11 +33,10 @@ def images(tmp_path: Path) -> list[Path]:
     return paths
 
 
-def test_progressive_disclosure_creates_separate_tracks(images: list[Path]):
-    proj = _make_project()
-    clips = proj.add_progressive_disclosure(images)
+def test_progressive_disclosure_creates_separate_tracks(project, images: list[Path]):
+    clips = project.add_progressive_disclosure(images)
 
-    track_names = [t.name for t in proj.timeline.tracks]
+    track_names = [t.name for t in project.timeline.tracks]
     assert 'Prog-0' in track_names
     assert 'Prog-1' in track_names
     assert 'Prog-2' in track_names
@@ -68,16 +45,15 @@ def test_progressive_disclosure_creates_separate_tracks(images: list[Path]):
 
     # Each clip lives on a different track
     clip_track_names = set()
-    for t in proj.timeline.tracks:
+    for t in project.timeline.tracks:
         for c in t:
             clip_track_names.add(t.name)
     assert len(clip_track_names & {'Prog-0', 'Prog-1', 'Prog-2'}) == 3
 
 
-def test_progressive_disclosure_images_accumulate(images: list[Path]):
+def test_progressive_disclosure_images_accumulate(project, images: list[Path]):
     """All previous images remain visible when a new one appears."""
-    proj = _make_project()
-    clips = proj.add_progressive_disclosure(
+    clips = project.add_progressive_disclosure(
         images, start_seconds=0.0, per_step_seconds=5.0,
     )
 
@@ -108,9 +84,8 @@ def test_progressive_disclosure_images_accumulate(images: list[Path]):
     assert abs(visible_starts[2] - 10.0) < 0.01
 
 
-def test_progressive_disclosure_timing(images: list[Path]):
-    proj = _make_project()
-    clips = proj.add_progressive_disclosure(
+def test_progressive_disclosure_timing(project, images: list[Path]):
+    clips = project.add_progressive_disclosure(
         images, start_seconds=2.0, per_step_seconds=4.0,
     )
 
@@ -133,11 +108,9 @@ def test_progressive_disclosure_timing(images: list[Path]):
     assert all(abs(e - end_times[0]) < 0.01 for e in end_times)
 
 
-def test_progressive_disclosure_fade_in(images: list[Path]):
-    proj = _make_project()
-
+def test_progressive_disclosure_fade_in(project, images: list[Path]):
     # With fade
-    clips = proj.add_progressive_disclosure(
+    clips = project.add_progressive_disclosure(
         images[:1], fade_in_seconds=0.8,
     )
     clip_data = clips[0]._data
@@ -148,31 +121,29 @@ def test_progressive_disclosure_fade_in(images: list[Path]):
     assert opacity_kfs[0].get('value') == 1.0, 'Opacity keyframe should target fully opaque'
     assert opacity_kfs[0].get('duration', 0) > 0, 'Opacity keyframe should have a fade duration'
 
-    # Without fade
-    proj2 = _make_project()
-    clips2 = proj2.add_progressive_disclosure(
+
+def test_progressive_disclosure_fade_in_disabled(project, images: list[Path]):
+    clips = project.add_progressive_disclosure(
         images[:1], fade_in_seconds=0,
     )
-    clip_data2 = clips2[0]._data
-    params2 = clip_data2.get('parameters', {})
-    opacity_param2 = params2.get('opacity', {})
-    opacity_kfs2 = opacity_param2.get('keyframes', []) if isinstance(opacity_param2, dict) else []
-    assert len(opacity_kfs2) == 0, 'Expected no opacity keyframes when fade_in_seconds=0'
+    clip_data = clips[0]._data
+    params = clip_data.get('parameters', {})
+    opacity_param = params.get('opacity', {})
+    opacity_kfs = opacity_param.get('keyframes', []) if isinstance(opacity_param, dict) else []
+    assert len(opacity_kfs) == 0, 'Expected no opacity keyframes when fade_in_seconds=0'
 
 
-def test_progressive_disclosure_replace_previous_with_fade_out(images: list[Path]):
-    """Cover project.py lines 1581-1582, 1585-1587: replace_previous fade-out."""
-    proj = _make_project()
-    clips = proj.add_progressive_disclosure(
+def test_progressive_disclosure_replace_previous_with_fade_out(project, images: list[Path]):
+    """Verify replace_previous fade-out creates all clips."""
+    clips = project.add_progressive_disclosure(
         images, fade_out_seconds=0.5, replace_previous=True,
     )
     assert len(clips) == 3
 
 
-def test_progressive_disclosure_fade_out_without_replace(images: list[Path]):
-    """Cover project.py lines 1588-1589: fade-out without replace_previous."""
-    proj = _make_project()
-    clips = proj.add_progressive_disclosure(
+def test_progressive_disclosure_fade_out_without_replace(project, images: list[Path]):
+    """Verify fade-out without replace_previous creates all clips."""
+    clips = project.add_progressive_disclosure(
         images, fade_out_seconds=0.5, replace_previous=False,
     )
     assert len(clips) == 3

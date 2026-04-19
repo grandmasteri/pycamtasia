@@ -8,30 +8,15 @@ from camtasia.operations.diff import ProjectDiff, diff_projects
 from camtasia.project import load_project
 from camtasia.timing import seconds_to_ticks
 
-RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
+
+def _load_copy(project):
+    """Load a second independent instance from the same tmp_path copy."""
+    return load_project(project.file_path)
 
 
-
-# Module-level list to prevent TemporaryDirectory from being GC'd during test
-_TEMP_DIRS: list = []
-
-def _isolated_project():
-    """Load template into an isolated temp copy (safe for parallel execution)."""
-    import shutil, tempfile
-    from camtasia.project import load_project
-    td = tempfile.TemporaryDirectory()
-    _TEMP_DIRS.append(td)  # prevent premature GC
-    dst = Path(td.name) / 'test.cmproj'
-    shutil.copytree(RESOURCES / 'new.cmproj', dst)
-    return load_project(dst)
-
-def _load_empty():
-    return _isolated_project()
-
-
-def test_identical_projects_no_changes():
-    a, b = _load_empty(), _load_empty()
-    result = diff_projects(a, b)
+def test_identical_projects_no_changes(project):
+    b = _load_copy(project)
+    result = diff_projects(project, b)
     assert not result.has_changes
     assert result.tracks_added == []
     assert result.tracks_removed == []
@@ -42,66 +27,66 @@ def test_identical_projects_no_changes():
     assert result.settings_changed == {}
 
 
-def test_track_added():
-    a, b = _load_empty(), _load_empty()
+def test_track_added(project):
+    b = _load_copy(project)
     b.timeline.get_or_create_track('New')
-    result = diff_projects(a, b)
+    result = diff_projects(project, b)
     assert len(result.tracks_added) == 1
     assert result.tracks_removed == []
 
 
-def test_track_removed():
-    a, b = _load_empty(), _load_empty()
-    a.timeline.get_or_create_track('Extra')
-    result = diff_projects(a, b)
+def test_track_removed(project):
+    b = _load_copy(project)
+    project.timeline.get_or_create_track('Extra')
+    result = diff_projects(project, b)
     assert len(result.tracks_removed) == 1
     assert result.tracks_added == []
 
 
-def test_clip_added():
-    a, b = _load_empty(), _load_empty()
-    track_a = a.timeline.get_or_create_track('T')
+def test_clip_added(project):
+    b = _load_copy(project)
+    project.timeline.get_or_create_track('T')
     track_b = b.timeline.get_or_create_track('T')
     track_b.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
-    result = diff_projects(a, b)
+    result = diff_projects(project, b)
     assert len(result.clips_added) == 1
     assert result.clips_removed == []
 
 
-def test_clip_removed():
-    a, b = _load_empty(), _load_empty()
-    track_a = a.timeline.get_or_create_track('T')
-    track_b = b.timeline.get_or_create_track('T')
+def test_clip_removed(project):
+    b = _load_copy(project)
+    track_a = project.timeline.get_or_create_track('T')
+    b.timeline.get_or_create_track('T')
     track_a.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
-    result = diff_projects(a, b)
+    result = diff_projects(project, b)
     assert len(result.clips_removed) == 1
     assert result.clips_added == []
 
 
-def test_media_added():
-    a, b = _load_empty(), _load_empty()
+def test_media_added(project):
+    b = _load_copy(project)
     wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
     b.import_media(wav)
-    result = diff_projects(a, b)
+    result = diff_projects(project, b)
     assert len(result.media_added) == 1
     assert result.media_removed == []
 
 
-def test_settings_changed():
-    a, b = _load_empty(), _load_empty()
+def test_settings_changed(project):
+    b = _load_copy(project)
     b.width = 3840
     b.height = 2160
-    result = diff_projects(a, b)
+    result = diff_projects(project, b)
     assert 'width' in result.settings_changed
     assert 'height' in result.settings_changed
-    assert result.settings_changed['width'] == (a.width, 3840)
-    assert result.settings_changed['height'] == (a.height, 2160)
+    assert result.settings_changed['width'] == (project.width, 3840)
+    assert result.settings_changed['height'] == (project.height, 2160)
 
 
-def test_has_changes_true():
-    a, b = _load_empty(), _load_empty()
+def test_has_changes_true(project):
+    b = _load_copy(project)
     b.width = 1280
-    result = diff_projects(a, b)
+    result = diff_projects(project, b)
     assert result.has_changes is True
 
 
@@ -115,11 +100,11 @@ def test_summary_no_changes():
     assert result.summary() == 'No changes'
 
 
-def test_summary_with_changes():
-    a, b = _load_empty(), _load_empty()
+def test_summary_with_changes(project):
+    b = _load_copy(project)
     b.width = 3840
     b.timeline.get_or_create_track('New')
-    result = diff_projects(a, b)
+    result = diff_projects(project, b)
     text = result.summary()
     assert 'width' in text
     assert 'Tracks added' in text

@@ -58,13 +58,13 @@ class TestAddWipe:
 
 
 class TestAllTransitionsReturnTransitionType:
-    def test_all_transitions_return_transition_type(self):
+    @pytest.mark.parametrize("method, args", [
+        ("add_dissolve", (1, 2)),
+        ("add_fade_to_white", (1, 2)),
+        ("add_slide", (1, 2)),
+        ("add_wipe", (1, 2)),
+    ])
+    def test_returns_transition_type(self, method, args):
         tl = _tl()
-        results = [
-            tl.add_dissolve(1, 2),
-            tl.add_fade_to_white(1, 2),
-            tl.add_slide(1, 2),
-            tl.add_wipe(1, 2),
-        ]
-        for t in results:
-            assert isinstance(t, Transition)
+        result = getattr(tl, method)(*args)
+        assert type(result) is Transition

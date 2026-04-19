@@ -1,17 +1,11 @@
 """Tests for Project.export_project_report()."""
-
 from __future__ import annotations
 
 from pathlib import Path
 
 import pytest
 
-
-@pytest.fixture
-def project():
-    from camtasia.project import load_project
-    resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-    return load_project(resources / 'new.cmproj')
+from camtasia.project import load_project
 
 
 class TestExportProjectReport:
@@ -80,7 +74,6 @@ class TestExportProjectReport:
 
     def test_with_real_fixture(self, tmp_path):
         """Test with a fixture that has actual clips."""
-        from camtasia.project import load_project
         fixtures = Path(__file__).parent / 'fixtures'
         fixture = fixtures / 'test_project_a.tscproj'
         if not fixture.exists():

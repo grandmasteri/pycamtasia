@@ -1,31 +1,34 @@
 """Property-based tests verifying structural invariants after random operation sequences."""
 from __future__ import annotations
 
+import copy
+import shutil
+import tempfile
 from pathlib import Path
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from camtasia import load_project
+from camtasia.history import ChangeHistory
+from camtasia.operations.layout import pack_track, ripple_delete
+from camtasia.timeline.clips.base import BaseClip
+from camtasia.timeline.clips.group import Group
 from camtasia.timeline.track import Track
+from camtasia.timing import ticks_to_seconds
 
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 
 TICK = 705_600_000  # ~23.5 s at 30 fps editRate
 
 
-
-# Module-level list to prevent TemporaryDirectory from being GC'd during test
-_TEMP_DIRS: list = []
-
-def _isolated_project():
-    """Load template into an isolated temp copy (safe for parallel execution)."""
-    import shutil, tempfile
-    from camtasia.project import load_project
-    td = tempfile.TemporaryDirectory()
-    _TEMP_DIRS.append(td)  # prevent premature GC
-    dst = Path(td.name) / 'test.cmproj'
+def _fresh_project():
+    """Load template into an isolated temp copy (safe for Hypothesis)."""
+    td = tempfile.mkdtemp()
+    dst = Path(td) / 'test.cmproj'
     shutil.copytree(RESOURCES / 'new.cmproj', dst)
     return load_project(dst)
+
 
 def _make_track():
     data = {'trackIndex': 0, 'medias': [], 'transitions': []}
@@ -103,9 +106,7 @@ def test_no_stale_transitions_after_operations(operations):
 @settings(max_examples=30, deadline=None)
 def test_validate_clean_after_operations(operations):
     """Project.validate() should find no errors after any operation sequence."""
-    from camtasia import load_project
-
-    proj = _isolated_project()
+    proj = _fresh_project()
     proj._data.setdefault('sourceBin', []).append({
         'id': 1, 'src': './media/test.wav', 'rect': [0, 0, 0, 0],
         'lastMod': '20260101T000000',
@@ -197,7 +198,6 @@ def test_duplicate_creates_unique_ids(num_duplicates):
 @settings(max_examples=20, deadline=None)
 def test_pack_preserves_clip_count(num_clips):
     """Packing a track should not add or remove clips."""
-    from camtasia.operations.layout import pack_track
     track, data = _make_track()
     for i in range(num_clips):
         track.add_clip('AMFile', 1, i * TICK * 3, TICK)  # gaps between clips
@@ -214,7 +214,6 @@ def test_pack_preserves_clip_count(num_clips):
 @settings(max_examples=20, deadline=None)
 def test_ripple_delete_reduces_count(num_clips):
     """Ripple delete should remove exactly one clip."""
-    from camtasia.operations.layout import ripple_delete
     track, data = _make_track()
     ids = []
     for i in range(num_clips):
@@ -234,7 +233,6 @@ def test_ripple_delete_reduces_count(num_clips):
 @settings(max_examples=50, deadline=None)
 def test_all_operations_leave_valid_state(operations):
     """Any sequence of operations should leave no stale transitions."""
-    from camtasia.operations.layout import pack_track
     track, data = _make_track()
     clip_ids = []
 
@@ -253,7 +251,6 @@ def test_all_operations_leave_valid_state(operations):
                     if m['id'] == cid:
                         mid = m['start'] + m['duration'] // 2
                         if mid > m['start'] and mid < m['start'] + m['duration']:
-                            from camtasia.timing import ticks_to_seconds
                             left, right = track.split_clip(cid, ticks_to_seconds(mid))
                             clip_ids[-1] = left.id
                             clip_ids.append(right.id)
@@ -423,7 +420,6 @@ def test_insert_preserves_existing(num_existing):
 @given(st.floats(min_value=0.0, max_value=1.0))
 @settings(max_examples=20, deadline=None)
 def test_opacity_stays_valid(value):
-    from camtasia.timeline.clips.base import BaseClip
     data = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': TICK, 'parameters': {}}
     clip = BaseClip(data)
     clip.opacity = value
@@ -437,7 +433,6 @@ def test_opacity_stays_valid(value):
 @given(st.floats(min_value=0.0, max_value=10.0))
 @settings(max_examples=20, deadline=None)
 def test_volume_stays_non_negative(value):
-    from camtasia.timeline.clips.base import BaseClip
     data = {'_type': 'AMFile', 'id': 1, 'start': 0, 'duration': TICK, 'parameters': {}}
     clip = BaseClip(data)
     clip.volume = value
@@ -471,7 +466,6 @@ def test_merge_adjacent_preserves_total_duration(num_clips):
 @given(st.floats(min_value=0.1, max_value=10.0))
 @settings(max_examples=20, deadline=None)
 def test_set_speed_preserves_start(speed):
-    from camtasia.timeline.clips.base import BaseClip
     data = {'_type': 'VMFile', 'id': 1, 'start': TICK * 5, 'duration': TICK * 3, 'parameters': {}}
     clip = BaseClip(data)
     original_start = clip.start
@@ -486,9 +480,6 @@ def test_set_speed_preserves_start(speed):
 @settings(max_examples=30, deadline=None)
 def test_undo_fully_reverts_operations(operations):
     """Undoing a tracked change block restores the exact original state."""
-    import copy
-    from camtasia.history import ChangeHistory
-
     original_data = {'tracks': [{'medias': [], 'transitions': []}]}
     project_data = copy.deepcopy(original_data)
     history = ChangeHistory()
@@ -524,7 +515,6 @@ def test_undo_fully_reverts_operations(operations):
 @settings(max_examples=30, deadline=None)
 def test_overlaps_with_is_symmetric(start_a, duration_a, start_b, duration_b):
     """If A overlaps B, then B overlaps A."""
-    from camtasia.timeline.clips.base import BaseClip
     clip_a = BaseClip({'_type': 'VMFile', 'id': 1, 'start': start_a * TICK, 'duration': duration_a * TICK})
     clip_b = BaseClip({'_type': 'VMFile', 'id': 2, 'start': start_b * TICK, 'duration': duration_b * TICK})
     assert clip_a.overlaps_with(clip_b) == clip_b.overlaps_with(clip_a)
@@ -543,7 +533,6 @@ def test_overlaps_with_is_symmetric(start_a, duration_a, start_b, duration_b):
 @settings(max_examples=30, deadline=None)
 def test_distance_to_positive_when_gap_exists(start_a, duration_a, start_b, duration_b):
     """distance_to is positive when there's a gap (B starts after A ends)."""
-    from camtasia.timeline.clips.base import BaseClip
     clip_a = BaseClip({'_type': 'VMFile', 'id': 1, 'start': start_a * TICK, 'duration': duration_a * TICK})
     clip_b = BaseClip({'_type': 'VMFile', 'id': 2, 'start': start_b * TICK, 'duration': duration_b * TICK})
     # B starts at 6+ ticks, A ends at most 5+3=8 ticks, so gap depends on values
@@ -639,7 +628,6 @@ def test_reverse_preserves_all_ids(num_clips):
 @settings(max_examples=20, deadline=None)
 def test_set_start_duration_roundtrip(start_seconds, duration_seconds):
     """Setting start/duration in seconds should round-trip correctly."""
-    from camtasia.timeline.clips.base import BaseClip
     data = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': TICK}
     clip = BaseClip(data)
     clip.set_start_seconds(start_seconds)
@@ -663,7 +651,6 @@ def test_group_clips_preserves_content(num_clips):
         clip_ids.append(clip.id)
     
     # Group all clips
-    from camtasia.timeline.clips.group import Group
     group = track.group_clips(clip_ids)
     
     # The Group should contain all the clips
@@ -680,7 +667,6 @@ def test_group_clips_preserves_content(num_clips):
 @settings(max_examples=20, deadline=None)
 def test_remove_internal_clip_reduces_count(num_clips):
     """Removing an internal clip should reduce clip_count by exactly 1."""
-    from camtasia.timeline.clips.group import Group
     group_data = {
         '_type': 'Group', 'id': 1, 'start': 0, 'duration': TICK * num_clips,
         'mediaDuration': TICK * num_clips, 'mediaStart': 0, 'scalar': 1,
@@ -707,8 +693,7 @@ def test_remove_internal_clip_reduces_count(num_clips):
 @settings(max_examples=20, deadline=None)
 def test_clone_track_preserves_clip_count(num_clips):
     """Cloning a track should preserve the number of clips."""
-    from camtasia import load_project
-    proj = _isolated_project()
+    proj = _fresh_project()
     track = proj.timeline.add_track('Source')
     for i in range(num_clips):
         track.add_clip('AMFile', 1, i * TICK, TICK)
@@ -725,8 +710,7 @@ def test_clone_track_preserves_clip_count(num_clips):
 @settings(max_examples=20, deadline=None)
 def test_remove_all_effects_zeroes_count(num_clips):
     """After remove_all_effects, no clip should have effects."""
-    from camtasia import load_project
-    proj = _isolated_project()
+    proj = _fresh_project()
     track = proj.timeline.add_track('Test')
     for i in range(num_clips):
         clip = track.add_clip('VMFile', 1, i * TICK, TICK)
@@ -746,8 +730,7 @@ def test_remove_all_effects_zeroes_count(num_clips):
 @settings(max_examples=20, deadline=None)
 def test_normalize_audio_equalizes_gain(target_gain):
     """After normalize_audio, all audio clips should have the target gain."""
-    from camtasia import load_project
-    proj = _isolated_project()
+    proj = _fresh_project()
     track = proj.timeline.add_track('Audio')
     for i in range(3):
         clip = track.add_audio(1, start_seconds=float(i), duration_seconds=1.0)
@@ -768,8 +751,7 @@ def test_normalize_audio_equalizes_gain(target_gain):
 @settings(max_examples=20, deadline=None)
 def test_replace_all_media_changes_all(num_clips):
     """replace_all_media should change all clips with the old source ID."""
-    from camtasia import load_project
-    proj = _isolated_project()
+    proj = _fresh_project()
     track = proj.timeline.add_track('Test')
     for i in range(num_clips):
         track.add_clip('VMFile', 42, i * TICK, TICK)

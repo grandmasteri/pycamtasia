@@ -2,14 +2,6 @@
 from __future__ import annotations
 
 import pytest
-from pathlib import Path
-
-
-@pytest.fixture
-def project():
-    from camtasia.project import load_project
-    resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-    return load_project(resources / 'new.cmproj')
 
 
 # --- add_section_divider ---
@@ -40,11 +32,11 @@ class TestAddSectionDividerBasic:
 
     def test_default_duration(self, project):
         clip = project.add_section_divider('Title', at_seconds=0.0)
-        assert abs(clip.duration_seconds - 3.0) < 0.1
+        assert clip.duration_seconds == pytest.approx(3.0, abs=0.1)
 
     def test_custom_duration(self, project):
         clip = project.add_section_divider('Title', at_seconds=0.0, duration_seconds=7.0)
-        assert abs(clip.duration_seconds - 7.0) < 0.1
+        assert clip.duration_seconds == pytest.approx(7.0, abs=0.1)
 
 
 class TestAddSectionDividerFades:
@@ -111,11 +103,11 @@ class TestAddEndCardBasic:
 
     def test_default_duration(self, project):
         clip = project.add_end_card()
-        assert abs(clip.duration_seconds - 5.0) < 0.1
+        assert clip.duration_seconds == pytest.approx(5.0, abs=0.1)
 
     def test_custom_duration(self, project):
         clip = project.add_end_card(duration_seconds=10.0)
-        assert abs(clip.duration_seconds - 10.0) < 0.1
+        assert clip.duration_seconds == pytest.approx(10.0, abs=0.1)
 
 
 class TestAddEndCardFades:

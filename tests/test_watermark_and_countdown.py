@@ -36,18 +36,18 @@ def _make_project():
 
 class TestAddWatermarkReturn:
     def test_returns_base_clip(self):
-        clip = _make_project().add_watermark(TEST_WAV)
-        assert isinstance(clip, BaseClip)
+        actual_clip = _make_project().add_watermark(TEST_WAV)
+        assert isinstance(actual_clip, BaseClip)
 
 
 class TestAddWatermarkOpacity:
     def test_default_opacity(self):
-        clip = _make_project().add_watermark(TEST_WAV)
-        assert clip.opacity == 0.3
+        actual_clip = _make_project().add_watermark(TEST_WAV)
+        assert actual_clip.opacity == 0.3
 
     def test_custom_opacity(self):
-        clip = _make_project().add_watermark(TEST_WAV, opacity=0.5)
-        assert clip.opacity == 0.5
+        actual_clip = _make_project().add_watermark(TEST_WAV, opacity=0.5)
+        assert actual_clip.opacity == 0.5
 
 
 class TestAddWatermarkTrack:
@@ -70,12 +70,12 @@ class TestAddWatermarkDuration:
     def test_empty_project_uses_fallback(self):
         proj = _make_project()
         assert proj.duration_seconds == 0
-        clip = proj.add_watermark(TEST_WAV)
-        assert clip.duration_seconds > 0
+        actual_clip = proj.add_watermark(TEST_WAV)
+        assert actual_clip.duration_seconds > 0
 
     def test_clip_starts_at_zero(self):
-        clip = _make_project().add_watermark(TEST_WAV)
-        assert clip.start == 0
+        actual_clip = _make_project().add_watermark(TEST_WAV)
+        assert actual_clip.start == 0
 
 
 class TestAddWatermarkMedia:
@@ -88,8 +88,8 @@ class TestAddWatermarkMedia:
 
 class TestAddWatermarkStringPath:
     def test_string_path_accepted(self):
-        clip = _make_project().add_watermark(str(TEST_WAV))
-        assert isinstance(clip, BaseClip)
+        actual_clip = _make_project().add_watermark(str(TEST_WAV))
+        assert isinstance(actual_clip, BaseClip)
 
 
 # ── add_countdown ──────────────────────────────────────────────────
@@ -97,12 +97,12 @@ class TestAddWatermarkStringPath:
 
 class TestAddCountdownReturn:
     def test_returns_list(self):
-        result = _make_project().add_countdown()
-        assert isinstance(result, list)
+        actual_result = _make_project().add_countdown()
+        assert isinstance(actual_result, list)
 
     def test_default_returns_three_clips(self):
-        result = _make_project().add_countdown()
-        assert [c.text for c in result] == ['3', '2', '1']
+        actual_result = _make_project().add_countdown()
+        assert [c.text for c in actual_result] == ['3', '2', '1']
 
     def test_all_are_base_clips(self):
         for clip in _make_project().add_countdown():

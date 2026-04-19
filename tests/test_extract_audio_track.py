@@ -1,17 +1,9 @@
 """Tests for Project.extract_audio_track()."""
-
 from __future__ import annotations
 
 from pathlib import Path
 
 import pytest
-
-
-@pytest.fixture
-def project():
-    from camtasia.project import load_project
-    resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-    return load_project(resources / 'new.cmproj')
 
 
 @pytest.fixture

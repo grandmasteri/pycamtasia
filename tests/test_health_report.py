@@ -1,30 +1,7 @@
 """Tests for Project.health_report()."""
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 import pytest
-
-RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-
-
-# Module-level list to prevent TemporaryDirectory from being GC'd during test
-_TEMP_DIRS: list = []
-
-def _isolated_project():
-    """Load template into an isolated temp copy (safe for parallel execution)."""
-    import shutil, tempfile
-    from camtasia.project import load_project
-    td = tempfile.TemporaryDirectory()
-    _TEMP_DIRS.append(td)  # prevent premature GC
-    dst = Path(td.name) / 'test.cmproj'
-    shutil.copytree(RESOURCES / 'new.cmproj', dst)
-    return load_project(dst)
-
-def project():
-    from camtasia.project import load_project
-    return _isolated_project()
 
 
 class TestHealthReportEmpty:

@@ -1,7 +1,7 @@
 """Tests for Project.validate() — pre-save validation checks."""
 from __future__ import annotations
 
-import json
+import shutil
 from pathlib import Path
 from unittest.mock import patch
 
@@ -12,23 +12,6 @@ from camtasia.validation import ValidationIssue
 from camtasia.media_bin import MediaType
 
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-
-
-# Module-level list to prevent TemporaryDirectory from being GC'd during test
-_TEMP_DIRS: list = []
-
-def _isolated_project():
-    """Load template into an isolated temp copy (safe for parallel execution)."""
-    import shutil, tempfile
-    from camtasia.project import load_project
-    td = tempfile.TemporaryDirectory()
-    _TEMP_DIRS.append(td)  # prevent premature GC
-    dst = Path(td.name) / 'test.cmproj'
-    shutil.copytree(RESOURCES / 'new.cmproj', dst)
-    return load_project(dst)
-
-def project():
-    return _isolated_project()
 
 
 def test_validate_clean_project_returns_no_issues(project):
@@ -143,7 +126,6 @@ def test_validate_detects_invalid_clip_reference(project):
 
 
 def test_save_calls_validate(project, tmp_path):
-    import shutil
     # Copy the project to a temp dir so save() can write
     proj_dir = tmp_path / 'test.cmproj'
     shutil.copytree(RESOURCES / 'new.cmproj', proj_dir)

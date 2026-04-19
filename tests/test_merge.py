@@ -1,9 +1,13 @@
 """Tests for camtasia.operations.merge."""
 from __future__ import annotations
 
+from pathlib import Path
+
 from camtasia import load_project
-from camtasia.operations.merge import merge_tracks
+from camtasia.operations.merge import merge_tracks, _remap_clip_ids
 from camtasia.timing import seconds_to_ticks
+
+RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 
 
 def _add_source(project, media_id, name='clip'):
@@ -36,10 +40,7 @@ def _populate_source(project, media_id=10, name='clip'):
 
 class TestMergeCopiesTracks:
     def test_track_count_increases(self, project):
-        from camtasia.project import load_project
-        from pathlib import Path
-        resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-        source = load_project(resources / 'new.cmproj')
+        source = load_project(RESOURCES / 'new.cmproj')
         _populate_source(source)
 
         initial = project.timeline.track_count
@@ -50,10 +51,7 @@ class TestMergeCopiesTracks:
 
 class TestMergeSkipsEmptyTracks:
     def test_empty_tracks_not_copied(self, project):
-        from camtasia.project import load_project
-        from pathlib import Path
-        resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-        source = load_project(resources / 'new.cmproj')
+        source = load_project(RESOURCES / 'new.cmproj')
         # Add one non-empty and leave existing empty tracks
         _populate_source(source)
         empty_count = sum(1 for t in source.timeline.tracks if len(t) == 0)
@@ -68,10 +66,7 @@ class TestMergeSkipsEmptyTracks:
 
 class TestMergeAppliesOffset:
     def test_clips_offset(self, project):
-        from camtasia.project import load_project
-        from pathlib import Path
-        resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-        source = load_project(resources / 'new.cmproj')
+        source = load_project(RESOURCES / 'new.cmproj')
         _populate_source(source)
 
         merge_tracks(source, project, offset_seconds=10.0)
@@ -84,10 +79,7 @@ class TestMergeAppliesOffset:
 
 class TestMergeReturnsCount:
     def test_returns_number_of_tracks_copied(self, project):
-        from camtasia.project import load_project
-        from pathlib import Path
-        resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-        source = load_project(resources / 'new.cmproj')
+        source = load_project(RESOURCES / 'new.cmproj')
         _populate_source(source)
 
         result = merge_tracks(source, project)
@@ -97,10 +89,7 @@ class TestMergeReturnsCount:
 
 class TestMergeRemapsMediaIds:
     def test_clip_src_remapped(self, project):
-        from camtasia.project import load_project
-        from pathlib import Path
-        resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-        source = load_project(resources / 'new.cmproj')
+        source = load_project(RESOURCES / 'new.cmproj')
         _populate_source(source, media_id=10, name='unique_media')
 
         merge_tracks(source, project)
@@ -114,7 +103,6 @@ class TestMergeRemapsMediaIds:
 
 class TestMergeReusesExistingMedia:
     def test_merge_reuses_media_with_same_identity(self, project):
-        from pathlib import Path
         wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
         # Import same media into both source and target
         target_media = project.import_media(wav)
@@ -150,9 +138,7 @@ def _add_group_clip(track_data, clip_id, inner_ids, src_id, start=0):
 
 class TestMergeRemapsGroupInternalIds:
     def test_merge_remaps_group_internal_ids(self, project):
-        from pathlib import Path
-        resources = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
-        source = load_project(resources / 'new.cmproj')
+        source = load_project(RESOURCES / 'new.cmproj')
         _add_source(source, 10, 'clip')
         track = source.timeline.add_track('Group Track')
         _add_group_clip(track._data, clip_id=1, inner_ids=[2, 3], src_id=10)
@@ -178,11 +164,6 @@ class TestMergeRemapsGroupInternalIds:
         collect_ids(group)
         # All IDs must be unique
         assert len(all_ids) == len(set(all_ids))
-
-
-# ── from test_coverage_phase4b: operations/merge.py tests ──
-
-from camtasia.operations.merge import _remap_clip_ids
 
 
 class TestRemapClipIdsAssetProperties:

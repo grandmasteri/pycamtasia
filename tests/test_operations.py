@@ -371,7 +371,7 @@ class TestReplaceMediaSource:
 
 
 class TestMatchMarkerWordBoundaryRetry:
-    """Cover sync.py line 80: retry find when first match is not at word boundary."""
+    """Retry find when first match is not at word boundary."""
 
     def test_skips_partial_match_and_finds_word_boundary(self):
         # Transcript: "abatch batch" — first find of "batch" hits inside "abatch"
@@ -384,7 +384,7 @@ class TestMatchMarkerWordBoundaryRetry:
 
 
 class TestMatchMarkerFallbackFirstWord:
-    """Cover sync.py line 90: fallback first-word match."""
+    """Fallback first-word match."""
 
     def test_fallback_matches_first_word(self):
         # Label has multiple words but none match as a phrase; first word matches a transcript word
@@ -397,7 +397,7 @@ class TestMatchMarkerFallbackFirstWord:
 
 
 class TestPlanSyncSkipsZeroDuration:
-    """Cover sync.py line 140: skip segments with zero audio duration."""
+    """Skip segments with zero audio duration."""
 
     def test_skips_zero_audio_duration_segment(self):
         # Two markers at the same audio timestamp → audio_dur_ticks == 0 → skip

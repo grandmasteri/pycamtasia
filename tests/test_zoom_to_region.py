@@ -16,8 +16,8 @@ def mock_clip():
 
 class TestAddZoomToRegion:
     def test_returns_clip(self, project, mock_clip):
-        result = project.add_zoom_to_region(mock_clip, start_seconds=2.0, duration_seconds=5.0)
-        assert result is mock_clip
+        actual_result = project.add_zoom_to_region(mock_clip, start_seconds=2.0, duration_seconds=5.0)
+        assert actual_result is mock_clip
 
     def test_default_scale_and_center(self, project, mock_clip):
         project.add_zoom_to_region(mock_clip, start_seconds=2.0, duration_seconds=5.0)

@@ -113,9 +113,9 @@ class TestStripAllEffects:
         proj = project_with_clips
         # First apply some effects
         proj.apply_template_effects({'VMFile': ['add_drop_shadow'], 'IMFile': ['add_drop_shadow']})
-        assert proj.total_effect_count > 0
+        assert proj.total_effect_count == 2
         removed = proj.remove_all_effects()
-        assert removed > 0
+        assert removed == 2
         assert proj.total_effect_count == 0
 
     def test_strips_zero_on_no_effects(self, project_with_clips):
@@ -135,9 +135,9 @@ class TestStripAllEffects:
             'IMFile': ['add_drop_shadow'],
         })
         applied_count = proj.total_effect_count
-        assert applied_count >= 3
+        assert applied_count == 3
         removed = proj.remove_all_effects()
-        assert removed == applied_count
+        assert removed == 3
         assert proj.total_effect_count == 0
 
 

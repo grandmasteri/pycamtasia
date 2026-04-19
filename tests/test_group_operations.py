@@ -2,34 +2,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
 
 from camtasia.project import Project, load_project
 from camtasia.timeline.clips.group import Group
-from camtasia.timeline.track import Track
 
-RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 FIXTURES = Path(__file__).parent / 'fixtures'
-
-
-# Module-level list to prevent TemporaryDirectory from being GC'd during test
-_TEMP_DIRS: list = []
-
-def _isolated_project():
-    """Load template into an isolated temp copy (safe for parallel execution)."""
-    import shutil, tempfile
-    from camtasia.project import load_project
-    td = tempfile.TemporaryDirectory()
-    _TEMP_DIRS.append(td)  # prevent premature GC
-    dst = Path(td.name) / 'test.cmproj'
-    shutil.copytree(RESOURCES / 'new.cmproj', dst)
-    return load_project(dst)
-
-@pytest.fixture
-def empty_project() -> Project:
-    return _isolated_project()
 
 
 @pytest.fixture
@@ -42,8 +21,8 @@ def complex_project() -> Project:
 # ---------------------------------------------------------------------------
 
 class TestApplyToAllGroups:
-    def test_returns_zero_for_empty_project(self, empty_project: Project) -> None:
-        applied_count: int = empty_project.apply_to_all_groups(lambda g: None)
+    def test_returns_zero_for_empty_project(self, project) -> None:
+        applied_count: int = project.apply_to_all_groups(lambda g: None)
         assert applied_count == 0
 
     def test_returns_group_count(self, complex_project: Project) -> None:
@@ -72,8 +51,8 @@ class TestApplyToAllGroups:
 # ---------------------------------------------------------------------------
 
 class TestMuteAllGroups:
-    def test_returns_zero_for_empty_project(self, empty_project: Project) -> None:
-        muted_count: int = empty_project.mute_all_groups()
+    def test_returns_zero_for_empty_project(self, project) -> None:
+        muted_count: int = project.mute_all_groups()
         assert muted_count == 0
 
     def test_returns_group_count(self, complex_project: Project) -> None:

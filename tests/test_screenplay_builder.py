@@ -1,6 +1,7 @@
 """Tests for screenplay builder."""
 from __future__ import annotations
 from pathlib import Path
+import warnings
 
 import pytest
 
@@ -91,7 +92,6 @@ class TestFindAudioFileVOPrefix:
 
 class TestBuildFromScreenplayEdgeCases:
     def test_warns_when_audio_file_not_found(self, project, tmp_path):
-        import warnings
         sp = Screenplay(sections=[ScreenplaySection(
             title='S1', level=2,
             vo_blocks=[VOBlock(id='99.99', text='missing', section='S1')],
@@ -103,7 +103,6 @@ class TestBuildFromScreenplayEdgeCases:
         assert any('No audio file found' in str(x.message) for x in w)
 
     def test_warns_when_resolved_path_missing(self, project, tmp_path):
-        import warnings
         sp = Screenplay(sections=[ScreenplaySection(
             title='S1', level=2,
             vo_blocks=[VOBlock(id='1.1', text='test', section='S1')],

@@ -981,30 +981,17 @@ class TestCursorShadowSetters:
         }
         return CursorShadow(data)
 
-    def test_set_enabled(self):
+    @pytest.mark.parametrize("attr, new_value", [
+        ("enabled", 0),
+        ("angle", 1.5),
+        ("offset", 5.0),
+        ("blur", 4.0),
+        ("opacity", 0.3),
+    ])
+    def test_scalar_setter(self, attr, new_value):
         e = self._make()
-        e.enabled = 0
-        assert e.enabled == 0
-
-    def test_set_angle(self):
-        e = self._make()
-        e.angle = 1.5
-        assert e.angle == 1.5
-
-    def test_set_offset(self):
-        e = self._make()
-        e.offset = 5.0
-        assert e.offset == 5.0
-
-    def test_set_blur(self):
-        e = self._make()
-        e.blur = 4.0
-        assert e.blur == 4.0
-
-    def test_set_opacity(self):
-        e = self._make()
-        e.opacity = 0.3
-        assert e.opacity == 0.3
+        setattr(e, attr, new_value)
+        assert getattr(e, attr) == new_value
 
     def test_set_color(self):
         e = self._make()
@@ -1022,15 +1009,14 @@ class TestCursorPhysicsSetters:
             },
         })
 
-    def test_set_intensity(self):
+    @pytest.mark.parametrize("attr, new_value", [
+        ("intensity", 0.9),
+        ("tilt", 0.7),
+    ])
+    def test_setter(self, attr, new_value):
         e = self._make()
-        e.intensity = 0.9
-        assert e.intensity == 0.9
-
-    def test_set_tilt(self):
-        e = self._make()
-        e.tilt = 0.7
-        assert e.tilt == 0.7
+        setattr(e, attr, new_value)
+        assert getattr(e, attr) == new_value
 
 
 class TestLeftClickScalingSetters:
@@ -1043,15 +1029,14 @@ class TestLeftClickScalingSetters:
             },
         })
 
-    def test_set_scale(self):
+    @pytest.mark.parametrize("attr, new_value", [
+        ("scale", 2.0),
+        ("speed", 0.5),
+    ])
+    def test_setter(self, attr, new_value):
         e = self._make()
-        e.scale = 2.0
-        assert e.scale == 2.0
-
-    def test_set_speed(self):
-        e = self._make()
-        e.speed = 0.5
-        assert e.speed == 0.5
+        setattr(e, attr, new_value)
+        assert getattr(e, attr) == new_value
 
 
 class TestBehaviorEdgeCases:
@@ -1431,7 +1416,7 @@ class TestProjectBEffectsIntegration:
             test_project_b_data,
             lambda d: d.get("_type") == "GenericBehaviorEffect",
         )
-        assert actual_behaviors != []
+        assert len(actual_behaviors) >= 1
         actual_effect = GenericBehaviorEffect(actual_behaviors[0])
         assert actual_effect.effect_name == "reveal"
         assert actual_effect.preset_name == "Reveal"
@@ -1444,7 +1429,7 @@ class TestProjectBEffectsIntegration:
             test_project_b_data,
             lambda d: d.get("effectName") == "Mask",
         )
-        assert actual_masks != []
+        assert len(actual_masks) >= 1
         actual_params = actual_masks[0]["parameters"]
         assert "mask-shape" in actual_params
 
@@ -1453,7 +1438,7 @@ class TestProjectBEffectsIntegration:
             test_project_b_data,
             lambda d: d.get("effectName") == "MotionBlur",
         )
-        assert actual_effects != []
+        assert len(actual_effects) >= 1
         actual_first = actual_effects[0]
         assert actual_first["category"] == "categoryVisualEffects"
 

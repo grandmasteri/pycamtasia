@@ -32,9 +32,9 @@ def _make_project():
 
 def test_single_file():
     proj = _make_project()
-    result = proj.add_voiceover_sequence([EMPTY_WAV])
-    assert 'empty.wav' in result
-    entry = result['empty.wav']
+    actual_result = proj.add_voiceover_sequence([EMPTY_WAV])
+    assert 'empty.wav' in actual_result
+    entry = actual_result['empty.wav']
     assert entry['start'] == 0.0
     assert entry['duration'] > 0
     assert isinstance(entry['clip'], AMFile)
@@ -42,20 +42,20 @@ def test_single_file():
 
 def test_multiple_files():
     proj = _make_project()
-    result = proj.add_voiceover_sequence([EMPTY_WAV, EMPTY2_WAV])
-    assert set(result.keys()) == {'empty.wav', 'empty2.wav'}
+    actual_result = proj.add_voiceover_sequence([EMPTY_WAV, EMPTY2_WAV])
+    assert set(actual_result.keys()) == {'empty.wav', 'empty2.wav'}
     # Second clip starts after first clip's duration
-    assert result['empty2.wav']['start'] == result['empty.wav']['duration']
+    assert actual_result['empty2.wav']['start'] == actual_result['empty.wav']['duration']
 
 
 def test_pauses():
     proj = _make_project()
-    result = proj.add_voiceover_sequence(
+    actual_result = proj.add_voiceover_sequence(
         [EMPTY_WAV, EMPTY2_WAV],
         pauses={'empty.wav': 2.0},
     )
     # Second clip starts after first duration + 2s pause
-    assert result['empty2.wav']['start'] == result['empty.wav']['duration'] + 2.0
+    assert actual_result['empty2.wav']['start'] == actual_result['empty.wav']['duration'] + 2.0
 
 
 def test_custom_track_name():
@@ -76,18 +76,18 @@ def test_default_track_name():
 
 def test_empty_list():
     proj = _make_project()
-    result = proj.add_voiceover_sequence([])
-    assert result == {}
+    actual_result = proj.add_voiceover_sequence([])
+    assert actual_result == {}
 
 
 def test_no_pauses_default():
     proj = _make_project()
-    result = proj.add_voiceover_sequence([EMPTY_WAV, EMPTY2_WAV])
+    actual_result = proj.add_voiceover_sequence([EMPTY_WAV, EMPTY2_WAV])
     # No pause: second starts right after first
-    assert result['empty2.wav']['start'] == result['empty.wav']['duration']
+    assert actual_result['empty2.wav']['start'] == actual_result['empty.wav']['duration']
 
 
 def test_string_paths():
     proj = _make_project()
-    result = proj.add_voiceover_sequence([str(EMPTY_WAV)])
-    assert 'empty.wav' in result
+    actual_result = proj.add_voiceover_sequence([str(EMPTY_WAV)])
+    assert 'empty.wav' in actual_result
