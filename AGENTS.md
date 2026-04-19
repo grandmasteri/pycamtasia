@@ -275,6 +275,41 @@ Use `@pytest.mark.parametrize` for multiple cases. Select valuable cases at boun
 - **Idiomatic**: Follow PEP 8 conventions.
 - **No redundant information in data models**: Don't include fields derivable from other fields in the same model.
 
+## Subagent Parallelism
+
+### Maximize Parallelism Through Divide and Conquer
+
+Break work into the smallest independent units and run them simultaneously. The only reason to sequence tasks is a true dependency — one task's output is another task's input. If no such dependency exists, the tasks MUST run in parallel.
+
+### Preserve the Orchestrator's Context Window
+
+The orchestrator coordinates — it never implements. Subagents absorb the token cost of reading files, researching, and reasoning. Only conclusions flow back. Even when parallelism isn't possible, delegation is still valuable because it preserves context.
+
+### When to Delegate vs Do Directly
+
+Delegate when there's **leverage** — the subagent reads/reasons over significantly more tokens than the prompt+response cost. Do it yourself when the prompt overhead ≈ the work itself.
+
+- Large file edits across many files → delegate (high leverage)
+- Reading docs/code to answer a question → delegate (saves context)
+- Adversarial review of code → delegate (fresh eyes, isolated context)
+- Small single-file edit you already know how to make → do directly (no leverage)
+- Appending a known block of text to a file → do directly (no leverage)
+
+### File Boundary Rules
+
+Each subagent owns specific files exclusively. No two subagents touch the same file in the same phase. If unavoidable, sequence the modifications or consolidate into one subagent.
+
+### Mandatory Verification Phase
+
+Every implementation phase MUST be followed by verification (mypy + pytest). Verify at checkpoints, not batched at the end. For adversarial review, use separate verification subagents — the implementer is biased.
+
+### Subagent Failure Handling
+
+1. Assess the failure (transient vs substantive)
+2. Re-task a new subagent with original instructions + failure details
+3. If re-tasking fails twice, report to user
+4. Don't absorb the failure — resist doing it yourself
+
 ## Running Tests
 
 Tests run in **parallel** via `pytest-xdist` (`-n auto` in `pyproject.toml`). Each test uses an **isolated temporary copy** of the template project via `tempfile.TemporaryDirectory` / `tmp_path` — no test ever mutates the shared template fixtures.
