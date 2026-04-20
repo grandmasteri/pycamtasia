@@ -4,31 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 8 domains 4-6)
-
-**Project:**
-
-1. [verified] `_probe_media_ffprobe` never extracts `frame_rate`. When pymediainfo is unavailable, non-30fps videos get wrong duration. HIGH. (project.py ~L81)
-
-2. [verified] `save()` empty-object expansion wrong indentation. Lookahead captures next line's indent, not child indent. Produces malformatted JSON like `{\n}` instead of `{\n  }`. (project.py ~L1003)
-
-3. [verified] `merge_projects` doesn't copy media files into merged project bundle. Source bin entries retain paths relative to original project. Broken media references. HIGH. (project.py ~L730)
-
-**Operations:**
-
-4. [verified] `_process_clip` UnifiedMedia speed-changed children get corrupted mediaDuration. `duration` scaled by `_scale_clip_timing`, then `mediaDuration` overwritten with parent's unscaled value. `duration/mediaDuration` ratio wrong. (speed.py ~L100)
-
-5. [verified] `rescale_project` overlap fix breaks speed-changed clip invariant. `pass` branch for speed-changed clips leaves scalar/mediaDuration unchanged when duration reduced. (speed.py ~L165)
-
-6. [verified] `merge_tracks` media deduplication by filename stem. Two different files with same name silently merged. (merge.py ~L104)
-
-7. [verified] `snap_to_grid` uses banker's rounding. Clips at exact midpoint snap inconsistently. (layout.py ~L88)
-
-8. [verified] `_process_clip` StitchedMedia inner non-UnifiedMedia clips get parent's scalar unconditionally. Destroys per-segment speed differences. (speed.py ~L82)
-
-9. [verified] `_scale_tick` returns int for string fraction inputs when result is whole number. Type inconsistency. (speed.py ~L20)
-
-**Supporting subsystems:** Zero new bugs found (reviewer explicitly confirmed clean).
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

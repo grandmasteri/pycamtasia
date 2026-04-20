@@ -98,20 +98,13 @@ def merge_tracks(
 
     # Build media ID mapping (source ID -> target ID)
     src_id_map: dict[int, int] = {}
-    def _track_type(media_data: dict) -> str | None:
-        tracks = media_data.get('sourceTracks', [])
-        return tracks[0].get('type') if tracks else None
 
     for media in source.media_bin:
-        existing = target.find_media_by_name(media.identity)
-        if existing and _track_type(existing._data) == _track_type(media._data):
-            src_id_map[media.id] = existing.id
-        else:
-            new_id = target.media_bin.next_id()
-            entry = copy.deepcopy(media._data)
-            entry['id'] = new_id
-            target._data['sourceBin'].append(entry)
-            src_id_map[media.id] = new_id
+        new_id = target.media_bin.next_id()
+        entry = copy.deepcopy(media._data)
+        entry['id'] = new_id
+        target._data['sourceBin'].append(entry)
+        src_id_map[media.id] = new_id
 
     # Copy non-empty tracks
     count = 0

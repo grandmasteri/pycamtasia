@@ -29,7 +29,7 @@ def _scale_tick(value: int | float | str, factor: Fraction) -> int | str:
     else:
         f = _frac(value) * factor
     if isinstance(value, str) and "/" in value:
-        return f"{f.numerator}/{f.denominator}" if f.denominator != 1 else int(f)
+        return f"{f.numerator}/{f.denominator}"
     return round(f)
 
 
@@ -90,7 +90,9 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                 inner["duration"] = _scale_tick(inner["duration"], factor)
                 inner["mediaStart"] = _scale_tick(inner.get("mediaStart", 0), factor)
                 inner["mediaDuration"] = _scale_tick(inner.get("mediaDuration", 0), factor)
-                inner["scalar"] = clip.get("scalar", 1)
+                # Only propagate scalar if inner doesn't have its own speed change
+                if not _has_speed_change(inner):
+                    inner["scalar"] = clip.get("scalar", 1)
                 # Only scale effects here for non-UnifiedMedia; UnifiedMedia handles its own via _process_clip
                 for effect in inner.get('effects', []):
                     if 'start' in effect:
@@ -120,10 +122,13 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
             child = clip.get(child_key)
             if child:
                 _process_clip(child, factor)
-                # If parent was speed-changed, restore child's mediaDuration
-                # to match parent so they stay consistent
-                if is_speed_changed and 'mediaDuration' in clip:
-                    child['mediaDuration'] = clip['mediaDuration']
+                # If parent was speed-changed, restore child's duration
+                # and mediaDuration to match parent so they stay consistent
+                if is_speed_changed:
+                    if 'duration' in clip:
+                        child['duration'] = clip['duration']
+                    if 'mediaDuration' in clip:
+                        child['mediaDuration'] = clip['mediaDuration']
 
 
 def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
@@ -165,7 +170,10 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
                     medias[i]['duration'] = int(_frac(medias[i]['duration'])) - overlap
                     # Recalculate mediaDuration
                     if _has_speed_change(medias[i]):
-                        pass
+                        md_old = _frac(medias[i].get('mediaDuration', 0))
+                        if md_old != 0:
+                            new_scalar = _frac(medias[i]['duration']) / md_old
+                            medias[i]['scalar'] = int(new_scalar) if new_scalar == int(new_scalar) else f'{new_scalar.numerator}/{new_scalar.denominator}'
                     else:
                         s = _frac(medias[i].get('scalar', 1))
                         if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group'):

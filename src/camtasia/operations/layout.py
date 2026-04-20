@@ -107,7 +107,7 @@ def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:
     for m in track._data.get('medias', []):
         start = _to_ticks(m.get('start', 0))
         quotient, remainder = divmod(start, grid_ticks)
-        if 2 * remainder > grid_ticks or (2 * remainder == grid_ticks and quotient % 2 == 1):
+        if 2 * remainder >= grid_ticks:
             quotient += 1
         new_start = max(0, quotient * grid_ticks)
         if new_start != start:

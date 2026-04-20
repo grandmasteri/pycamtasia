@@ -149,6 +149,23 @@ class TestProjectSave:
         ]
         assert set(track_names) == {"", "new-track"}
 
+    def test_save_empty_object_indentation_uses_line_indent(self, tmp_path: Path):
+        """Empty {} on a nested line should expand with the line's own indent."""
+        data = dict(MINIMAL_PROJECT_DATA)
+        data['nested'] = {'inner': {}}
+        proj_dir = _create_cmproj(tmp_path, data)
+        project = Project(proj_dir)
+        project.save()
+        text = (proj_dir / 'project.tscproj').read_text()
+        # The closing } should be at the same indent as the line containing the key
+        import re
+        # Find the "inner" key line and the next line
+        match = re.search(r'^( +)"inner" : \{\n( +)\}', text, re.MULTILINE)
+        assert match is not None, f'Expected expanded empty object, got:\n{text}'
+        key_indent = match.group(1)
+        closing_indent = match.group(2)
+        assert key_indent == closing_indent
+
 
 class TestLoadProject:
     def test_load_project_returns_project(self, tmp_path: Path):
@@ -917,6 +934,52 @@ class TestProbeMediaFfprobe:
         assert '_backend' in result
         assert 'width' not in result
         assert 'duration_seconds' not in result
+
+    def test_ffprobe_extracts_frame_rate(self, monkeypatch):
+        """_probe_media_ffprobe parses r_frame_rate from JSON stream output."""
+        call_count = [0]
+        def fake_run(*args, **kwargs):
+            call_count[0] += 1
+            result = type('R', (), {'stdout': '', 'returncode': 0})()
+            if call_count[0] == 1:
+                result.stdout = '1920,1080\n'
+            elif call_count[0] == 2:
+                result.stdout = '5.5\n'
+            elif call_count[0] == 3:
+                import json as _json
+                result.stdout = _json.dumps({
+                    'streams': [
+                        {'codec_type': 'video', 'r_frame_rate': '30/1'},
+                    ]
+                })
+            return result
+
+        monkeypatch.setattr(subprocess, 'run', fake_run)
+        result = _probe_media_ffprobe(Path('/fake/video.mp4'))
+        assert result['frame_rate'] == 30.0
+
+    def test_ffprobe_extracts_fractional_frame_rate(self, monkeypatch):
+        """_probe_media_ffprobe handles fractional frame rates like 29970/1000."""
+        call_count = [0]
+        def fake_run(*args, **kwargs):
+            call_count[0] += 1
+            result = type('R', (), {'stdout': '', 'returncode': 0})()
+            if call_count[0] == 1:
+                result.stdout = '1920,1080\n'
+            elif call_count[0] == 2:
+                result.stdout = '2.0\n'
+            elif call_count[0] == 3:
+                import json as _json
+                result.stdout = _json.dumps({
+                    'streams': [
+                        {'codec_type': 'video', 'r_frame_rate': '29970/1000'},
+                    ]
+                })
+            return result
+
+        monkeypatch.setattr(subprocess, 'run', fake_run)
+        result = _probe_media_ffprobe(Path('/fake/video.mp4'))
+        assert abs(result['frame_rate'] - 29.97) < 0.001
 
 
 

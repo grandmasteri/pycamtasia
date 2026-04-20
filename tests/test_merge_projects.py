@@ -331,3 +331,27 @@ class TestStripAssetPropertiesStitchedMedia:
         saved = _strip_asset_properties(clip)
         assert len(saved) == 1
         assert 'assetProperties' not in clip['medias'][0]['attributes']
+
+
+@pytest.mark.timeout(30)
+def test_merge_projects_copies_media_files(tmp_path):
+    """Bug 3: merge_projects should copy actual media files to the merged project."""
+    a = Project.new(tmp_path / 'a.cmproj', title='A')
+    # Create a fake media file in project A
+    media_dir = tmp_path / 'a.cmproj' / 'media'
+    media_dir.mkdir(parents=True, exist_ok=True)
+    fake_media = media_dir / 'clip.mp4'
+    fake_media.write_bytes(b'fake video data')
+    # Add a sourceBin entry referencing it
+    a._data.setdefault('sourceBin', []).append({
+        'id': 1, 'src': './media/clip.mp4',
+        'rect': [0, 0, 1920, 1080],
+        'sourceTracks': [{'range': [0, 300], 'type': 0}],
+    })
+    a.save()
+
+    merged = Project.merge_projects([a], tmp_path / 'merged.cmproj')  # noqa: F841
+    # The media file should have been copied to the merged project
+    merged_media = tmp_path / 'merged.cmproj' / 'media' / 'clip.mp4'
+    assert merged_media.exists(), 'Media file was not copied to merged project'
+    assert merged_media.read_bytes() == b'fake video data'

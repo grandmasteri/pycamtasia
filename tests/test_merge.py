@@ -102,10 +102,12 @@ class TestMergeRemapsMediaIds:
 
 
 class TestMergeReusesExistingMedia:
-    def test_merge_reuses_media_with_same_identity(self, project):
+    def test_merge_always_creates_new_media_entry(self, project):
+        """Bug 6 fix: merge_tracks no longer deduplicates by filename stem."""
         wav = Path(__file__).parent / 'fixtures' / 'empty.wav'
         # Import same media into both source and target
-        target_media = project.import_media(wav)
+        target_media = project.import_media(wav)  # noqa: F841
+        initial_bin_count = len(project._data['sourceBin'])
 
         source = load_project(str(project.file_path))
         source_media = source.import_media(wav)
@@ -113,10 +115,8 @@ class TestMergeReusesExistingMedia:
         track.add_clip('AMFile', source_media.id, 0, 705600000)
 
         merge_tracks(source, project)
-        # The merged clip should reference the target's existing media ID
-        merged_track = list(project.timeline.tracks)[-1]
-        actual_src = next(iter(merged_track.clips)).source_id
-        assert actual_src == target_media.id
+        # A new sourceBin entry should have been created (no dedup)
+        assert len(project._data['sourceBin']) == initial_bin_count + 1
 
 
 def _add_group_clip(track_data, clip_id, inner_ids, src_id, start=0):
@@ -291,3 +291,25 @@ class TestMergeNoDoubleRemapAssetProperties:
         # Old IDs should not remain
         assert 10 not in ap
         assert 11 not in ap
+
+
+class TestMergeTracksNoDeduplicate:
+    """Bug 6: merge_tracks should always copy media entries, never deduplicate."""
+
+    def test_same_filename_gets_separate_entries(self, tmp_path):
+        """Two projects with same media filename should both get new sourceBin entries."""
+        source = load_project(RESOURCES / 'new.cmproj')
+        target = load_project(RESOURCES / 'new.cmproj')
+
+        # Add same-named media to both
+        _add_source(source, 100, name='shared')
+        _add_source(target, 200, name='shared')
+
+        source_track = source.timeline.add_track('V')
+        _add_clip(source_track._data, 100, 10)
+
+        initial_bin_count = len(target._data['sourceBin'])
+        merge_tracks(source, target)
+
+        # A new entry should have been added (not reused target's existing one)
+        assert len(target._data['sourceBin']) == initial_bin_count + 1

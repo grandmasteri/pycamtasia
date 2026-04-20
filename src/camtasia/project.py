@@ -105,6 +105,29 @@ def _probe_media_ffprobe(path: Path) -> dict:
             result['duration_seconds'] = float(val)
     except Exception:
         pass
+    try:
+        out = _sp.run(
+            ['ffprobe', '-v', 'quiet', '-print_format', 'json',
+             '-show_streams', str(path)],
+            capture_output=True, text=True, timeout=10,
+        )
+        import json as _json
+        data = _json.loads(out.stdout)
+        for stream in data.get('streams', []):
+            if stream.get('codec_type') == 'video':
+                fr = stream.get('r_frame_rate') or stream.get('avg_frame_rate')
+                if fr and '/' in fr:
+                    num_s, denom_s = fr.split('/')
+                    try:
+                        num_i = int(num_s)
+                        denom_i = int(denom_s)
+                        if denom_i > 0:
+                            result['frame_rate'] = num_i / denom_i
+                    except ValueError:  # pragma: no cover  # defensive for malformed ffprobe output
+                        pass
+                break
+    except Exception:
+        pass
     return result
 
 
@@ -734,6 +757,16 @@ class Project:
                 new_id = merged.media_bin.next_id()
                 cloned_media['id'] = new_id
                 src_id_map[old_id] = new_id
+                # Copy the actual media file if it exists
+                src_rel = cloned_media.get('src', '')
+                if src_rel and source_project.file_path.is_dir() and merged.file_path.is_dir():
+                    src_abs = source_project.file_path / src_rel.lstrip('./')
+                    if src_abs.exists():
+                        dst_abs = merged.file_path / src_rel.lstrip('./')
+                        dst_abs.parent.mkdir(parents=True, exist_ok=True)
+                        if not dst_abs.exists():
+                            import shutil
+                            shutil.copy2(src_abs, dst_abs)
                 merged._data.setdefault('sourceBin', []).append(cloned_media)
 
             # Copy tracks with time offset
@@ -1012,10 +1045,7 @@ class Project:
         )
 
         # Step 4: Expand empty objects to multi-line with proper indentation
-        def _expand_empty(m: re.Match) -> str:
-            indent = m.group(1)
-            return str('{\n' + indent + '}')
-        text = re.sub(r'\{\}(?=\n(\s*))', _expand_empty, text)
+        text = re.sub(r'^([ \t]*)([^\n]*?)\{\}([ \t]*)$', r'\1\2{\n\1}', text, flags=re.MULTILINE)
 
         # Step 5: Add trailing space after commas at end of lines
         text = re.sub(r',\n', ', \n', text)

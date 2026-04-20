@@ -1279,3 +1279,109 @@ class TestWalkClipsNestedStitched:
         vmfile = inner_stitched['medias'][0]
         assert vmfile['src'] == 99
         assert count >= 3  # outer, inner stitched, and vmfile
+
+
+class TestScaleTickStringConsistency:
+    """Bug 9: _scale_tick should always return str for string fraction inputs."""
+
+    def test_string_fraction_returns_string_even_when_whole(self):
+        """Scaling '2/1' by 1 should return '2/1', not int 2."""
+        result = _scale_tick('2/1', Fraction(1))
+        assert isinstance(result, str)
+        assert '/' in result
+
+    def test_string_fraction_returns_string_after_scaling(self):
+        result = _scale_tick('3/2', Fraction(2))
+        assert isinstance(result, str)
+        assert '/' in result
+
+
+class TestUnifiedMediaSpeedChildDuration:
+    """Bug 4: UnifiedMedia speed-changed children should get parent's duration AND mediaDuration."""
+
+    def test_speed_changed_unified_children_get_parent_duration(self):
+        from camtasia.operations.speed import _process_clip
+        clip = {
+            '_type': 'UnifiedMedia',
+            'start': 0, 'duration': 1000, 'mediaDuration': 500,
+            'scalar': 2,
+            'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+            'video': {
+                '_type': 'VMFile', 'start': 0, 'duration': 1000,
+                'mediaDuration': 500, 'scalar': 1,
+                'metadata': {}, 'effects': [],
+            },
+            'audio': {
+                '_type': 'AMFile', 'start': 0, 'duration': 1000,
+                'mediaDuration': 500, 'scalar': 1,
+                'metadata': {}, 'effects': [],
+            },
+        }
+        _process_clip(clip, Fraction(2))
+        # Both children should have parent's duration AND mediaDuration
+        assert clip['video']['duration'] == clip['duration']
+        assert clip['video']['mediaDuration'] == clip['mediaDuration']
+        assert clip['audio']['duration'] == clip['duration']
+        assert clip['audio']['mediaDuration'] == clip['mediaDuration']
+
+
+class TestOverlapFixSpeedChangedScalar:
+    """Bug 5: Overlap fix should recalculate scalar, not skip, for speed-changed clips."""
+
+    def test_overlap_fix_recalculates_scalar(self):
+        project = _make_project([{
+            'medias': [
+                {
+                    '_type': 'VMFile', 'id': 1, 'src': 0,
+                    'start': 0, 'duration': 110, 'mediaDuration': 55,
+                    'scalar': 2, 'effects': [],
+                    'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+                },
+                {
+                    '_type': 'VMFile', 'id': 2, 'src': 0,
+                    'start': 100, 'duration': 100, 'mediaDuration': 100,
+                    'scalar': 1, 'effects': [],
+                    'metadata': {},
+                },
+            ],
+            'transitions': [],
+        }])
+        rescale_project(project, Fraction(1))
+        clip_a = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        # mediaDuration should be unchanged (55), scalar should be recalculated
+        assert clip_a['mediaDuration'] == 55
+        # duration was reduced by overlap (10), so new duration = 100
+        assert clip_a['duration'] == 100
+
+
+class TestStitchedMediaInnerScalarPreservation:
+    """Bug 8: StitchedMedia inner clips with own speed change should keep their scalar."""
+
+    def test_inner_speed_changed_clip_keeps_own_scalar(self):
+        from camtasia.operations.speed import _process_clip
+        clip = {
+            '_type': 'StitchedMedia',
+            'start': 0, 'duration': 2000, 'mediaStart': 0, 'mediaDuration': 2000,
+            'scalar': 1, 'metadata': {}, 'effects': [],
+            'medias': [
+                {
+                    '_type': 'VMFile', 'start': 0, 'duration': 1000,
+                    'mediaStart': 0, 'mediaDuration': 500,
+                    'scalar': 2, 'effects': [],
+                    'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+                },
+                {
+                    '_type': 'VMFile', 'start': 1000, 'duration': 1000,
+                    'mediaStart': 0, 'mediaDuration': 1000,
+                    'scalar': 1, 'effects': [],
+                    'metadata': {},
+                },
+            ],
+        }
+        _process_clip(clip, Fraction(2))
+        inner_speed = clip['medias'][0]
+        inner_normal = clip['medias'][1]
+        # Speed-changed inner should keep its own scalar (2), not get parent's (1)
+        assert inner_speed['scalar'] == 2
+        # Normal inner should get parent's scalar
+        assert inner_normal['scalar'] == clip.get('scalar', 1)

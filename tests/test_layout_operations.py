@@ -192,7 +192,7 @@ class TestSnapToGrid:
             (0.3, 0.0),
             (0.7, 1.0),
             (1.4, 1.0),
-            (2.5, 2.0 if round(2.5) == 2 else 3.0),  # Python banker's rounding
+            (2.5, 3.0),  # round-half-up (Bug 7 fix)
         ],
         ids=['round-down', 'round-up', 'round-down-1s', 'half'],
     )
@@ -264,8 +264,8 @@ class TestStringFractionTicks:
             self._frac_clip(1, '705600000/2', '705600000'),
         ])
         snap_to_grid(track, grid_seconds=1.0)
-        # 352800000 ticks = 0.5s; banker's rounding snaps to 0
-        assert track._data['medias'][0]['start'] == 0
+        # 352800000 ticks = 0.5s; round-half-up snaps to 1.0s (Bug 7 fix)
+        assert track._data['medias'][0]['start'] == seconds_to_ticks(1.0)
 
 
 class TestRippleDeleteDoesNotPropagateUnshiftedClips:
@@ -343,3 +343,27 @@ class TestPackTrackStringFractionStart:
         pack_track(track)
         # After packing, clip 2 should start right after clip 1
         assert track._data['medias'][1]['start'] == seconds_to_ticks(2.0)
+
+
+class TestSnapToGridRoundHalfUp:
+    """Bug 7: snap_to_grid should use round-half-up, not banker's rounding."""
+
+    def test_half_grid_rounds_up_for_even_quotient(self):
+        """A clip at exactly half a grid step should round UP, not to even."""
+        grid = 1.0
+        grid_ticks = seconds_to_ticks(grid)
+        # Place clip at exactly 0.5 grid steps (half of grid_ticks)
+        half = grid_ticks // 2
+        track = _make_track([{'id': 1, 'start': half, 'duration': seconds_to_ticks(1.0)}])
+        snap_to_grid(track, grid_seconds=grid)
+        # With round-half-up, 0.5 grid steps should snap to 1 grid step
+        assert track._data['medias'][0]['start'] == grid_ticks
+
+    def test_half_grid_rounds_up_for_odd_quotient(self):
+        """A clip at 1.5 grid steps should also round UP to 2."""
+        grid = 1.0
+        grid_ticks = seconds_to_ticks(grid)
+        pos = grid_ticks + grid_ticks // 2  # 1.5 grid steps
+        track = _make_track([{'id': 1, 'start': pos, 'duration': seconds_to_ticks(1.0)}])
+        snap_to_grid(track, grid_seconds=grid)
+        assert track._data['medias'][0]['start'] == 2 * grid_ticks
