@@ -4,7 +4,31 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 11 domains 4-6)
+
+**Project:**
+
+1. [verified] `import_media()` video editRate mismatch. sample_rate kwarg passed to MediaBin but ignored for video; editRate hardcodes to 30. (project.py ~L1126)
+
+2. [verified] `save()` empty-object expansion regex corrupts string values containing `{}`. (project.py ~L1047)
+
+3. [verified] `add_voiceover_sequence()` silently truncates audio to 1 second when probing fails. (project.py ~L1340)
+
+4. [verified] `history.py from_json()` crashes with unhelpful KeyError on malformed history files. (history.py ~L185)
+
+**Operations:**
+
+5. [verified] `merge_tracks()` id_counter re-initialized per-track causing duplicate IDs across tracks. HIGH. (merge.py ~L122)
+
+**Supporting:**
+
+6. [verified] `media_bin.py import_media` crashes with `float(None)` when pymediainfo returns `duration=None`. Images trigger this. (media_bin.py L327, L508)
+
+7. [verified] `add_lower_third()` double-remaps `assetProperties.objects` after `_remap_clip_ids_with_map` already did. Corrupts theme mappings when ID collision occurs. (track.py ~L830)
+
+8. [verified] `add_lower_third()` line clip `parameters.translation0/1` keyframes not scaled with duration. Line position animation out of sync with shape animation. (track.py ~L869)
+
+9. [verified] `StrokeStyle` enum missing `'none'` value. Users can't use enum for no-stroke. (annotations/types.py)
 
 ## TechSmith Tutorial Analysis
 
