@@ -77,9 +77,12 @@ def _build_markdown_report(project: Project) -> str:
         clip_count = len(track)
         if clip_count > 0:
             types = sorted({c.clip_type for c in track.clips})
-            lines.append(f'### Track {track.index}: {track.name or "(unnamed)"}')
-            lines.append(f'- {clip_count} clips: {", ".join(types)}')
-            lines.append('')
+            type_str = ', '.join(types)
+        else:
+            type_str = '(empty)'
+        lines.append(f'### Track {track.index}: {track.name or "(unnamed)"}')
+        lines.append(f'- {clip_count} clips: {type_str}')
+        lines.append('')
     lines.append('## Media Bin')
     lines.append('')
     for m in project.media_bin:

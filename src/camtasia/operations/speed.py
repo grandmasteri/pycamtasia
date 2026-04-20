@@ -70,7 +70,10 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
     _scale_clip_timing(clip, factor)
 
     if _has_speed_change(clip):
-        _adjust_scalar(clip, factor)
+        # For StitchedMedia/Group, mediaDuration is scaled (representing internal timeline)
+        # so the duration=mediaDuration*scalar invariant preserves without adjusting scalar.
+        if ctype not in ("StitchedMedia", "Group"):
+            _adjust_scalar(clip, factor)
         # Recalculate mediaDuration from new duration/scalar to maintain invariant
         if ctype not in ("StitchedMedia", "Group", "UnifiedMedia", "IMFile", "ScreenIMFile"):
             new_scalar = _frac(clip.get("scalar", 1))
@@ -85,6 +88,8 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
             if inner.get('_type') == 'UnifiedMedia':
                 # Let _process_clip handle UnifiedMedia path including video/audio children
                 _process_clip(inner, factor)
+            elif inner.get('_type') in ('Group', 'StitchedMedia'):
+                _process_clip(inner, factor)  # recurse to handle nested structures
             else:
                 inner["start"] = _scale_tick(inner["start"], factor)
                 inner["duration"] = _scale_tick(inner["duration"], factor)
@@ -170,6 +175,9 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
             b_start = int(_frac(medias[i + 1].get("start", 0)))
             if a_end > b_start:  # overlap
                 overlap = a_end - b_start
+                # Compound clips need coordinated internal trimming; skip overlap fix for them
+                if medias[i].get('_type') in ('StitchedMedia', 'Group'):
+                    continue
                 if int(_frac(medias[i]['duration'])) > overlap:
                     medias[i]['duration'] = int(_frac(medias[i]['duration'])) - overlap
                     # Recalculate mediaDuration

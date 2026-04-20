@@ -120,6 +120,20 @@ def test_no_duplicate_keyframe_fade_out_only(project):
     # Collect all keyframes at time=0 with endTime=0
     zero_kfs = [kf for kf in keyframes if kf.get('endTime') == 0 and kf.get('time') == 0]
     assert len(zero_kfs) <= 1, f"Duplicate keyframes at t=0: {zero_kfs}"
-    # Should have exactly 2 keyframes: sustain then fade-out
-    assert len(keyframes) == 2
+    # Should have 3 keyframes: initial anchor, sustain, then fade-out
+    assert len(keyframes) == 3
+    assert keyframes[-1]['value'] == 0.0
+
+
+def test_fade_out_only_has_initial_anchor_keyframe(project):
+    """Bug 1: fade_in=0, fade_out>0 must have an initial anchor keyframe at target volume."""
+    clip = project.add_background_music(
+        EMPTY_WAV, fade_in_seconds=0, fade_out_seconds=3.0, volume=0.5,
+    )
+    volume_param = clip._data.get('parameters', {}).get('volume', {})
+    keyframes = volume_param.get('keyframes', [])
+    # First keyframe should be the anchor at volume (not 0.0)
+    assert keyframes[0]['endTime'] == 0
+    assert keyframes[0]['value'] == 0.5
+    # Last keyframe should fade to 0.0
     assert keyframes[-1]['value'] == 0.0

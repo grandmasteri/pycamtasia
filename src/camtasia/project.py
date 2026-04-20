@@ -2080,6 +2080,9 @@ class Project:
                     keyframes.append({'endTime': total_ticks, 'time': fade_in_ticks, 'value': volume, 'duration': total_ticks - fade_in_ticks})
             elif fade_out_ticks == 0:
                 keyframes.append({'endTime': 0, 'time': 0, 'value': volume, 'duration': 0})  # pragma: no cover  # unreachable: outer guard ensures at least one fade > 0
+            else:
+                # fade_in=0 and fade_out>0: add initial anchor at target volume
+                keyframes.append({'endTime': 0, 'time': 0, 'value': volume, 'duration': 0})
             if fade_out_ticks > 0 and total_ticks >= fade_in_ticks + fade_out_ticks:
                 fade_out_start = total_ticks - fade_out_ticks
                 keyframes.append({'endTime': fade_out_start, 'time': fade_in_ticks, 'value': volume, 'duration': fade_out_start - fade_in_ticks})

@@ -271,3 +271,29 @@ class TestLowerThirdLineClipKeyframeScaling:
         times = [kf['time'] for kf in width_kfs]
         assert 352800000 in times
         assert 705600000 in times
+
+
+class TestLowerThirdTemplateIdsRemapped:
+    """Bug 8: placeholder IDs 83-88 must be remapped before insertion."""
+
+    def test_no_template_ids_remain(self):
+        track = _make_track()
+        clip = track.add_lower_third("Name", "Sub", 0, 10)
+
+        # Collect all IDs recursively
+        all_ids: list[int] = []
+
+        def collect(d: dict) -> None:
+            if 'id' in d:
+                all_ids.append(d['id'])
+            for key in ('video', 'audio'):
+                if key in d and isinstance(d[key], dict):
+                    collect(d[key])
+            for t in d.get('tracks', []):
+                for m in t.get('medias', []):
+                    collect(m)
+
+        collect(clip._data)
+        # None of the original template IDs (83-88) should remain
+        template_ids = {83, 84, 85, 86, 87, 88}
+        assert not template_ids.intersection(all_ids), f"Template IDs still present: {template_ids.intersection(all_ids)}"

@@ -134,3 +134,19 @@ class TestJsonReportRoundsFloats:
         dur = str(data['duration_seconds'])
         if '.' in dur:
             assert len(dur.split('.')[1]) <= 3
+
+
+class TestMarkdownReportIncludesEmptyTracks:
+    """Bug 7: markdown report track listing must include empty tracks."""
+
+    def test_empty_tracks_listed_in_markdown(self, project, tmp_path):
+        from camtasia.export.report import export_project_report
+
+        out = tmp_path / 'report.md'
+        export_project_report(project, out, format='markdown')
+        text = out.read_text()
+        # The default project has 2 empty tracks; both should appear
+        assert '(empty)' in text
+        track_count = project.timeline.track_count
+        track_headings = [line for line in text.split('\n') if line.startswith('### Track')]
+        assert len(track_headings) == track_count

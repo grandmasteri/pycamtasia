@@ -200,3 +200,24 @@ class TestCleanupStitchedMediaSources:
         removed = remove_orphaned_media(project)
         assert 1 not in removed
         assert 999 in removed
+
+
+class TestCollectSourceIdsNoDoubleVisit:
+    """Bug 5: _collect_source_ids should not double-visit video/audio in Group tracks."""
+
+    def test_group_with_unified_media_video_audio_collected_once(self, project):
+        """Ensure sources inside Group track medias with video/audio are collected correctly."""
+        from camtasia.operations.cleanup import _collect_source_ids
+
+        group_data = {
+            '_type': 'Group', 'id': 1,
+            'tracks': [{
+                'medias': [{
+                    '_type': 'UnifiedMedia', 'id': 2, 'src': 10,
+                    'video': {'_type': 'VMFile', 'id': 3, 'src': 20},
+                    'audio': {'_type': 'AMFile', 'id': 4, 'src': 30},
+                }],
+            }],
+        }
+        ids = _collect_source_ids(group_data)
+        assert ids == {10, 20, 30}

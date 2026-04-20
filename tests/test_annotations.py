@@ -364,3 +364,13 @@ class TestKeystrokeCalloutFillStroke:
     def test_has_stroke_style(self):
         result = keystroke_callout('Ctrl+C')
         assert result['stroke-style'] == 'solid'
+
+
+class TestSquareCornerRadius:
+    """Bug 9: square() must include 'corner-radius' key."""
+
+    def test_square_has_corner_radius(self):
+        result = square('Hello', 'Arial', 'Bold')
+        assert 'corner-radius' in result
+        assert result['corner-radius'] == 0.0
+        assert isinstance(result['corner-radius'], float)

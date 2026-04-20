@@ -1385,3 +1385,107 @@ class TestStitchedMediaInnerScalarPreservation:
         assert inner_speed['scalar'] == 2
         # Normal inner should get parent's scalar
         assert inner_normal['scalar'] == clip.get('scalar', 1)
+
+
+# ── Bug 2: StitchedMedia should recurse Group/nested StitchedMedia ──
+
+
+class TestStitchedMediaRecursesNestedStructures:
+    """Bug 2: _process_clip must recurse into Group/StitchedMedia inside StitchedMedia."""
+
+    def test_nested_group_inside_stitched_is_scaled(self):
+        inner_group = {
+            "id": 25,
+            "_type": "Group",
+            "start": 0,
+            "duration": 10_000_000_000,
+            "mediaDuration": 10_000_000_000,
+            "scalar": 1,
+            "metadata": {},
+            "tracks": [
+                {
+                    "trackIndex": 0,
+                    "medias": [
+                        {
+                            "id": 26,
+                            "_type": "VMFile",
+                            "src": 1,
+                            "start": 0,
+                            "duration": 10_000_000_000,
+                            "mediaStart": 0,
+                            "mediaDuration": 10_000_000_000,
+                            "scalar": 1,
+                            "metadata": {},
+                        }
+                    ],
+                }
+            ],
+        }
+        stitched = {
+            "id": 20,
+            "_type": "StitchedMedia",
+            "src": 3,
+            "start": 0,
+            "duration": 10_000_000_000,
+            "mediaStart": 0,
+            "mediaDuration": 10_000_000_000,
+            "medias": [inner_group],
+        }
+        project = _make_project(tracks=[{"medias": [stitched], "transitions": []}])
+        rescale_project(project, Fraction(2))
+
+        actual = project["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]
+        nested_group = actual["medias"][0]
+        assert nested_group["duration"] == 20_000_000_000
+        inner_clip = nested_group["tracks"][0]["medias"][0]
+        assert inner_clip["duration"] == 20_000_000_000
+
+
+# ── Bug 3: _adjust_scalar not applied to StitchedMedia/Group wrappers ──
+
+
+class TestNoDoubleScalarForCompoundClips:
+    """Bug 3: StitchedMedia/Group wrappers should not have _adjust_scalar called."""
+
+    def test_stitched_media_scalar_unchanged_when_speed_changed(self):
+        stitched = _make_stitched_clip()
+        stitched["metadata"] = {"clipSpeedAttribute": {"type": "bool", "value": True}}
+        stitched["scalar"] = "1/2"
+        project = _make_project(tracks=[{"medias": [stitched], "transitions": []}])
+
+        rescale_project(project, Fraction(2))
+
+        actual = project["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]
+        # Scalar should remain unchanged for StitchedMedia
+        assert parse_scalar(actual["scalar"]) == Fraction(1, 2)
+
+    def test_group_scalar_unchanged_when_speed_changed(self):
+        group = _make_group_clip()
+        group["metadata"] = {"clipSpeedAttribute": {"type": "bool", "value": True}}
+        group["scalar"] = "3/4"
+        project = _make_project(tracks=[{"medias": [group], "transitions": []}])
+
+        rescale_project(project, Fraction(2))
+
+        actual = project["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]
+        assert parse_scalar(actual["scalar"]) == Fraction(3, 4)
+
+
+# ── Bug 4: overlap fix skips compound clips ──
+
+
+class TestOverlapFixSkipsCompoundClips:
+    """Bug 4: overlap fix should skip StitchedMedia/Group to avoid internal inconsistency."""
+
+    def test_stitched_media_not_trimmed_on_overlap(self):
+        stitched = _make_stitched_clip(start=0)
+        stitched["duration"] = 100
+        # Place a simple clip right after with 1-tick overlap
+        simple = _make_audio_clip(clip_id=50, start=99, duration=100)
+        project = _make_project(tracks=[{"medias": [stitched, simple], "transitions": []}])
+
+        rescale_project(project, Fraction(1))  # factor=1 just triggers overlap fix
+
+        actual_stitched = project["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]
+        # StitchedMedia duration should remain unchanged
+        assert actual_stitched["duration"] == 100

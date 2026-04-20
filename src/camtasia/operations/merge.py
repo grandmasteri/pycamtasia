@@ -108,6 +108,8 @@ def merge_tracks(
 
     # Copy non-empty tracks
     count = 0
+    clip_id_map: dict[int, int] = {}
+    new_clips_by_track: list = []
     for track in source.timeline.tracks:
         if len(track) == 0:
             continue
@@ -119,7 +121,6 @@ def merge_tracks(
                 new_track._attributes[attr] = track._attributes[attr]
         id_counter = [target.next_available_id]
 
-        clip_id_map: dict[int, int] = {}
         new_clips: list[dict] = []
         for clip_data in track._data.get('medias', []):
             new_clip = copy.deepcopy(clip_data)
@@ -134,11 +135,13 @@ def merge_tracks(
             _propagate_start_to_unified(new_clip)
             new_clips.append(new_clip)
 
-        # Append clips to track (second pass remaps assetProperties with complete id_map)
+        new_clips_by_track.append((new_track, new_clips))
+        count += 1
+
+    # Second pass after ALL tracks processed, with complete clip_id_map
+    for new_track, new_clips in new_clips_by_track:
         for new_clip in new_clips:
             _remap_asset_properties(new_clip, clip_id_map)
             new_track._data.setdefault('medias', []).append(new_clip)
-
-        count += 1
 
     return count

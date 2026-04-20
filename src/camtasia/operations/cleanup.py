@@ -16,11 +16,7 @@ def _collect_source_ids(clip_data: dict) -> set[int]:
         ids.add(src)
     for track in clip_data.get('tracks', []):
         for media in track.get('medias', []):
-            ids.update(_collect_source_ids(media))
-            if 'video' in media:
-                ids.update(_collect_source_ids(media['video']))
-            if 'audio' in media:
-                ids.update(_collect_source_ids(media['audio']))
+            ids.update(_collect_source_ids(media))  # recursive call handles video/audio internally
     # StitchedMedia stores sub-clips in 'medias' directly
     for nested in clip_data.get('medias', []):
         ids.update(_collect_source_ids(nested))

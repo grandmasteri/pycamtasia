@@ -313,3 +313,47 @@ class TestMergeTracksNoDeduplicate:
 
         # A new entry should have been added (not reused target's existing one)
         assert len(target._data['sourceBin']) == initial_bin_count + 1
+
+
+class TestMergeClipIdMapSharedAcrossTracks:
+    """Bug 6: clip_id_map must be shared across all tracks so cross-track
+    assetProperties references resolve correctly."""
+
+    def test_cross_track_asset_properties_remapped(self, project, tmp_path):
+        import shutil
+        src_proj = tmp_path / 'source.cmproj'
+        shutil.copytree(RESOURCES / 'new.cmproj', src_proj)
+        source = load_project(src_proj)
+
+        _add_source(source, 10, 'clip')
+        track_a = source.timeline.add_track('Track A')
+        track_b = source.timeline.add_track('Track B')
+
+        # Clip on track A references clip on track B via assetProperties
+        track_a._data['medias'] = [{
+            '_type': 'VMFile', 'id': 50, 'src': 10,
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'metadata': {}, 'parameters': {}, 'effects': [],
+            'attributes': {'ident': 'a', 'assetProperties': [
+                {'objects': [60]}  # references clip on track B
+            ]}, 'animationTracks': {},
+        }]
+        track_b._data['medias'] = [{
+            '_type': 'VMFile', 'id': 60, 'src': 10,
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'metadata': {}, 'parameters': {}, 'effects': [],
+            'attributes': {'ident': 'b'}, 'animationTracks': {},
+        }]
+
+        merge_tracks(source, project)
+
+        # Find the merged tracks
+        merged_a = [t for t in project.timeline.tracks if t.name == 'Track A'][-1]
+        merged_b = [t for t in project.timeline.tracks if t.name == 'Track B'][-1]
+        new_b_id = merged_b._data['medias'][0]['id']
+        ap = merged_a._data['medias'][0]['attributes']['assetProperties'][0]['objects']
+        # The cross-track reference should point to the new ID of clip B
+        assert new_b_id in ap
+        assert 60 not in ap
