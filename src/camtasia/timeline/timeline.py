@@ -821,6 +821,11 @@ class Timeline:
                         new_md = Fraction(new_duration) / scalar
                         m['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
                     _adjust_effects_after_split_right(m, clamp_amount)
+                    if m.get('_type') == 'UnifiedMedia':
+                        for sub_key in ('video', 'audio'):
+                            sub = m.get(sub_key)
+                            if sub is not None:
+                                _adjust_effects_after_split_right(sub, clamp_amount)
                 else:
                     m['start'] = new_start
                 _propagate_start_to_unified(m)
@@ -876,12 +881,24 @@ class Timeline:
                 if clip_start >= position_ticks:
                     media_dict['start'] = clip_start + gap_ticks
                     _propagate_start_to_unified(media_dict)
+            for t in track._data.get('transitions', []):
+                if 'start' in t and t['start'] >= position_ticks:
+                    t['start'] += gap_ticks
 
     def remove_gap(self, position_seconds: float, gap_duration_seconds: float) -> None:
         """Remove a gap at a position across ALL tracks, pulling subsequent clips back."""
         from camtasia.timing import seconds_to_ticks
         gap_ticks: int = seconds_to_ticks(gap_duration_seconds)
         position_ticks: int = seconds_to_ticks(position_seconds)
+        # Validate: no clip should exist inside the gap region
+        for track in self.tracks:
+            for media_dict in track._data.get('medias', []):
+                cs: int = media_dict.get('start', 0)
+                if position_ticks < cs < position_ticks + gap_ticks:
+                    raise ValueError(
+                        f'Cannot remove gap: clip at position {ticks_to_seconds(cs)}s '
+                        f'overlaps with gap region'
+                    )
         for track in self.tracks:
             for media_dict in track._data.get('medias', []):
                 clip_start: int = media_dict.get('start', 0)

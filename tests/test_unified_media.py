@@ -343,3 +343,34 @@ class TestUnifiedMediaAudioMissing:
         um = UnifiedMedia(unified_data)
         audio = um.audio
         assert audio.id == 8
+
+
+# ------------------------------------------------------------------
+# Bug 2: media_duration setter must not overwrite sub-clip mediaStart
+# ------------------------------------------------------------------
+
+class TestMediaDurationSetterNoMediaStartOverwrite:
+    def test_media_duration_preserves_sub_clip_media_start(self):
+        data = {
+            '_type': 'UnifiedMedia', 'id': 1,
+            'start': 0, 'duration': 1000, 'mediaStart': 0,
+            'mediaDuration': 500,
+            'video': {
+                '_type': 'VMFile', 'id': 2, 'src': 1,
+                'start': 0, 'duration': 1000,
+                'mediaStart': 200, 'mediaDuration': 500,
+            },
+            'audio': {
+                '_type': 'AMFile', 'id': 3, 'src': 1,
+                'start': 0, 'duration': 1000,
+                'mediaStart': 200, 'mediaDuration': 500,
+            },
+        }
+        clip = BaseClip(data)
+        clip.media_duration = 600
+
+        assert data['video']['mediaDuration'] == 600
+        assert data['audio']['mediaDuration'] == 600
+        # mediaStart must NOT be overwritten
+        assert data['video']['mediaStart'] == 200
+        assert data['audio']['mediaStart'] == 200

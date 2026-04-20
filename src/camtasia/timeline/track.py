@@ -2413,7 +2413,6 @@ class Track:
             raise ValueError(f'factor must be > 0, got {factor}')
         for media_dict in self._data.get('medias', []):
             media_dict['start'] = int(media_dict.get('start', 0) * factor)
-            _propagate_start_to_unified(media_dict)
             media_dict['duration'] = int(media_dict.get('duration', 0) * factor)
             media_duration = Fraction(str(media_dict.get('mediaDuration', media_dict['duration'])))
             if media_duration != 0:
@@ -2422,6 +2421,7 @@ class Track:
             if media_dict.get('_type') in ('IMFile', 'ScreenIMFile'):
                 media_dict['mediaDuration'] = 1
                 media_dict['scalar'] = 1
+            _propagate_start_to_unified(media_dict)
             if media_dict.get('_type') == 'UnifiedMedia':
                 for sub_key in ('video', 'audio'):
                     sub = media_dict.get(sub_key)

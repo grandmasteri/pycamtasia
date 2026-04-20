@@ -105,3 +105,116 @@ class TestTimelineGroups:
         timeline_group_ids = {g.id for g in complex_project.timeline.groups}
         project_group_ids = {g.id for _, g in complex_project.all_groups}
         assert timeline_group_ids == project_group_ids
+
+
+# ---------------------------------------------------------------------------
+# Bug 3: set_internal_segment_speeds scalar must not truncate to integer
+# ---------------------------------------------------------------------------
+
+class TestSetInternalSegmentSpeedsScalar:
+    def test_non_integer_scalar_preserved_as_fraction(self) -> None:
+        """When total_tl / total_src is not an integer, scalar must be a string fraction."""
+        from fractions import Fraction
+
+        from camtasia.timeline.clips.group import Group
+        from camtasia.timing import seconds_to_ticks
+
+        dur_ticks = seconds_to_ticks(10.0)
+        group_data: dict = {
+            '_type': 'Group', 'id': 1,
+            'start': 0, 'duration': dur_ticks,
+            'mediaStart': 0, 'mediaDuration': dur_ticks,
+            'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {},
+            'attributes': {'ident': '', 'widthAttr': 1920.0, 'heightAttr': 1080.0},
+            'tracks': [
+                {'trackIndex': 0, 'medias': [{
+                    'id': 10, '_type': 'UnifiedMedia',
+                    'video': {
+                        'id': 11, '_type': 'ScreenVMFile', 'src': 42,
+                        'trackNumber': 0, 'attributes': {'ident': ''},
+                        'parameters': {}, 'effects': [],
+                        'start': 0, 'duration': dur_ticks,
+                        'mediaStart': 0, 'mediaDuration': dur_ticks,
+                        'scalar': 1, 'animationTracks': {},
+                    },
+                    'effects': [],
+                    'start': 0, 'duration': dur_ticks,
+                    'mediaStart': 0, 'mediaDuration': dur_ticks,
+                    'scalar': 1,
+                }]},
+                {'trackIndex': 1, 'medias': [{
+                    'id': 20, '_type': 'AMFile', 'src': 42,
+                    'trackNumber': 1, 'attributes': {'ident': ''},
+                    'parameters': {}, 'effects': [],
+                    'start': 0, 'duration': dur_ticks,
+                    'mediaStart': 0, 'mediaDuration': dur_ticks,
+                    'scalar': 1, 'animationTracks': {},
+                }]},
+            ],
+        }
+        group = Group(group_data)
+        # 3s source at 2x speed = 6s timeline, 7s source at 1x = 7s timeline
+        # total_tl = 13s, total_src = 10s, ratio = 13/10 (not integer)
+        group.set_internal_segment_speeds(
+            [(0.0, 3.0, 6.0), (3.0, 10.0, 7.0)],
+            next_id=100,
+        )
+        # Check the AMFile on track 1 got a fractional scalar
+        am = group_data['tracks'][1]['medias'][0]
+        scalar_val = Fraction(str(am['scalar']))
+        assert scalar_val == Fraction(13, 10)
+
+
+# ---------------------------------------------------------------------------
+# Bug 4: internal_media_src must check StitchedMedia children
+# ---------------------------------------------------------------------------
+
+class TestInternalMediaSrcStitchedMedia:
+    def test_finds_src_in_stitched_screen_vm_file(self) -> None:
+        from camtasia.timeline.clips.group import Group
+
+        group_data: dict = {
+            '_type': 'Group', 'id': 1,
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100,
+            'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {},
+            'attributes': {'ident': ''},
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                'id': 10, '_type': 'StitchedMedia',
+                'start': 0, 'duration': 100,
+                'medias': [
+                    {'id': 11, '_type': 'ScreenVMFile', 'src': 99, 'start': 0, 'duration': 50},
+                    {'id': 12, '_type': 'ScreenVMFile', 'src': 99, 'start': 50, 'duration': 50},
+                ],
+            }]}],
+        }
+        group = Group(group_data)
+        assert group.internal_media_src == 99
+
+    def test_finds_src_in_stitched_unified_media(self) -> None:
+        from camtasia.timeline.clips.group import Group
+
+        group_data: dict = {
+            '_type': 'Group', 'id': 1,
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100,
+            'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {},
+            'attributes': {'ident': ''},
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                'id': 10, '_type': 'StitchedMedia',
+                'start': 0, 'duration': 100,
+                'medias': [{
+                    'id': 11, '_type': 'UnifiedMedia',
+                    'video': {'_type': 'ScreenVMFile', 'src': 77},
+                    'start': 0, 'duration': 100,
+                }],
+            }]}],
+        }
+        group = Group(group_data)
+        assert group.internal_media_src == 77

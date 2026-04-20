@@ -196,3 +196,68 @@ class TestRename:
         group.rename('Sized').set_dimensions(1280.0, 720.0)
         assert group.ident == 'Sized'
         assert group.width == 1280.0
+
+
+# ---------------------------------------------------------------------------
+# Bug 5: ungroup must compose each StitchedMedia inner scalar individually
+# ---------------------------------------------------------------------------
+
+class TestUngroupStitchedMediaInnerScalars:
+    def test_inner_scalars_composed_individually(self) -> None:
+        from fractions import Fraction
+
+        from camtasia.timing import parse_scalar
+
+        inner_seg_a = {
+            '_type': 'ScreenVMFile', 'id': 20, 'src': 1,
+            'start': 0, 'duration': 500, 'mediaStart': 0,
+            'mediaDuration': 500, 'scalar': '1/2',
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {},
+        }
+        inner_seg_b = {
+            '_type': 'ScreenVMFile', 'id': 21, 'src': 1,
+            'start': 500, 'duration': 500, 'mediaStart': 0,
+            'mediaDuration': 250, 'scalar': '2/1',
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {},
+        }
+        stitched = {
+            '_type': 'StitchedMedia', 'id': 10,
+            'start': 0, 'duration': 1000,
+            'mediaStart': 0, 'mediaDuration': 1000,
+            'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {},
+            'medias': [inner_seg_a, inner_seg_b],
+        }
+        group = _make_group([[stitched]])
+        # Set group scalar to 2 (half speed)
+        group._data['scalar'] = '2/1'
+
+        extracted = group.ungroup()
+        assert len(extracted) == 1
+        clip = extracted[0]
+        medias = clip._data.get('medias', [])
+        # inner_seg_a had scalar 1/2, group scalar 2/1 → composed = 1
+        assert parse_scalar(medias[0]['scalar']) == Fraction(1)
+        # inner_seg_b had scalar 2/1, group scalar 2/1 → composed = 4
+        assert parse_scalar(medias[1]['scalar']) == Fraction(4)
+
+
+# ---------------------------------------------------------------------------
+# Bug 6: ungroup must produce integer ticks for start/duration
+# ---------------------------------------------------------------------------
+
+class TestUngroupIntegerTicks:
+    def test_start_and_duration_are_integers(self) -> None:
+        clip_data = _clip_data('VMFile', 10, 0.0, 3.0)
+        group = _make_group([[clip_data]])
+        # Use a scalar that would produce non-integer fractions
+        group._data['scalar'] = '3/2'
+
+        extracted = group.ungroup()
+        assert len(extracted) == 1
+        clip = extracted[0]
+        assert isinstance(clip._data['start'], int)
+        assert isinstance(clip._data['duration'], int)

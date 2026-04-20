@@ -28,7 +28,8 @@ class TestBaseClipIsBetween:
     def test_clip_ends_after_range(self, project: Project) -> None:
         track = project.timeline.add_track('T')
         clip = track.add_clip('VMFile', 1, EDIT_RATE * 2, EDIT_RATE * 5)
-        assert clip.is_between(2.0, 5.0) is False
+        # is_between checks start position only: start_ticks <= clip.start < end_ticks
+        assert clip.is_between(2.0, 5.0) is True
 
 
 class TestBaseClipIntersects:
@@ -101,3 +102,46 @@ class TestProjectClipsBetween:
         returned_track, returned_clip = result[0]
         assert returned_track.name == 'T'
         assert returned_clip.start_seconds == 1.0
+
+
+# ---------------------------------------------------------------------------
+# Bug 1: is_between / intersects must use tick-space comparison
+# ---------------------------------------------------------------------------
+
+class TestIsBetweenTickSpace:
+    """is_between must convert seconds to ticks before comparing."""
+
+    def test_clip_at_exact_tick_boundary(self, project: Project) -> None:
+        track = project.timeline.add_track('T')
+        clip = track.add_clip('VMFile', 1, EDIT_RATE * 2, EDIT_RATE * 3)
+        # Clip: 2s-5s. Range: 2s-5s. start_ticks <= clip.start < end_ticks
+        assert clip.is_between(2.0, 5.0) is True
+
+    def test_clip_start_equals_range_start_ticks(self, project: Project) -> None:
+        track = project.timeline.add_track('T')
+        clip = track.add_clip('VMFile', 1, EDIT_RATE * 3, EDIT_RATE * 1)
+        assert clip.is_between(3.0, 10.0) is True
+
+    def test_clip_start_before_range_start_ticks(self, project: Project) -> None:
+        track = project.timeline.add_track('T')
+        clip = track.add_clip('VMFile', 1, EDIT_RATE * 1, EDIT_RATE * 2)
+        assert clip.is_between(2.0, 10.0) is False
+
+
+class TestIntersectsTickSpace:
+    """intersects must use tick-space comparison."""
+
+    def test_overlapping_clip_detected(self, project: Project) -> None:
+        track = project.timeline.add_track('T')
+        clip = track.add_clip('VMFile', 1, EDIT_RATE * 1, EDIT_RATE * 4)
+        assert clip.intersects(3.0, 6.0) is True
+
+    def test_non_overlapping_clip_rejected(self, project: Project) -> None:
+        track = project.timeline.add_track('T')
+        clip = track.add_clip('VMFile', 1, EDIT_RATE * 6, EDIT_RATE * 2)
+        assert clip.intersects(1.0, 5.0) is False
+
+    def test_adjacent_clip_does_not_intersect_ticks(self, project: Project) -> None:
+        track = project.timeline.add_track('T')
+        clip = track.add_clip('VMFile', 1, EDIT_RATE * 5, EDIT_RATE * 2)
+        assert clip.intersects(1.0, 5.0) is False

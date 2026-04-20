@@ -201,3 +201,49 @@ class TestShiftAllClipsEffectsOnClamp:
         mid = [e for e in effects if e.get("name") == "mid"]
         assert len(mid) == 1
         assert mid[0]["start"] == seconds_to_ticks(2.0)
+
+
+# ---------------------------------------------------------------------------
+# Bug 8: scale_all_durations must propagate AFTER all fields are updated
+# ---------------------------------------------------------------------------
+
+class TestScaleAllDurationsPropagationOrder:
+    def test_unified_media_sub_clips_get_updated_scalar(self):
+        """After scaling, UnifiedMedia sub-clips must have the new scalar, not the old one."""
+        from fractions import Fraction
+
+        track = _make_track()
+        um_data = {
+            'id': 1, '_type': 'UnifiedMedia',
+            'start': 0, 'duration': seconds_to_ticks(10.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+            'scalar': 1,
+            'video': {
+                'id': 2, '_type': 'VMFile', 'src': 1,
+                'start': 0, 'duration': seconds_to_ticks(10.0),
+                'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+                'scalar': 1,
+            },
+            'audio': {
+                'id': 3, '_type': 'AMFile', 'src': 1,
+                'start': 0, 'duration': seconds_to_ticks(10.0),
+                'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+                'scalar': 1,
+            },
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {},
+        }
+        track._data['medias'] = [um_data]
+
+        track.scale_all_durations(2.0)
+
+        # After 2x scale: duration doubles, mediaDuration unchanged, scalar = 2
+        wrapper = track._data['medias'][0]
+        expected_scalar = Fraction(wrapper['duration']) / Fraction(str(wrapper['mediaDuration']))
+        video = wrapper['video']
+        audio = wrapper['audio']
+        # Sub-clips must have the SAME scalar as the wrapper (propagated after update)
+        assert Fraction(str(video['scalar'])) == expected_scalar
+        assert Fraction(str(audio['scalar'])) == expected_scalar
+        assert video['duration'] == wrapper['duration']
+        assert audio['duration'] == wrapper['duration']

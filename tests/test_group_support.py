@@ -573,8 +573,8 @@ class TestSyncInternalDurationsZeroDuration:
 # ------------------------------------------------------------------
 
 class TestUngroupFractionalTicks:
-    def test_ungroup_preserves_fractional_start_and_duration(self):
-        """When group_scalar produces non-integer ticks, store as string fraction."""
+    def test_ungroup_rounds_fractional_start_and_duration_to_int(self):
+        """When group_scalar produces non-integer ticks, round to int (Bug 6 fix)."""
         group_data = {
             '_type': 'Group', 'id': 1, 'start': 0,
             'duration': 3000, 'mediaDuration': 3000,
@@ -591,10 +591,10 @@ class TestUngroupFractionalTicks:
         group = Group(group_data)
         clips = group.ungroup()
         assert len(clips) == 1
-        # 100 * 1/3 = 100/3 — not an integer, should be stored as string
+        # 100 * 1/3 = 100/3 ≈ 33 — must be rounded to int
         clip_data = clips[0]._data
-        assert isinstance(clip_data['start'], str) or clip_data['start'] == Fraction(100, 3)
-        assert isinstance(clip_data['duration'], str) or clip_data['duration'] == Fraction(300, 3)
+        assert isinstance(clip_data['start'], int)
+        assert isinstance(clip_data['duration'], int)
 
     def test_ungroup_integer_result_stays_int(self):
         """When group_scalar produces integer ticks, store as int."""

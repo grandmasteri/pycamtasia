@@ -949,3 +949,105 @@ class TestShiftAllClampEffects:
         mid = [e for e in effects if e.get('name') == 'mid']
         assert len(mid) == 1
         assert mid[0]['start'] == seconds_to_ticks(2.0)
+
+
+# ---------------------------------------------------------------------------
+# Bug 9: shift_all must adjust UnifiedMedia sub-clip effects on clamping
+# ---------------------------------------------------------------------------
+
+class TestShiftAllUnifiedMediaSubClipEffects:
+    def test_sub_clip_effects_adjusted_on_clamp(self, project):
+        from camtasia.timing import seconds_to_ticks
+        track = project.timeline.tracks[0]
+        um_data = {
+            'id': 50, '_type': 'UnifiedMedia',
+            'start': seconds_to_ticks(2.0), 'duration': seconds_to_ticks(10.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+            'scalar': 1,
+            'video': {
+                'id': 51, '_type': 'VMFile', 'src': 1,
+                'start': seconds_to_ticks(2.0), 'duration': seconds_to_ticks(10.0),
+                'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+                'scalar': 1,
+                'effects': [
+                    {'start': seconds_to_ticks(5.0), 'duration': seconds_to_ticks(3.0), 'name': 'vid_eff'},
+                ],
+            },
+            'audio': {
+                'id': 52, '_type': 'AMFile', 'src': 1,
+                'start': seconds_to_ticks(2.0), 'duration': seconds_to_ticks(10.0),
+                'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+                'scalar': 1,
+                'effects': [
+                    {'start': seconds_to_ticks(1.0), 'duration': seconds_to_ticks(2.0), 'name': 'aud_eff'},
+                ],
+            },
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {},
+        }
+        track._data['medias'] = [um_data]
+
+        project.timeline.shift_all(-5.0)  # clamp_amount = 3s
+
+        video = um_data['video']
+        # vid_eff: start=5s, after clamp 3s → start=2s
+        vid_effs = video['effects']
+        assert len(vid_effs) == 1
+        assert vid_effs[0]['start'] == seconds_to_ticks(2.0)
+
+        audio = um_data['audio']
+        # aud_eff: start=1s, dur=2s, end=3s. end <= clamp(3s) → removed
+        assert len(audio['effects']) == 0
+
+
+# ---------------------------------------------------------------------------
+# Bug 10: Timeline.insert_gap must shift track transitions
+# ---------------------------------------------------------------------------
+
+class TestTimelineInsertGapShiftsTransitions:
+    def test_transitions_shifted_with_clips(self, project):
+        from camtasia.timing import seconds_to_ticks
+        track = project.timeline.tracks[0]
+        c1 = track.add_clip('VMFile', 1, seconds_to_ticks(0.0), seconds_to_ticks(5.0))
+        c2 = track.add_clip('VMFile', 1, seconds_to_ticks(5.0), seconds_to_ticks(5.0))
+        # Add a transition with a start field
+        track._data.setdefault('transitions', []).append({
+            'name': 'Fade', 'start': seconds_to_ticks(5.0),
+            'duration': seconds_to_ticks(1.0),
+            'leftMedia': c1.id, 'rightMedia': c2.id,
+        })
+
+        project.timeline.insert_gap(3.0, 2.0)
+
+        trans = track._data['transitions'][0]
+        assert trans['start'] == seconds_to_ticks(7.0)
+
+
+# ---------------------------------------------------------------------------
+# Bug 11: Timeline.remove_gap must validate gap existence
+# ---------------------------------------------------------------------------
+
+class TestTimelineRemoveGapValidation:
+    def test_raises_when_clip_in_gap_region(self, project):
+        import pytest
+
+        from camtasia.timing import seconds_to_ticks
+        track = project.timeline.tracks[0]
+        track.add_clip('VMFile', 1, seconds_to_ticks(0.0), seconds_to_ticks(3.0))
+        track.add_clip('VMFile', 1, seconds_to_ticks(5.0), seconds_to_ticks(3.0))
+
+        # Try to remove a 5s gap starting at 2s — clip at 5s is inside [2s, 7s)
+        with pytest.raises(ValueError, match='Cannot remove gap'):
+            project.timeline.remove_gap(2.0, 5.0)
+
+    def test_succeeds_when_gap_is_clear(self, project):
+        from camtasia.timing import seconds_to_ticks
+        track = project.timeline.tracks[0]
+        track.add_clip('VMFile', 1, seconds_to_ticks(0.0), seconds_to_ticks(3.0))
+        track.add_clip('VMFile', 1, seconds_to_ticks(8.0), seconds_to_ticks(3.0))
+
+        # Remove 5s gap at 3s — no clip in [3s, 8s)
+        project.timeline.remove_gap(3.0, 5.0)
+
+        clips = sorted(track._data['medias'], key=lambda m: m['start'])
+        assert clips[1]['start'] == seconds_to_ticks(3.0)

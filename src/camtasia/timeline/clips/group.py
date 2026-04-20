@@ -191,8 +191,8 @@ class Group(BaseClip):
                     orig_dur = Fraction(str(cloned_data.get('duration', 0)))
                     new_start = orig_start * group_scalar
                     new_dur = orig_dur * group_scalar
-                    cloned_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
-                    cloned_data['duration'] = int(new_dur) if new_dur == int(new_dur) else str(new_dur)
+                    cloned_data['start'] = round(new_start)
+                    cloned_data['duration'] = round(new_dur)
                     orig_scalar = _parse_scalar(cloned_data.get('scalar', 1))
                     composed = group_scalar * orig_scalar
                     cloned_data['scalar'] = int(composed) if composed == int(composed) else str(composed)
@@ -206,11 +206,13 @@ class Group(BaseClip):
                             orig_eff_dur = Fraction(str(effect['duration']))
                             new_eff_dur = orig_eff_dur * group_scalar
                             effect['duration'] = int(new_eff_dur) if new_eff_dur == int(new_eff_dur) else str(new_eff_dur)
-                    if cloned_data.get('_type') == 'StitchedMedia':
+                    if cloned_data.get('_type') == 'StitchedMedia' and group_scalar != 1:
                         for inner in cloned_data.get('medias', []):
-                            inner['scalar'] = cloned_data['scalar']
+                            inner_orig_scalar = _parse_scalar(inner.get('scalar', 1))
+                            composed_inner = group_scalar * inner_orig_scalar
+                            inner['scalar'] = int(composed_inner) if composed_inner == int(composed_inner) else str(composed_inner)
                             inner_md = Fraction(str(inner.get('mediaDuration', 0)))
-                            new_inner_dur = inner_md * _parse_scalar(cloned_data['scalar'])
+                            new_inner_dur = inner_md * composed_inner
                             inner['duration'] = int(new_inner_dur) if new_inner_dur == int(new_inner_dur) else str(new_inner_dur)
                         cursor = 0
                         for inner in cloned_data.get('medias', []):
@@ -277,6 +279,16 @@ class Group(BaseClip):
                     if video.get('_type') == 'ScreenVMFile':
                         src = video.get('src')
                         return int(src) if src is not None else None
+                if media.get('_type') == 'StitchedMedia':
+                    for seg in media.get('medias', []):
+                        if seg.get('_type') == 'ScreenVMFile':
+                            src = seg.get('src')
+                            return int(src) if src is not None else None
+                        if seg.get('_type') == 'UnifiedMedia':
+                            video = seg.get('video', {})
+                            if video.get('_type') == 'ScreenVMFile':
+                                src = video.get('src')
+                                return int(src) if src is not None else None
         return None
 
     def find_internal_clip(self, clip_type: str) -> BaseClip | None:
@@ -633,7 +645,8 @@ class Group(BaseClip):
                     m['duration'] = total_tl
                     m['mediaDuration'] = total_src
                     m['mediaStart'] = first_seg_src_start_ticks
-                    m['scalar'] = int(Fraction(total_tl) / Fraction(total_src)) if total_src != 0 else 1
+                    ratio = Fraction(total_tl) / Fraction(total_src) if total_src != 0 else Fraction(1)
+                    m['scalar'] = int(ratio) if ratio == int(ratio) else str(ratio)
 
     def sync_internal_durations(self) -> Self:
         """Trim all internal clips to match the Group's duration.

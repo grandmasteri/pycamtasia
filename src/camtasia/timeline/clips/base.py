@@ -181,11 +181,18 @@ class BaseClip:
 
     def is_between(self, range_start_seconds: float, range_end_seconds: float) -> bool:
         """Whether this clip falls entirely within the given time range."""
-        return self.start_seconds >= range_start_seconds and self.end_seconds <= range_end_seconds
+        from camtasia.timing import seconds_to_ticks
+        start_ticks = seconds_to_ticks(range_start_seconds)
+        end_ticks = seconds_to_ticks(range_end_seconds)
+        return start_ticks <= self.start < end_ticks
 
     def intersects(self, range_start_seconds: float, range_end_seconds: float) -> bool:
         """Whether this clip overlaps with the given time range at all."""
-        return self.start_seconds < range_end_seconds and self.end_seconds > range_start_seconds
+        from camtasia.timing import seconds_to_ticks
+        start_ticks = seconds_to_ticks(range_start_seconds)
+        end_ticks = seconds_to_ticks(range_end_seconds)
+        clip_end_ticks = self.start + self.duration
+        return self.start < end_ticks and clip_end_ticks > start_ticks
 
     @property
     def is_muted(self) -> bool:
@@ -260,7 +267,6 @@ class BaseClip:
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['mediaDuration'] = stored
-                    sub['mediaStart'] = self._data.get('mediaStart', 0)
 
     @property
     def scalar(self) -> Fraction:

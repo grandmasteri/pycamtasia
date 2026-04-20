@@ -242,9 +242,10 @@ class TestUnifiedMediaScalarSetterPropagatesMediaStart:
 
 
 class TestUnifiedMediaDurationPropertySetterPropagatesMediaStart:
-    def test_media_duration_setter_propagates_media_start(self):
+    def test_media_duration_setter_does_not_overwrite_media_start(self):
         data = _unified_media_with_media_start(media_start=EDIT_RATE * 2)
         clip = UnifiedMedia(data)
         clip.media_duration = EDIT_RATE * 5
         for key in ('video', 'audio'):
-            assert data[key]['mediaStart'] == EDIT_RATE * 2
+            # Bug 2 fix: media_duration setter must NOT overwrite sub-clip mediaStart
+            assert data[key]['mediaStart'] == 0
