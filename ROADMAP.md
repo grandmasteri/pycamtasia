@@ -4,7 +4,37 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 15 domains 4-6)
+
+**Project/validation:**
+
+1. [verified] `import_media()` video sets audio `sample_rate` kwarg to video frame rate. Video's audio track gets wrong sampleRate (30 instead of 48000), breaking audio duration calcs. (project.py ~L1129)
+
+2. [withdrawn: keyframes use segment-start convention verified by fade_in/fade_out pattern elsewhere. KF0 establishes value=0 at t=0, KF1 transitions from t=0 to endTime=fade_in_ticks reaching value=volume. Correct fade.] `add_background_music` keyframe time=0 on KF1.
+
+3. [verified] `save()` trailing-space regex `r',\n'` \u2192 `', \n'` applied globally. Corrupts multi-line string values containing commas+newlines. (project.py ~L1051)
+
+4. [verified] `save()` `_replace_special` silently replaces NaN with 0.0 without warning. Lossy data transformation. (project.py ~L1013)
+
+5. [verified] `_check_timing_consistency` silently skips `scalar=0` clips instead of flagging them as invalid. (validation.py ~L283)
+
+**Operations:**
+
+6. [verified] `speed.py _process_clip` speed-changed UnifiedMedia children's `start` not updated. Parent's start scaled, but children retain pre-rescale start. (speed.py ~L120)
+
+7. [verified] `template.py _walk_clips` missing recursion into compound children (Group/StitchedMedia) of UnifiedMedia inside StitchedMedia. Top-level UnifiedMedia path has it, nested path doesn't. (template.py ~L49)
+
+**Supporting:**
+
+8. [verified] `lower_third.py` LOWER_THIRD_TEMPLATE `assetProperties.objects` IDs [85,86,88] not remapped by `_remap_clip_ids_with_map`. Theme color/asset linkage broken after insertion. HIGH. (lower_third.py)
+
+9. [verified] `trec_probe.py` NTSC frame rates get wrong sampleRate due to `limit_denominator(1000)`. 29.97 becomes 2997/100 instead of 30000/1001. (trec_probe.py ~L73)
+
+10. [verified] `media_bin.import_media` video sampleRate always integer from `round(fps)`. Should produce fractional string for non-integer fps (23.976, 29.97, 59.94). (media_bin.py ~L253)
+
+11. [verified] `annotations/callouts.py arrow()` missing `fill-color-*` and `fill-style` keys for arrowhead. (callouts.py ~L131)
+
+12. [verified] `trec_probe.py` video bitDepth hardcoded to 24, audio to 16. Ignores pymediainfo's `track.bit_depth`. (trec_probe.py ~L82, L103)
 
 ## TechSmith Tutorial Analysis
 
