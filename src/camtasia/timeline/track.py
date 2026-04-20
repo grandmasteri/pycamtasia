@@ -1106,7 +1106,11 @@ class Track:
             The newly created Group clip.
         """
         dur_ticks = seconds_to_ticks(duration_seconds)
+        start_ticks = seconds_to_ticks(start_seconds)
         id_counter = [self._next_clip_id()]
+
+        group_id = id_counter[0]
+        id_counter[0] += 1
 
         bg_media = {
             'id': id_counter[0],
@@ -1181,15 +1185,27 @@ class Track:
              'magnetic': False, 'matte': 0, 'solo': False},
         ]
 
-        return self.add_group(
-            start_seconds, duration_seconds,
-            internal_tracks=internal_tracks,
-            attributes={
+        group_record: dict[str, Any] = {
+            'id': group_id,
+            '_type': 'Group',
+            'start': start_ticks,
+            'duration': dur_ticks,
+            'mediaStart': 0,
+            'mediaDuration': dur_ticks,
+            'scalar': 1,
+            'tracks': internal_tracks,
+            'parameters': {**_GROUP_DEFAULT_PARAMETERS},
+            'effects': [],
+            'metadata': {**_GROUP_DEFAULT_METADATA},
+            'animationTracks': {},
+            'attributes': {
                 'ident': '', 'gain': 1.0, 'mixToMono': False,
                 'widthAttr': 1920.0, 'heightAttr': 1080.0,
                 'maxDurationAttr': 0, 'assetProperties': [],
             },
-        )
+        }
+        self._data.setdefault('medias', []).append(group_record)
+        return cast('Group', clip_from_dict(group_record))
 
     def add_transition(
         self,
@@ -1770,7 +1786,7 @@ class Track:
                     if imedia.get('_type') == 'VMFile':
                         imedia['scalar'] = str(vmfile_scalar)
 
-            advance = seconds_to_ticks(dur_s) * (Fraction(original_scalar) / Fraction(seg_scalar))
+            advance = Fraction(seconds_to_ticks(dur_s)) / Fraction(seg_scalar)
             cumulative_ms += Fraction(advance)
 
         return pieces

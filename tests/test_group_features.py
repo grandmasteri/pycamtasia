@@ -517,3 +517,67 @@ class TestSyncInternalDurationsStartOffset:
         clips_after = group._data['tracks'][0]['medias']
         assert clips_after[0]['duration'] == 100
         assert clips_after[1]['duration'] == 50
+
+
+class TestSetInternalSegmentSpeedsResetsMediaStart:
+    """Bug 6: set_internal_segment_speeds must reset mediaStart=0 on other-track clips."""
+
+    def test_amfile_mediastart_reset_to_zero(self):
+        """AMFile on non-video track should have mediaStart=0 after speed change."""
+        data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': seconds_to_ticks(100.0),
+            'mediaStart': seconds_to_ticks(10.0),
+            'mediaDuration': seconds_to_ticks(100.0),
+            'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {}, 'attributes': {'ident': ''},
+            'tracks': [
+                {'medias': [{
+                    'id': 10, '_type': 'AMFile', 'src': 1,
+                    'start': 0, 'duration': seconds_to_ticks(100.0),
+                    'mediaStart': seconds_to_ticks(10.0),
+                    'mediaDuration': seconds_to_ticks(100.0),
+                    'scalar': 1, 'metadata': {}, 'parameters': {},
+                    'effects': [], 'attributes': {}, 'animationTracks': {},
+                }]},
+                {'medias': [{
+                    'id': 11, '_type': 'UnifiedMedia',
+                    'video': {
+                        'src': 1,
+                        'attributes': {'ident': ''},
+                        'parameters': {},
+                        'effects': [],
+                    },
+                    'start': 0, 'duration': seconds_to_ticks(100.0),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(100.0),
+                    'scalar': 1, 'metadata': {}, 'parameters': {},
+                    'effects': [], 'attributes': {}, 'animationTracks': {},
+                }]},
+            ],
+        }
+        g = Group(data)
+        g.set_internal_segment_speeds([(0, 50, 50.0), (50, 100, 50.0)])
+        am_clip = data['tracks'][0]['medias'][0]
+        assert am_clip['mediaStart'] == 0
+
+
+class TestMergeInternalTracksSnapshot:
+    """Bug 7: merge_internal_tracks should snapshot self.tracks once."""
+
+    def test_single_track_returns_immediately(self):
+        """A group with one track should return it without mutation."""
+        g = _make_group([[_clip_data('VMFile', 10, 0.0, 5.0)]])
+        result = g.merge_internal_tracks()
+        assert len(result.clips) == 1
+
+    def test_merge_preserves_all_clips(self):
+        """Merging 3 tracks should collect all clips into track 0."""
+        g = _make_group([
+            [_clip_data('VMFile', 10, 0.0, 5.0)],
+            [_clip_data('AMFile', 20, 0.0, 5.0)],
+            [_clip_data('IMFile', 30, 0.0, 5.0)],
+        ])
+        result = g.merge_internal_tracks()
+        assert len(result.clips) == 3
+        assert len(g.tracks) == 1

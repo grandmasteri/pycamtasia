@@ -49,3 +49,5 @@ class StitchedMedia(BaseClip):
         self._data['medias'] = []
         self._data['duration'] = 0
         self._data['mediaDuration'] = 0
+        self._data['scalar'] = 1
+        self._data['mediaStart'] = 0

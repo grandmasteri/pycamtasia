@@ -1103,6 +1103,9 @@ class Timeline:
             if found_track.index != target_track_index:
                 found_track._data['medias'].remove(found_media)
                 target_track._data.setdefault('medias', []).append(found_media)
+            # Apply transition overlap BEFORE positioning current clip
+            if transition_name and prev_id is not None:
+                cursor -= trans_ticks
             found_media['start'] = cursor
             _propagate_start_to_unified(found_media)
             # Add transition
@@ -1121,8 +1124,6 @@ class Timeline:
                     },
                 })
             cursor += found_media.get('duration', 0)
-            if transition_name and prev_id is not None:
-                cursor -= trans_ticks
             prev_id = clip_id
 
 

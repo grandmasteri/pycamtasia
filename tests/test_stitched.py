@@ -209,3 +209,24 @@ class TestSetSpeedStitchedMediaLayout:
         clip = _make_stitched_for_speed([(0, EDIT_RATE, EDIT_RATE)])
         clip.set_speed(3.0)
         assert clip._data['medias'][0]['start'] == 0
+
+
+class TestClearSegmentsResetsScalarAndMediaStart:
+    """clear_segments must reset scalar to 1 and mediaStart to 0."""
+
+    def test_clear_segments_resets_scalar(self):
+        data = {
+            '_type': 'StitchedMedia', 'id': 1, 'start': 0,
+            'duration': 1000, 'mediaDuration': 2000,
+            'scalar': '1/2', 'mediaStart': 500,
+            'medias': [{'_type': 'VMFile', 'id': 10, 'start': 0,
+                        'duration': 1000, 'mediaDuration': 2000, 'scalar': '1/2'}],
+            'metadata': {}, 'parameters': {}, 'effects': [], 'animationTracks': {},
+        }
+        clip = StitchedMedia(data)
+        clip.clear_segments()
+        assert data['scalar'] == 1
+        assert data['mediaStart'] == 0
+        assert data['duration'] == 0
+        assert data['mediaDuration'] == 0
+        assert data['medias'] == []

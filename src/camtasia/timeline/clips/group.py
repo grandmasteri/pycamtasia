@@ -181,10 +181,19 @@ class Group(BaseClip):
             List of clips with timeline-absolute start positions.
         """
         group_start: int = self.start
+        group_scalar = _parse_scalar(self._data.get('scalar', 1))
         extracted_clips: list[BaseClip] = []
         for group_track in self.tracks:
             for clip in group_track.clips:
                 cloned_data: dict[str, Any] = copy.deepcopy(dict(clip._data))
+                if group_scalar != 1:
+                    orig_start = Fraction(str(cloned_data.get('start', 0)))
+                    orig_dur = Fraction(str(cloned_data.get('duration', 0)))
+                    cloned_data['start'] = int(orig_start * group_scalar)
+                    cloned_data['duration'] = int(orig_dur * group_scalar)
+                    orig_scalar = _parse_scalar(cloned_data.get('scalar', 1))
+                    composed = group_scalar * orig_scalar
+                    cloned_data['scalar'] = int(composed) if composed == int(composed) else str(composed)
                 cloned_data['start'] = cloned_data.get('start', 0) + group_start
                 from camtasia.timeline.track import _propagate_start_to_unified
                 _propagate_start_to_unified(cloned_data)
@@ -357,8 +366,11 @@ class Group(BaseClip):
         """
         if not self.tracks:
             return self.add_internal_track()
-        target_track: GroupTrack = self.tracks[0]
-        for source_track in self.tracks[1:]:
+        tracks_snapshot = list(self.tracks)
+        if len(tracks_snapshot) <= 1:
+            return tracks_snapshot[0]
+        target_track: GroupTrack = tracks_snapshot[0]
+        for source_track in tracks_snapshot[1:]:
             for media_dict in source_track._data.get('medias', []):
                 target_track._data.setdefault('medias', []).append(media_dict)
         # Remove all tracks except the first
@@ -572,6 +584,7 @@ class Group(BaseClip):
                 if m.get('_type') in ('VMFile', 'ScreenVMFile', 'AMFile'):
                     m['duration'] = total_tl
                     m['mediaDuration'] = total_tl
+                    m['mediaStart'] = 0
                     m['scalar'] = 1
 
     def sync_internal_durations(self) -> Self:
@@ -592,6 +605,10 @@ class Group(BaseClip):
                 if clip_end > group_dur:
                     m['duration'] = max(0, group_dur - clip_start)
                     if m['duration'] == 0:
+                        if m.get('_type') in ('IMFile', 'ScreenIMFile'):
+                            m['mediaDuration'] = 1
+                        else:
+                            m['mediaDuration'] = 0
                         continue
                     if m.get('_type') in ('IMFile', 'ScreenIMFile'):
                         m['mediaDuration'] = 1

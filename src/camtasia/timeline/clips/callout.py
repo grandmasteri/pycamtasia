@@ -307,6 +307,11 @@ class Callout(BaseClip):
                 )
             font['weight'] = _WEIGHT_REVERSE[weight]
         else:
+            if weight not in _WEIGHT_MAP:
+                raise ValueError(
+                    f'weight {weight!r} is not a standard font weight. '
+                    f'Valid weights: {sorted(_WEIGHT_MAP.keys())}'
+                )
             font['weight'] = weight
         font['size'] = size
         for kf in self._data.get('def', {}).get('textAttributes', {}).get('keyframes', []):  # type: ignore[attr-defined]

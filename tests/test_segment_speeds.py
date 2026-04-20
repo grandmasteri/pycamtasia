@@ -84,14 +84,14 @@ def test_media_start_accumulates():
     pieces = track.set_segment_speeds(1, [(30, 1.0), (40, 2.0), (30, 0.5)])
     assert pieces[0]._data['mediaStart'] == 0
     # Piece 0: 30s at 1.0x speed, original_scalar = 5/6
-    # advance = 30s_ticks * (original_scalar / seg_scalar)
-    # seg_scalar_0 = (5/6) / 1 = 5/6, so advance = 30s_ticks * 1 = 30s_ticks
+    # seg_scalar_0 = (5/6) / 1 = 5/6
+    # advance = dur_ticks / seg_scalar = 30s_ticks / (5/6) = 36s_ticks
     ms1 = pieces[1]._data['mediaStart']
     ms2 = pieces[2]._data['mediaStart']
-    assert ms1 == seconds_to_ticks(30.0)
+    assert ms1 == seconds_to_ticks(36.0)
     # Piece 1: 40s at 2.0x, seg_scalar = (5/6)/2 = 5/12
-    # advance = 40s_ticks * ((5/6) / (5/12)) = 40s_ticks * 2 = 80s_ticks
-    assert ms2 == seconds_to_ticks(30.0) + seconds_to_ticks(80.0)
+    # advance = 40s_ticks / (5/12) = 96s_ticks
+    assert ms2 == seconds_to_ticks(36.0) + seconds_to_ticks(96.0)
 
 
 def test_set_internal_segment_speeds_clears_transitions():

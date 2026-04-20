@@ -892,3 +892,38 @@ class TestShiftAllClampScalarZero:
         project.timeline.shift_all(-10.0)
         # mediaStart should remain unchanged since scalar=0
         assert clip._data['mediaStart'] == seconds_to_ticks(2.0)
+
+
+class TestBuildSectionTimelineOverlap:
+    """Bug 9: build_section_timeline must overlap the first transitioned clip."""
+
+    def test_first_transition_creates_overlap(self, project):
+        tl = project.timeline
+        t0 = tl.tracks[0]
+        c1 = t0.add_video(1, start_seconds=0, duration_seconds=3)
+        c2 = t0.add_video(1, start_seconds=5, duration_seconds=3)
+        tl.build_section_timeline(
+            [(c1.id, None), (c2.id, 'FadeThrough')],
+            target_track_index=0,
+            transition_duration_seconds=1.0,
+        )
+        # c2 should start at c1.end - transition_duration = 3s - 1s = 2s
+        from camtasia.timing import seconds_to_ticks
+        assert c1._data['start'] == 0
+        assert c2._data['start'] == seconds_to_ticks(2.0)
+
+    def test_three_clips_all_overlap(self, project):
+        tl = project.timeline
+        t0 = tl.tracks[0]
+        c1 = t0.add_video(1, start_seconds=0, duration_seconds=4)
+        c2 = t0.add_video(1, start_seconds=10, duration_seconds=4)
+        c3 = t0.add_video(1, start_seconds=20, duration_seconds=4)
+        tl.build_section_timeline(
+            [(c1.id, None), (c2.id, 'Fade'), (c3.id, 'Fade')],
+            target_track_index=0,
+            transition_duration_seconds=1.0,
+        )
+        from camtasia.timing import seconds_to_ticks
+        assert c1._data['start'] == 0
+        assert c2._data['start'] == seconds_to_ticks(3.0)
+        assert c3._data['start'] == seconds_to_ticks(6.0)

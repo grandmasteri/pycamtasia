@@ -810,12 +810,16 @@ class BaseClip:
             fade_out_kf = existing[-1]
             self._clear_opacity()
             in_ticks = seconds_to_ticks(duration_seconds)
+            end = int(Fraction(str(self._data.get('duration', self._data.get('mediaDuration', 0)))))
+            in_ticks = min(in_ticks, end)
             self._add_opacity_track([
                 {'time': 0, 'value': 1.0, 'endTime': in_ticks, 'duration': in_ticks},
                 fade_out_kf,
             ], default_value=0.0)
         else:  # pragma: no cover
             in_ticks = seconds_to_ticks(duration_seconds)
+            end = int(Fraction(str(self._data.get('duration', self._data.get('mediaDuration', 0)))))
+            in_ticks = min(in_ticks, end)
             self._add_opacity_track([
                 {'time': 0, 'value': 1.0, 'endTime': in_ticks, 'duration': in_ticks},
             ])

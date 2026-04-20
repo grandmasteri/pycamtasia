@@ -1823,3 +1823,78 @@ class TestShiftAllClipsClampScalarZero:
         clip._data['mediaStart'] = seconds_to_ticks(2.0)
         track.shift_all_clips(-10.0)
         assert clip._data['mediaStart'] == seconds_to_ticks(2.0)
+
+
+class TestAddScreenRecordingUniqueIds:
+    """Bug 8: add_screen_recording must produce unique IDs for all clips."""
+
+    def test_no_duplicate_ids(self):
+        track = _make_track()
+        group = track.add_screen_recording(source_id=2, start_seconds=0.0, duration_seconds=10.0)
+        all_ids = []
+        all_ids.append(group.id)
+        for t in group._data.get('tracks', []):
+            for m in t.get('medias', []):
+                all_ids.append(m['id'])
+                for sub_key in ('video', 'audio'):
+                    sub = m.get(sub_key)
+                    if sub and 'id' in sub:
+                        all_ids.append(sub['id'])
+        assert len(all_ids) == len(set(all_ids)), f"Duplicate IDs found: {all_ids}"
+
+    def test_passes_validation(self):
+        from camtasia.timeline.timeline import Timeline
+        data = {
+            'id': 0,
+            'sceneTrack': {'scenes': [{'csml': {'tracks': [
+                {'trackIndex': 0, 'medias': []},
+            ]}}]},
+            'trackAttributes': [{'ident': 'T'}],
+            'parameters': {'toc': {'keyframes': []}},
+        }
+        tl = Timeline(data)
+        t0 = tl.tracks[0]
+        t0.add_screen_recording(source_id=2, start_seconds=0.0, duration_seconds=10.0)
+        issues = tl.validate_structure()
+        assert not issues, f"Validation issues: {issues}"
+
+
+class TestSetSegmentSpeedsMediaStartFormula:
+    """Bug 10: set_segment_speeds advance formula should be dur_ticks / seg_scalar."""
+
+    def test_media_start_correct_with_non_unity_original_scalar(self):
+        """When original_scalar != 1, advance = dur_ticks / seg_scalar (not * original/seg)."""
+        # Group with original_scalar = duration/mediaDuration = 100/120 = 5/6
+        group_data = {
+            'id': 1, '_type': 'Group',
+            'start': seconds_to_ticks(10.0),
+            'duration': seconds_to_ticks(100.0),
+            'mediaStart': 0,
+            'mediaDuration': seconds_to_ticks(120.0),
+            'scalar': 1,
+            'metadata': {}, 'parameters': {}, 'effects': [],
+            'attributes': {'ident': ''}, 'animationTracks': {},
+            'tracks': [
+                {'medias': [{
+                    'id': 10, '_type': 'VMFile', 'src': 1,
+                    'start': 0, 'duration': seconds_to_ticks(100.0),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(100.0),
+                    'scalar': 1, 'metadata': {}, 'parameters': {},
+                    'effects': [], 'attributes': {}, 'animationTracks': {},
+                }]},
+                {'medias': [{
+                    'id': 11, '_type': 'UnifiedMedia', 'src': 1,
+                    'start': 0, 'duration': seconds_to_ticks(120.0),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(120.0),
+                    'scalar': 1, 'metadata': {}, 'parameters': {},
+                    'effects': [], 'attributes': {}, 'animationTracks': {},
+                }]},
+            ],
+        }
+        track = _make_track([group_data])
+        pieces = track.set_segment_speeds(1, [(50, 1.0), (50, 2.0)])
+        # original_scalar = 5/6
+        # seg_scalar_0 = (5/6)/1 = 5/6
+        # advance_0 = 50s_ticks / (5/6) = 60s_ticks
+        ms1 = pieces[1]._data['mediaStart']
+        assert ms1 == seconds_to_ticks(60.0)

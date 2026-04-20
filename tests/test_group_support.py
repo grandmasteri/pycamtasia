@@ -493,3 +493,75 @@ class TestGroupTrackReprAndParams:
         track_data = {"trackIndex": 0, "medias": [], "parameters": {"volume": 0.5}}
         track = GroupTrack(track_data)
         assert track.parameters == {"volume": 0.5}
+
+
+# ==================================================================
+# Bug fix: ungroup must scale by Group's scalar
+# ==================================================================
+
+class TestUngroupScalesByGroupScalar:
+    def test_ungroup_scales_start_and_duration_by_scalar(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': 2000, 'mediaDuration': 2000,
+            'scalar': '1/2',
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'VMFile', 'id': 10, 'src': 1,
+                    'start': 100, 'duration': 400,
+                    'mediaStart': 0, 'mediaDuration': 400, 'scalar': 1,
+                }],
+            }],
+        }
+        group = Group(group_data)
+        clips = group.ungroup()
+        assert len(clips) == 1
+        # start should be scaled: 100 * 1/2 = 50, then + group_start(0) = 50
+        assert clips[0].start == 50
+        # duration should be scaled: 400 * 1/2 = 200
+        assert clips[0].duration == 200
+
+
+# ==================================================================
+# Bug fix: sync_internal_durations must set mediaDuration on zero-duration clips
+# ==================================================================
+
+class TestSyncInternalDurationsZeroDuration:
+    def test_zero_duration_clip_gets_media_duration_zeroed(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': 100, 'mediaDuration': 100, 'scalar': 1,
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'VMFile', 'id': 10, 'src': 1,
+                    'start': 200, 'duration': 500,
+                    'mediaStart': 0, 'mediaDuration': 500, 'scalar': 1,
+                }],
+            }],
+        }
+        group = Group(group_data)
+        group.sync_internal_durations()
+        m = group_data['tracks'][0]['medias'][0]
+        assert m['duration'] == 0
+        assert m['mediaDuration'] == 0
+
+    def test_zero_duration_image_clip_keeps_media_duration_one(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': 100, 'mediaDuration': 100, 'scalar': 1,
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'IMFile', 'id': 10, 'src': 1,
+                    'start': 200, 'duration': 500,
+                    'mediaStart': 0, 'mediaDuration': 1, 'scalar': 1,
+                }],
+            }],
+        }
+        group = Group(group_data)
+        group.sync_internal_durations()
+        m = group_data['tracks'][0]['medias'][0]
+        assert m['duration'] == 0
+        assert m['mediaDuration'] == 1

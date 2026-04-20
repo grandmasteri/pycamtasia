@@ -480,3 +480,19 @@ class TestSetFontWeightValidation:
         clip = track.add_callout('Hello', start_seconds=0.0, duration_seconds=2.0)
         with pytest.raises(ValueError, match=r"not a standard font weight"):
             clip.set_font(name='Arial', weight=450)
+
+
+class TestSetFontInvalidStringWeight:
+    """set_font must reject unrecognized string weights instead of silently falling back."""
+
+    def test_unrecognized_string_weight_raises(self):
+        data = _callout_dict()
+        callout = Callout(data)
+        with pytest.raises(ValueError, match="not a standard font weight"):
+            callout.set_font('Arial', weight='SemiBold')
+
+    def test_recognized_string_weight_accepted(self):
+        data = _callout_dict()
+        callout = Callout(data)
+        callout.set_font('Arial', weight='Bold')
+        assert callout.font['weight'] == 'Bold'

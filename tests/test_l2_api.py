@@ -212,3 +212,22 @@ class TestClipMetadataDefaults:
     def test_add_image_includes_trimStartSum(self, track: Track):
         clip = track.add_image(1, 0.0, 5.0)
         assert clip._data['trimStartSum'] == 0
+
+class TestFadeInClampsDuration:
+    """fade_in must clamp in_ticks to clip duration, like fade_out and fade."""
+
+    def test_fade_in_clamps_to_clip_duration(self):
+        data = _clip_data(duration=EDIT_RATE * 2)  # 2-second clip
+        clip = IMFile(data)
+        clip.fade_in(10.0)  # request 10s fade on 2s clip
+        kfs = data['parameters']['opacity']['keyframes']
+        assert kfs[0]['endTime'] <= EDIT_RATE * 2
+
+    def test_fade_in_merge_branch_clamps(self):
+        data = _clip_data(duration=EDIT_RATE * 2)
+        clip = IMFile(data)
+        clip.fade_out(0.5)  # set up existing fade-out
+        clip.fade_in(10.0)  # merge branch, should clamp
+        kfs = data['parameters']['opacity']['keyframes']
+        assert kfs[0]['endTime'] <= EDIT_RATE * 2
+
