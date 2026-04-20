@@ -4,7 +4,37 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (domains 4-6 cycle 3)
+
+**Project-level orchestration:**
+
+1. `add_background_music()` volume keyframe `time` fields inconsistent. Second keyframe has `'time': 0` but schema uses `time` as keyframe's own position (like `endTime`). Should be `time: fade_in_ticks`. Third keyframe has `time: fade_in_ticks` but should be `fade_out_start`. May produce malformed volume automation. (project.py ~L2030)
+
+2. `repair()` overlap-fix doesn't count fixes when clip is reduced to zero duration. `zero_duration_removed` gets incremented but `overlaps_fixed` is skipped via `continue`. Counter inaccuracy. (project.py ~L924)
+
+3. `validation._collect_ids()` doesn't recurse into UnifiedMedia `video`/`audio` sub-clips. Collects their IDs but not their nested structures. Theoretical since video/audio are leaf clips in practice. (validation.py ~L32)
+
+4. `ChangeHistory.undo()` doesn't trim `_redo_stack` on overflow. `record()` trims undo, `redo()` trims undo, but `undo()` appends to redo without checking `max_history_depth`. (history.py ~L92)
+
+**Operations:**
+
+5. `_process_clip()` doesn't scale `mediaStart` for UnifiedMedia wrapper. StitchedMedia and Group branches both scale `mediaStart`, but UnifiedMedia does not. For a trimmed UnifiedMedia, `rescale_project` leaves mediaStart stale, causing wrong source-media offset. (speed.py ~L105)
+
+6. `merge.py _remap_clip_ids` `assetProperties.objects` uses incomplete id_map for sibling references. Since clips are processed sequentially, a clip's assetProperties may reference a sibling whose new ID isn't in id_map yet. Falls back to old ID. (merge.py ~L32)
+
+7. `ripple_insert()` doesn't validate `position_seconds >= 0`. Negative position silently makes operation a no-op. Inconsistent with the duration_seconds validation. (layout.py ~L48)
+
+8. `snap_to_grid()` unconditionally clears transitions. `pack_track` and `ripple_insert` correctly guard with `if any_shifted`; `snap_to_grid` doesn't. (layout.py)
+
+**Supporting subsystems:**
+
+9. `arrow()` silently discards explicit `stroke_color` when `color` is also provided. `color` unconditionally overwrites stroke_color. Should only apply when stroke_color is None, or raise on conflict. (annotations/callouts.py ~L155)
+
+10. `arrow()` `color` convenience parameter is 3-tuple, drops alpha. `highlight()` in same module accepts 4-tuple. API inconsistency. (annotations/callouts.py ~L160)
+
+11. `Media.duration_seconds` short-circuits on image track before checking audio. In the fallback loop, `elif type==1` returns 0.0 immediately, skipping any subsequent audio tracks. (media_bin/media_bin.py ~L103)
+
+12. `_visual_track_to_json` produces non-conformant `sampleRate=0` for images. Real Camtasia uses `sampleRate=editRate` (typically 600). Video case was fixed; image case was not. (media_bin/media_bin.py ~L362)
 
 ## TechSmith Tutorial Analysis
 
