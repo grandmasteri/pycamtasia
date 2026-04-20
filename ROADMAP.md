@@ -4,7 +4,35 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (domains 4-6: project-level, operations, supporting subsystems)
+
+**Project-level orchestration (project.py, validation.py, history.py):**
+
+1. `add_progressive_disclosure()` with `replace_previous=True` and `fade_out_seconds > 0`: fades at the wrong time. Code applies `fade_out()` to each previous clip but doesn't truncate their duration. Fade happens at sequence end instead of when next image appears. Only the `fade_out_seconds == 0` branch correctly truncates duration. (project.py ~line 1578)
+
+2. `save_with_history()` / `load_history()`: crash when `file_path` is a `.tscproj` file (not a directory). Computes `self.file_path / '.pycamtasia_history.json'` which is invalid for a file path. Should use `self.file_path.parent` when `file_path.is_file()`, mirroring the `validate()` pattern. (project.py ~line 1872)
+
+3. `normalize_audio()`: double-counts UnifiedMedia audio clips. `self.all_clips` yields both the UnifiedMedia wrapper AND its audio sub-clip separately. Both branches write gain to the same dict (shared reference) and increment count. Data mutation is idempotent but return count is inflated. (project.py ~line 1930)
+
+4. `validation._check_source_bin_ids()`: silently ignores sourceBin entries with missing `id`. Should flag as structural error. `_check_src_references()` also includes `None` in `source_ids` set when entries lack `id`, potentially masking reference errors. (validation.py ~line 316)
+
+5. `validate()` orphaned-media check uses `clip.source_id` (property) while `replace_all_media()` uses `clip._data.get('src')`. Latent inconsistency if property ever diverges from raw data. (project.py ~line 860)
+
+**Operations (operations/*.py):**
+
+6. `_process_clip()`: Effects on UnifiedMedia children inside StitchedMedia are double-scaled. `_process_clip(inner, factor)` already scales effects via `_scale_clip_timing`, then the unconditional `for effect in inner.get('effects', [])` loop scales them again. Effect start/duration multiplied by factor² instead of factor. (speed.py ~line 80)
+
+7. `_process_clip()`: `mediaDuration` incorrectly scaled for speed-changed UnifiedMedia clips. Flow: `_scale_clip_timing` skips mediaDuration for UnifiedMedia (correct), `_adjust_scalar` adjusts scalar (correct), then the UnifiedMedia branch does `clip['mediaDuration'] = _scale_tick(clip['mediaDuration'], factor)` — but the correct post-rescale mediaDuration for a speed-changed clip is `duration_new / scalar_new = mediaDuration_old` (unchanged), not `mediaDuration_old * factor`. (speed.py ~line 100)
+
+**Supporting subsystems:**
+
+8. `_text_attributes()`: uses `int()` truncation instead of `round()` for color channel conversion. `int(0.999 * 255)` = 254 instead of 255; `int(0.5 * 255)` = 127 instead of 128. `RGBA.from_floats()` in color.py correctly uses `round()`. Affects every callout created via `text()`, `square()`, `keystroke_callout()`. (annotations/callouts.py line 12)
+
+9. `keystroke_callout()` font dict missing color and tracking fields. Other callout builders (`text()`, `square()`) include `color-blue/green/red/opacity` and `tracking`. Missing color fields cause Camtasia to use default black font color while textAttributes say white — inconsistent. Also, `font_color = Color(1.0, 1.0, 1.0)` is created but never used in the font dict. (annotations/callouts.py ~line 221)
+
+10. `keystroke_callout()` uses Python `False` instead of `0.0` for `hasDropShadow`. Camtasia's format expects `0.0` (float). Serializes to JSON `false` which Camtasia may reject or silently repair. (annotations/callouts.py line 218)
+
+11. `add_lower_third()` doesn't scale the line shape clip's keyframed animation timing. Text group's inner clip timing IS scaled (lines 857-868), but the line clip (track index 2, original id 88) has hardcoded keyframes in `def` (width/height/translation/fill-color) and `animationTracks.visual` with `endTime` values 352800000, 705600000, 1411200000, 7197120000 from the original template. Not scaled when `duration_seconds` differs from default. (timeline/track.py ~line 855)
 
 ## TechSmith Tutorial Analysis
 
