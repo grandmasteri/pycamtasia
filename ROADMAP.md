@@ -4,7 +4,35 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 14 domains 1-3)
+
+**Leaf clips:**
+
+1. [verified] `is_video` returns True unconditionally for UnifiedMedia (ignores audio-only case where video is None). Contradicts is_audio which correctly checks. (base.py is_video property)
+
+2. [verified] `is_video` crashes on StitchedMedia containing UnifiedMedia with explicit `video: None`. `m.get('video', {})` returns None (default only fires for missing key), then `None.get('_type')` raises AttributeError. HIGH. (base.py is_video)
+
+3. [verified] `fade_in()` / `fade_out()` accumulate stale `animationTracks.visual` entries on repeated calls. Merge branches call `_clear_opacity()` but else branches do not. (base.py)
+
+4. [verified] `set_speed()` Group branch skips mediaDuration recalc for inner UnifiedMedia. Duration updated but mediaDuration stale; then stale value propagated to sub-clips. (base.py ~L395)
+
+**Compound clips:**
+
+5. [verified] `StitchedMedia.set_speed()` doesn't propagate timing to UnifiedMedia sub-clips within segments. Direct top-level StitchedMedia path omits UnifiedMedia sub-dict propagation. (base.py ~L351)
+
+6. [verified] `Group.set_speed()` StitchedMedia inner segments don't propagate to UnifiedMedia sub-dicts when inner segment is UnifiedMedia. (base.py ~L416)
+
+7. [verified] `StitchedMedia.duration` setter doesn't re-layout inner segments. Sum of inner durations no longer matches wrapper duration. Same for `scalar` setter. (base.py ~L148)
+
+8. [verified] `StitchedMedia.clear_segments()` doesn't clear wrapper-level effects with absolute start times that reference cleared segment positions. (stitched.py ~L42)
+
+9. [verified] `Group.ungroup()` stores extracted clip `start` as string fraction when non-integer (line 383: `int(new_start) if new_start == int(new_start) else str(new_start)`). Subsequent `int(self._data['start'])` accessor crashes. (group.py ~L383)
+
+**Track/timeline:**
+
+10. [verified] `scale_all_durations()` doesn't recalculate `mediaDuration` or `scalar` for inner Group clips (non-image, non-UnifiedMedia). Breaks duration = mediaDuration * scalar invariant. (track.py ~L2525)
+
+11. [verified] `scale_all_durations()` inner Group UnifiedMedia sub-clips missing `mediaDuration` and `scalar` propagation. Top-level UnifiedMedia path includes both. (track.py ~L2535)
 
 ## TechSmith Tutorial Analysis
 
