@@ -4,7 +4,35 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 6 domains 1-3)
+
+**Leaf clips:**
+
+1. [verified] `is_between()` and `intersects()` use float-seconds comparison while `is_at()` uses tick-integer comparison. Float precision at boundaries. (base.py)
+
+2. [verified] `media_duration` setter overwrites sub-clip `mediaStart` as unintended side effect. Not part of mediaDuration contract. Silently corrupts independently-set sub-clip mediaStart. (base.py)
+
+**Compound clips:**
+
+3. [verified] `Group.set_internal_segment_speeds` scalar truncated to integer via `int(Fraction(total_tl) / Fraction(total_src))`. Non-integer ratios silently become 1. (group.py ~L635)
+
+4. [verified] `Group.internal_media_src` doesn't check StitchedMedia children. Inconsistent with `is_screen_recording` which does. (group.py)
+
+5. [verified] `Group.ungroup()` StitchedMedia inner scalars overwritten with wrapper's composed scalar. Destroys per-segment speed differences. Should compose each segment's original scalar with group_scalar. (group.py)
+
+6. [verified] `Group.ungroup()` stores fraction strings for start/duration when group_scalar produces non-integer ticks. Subsequent `BaseClip.start`/`duration` via `int(...)` crashes with ValueError. (group.py)
+
+**Track/timeline:**
+
+7. [verified] `trim_clip()` double-adjusts effects on UnifiedMedia. Adjusts sub-clip effects inside UnifiedMedia block, then wrapper's effects again outside. (track.py ~L870)
+
+8. [verified] `scale_all_durations()` propagates to UnifiedMedia sub-clips before duration/scalar update. Sub-clips get stale values. (track.py ~L1050)
+
+9. [verified] `Timeline.shift_all()` doesn't adjust effects on UnifiedMedia sub-clips when clamping. Only wrapper effects adjusted. (timeline.py)
+
+10. [verified] `Timeline.insert_gap()` doesn't shift track-level transitions. Only shifts clip starts. (timeline.py ~L620)
+
+11. [verified] `Timeline.remove_gap()` doesn't validate gap existence. Blindly shifts based on caller parameters; can create overlaps. Compare with `Track.remove_gap_at` which finds actual boundaries. (timeline.py ~L635)
 
 ## TechSmith Tutorial Analysis
 
