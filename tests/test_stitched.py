@@ -1,9 +1,12 @@
 """Tests for camtasia.timeline.clips.stitched — StitchedMedia clip type."""
 from __future__ import annotations
 
+from fractions import Fraction
+
 import pytest
 
 from camtasia.timeline.clips import AMFile, BaseClip, StitchedMedia, clip_from_dict
+from camtasia.timeline.clips.base import EDIT_RATE
 from camtasia.timing import seconds_to_ticks
 
 # ------------------------------------------------------------------
@@ -158,3 +161,51 @@ class TestStitchedMediaImprovements:
         actual_clip.clear_segments()
         assert actual_clip.segment_count == 0
         assert actual_clip._data['medias'] == []
+
+
+def _make_stitched_for_speed(segments: list[tuple[int, int, int]]) -> BaseClip:
+    """Build a StitchedMedia clip with inner segments (start, duration, mediaDuration)."""
+    medias = []
+    for start, dur, md in segments:
+        medias.append({
+            '_type': 'VMFile', 'id': len(medias) + 100,
+            'start': start, 'duration': dur, 'mediaDuration': md,
+            'scalar': 1, 'metadata': {},
+        })
+    total_dur = sum(d for _, d, _ in segments)
+    return BaseClip({
+        '_type': 'StitchedMedia', 'id': 1, 'start': 0,
+        'duration': total_dur, 'mediaDuration': total_dur, 'scalar': 1,
+        'medias': medias, 'metadata': {}, 'parameters': {},
+        'effects': [], 'animationTracks': {},
+    })
+
+
+class TestSetSpeedStitchedMediaLayout:
+    def test_inner_starts_sequential_after_speed_change(self):
+        clip = _make_stitched_for_speed([
+            (0, EDIT_RATE, EDIT_RATE),
+            (EDIT_RATE, EDIT_RATE, EDIT_RATE),
+        ])
+        clip.set_speed(2.0)
+        inners = clip._data['medias']
+        assert inners[0]['start'] == 0
+        expected_dur = int(Fraction(EDIT_RATE) * Fraction(1, 2))
+        assert inners[1]['start'] == expected_dur
+
+    def test_no_gaps_or_overlaps_after_speed_change(self):
+        clip = _make_stitched_for_speed([
+            (0, EDIT_RATE, EDIT_RATE),
+            (EDIT_RATE, EDIT_RATE * 2, EDIT_RATE * 2),
+            (EDIT_RATE * 3, EDIT_RATE, EDIT_RATE),
+        ])
+        clip.set_speed(0.5)
+        inners = clip._data['medias']
+        for i in range(len(inners) - 1):
+            end = inners[i]['start'] + int(Fraction(str(inners[i]['duration'])))
+            assert end == inners[i + 1]['start']
+
+    def test_single_segment_start_stays_zero(self):
+        clip = _make_stitched_for_speed([(0, EDIT_RATE, EDIT_RATE)])
+        clip.set_speed(3.0)
+        assert clip._data['medias'][0]['start'] == 0

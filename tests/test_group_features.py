@@ -474,3 +474,46 @@ class TestGroupSetInternalSegmentSpeedsCanvasWidthOnly:
         g = Group(data)
         g.set_internal_segment_speeds(segments=[(0.0, 5.0, 5.0)])
         assert data['tracks'][0]['medias'][0]['_type'] == 'ScreenVMFile'
+
+
+def _make_group_for_sync(group_dur: int, clips: list[dict]) -> Group:
+    """Build a Group with one internal track containing the given clip dicts."""
+    return Group({
+        '_type': 'Group', 'id': 1, 'start': 0,
+        'duration': group_dur, 'mediaDuration': group_dur, 'scalar': 1,
+        'parameters': {}, 'effects': [], 'metadata': {},
+        'animationTracks': {}, 'attributes': {'ident': ''},
+        'tracks': [{'trackIndex': 0, 'medias': clips}],
+    })
+
+
+class TestSyncInternalDurationsStartOffset:
+    """sync_internal_durations must account for clip start offset."""
+
+    def test_clip_with_start_offset_trimmed_correctly(self):
+        group = _make_group_for_sync(100, [
+            {'_type': 'VMFile', 'id': 10, 'start': 60, 'duration': 80,
+             'mediaDuration': 80, 'scalar': 1},
+        ])
+        group.sync_internal_durations()
+        assert group._data['tracks'][0]['medias'][0]['duration'] == 40
+
+    def test_clip_starting_past_group_end_gets_zero_duration(self):
+        group = _make_group_for_sync(50, [
+            {'_type': 'VMFile', 'id': 10, 'start': 60, 'duration': 40,
+             'mediaDuration': 40, 'scalar': 1},
+        ])
+        group.sync_internal_durations()
+        assert group._data['tracks'][0]['medias'][0]['duration'] == 0
+
+    def test_multiple_clips_with_offsets(self):
+        group = _make_group_for_sync(100, [
+            {'_type': 'VMFile', 'id': 10, 'start': 0, 'duration': 100,
+             'mediaDuration': 100, 'scalar': 1},
+            {'_type': 'VMFile', 'id': 11, 'start': 50, 'duration': 80,
+             'mediaDuration': 80, 'scalar': 1},
+        ])
+        group.sync_internal_durations()
+        clips_after = group._data['tracks'][0]['medias']
+        assert clips_after[0]['duration'] == 100
+        assert clips_after[1]['duration'] == 50

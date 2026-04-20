@@ -1570,3 +1570,63 @@ class TestIsSilentUnifiedMedia:
             '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
         })
         assert clip.is_silent is False
+
+
+class TestMediaStartSecondsPrecision:
+    """media_start_seconds must not truncate fractional ticks."""
+
+    def test_fractional_media_start_preserved(self):
+        clip = BaseClip({
+            '_type': 'VMFile', 'id': 1, 'start': 0,
+            'duration': EDIT_RATE, 'mediaDuration': EDIT_RATE,
+            'mediaStart': '705600001/2', 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {},
+        })
+        expected = float(Fraction(705600001, 2)) / EDIT_RATE
+        assert clip.media_start_seconds == expected
+
+    def test_integer_media_start_unchanged(self):
+        clip = BaseClip({
+            '_type': 'VMFile', 'id': 1, 'start': 0,
+            'duration': EDIT_RATE, 'mediaDuration': EDIT_RATE,
+            'mediaStart': EDIT_RATE, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {},
+        })
+        assert abs(clip.media_start_seconds - 1.0) < 1e-12
+
+
+class TestClearAllKeyframesAnimationTracks:
+    """clear_all_keyframes must also clear animationTracks."""
+
+    def test_animation_tracks_cleared(self):
+        clip = BaseClip({
+            '_type': 'VMFile', 'id': 1, 'start': 0,
+            'duration': EDIT_RATE, 'mediaDuration': EDIT_RATE, 'scalar': 1,
+            'parameters': {
+                'opacity': {
+                    'type': 'double', 'defaultValue': 1.0,
+                    'keyframes': [{'time': 0, 'value': 0.0, 'endTime': 100, 'duration': 100}],
+                },
+            },
+            'effects': [], 'metadata': {},
+            'animationTracks': {'visual': [{'endTime': 100, 'duration': 100}]},
+        })
+        clip.clear_all_keyframes()
+        assert 'keyframes' not in clip._data['parameters']['opacity']
+        assert clip._data['animationTracks'] == {}
+
+
+class TestMediaMattePresetName:
+    """add_media_matte default preset_name should be 'Luminosity'."""
+
+    def test_default_preset_name_is_luminosity(self):
+        clip = BaseClip({
+            '_type': 'VMFile', 'id': 1, 'start': 0, 'duration': EDIT_RATE,
+            'mediaDuration': EDIT_RATE, 'scalar': 1, 'parameters': {},
+            'effects': [], 'metadata': {}, 'animationTracks': {},
+        })
+        clip.add_media_matte()
+        eff = clip._data['effects'][-1]
+        assert eff['metadata']['presetName'] == 'Media Matte Luminosity'

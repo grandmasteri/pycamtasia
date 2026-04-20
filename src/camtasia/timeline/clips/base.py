@@ -327,6 +327,12 @@ class BaseClip:
                 inner.setdefault('metadata', {})['clipSpeedAttribute'] = {
                     'type': 'bool', 'value': scalar_fraction != 1
                 }
+            # Re-layout starts sequentially
+            cursor = 0
+            for inner in self._data.get('medias', []):
+                inner['start'] = cursor
+                dur_val = inner['duration']
+                cursor += int(Fraction(str(dur_val)))
         return self
 
     @property
@@ -1166,7 +1172,7 @@ class BaseClip:
         return self
 
     def add_media_matte(self, *, intensity: float = 1.0, matte_mode: int = 1, track_depth: int = 10002,
-                        preset_name: str = 'Media Matte Luminasity') -> Self:
+                        preset_name: str = 'Media Matte Luminosity') -> Self:
         """Add a media matte compositing effect.
 
         Uses one track as a transparency mask for this clip.
@@ -1631,8 +1637,7 @@ class BaseClip:
     @property
     def media_start_seconds(self) -> float:
         """Media start offset in seconds."""
-        from camtasia.timing import ticks_to_seconds
-        return float(ticks_to_seconds(int(Fraction(str(self.media_start)))))
+        return float(Fraction(str(self.media_start))) / EDIT_RATE
 
     def overlaps_with(self, other_clip: BaseClip) -> bool:
         """Check if this clip's time range overlaps with another clip."""
@@ -1662,6 +1667,7 @@ class BaseClip:
         for _parameter_name, parameter_value in parameters.items():
             if isinstance(parameter_value, dict) and 'keyframes' in parameter_value:
                 parameter_value.pop('keyframes')
+        self._data['animationTracks'] = {}
         return self
 
     def copy_timing_from(self, source_clip: BaseClip) -> Self:

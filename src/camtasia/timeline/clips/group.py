@@ -587,8 +587,12 @@ class Group(BaseClip):
         group_dur = self._data.get('duration', 0)
         for track in self._data.get('tracks', []):
             for m in track.get('medias', []):
-                if m.get('duration', 0) > group_dur:
-                    m['duration'] = group_dur
+                clip_start = m.get('start', 0)
+                clip_end = clip_start + m.get('duration', 0)
+                if clip_end > group_dur:
+                    m['duration'] = max(0, group_dur - clip_start)
+                    if m['duration'] == 0:
+                        continue
                     if m.get('_type') in ('IMFile', 'ScreenIMFile'):
                         m['mediaDuration'] = 1
                     else:
