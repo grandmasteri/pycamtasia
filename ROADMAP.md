@@ -8,39 +8,39 @@ _This section is the authoritative list of bugs reported by adversarial reviewer
 
 **Leaf clip types:**
 
-1. `AMFile.is_muted` ignores `volume` parameter. Only checks `self.gain == 0.0`. If volume is set to 0 via inherited setter, `is_muted` returns False while `is_silent` returns True. Inconsistent. (audio.py ~L61)
+1. [verified] `AMFile.is_muted` ignores `volume` parameter. Only checks `self.gain == 0.0`. If volume is set to 0 via inherited setter, `is_muted` returns False while `is_silent` returns True. Inconsistent. (audio.py ~L61)
 
-2. `Callout.set_colors()` `font_color` docstring says `(r, g, b)` but code accesses `font_color[3]` for alpha. `fill`/`stroke` correctly documented as `(r, g, b, opacity)`. Documentation bug. (callout.py ~L337)
+2. [verified] `Callout.set_colors()` `font_color` docstring says `(r, g, b)` but code accesses `font_color[3]` for alpha. `fill`/`stroke` correctly documented as `(r, g, b, opacity)`. Documentation bug. (callout.py ~L337)
 
-3. `ScreenVMFile.cursor_scale` default is `5.0` instead of `1.0`. `return self._get_param_value('cursorScale', 5.0)` — 5x cursor enlargement for clips without explicit cursorScale. Camtasia default is 1.0. (screen_recording.py ~L30)
+3. [verified] `ScreenVMFile.cursor_scale` default is `5.0` instead of `1.0`. `return self._get_param_value('cursorScale', 5.0)` — 5x cursor enlargement for clips without explicit cursorScale. Camtasia default is 1.0. (screen_recording.py ~L30)
 
 **Compound clip types:**
 
-4. `Group.ungroup()` truncates fractional tick values when group_scalar != 1. `cloned_data['start'] = int(orig_start * group_scalar)` — int() truncates. Accumulated drift. (group.py ~L193)
+4. [verified] `Group.ungroup()` truncates fractional tick values when group_scalar != 1. `cloned_data['start'] = int(orig_start * group_scalar)` — int() truncates. Accumulated drift. (group.py ~L193)
 
-5. `Group.ungroup()` doesn't propagate composed scalar to StitchedMedia children. Updates outer wrapper's scalar but inner medias array is not re-laid out. (group.py ~L190)
+5. [verified] `Group.ungroup()` doesn't propagate composed scalar to StitchedMedia children. Updates outer wrapper's scalar but inner medias array is not re-laid out. (group.py ~L190)
 
-6. `BaseClip.set_speed()` has no handling for Group clip type. UnifiedMedia and StitchedMedia have propagation, but Group just updates wrapper's scalar/mediaDuration with no child propagation. (base.py ~L296)
+6. [verified] `BaseClip.set_speed()` has no handling for Group clip type. UnifiedMedia and StitchedMedia have propagation, but Group just updates wrapper's scalar/mediaDuration with no child propagation. (base.py ~L296)
 
-7. `set_internal_segment_speeds()` crashes with IndexError when template StitchedMedia has empty `medias` list. Default `[{}]` only applies when medias key is missing entirely, not when it's empty. (group.py ~L467)
+7. [verified] `set_internal_segment_speeds()` crashes with IndexError when template StitchedMedia has empty `medias` list. Default `[{}]` only applies when medias key is missing entirely, not when it's empty. (group.py ~L467)
 
-8. `set_internal_segment_speeds()` sets companion clip `mediaStart=0` unconditionally. When segments don't start at source time 0, audio clips get wrong mediaStart causing A/V desync. (group.py ~L580)
+8. [verified] `set_internal_segment_speeds()` sets companion clip `mediaStart=0` unconditionally. When segments don't start at source time 0, audio clips get wrong mediaStart causing A/V desync. (group.py ~L580)
 
-9. `sync_internal_durations()` skips `_propagate_start_to_unified` for zero-duration clips. The `continue` after setting mediaDuration=0 skips the propagation call. UnifiedMedia children keep stale values. (group.py ~L605)
+9. [verified] `sync_internal_durations()` skips `_propagate_start_to_unified` for zero-duration clips. The `continue` after setting mediaDuration=0 skips the propagation call. UnifiedMedia children keep stale values. (group.py ~L605)
 
-10. `StitchedMedia.min_media_start` docstring says "frames" but value is in ticks (705,600,000/sec). Callers would be off by ~23,520,000x. (stitched.py ~L44)
+10. [verified] `StitchedMedia.min_media_start` docstring says "frames" but value is in ticks (705,600,000/sec). Callers would be off by ~23,520,000x. (stitched.py ~L44)
 
-11. `set_internal_segment_speeds()` docstring claims "StitchedMedia clips" but creates bare `ScreenVMFile` clips; no ScreenIMFile clips either. Misleading documentation. (group.py ~L410)
+11. [verified] `set_internal_segment_speeds()` docstring claims "StitchedMedia clips" but creates bare `ScreenVMFile` clips; no ScreenIMFile clips either. Misleading documentation. (group.py ~L410)
 
 **Track and timeline management:**
 
-12. `Track.shift_all_clips()` and `Timeline.shift_all()` create zero-duration clips silently when clamp_amount >= old_duration. Invalid state — should remove or error. (track.py ~L1070, timeline.py ~L490)
+12. [verified] `Track.shift_all_clips()` and `Timeline.shift_all()` create zero-duration clips silently when clamp_amount >= old_duration. Invalid state — should remove or error. (track.py ~L1070, timeline.py ~L490)
 
-13. `Track.split_clip()` dead `assetProperties.objects` remap code. Looks at `right_data.get('assetProperties', {})` (top-level) but assetProperties lives under `attributes`. Objects contain ints, not dicts with id keys. Dead code. (track.py ~L870)
+13. [verified] `Track.split_clip()` dead `assetProperties.objects` remap code. Looks at `right_data.get('assetProperties', {})` (top-level) but assetProperties lives under `attributes`. Objects contain ints, not dicts with id keys. Dead code. (track.py ~L870)
 
-14. `Track.scale_all_durations()` doesn't scale effect `start`/`duration` within clips. Effects become misaligned relative to the clip's new duration after scaling. (track.py ~L1120)
+14. [verified] `Track.scale_all_durations()` doesn't scale effect `start`/`duration` within clips. Effects become misaligned relative to the clip's new duration after scaling. (track.py ~L1120)
 
-15. `Track.replace_clip()` doesn't remap nested IDs in replacement clip. For compound replacement clips (Group/UnifiedMedia/StitchedMedia), only top-level id is reassigned. Nested ids can collide. (track.py ~L950)
+15. [verified] `Track.replace_clip()` doesn't remap nested IDs in replacement clip. For compound replacement clips (Group/UnifiedMedia/StitchedMedia), only top-level id is reassigned. Nested ids can collide. (track.py ~L950)
 
 ## TechSmith Tutorial Analysis
 
