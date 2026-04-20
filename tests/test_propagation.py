@@ -220,3 +220,31 @@ class TestSetDurationSecondsMediaStartPropagation:
         clip.set_duration_seconds(4.0)
         for key in ('video', 'audio'):
             assert data[key]['mediaStart'] == EDIT_RATE * 3
+
+
+class TestUnifiedMediaDurationSetterPropagatesMediaStart:
+    def test_duration_setter_propagates_media_start(self):
+        data = _unified_media_with_media_start(media_start=EDIT_RATE * 3)
+        clip = UnifiedMedia(data)
+        clip.duration = EDIT_RATE * 2
+        for key in ('video', 'audio'):
+            assert data[key]['mediaStart'] == EDIT_RATE * 3
+
+
+class TestUnifiedMediaScalarSetterPropagatesMediaStart:
+    def test_scalar_setter_propagates_media_start(self):
+        from fractions import Fraction
+        data = _unified_media_with_media_start(media_start=EDIT_RATE * 4)
+        clip = UnifiedMedia(data)
+        clip.scalar = Fraction(1, 2)
+        for key in ('video', 'audio'):
+            assert data[key]['mediaStart'] == EDIT_RATE * 4
+
+
+class TestUnifiedMediaDurationPropertySetterPropagatesMediaStart:
+    def test_media_duration_setter_propagates_media_start(self):
+        data = _unified_media_with_media_start(media_start=EDIT_RATE * 2)
+        clip = UnifiedMedia(data)
+        clip.media_duration = EDIT_RATE * 5
+        for key in ('video', 'audio'):
+            assert data[key]['mediaStart'] == EDIT_RATE * 2

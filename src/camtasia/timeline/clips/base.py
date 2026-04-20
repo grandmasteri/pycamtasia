@@ -141,6 +141,7 @@ class BaseClip:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['scalar'] = self._data.get('scalar', 1)
+                    sub['mediaStart'] = self._data.get('mediaStart', 0)
 
     @property
     def end_seconds(self) -> float:
@@ -259,6 +260,7 @@ class BaseClip:
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['mediaDuration'] = stored
+                    sub['mediaStart'] = self._data.get('mediaStart', 0)
 
     @property
     def scalar(self) -> Fraction:
@@ -287,6 +289,8 @@ class BaseClip:
                 sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
                 if sub is not None:
                     sub['scalar'] = self._data['scalar']
+                    sub['mediaDuration'] = self._data['mediaDuration']
+                    sub['mediaStart'] = self._data.get('mediaStart', 0)
                     sub['mediaDuration'] = self._data['mediaDuration']
 
     def set_speed(self, speed: float) -> Self:
