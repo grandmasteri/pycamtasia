@@ -187,3 +187,46 @@ def test_validate_unified_media_sub_clip_src_not_orphaned(project):
     issues = project.validate()
     orphan_issues = [i for i in issues if 'Orphaned media' in i.message]
     assert len(orphan_issues) == 0, f"Unexpected orphan issues: {orphan_issues}"
+
+
+# ── Bug 1: validate() uses self.all_clips (recurses into Groups) ────
+
+
+def test_validate_does_not_report_orphaned_media_referenced_by_group_child(project):
+    """Media referenced only by a nested Group child should not be orphaned."""
+    # Add media entry
+    project.media_bin.add_media_entry({
+        'id': 50,
+        'src': './media/nested.mov',
+        'rect': [0, 0, 1920, 1080],
+        'lastMod': '20260101T000000',
+        'sourceTracks': [{'range': [0, 5000], 'type': 0, 'editRate': 30,
+                          'trackRect': [0, 0, 1920, 1080], 'sampleRate': 30,
+                          'bitDepth': 24, 'numChannels': 0,
+                          'integratedLUFS': 100.0, 'peakLevel': -1.0,
+                          'tag': 0, 'metaData': '', 'parameters': {}}],
+        'metadata': {},
+    })
+    # Create a Group clip whose inner child references media 50
+    from camtasia.timing import seconds_to_ticks
+    track = project.timeline.tracks[0]
+    group_data = {
+        'id': 99, '_type': 'Group',
+        'start': 0, 'duration': seconds_to_ticks(5.0),
+        'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+        'scalar': 1, 'metadata': {}, 'parameters': {},
+        'effects': [], 'attributes': {'ident': ''},
+        'animationTracks': {},
+        'tracks': [{'medias': [{
+            'id': 100, '_type': 'VMFile', 'src': 50,
+            'start': 0, 'duration': seconds_to_ticks(5.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+            'scalar': 1, 'metadata': {}, 'parameters': {},
+            'effects': [], 'attributes': {}, 'animationTracks': {},
+        }]}],
+    }
+    track._data.setdefault('medias', []).append(group_data)
+
+    issues = project.validate()
+    orphan_messages = [i.message for i in issues if 'Orphaned' in i.message and 'nested.mov' in i.message]
+    assert orphan_messages == [], f'Media 50 falsely reported as orphaned: {orphan_messages}'

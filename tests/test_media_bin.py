@@ -405,7 +405,7 @@ class TestMediaBinEdgeCases:
                 'sourceTracks': [{'type': 1, 'range': [0, 1], 'editRate': 1}],
                 'rect': [0, 0, 100, 100]}
         m = Media(data)
-        assert m.duration_seconds == 0.0
+        assert m.duration_seconds is None
 
     def test_unsupported_stream_type_raises(self):
         with pytest.raises(ValueError, match='Unsupported'):
@@ -450,13 +450,13 @@ class TestDurationSecondsImageAudioMix:
         m = Media(data)
         assert m.duration_seconds == 1.0
 
-    def test_image_only_returns_zero(self):
+    def test_image_only_returns_none(self):
         data = {
             'id': 1, 'src': 'test.png', 'rect': [0, 0, 100, 100],
             'sourceTracks': [{'type': 1, 'range': [0, 1], 'editRate': 1}],
         }
         m = Media(data)
-        assert m.duration_seconds == 0.0
+        assert m.duration_seconds is None
 
 
 # ── Bug 12: _visual_track_to_json sampleRate for images ────────────
@@ -515,3 +515,30 @@ class TestImportMediaZeroWidthHeight:
             )
             st = media.source_tracks[0]
             assert st['bitDepth'] == 0
+
+
+# ── Bug 9: image duration_seconds returns None, not 0.0 ─────────────
+
+
+class TestImageDurationReturnsNone:
+    def test_image_duration_is_none_not_zero(self):
+        """Image media should return None for duration_seconds, not 0.0."""
+        data = {
+            'id': 1, 'src': 'test.png', 'rect': [0, 0, 100, 100],
+            'sourceTracks': [{'type': 1, 'range': [0, 1], 'editRate': 600}],
+        }
+        m = Media(data)
+        assert m.duration_seconds is None
+
+    def test_none_check_fallback_works(self):
+        """Callers using 'if duration is None' should now correctly detect images."""
+        data = {
+            'id': 1, 'src': 'test.png', 'rect': [0, 0, 100, 100],
+            'sourceTracks': [{'type': 1, 'range': [0, 1], 'editRate': 600}],
+        }
+        m = Media(data)
+        duration = m.duration_seconds
+        # This pattern was broken when duration_seconds returned 0.0
+        if duration is None:
+            duration = 5.0  # fallback
+        assert duration == 5.0

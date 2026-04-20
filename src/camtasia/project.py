@@ -760,9 +760,10 @@ class Project:
                 # Copy the actual media file if it exists
                 src_rel = cloned_media.get('src', '')
                 if src_rel and source_project.file_path.is_dir() and merged.file_path.is_dir():
-                    src_abs = source_project.file_path / src_rel.lstrip('./')
+                    src_stripped = src_rel.removeprefix('./')
+                    src_abs = source_project.file_path / src_stripped
                     if src_abs.exists():
-                        dst_abs = merged.file_path / src_rel.lstrip('./')
+                        dst_abs = merged.file_path / src_stripped
                         dst_abs.parent.mkdir(parents=True, exist_ok=True)
                         if not dst_abs.exists():
                             import shutil
@@ -895,7 +896,7 @@ class Project:
 
         # Collect all clip source references
         referenced_ids: set[int] = set()
-        for clip in self.timeline.all_clips():
+        for _, clip in self.all_clips:
             if clip.source_id is not None:
                 referenced_ids.add(clip.source_id)
             # Also check UnifiedMedia children

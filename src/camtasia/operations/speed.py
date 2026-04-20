@@ -129,6 +129,10 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                         child['duration'] = clip['duration']
                     if 'mediaDuration' in clip:
                         child['mediaDuration'] = clip['mediaDuration']
+                    if 'scalar' in clip:
+                        child['scalar'] = clip['scalar']
+                    if 'mediaStart' in clip:
+                        child['mediaStart'] = clip['mediaStart']
 
 
 def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
@@ -173,7 +177,7 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
                         md_old = _frac(medias[i].get('mediaDuration', 0))
                         if md_old != 0:
                             new_scalar = _frac(medias[i]['duration']) / md_old
-                            medias[i]['scalar'] = int(new_scalar) if new_scalar == int(new_scalar) else f'{new_scalar.numerator}/{new_scalar.denominator}'
+                            medias[i]['scalar'] = scalar_to_string(new_scalar)
                     else:
                         s = _frac(medias[i].get('scalar', 1))
                         if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group'):

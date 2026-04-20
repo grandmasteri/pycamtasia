@@ -716,3 +716,107 @@ def test_media_duration_recalculated_after_speed_change():
         assert actual_md == expected_md, (
             f"mediaDuration mismatch: expected {expected_md}, got {actual_md}"
         )
+
+
+# ── Bug 5: overlap fix uses scalar_to_string() for consistent serialization ──
+
+
+class TestOverlapFixScalarSerialization:
+    def test_overlap_fix_uses_scalar_to_string_format(self):
+        """After overlap fix, scalar should use scalar_to_string() format (str 'n/d' or int 1)."""
+        from camtasia.timing import scalar_to_string
+        data = {
+            "timeline": {
+                "sceneTrack": {
+                    "scenes": [{
+                        "csml": {
+                            "tracks": [{
+                                "medias": [
+                                    {
+                                        "_type": "AMFile",
+                                        "start": 0,
+                                        "duration": 100,
+                                        "mediaDuration": 200,
+                                        "scalar": "1/2",
+                                        "metadata": {"clipSpeedAttribute": {"type": "bool", "value": True}},
+                                    },
+                                    {
+                                        "_type": "AMFile",
+                                        "start": 99,
+                                        "duration": 100,
+                                        "mediaDuration": 100,
+                                        "scalar": 1,
+                                    },
+                                ],
+                            }],
+                        }
+                    }]
+                },
+                "parameters": {"toc": {"keyframes": []}},
+            }
+        }
+        rescale_project(data, Fraction(1))  # identity triggers overlap fix
+        clip = data["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]
+        scalar_val = clip["scalar"]
+        # scalar_to_string returns int 1 for unity, or 'n/d' string for non-unity
+        expected = scalar_to_string(Fraction(clip["duration"]) / Fraction(clip["mediaDuration"]))
+        assert scalar_val == expected
+
+
+# ── Bug 7: UnifiedMedia child override propagates scalar and mediaStart ──
+
+
+class TestUnifiedMediaChildScalarMediaStartPropagation:
+    def test_speed_changed_unified_propagates_scalar_to_children(self):
+        """When UnifiedMedia has speed change, children should get parent's scalar."""
+        data = {
+            "timeline": {
+                "sceneTrack": {
+                    "scenes": [{
+                        "csml": {
+                            "tracks": [{
+                                "medias": [{
+                                    "_type": "UnifiedMedia",
+                                    "start": 0,
+                                    "duration": 1000,
+                                    "mediaDuration": 2000,
+                                    "mediaStart": 100,
+                                    "scalar": "1/2",
+                                    "metadata": {"clipSpeedAttribute": {"type": "bool", "value": True}},
+                                    "video": {
+                                        "_type": "VMFile",
+                                        "start": 0,
+                                        "duration": 1000,
+                                        "mediaDuration": 2000,
+                                        "mediaStart": 100,
+                                        "scalar": "1/2",
+                                    },
+                                    "audio": {
+                                        "_type": "AMFile",
+                                        "start": 0,
+                                        "duration": 1000,
+                                        "mediaDuration": 2000,
+                                        "mediaStart": 100,
+                                        "scalar": "1/2",
+                                    },
+                                }],
+                            }],
+                        }
+                    }]
+                },
+                "parameters": {"toc": {"keyframes": []}},
+            }
+        }
+        rescale_project(data, Fraction(2))
+        um = data["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]
+        video = um["video"]
+        audio = um["audio"]
+        # Children should have parent's scalar and mediaStart
+        assert video["scalar"] == um["scalar"]
+        assert audio["scalar"] == um["scalar"]
+        assert video["mediaStart"] == um["mediaStart"]
+        assert audio["mediaStart"] == um["mediaStart"]
+        assert video["duration"] == um["duration"]
+        assert audio["duration"] == um["duration"]
+        assert video["mediaDuration"] == um["mediaDuration"]
+        assert audio["mediaDuration"] == um["mediaDuration"]

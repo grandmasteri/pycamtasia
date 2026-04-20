@@ -105,7 +105,7 @@ class Media:
                     return (range_val[1] - range_val[0]) / edit_rate  # type: ignore[no-any-return]
         for st in self._data.get('sourceTracks', []):
             if st.get('type') == 1:  # image
-                return 0.0
+                return None
         return None
 
     @property

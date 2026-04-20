@@ -170,7 +170,7 @@ def arrow(
         'stroke-color-green': stroke_color.green,
         'stroke-color-blue': stroke_color.blue,
         'stroke-color-opacity': stroke_color.opacity,
-        'stroke-width': {'type': 'double', 'defaultValue': width, 'interp': 'linr'},
+        'stroke-width': float(width),
     }
 
 
@@ -194,6 +194,12 @@ def highlight(
         'fill-color-opacity': a,
         'fill-style': 'solid',
         'corner-radius': 0.0,
+        'stroke-color-red': 0.0,
+        'stroke-color-green': 0.0,
+        'stroke-color-blue': 0.0,
+        'stroke-color-opacity': 0.0,
+        'stroke-width': 0.0,
+        'stroke-style': 'none',
     }
 
 
@@ -224,6 +230,17 @@ def keystroke_callout(
         'horizontal-alignment': 'center',
         'vertical-alignment': 'center',
         'resize-behavior': 'resizeText',
+        'fill-color-red': 0.2,
+        'fill-color-green': 0.2,
+        'fill-color-blue': 0.2,
+        'fill-color-opacity': 0.9,
+        'fill-style': 'solid',
+        'stroke-color-red': 0.8,
+        'stroke-color-green': 0.8,
+        'stroke-color-blue': 0.8,
+        'stroke-color-opacity': 1.0,
+        'stroke-width': 1.0,
+        'stroke-style': 'solid',
         'font': {
             'color-blue': font_color.blue,
             'color-green': font_color.green,

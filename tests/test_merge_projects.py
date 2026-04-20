@@ -355,3 +355,30 @@ def test_merge_projects_copies_media_files(tmp_path):
     merged_media = tmp_path / 'merged.cmproj' / 'media' / 'clip.mp4'
     assert merged_media.exists(), 'Media file was not copied to merged project'
     assert merged_media.read_bytes() == b'fake video data'
+
+
+# ── Bug 3: merge_projects uses removeprefix('./') not lstrip('./') ───
+
+
+@pytest.mark.timeout(30)
+def test_merge_projects_removeprefix_preserves_dotdot_paths(tmp_path):
+    """lstrip('./') would mangle '../shared/file' to 'shared/file'.
+    removeprefix('./') only strips the exact prefix './'."""
+    a = Project.new(tmp_path / 'a.cmproj', title='A')
+    # Add a sourceBin entry with a path that starts with './' but also has dots
+    a._data.setdefault('sourceBin', []).append({
+        'id': 1, 'src': './...dotty/clip.mp4',
+        'rect': [0, 0, 1920, 1080],
+        'lastMod': '20260101T000000',
+        'sourceTracks': [{'range': [0, 300], 'type': 0, 'editRate': 30,
+                          'trackRect': [0, 0, 1920, 1080], 'sampleRate': 30,
+                          'bitDepth': 24, 'numChannels': 0,
+                          'integratedLUFS': 100.0, 'peakLevel': -1.0,
+                          'tag': 0, 'metaData': '', 'parameters': {}}],
+    })
+    a.save()
+
+    merged = Project.merge_projects([a], tmp_path / 'merged.cmproj')
+    # The source path should be preserved in the merged project's sourceBin
+    sources = [e.get('src') for e in merged._data.get('sourceBin', [])]
+    assert './...dotty/clip.mp4' in sources

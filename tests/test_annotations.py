@@ -15,7 +15,7 @@ def test_arrow_default_values():
     assert result['stroke-color-red'] == 1.0
     assert result['stroke-color-green'] == 0.0
     assert result['stroke-color-blue'] == 0.0
-    assert result['stroke-width']['defaultValue'] == 3.0
+    assert result['stroke-width'] == 3.0
 
 
 def test_arrow_custom_values():
@@ -27,7 +27,7 @@ def test_arrow_custom_values():
     assert result['stroke-color-red'] == 0.0
     assert result['stroke-color-green'] == 1.0
     assert result['stroke-color-blue'] == 0.5
-    assert result['stroke-width']['defaultValue'] == 5.0
+    assert result['stroke-width'] == 5.0
 
 
 def test_highlight_default_values():
@@ -267,7 +267,7 @@ class TestHighlightFlatValues:
 
     def test_no_stroke_width_key(self):
         result = highlight()
-        assert 'stroke-width' not in result
+        assert result['stroke-width'] == 0.0
 
 
 class TestSquareDefaultStrokeColor:
@@ -298,3 +298,69 @@ class TestCalloutFontNoColorOpacity:
     def test_keystroke_font_no_color_opacity(self):
         result = keystroke_callout('Ctrl+C')
         assert 'color-opacity' not in result['font']
+
+
+# ── Bug 8: arrow stroke-width is plain float, not animated dict ──────
+
+
+class TestArrowStrokeWidthIsPlainFloat:
+    def test_stroke_width_is_float_not_dict(self):
+        result = arrow()
+        assert isinstance(result['stroke-width'], float)
+        assert not isinstance(result['stroke-width'], dict)
+
+    def test_stroke_width_custom_is_float(self):
+        result = arrow(width=7.5)
+        assert result['stroke-width'] == 7.5
+        assert isinstance(result['stroke-width'], float)
+
+
+# ── Bug 10: highlight has stroke properties ──────────────────────────
+
+
+class TestHighlightStrokeProperties:
+    def test_has_stroke_color_keys(self):
+        result = highlight()
+        assert result['stroke-color-red'] == 0.0
+        assert result['stroke-color-green'] == 0.0
+        assert result['stroke-color-blue'] == 0.0
+        assert result['stroke-color-opacity'] == 0.0
+
+    def test_has_stroke_width(self):
+        result = highlight()
+        assert result['stroke-width'] == 0.0
+
+    def test_has_stroke_style(self):
+        result = highlight()
+        assert result['stroke-style'] == 'none'
+
+
+# ── Bug 11: keystroke_callout has fill and stroke background ─────────
+
+
+class TestKeystrokeCalloutFillStroke:
+    def test_has_fill_color_keys(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['fill-color-red'] == 0.2
+        assert result['fill-color-green'] == 0.2
+        assert result['fill-color-blue'] == 0.2
+        assert result['fill-color-opacity'] == 0.9
+
+    def test_has_fill_style(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['fill-style'] == 'solid'
+
+    def test_has_stroke_color_keys(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['stroke-color-red'] == 0.8
+        assert result['stroke-color-green'] == 0.8
+        assert result['stroke-color-blue'] == 0.8
+        assert result['stroke-color-opacity'] == 1.0
+
+    def test_has_stroke_width(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['stroke-width'] == 1.0
+
+    def test_has_stroke_style(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['stroke-style'] == 'solid'
