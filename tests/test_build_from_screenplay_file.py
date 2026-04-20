@@ -148,3 +148,35 @@ class TestPausesWithMissingAudio:
         assert result['clips_placed'] == 0
         assert result['pauses_added'] == 1
         assert result['total_duration'] > 0
+
+
+class TestInterSectionDefaultPause:
+    """Bug 9: build_from_screenplay must add default pause between sections."""
+
+    def test_pause_between_sections(self, project, tmp_path):
+        """Two sections with VO blocks should have a default pause between them."""
+        import warnings
+
+        from camtasia.builders.screenplay_builder import build_from_screenplay
+        from camtasia.screenplay import Screenplay, ScreenplaySection, VOBlock
+
+        audio_dir = tmp_path / 'audio'
+        audio_dir.mkdir()
+        wav = FIXTURES / 'empty.wav'
+        (audio_dir / '1.1.wav').write_bytes(wav.read_bytes())
+        (audio_dir / '2.1.wav').write_bytes(wav.read_bytes())
+
+        sp = Screenplay(sections=[
+            ScreenplaySection(title='S1', level=2,
+                              vo_blocks=[VOBlock(id='1.1', text='hello', section='S1')]),
+            ScreenplaySection(title='S2', level=2,
+                              vo_blocks=[VOBlock(id='2.1', text='world', section='S2')]),
+        ])
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            result = build_from_screenplay(project, sp, audio_dir, default_pause=1.0)
+        # 1 pause within S1 (after VO-1.1, before end of section) = 0 (only 1 VO in section)
+        # 1 pause between S1 and S2 (inter-section)
+        # 0 pause within S2 (only 1 VO in section)
+        # Total: at least 1 inter-section pause
+        assert result['pauses_added'] >= 1

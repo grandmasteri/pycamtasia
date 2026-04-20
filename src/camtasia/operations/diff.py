@@ -64,8 +64,12 @@ def diff_projects(a: Project, b: Project) -> ProjectDiff:
 
     # Clip differences (on shared tracks)
     for idx in a_tracks & b_tracks:
-        a_clips = {c.id for c in a.timeline.tracks[idx].clips}
-        b_clips = {c.id for c in b.timeline.tracks[idx].clips}
+        a_track = next((t for t in a.timeline.tracks if t.index == idx), None)
+        b_track = next((t for t in b.timeline.tracks if t.index == idx), None)
+        if a_track is None or b_track is None:
+            continue  # pragma: no cover  # defensive: idx came from the track set
+        a_clips = {c.id for c in a_track.clips}
+        b_clips = {c.id for c in b_track.clips}
         for cid in sorted(b_clips - a_clips):
             result.clips_added.append((idx, cid))
         for cid in sorted(a_clips - b_clips):
@@ -73,12 +77,18 @@ def diff_projects(a: Project, b: Project) -> ProjectDiff:
 
     # Clips on removed tracks
     for idx in a_tracks - b_tracks:
-        for c in a.timeline.tracks[idx].clips:
+        a_track = next((t for t in a.timeline.tracks if t.index == idx), None)
+        if a_track is None:
+            continue  # pragma: no cover  # defensive: idx came from a_tracks
+        for c in a_track.clips:
             result.clips_removed.append((idx, c.id))
 
     # Clips on added tracks
     for idx in b_tracks - a_tracks:
-        for c in b.timeline.tracks[idx].clips:
+        b_track = next((t for t in b.timeline.tracks if t.index == idx), None)
+        if b_track is None:
+            continue  # pragma: no cover  # defensive: idx came from b_tracks
+        for c in b_track.clips:
             result.clips_added.append((idx, c.id))
 
     # Media differences

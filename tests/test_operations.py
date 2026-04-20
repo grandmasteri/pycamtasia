@@ -10,7 +10,7 @@ from camtasia.audiate.transcript import Word
 from camtasia.operations.diff import diff_projects
 from camtasia.operations.merge import _remap_src_in_clip
 from camtasia.operations.speed import _adjust_scalar, _scale_tick, rescale_project, set_audio_speed
-from camtasia.operations.sync import match_marker_to_transcript, plan_sync
+from camtasia.operations.sync import apply_sync, match_marker_to_transcript, plan_sync
 from camtasia.operations.template import (
     _walk_clips,
     clone_project_structure,
@@ -1489,3 +1489,79 @@ class TestOverlapFixSkipsCompoundClips:
         actual_stitched = project["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]
         # StitchedMedia duration should remain unchanged
         assert actual_stitched["duration"] == 100
+
+
+class TestDiffProjectsNonContiguousTrackIndex:
+    """Bug 3: diff_projects must not IndexError on non-contiguous trackIndex values."""
+
+    def test_non_contiguous_track_indices(self, project):
+        """Projects with trackIndex 0 and 5 should not raise IndexError."""
+        a = project
+        # Add a track with non-contiguous trackIndex
+        scene = a._data['timeline']['sceneTrack']['scenes'][0]['csml']
+        scene['tracks'].append({
+            'trackIndex': 5, 'medias': [{
+                '_type': 'IMFile', 'id': 900, 'start': 0, 'duration': 100, 'src': 0,
+                'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1, 'metadata': {},
+                'parameters': {}, 'effects': [], 'attributes': {'ident': ''}, 'animationTracks': {},
+            }], 'transitions': [],
+        })
+        b = Project.__new__(Project)
+        b._data = copy.deepcopy(a._data)
+        b._file_path = a._file_path
+        result = diff_projects(a, b)
+        assert not result.has_changes
+
+
+class TestApplySyncRespectsGroupScalar:
+    """Bug 4: apply_sync must account for group scalar when computing offsets."""
+
+    def test_scalar_affects_source_offsets(self):
+        """With scalar=2, timeline offset should be halved for source-media offset."""
+        from unittest.mock import MagicMock
+
+        from camtasia.operations.sync import SyncSegment
+
+        group = MagicMock()
+        group._data = {
+            'start': 0,
+            'mediaStart': 0,
+            'scalar': 2,
+            'tracks': [{'medias': []}],
+        }
+        seg = SyncSegment(
+            video_start_ticks=0,
+            video_end_ticks=EDIT_RATE,
+            audio_start_seconds=0.0,
+            audio_end_seconds=0.5,
+            scalar=Fraction(2),
+        )
+        # apply_sync calls group.set_internal_segment_speeds with tuples
+        apply_sync(group, [seg])
+        call_args = group.set_internal_segment_speeds.call_args[0][0]
+        # With scalar=2, timeline offset of EDIT_RATE ticks should map to
+        # source offset of EDIT_RATE/2 ticks = 0.5 seconds
+        src_end = call_args[0][1]
+        assert abs(src_end - 0.5) < 0.01
+
+
+class TestStitchedMediaInnerScalarPreserved:
+    """Bug 5: _process_clip must not overwrite non-unity inner scalar."""
+
+    def test_inner_non_unity_scalar_preserved(self):
+        from camtasia.operations.speed import _process_clip
+        clip = {
+            '_type': 'StitchedMedia',
+            'start': 0, 'duration': 200, 'mediaStart': 0, 'mediaDuration': 200,
+            'scalar': 1, 'metadata': {}, 'effects': [],
+            'medias': [{
+                '_type': 'IMFile', 'id': 10,
+                'start': 0, 'duration': 100, 'mediaStart': 0, 'mediaDuration': 100,
+                'scalar': '1/2',  # non-unity inner scalar
+                'metadata': {},
+                'effects': [],
+            }],
+        }
+        _process_clip(clip, Fraction(1))
+        # Inner scalar should be preserved, not overwritten to 1
+        assert clip['medias'][0]['scalar'] == '1/2'

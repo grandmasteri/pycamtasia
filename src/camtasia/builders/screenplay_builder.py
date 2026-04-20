@@ -47,7 +47,7 @@ def build_from_screenplay(
     clips_placed = 0
     pauses_added = 0
 
-    for section in screenplay.sections:
+    for section_idx, section in enumerate(screenplay.sections):
         has_explicit_pauses = bool(section.pauses)
         # Build a map of pauses keyed by the VO index they follow
         pauses_after: dict[int, list[float]] = {}
@@ -91,6 +91,15 @@ def build_from_screenplay(
         for dur in trailing_pauses:
             builder.add_pause(dur)
             pauses_added += 1
+
+        # Add default pause between sections when no explicit pauses
+        if (default_pause > 0
+                and not has_explicit_pauses
+                and section_idx < len(screenplay.sections) - 1):
+            has_more_vo = any(s.vo_blocks for s in screenplay.sections[section_idx + 1:])
+            if has_more_vo and clips_placed > 0:
+                builder.add_pause(default_pause)
+                pauses_added += 1
 
     return {
         'clips_placed': clips_placed,

@@ -179,14 +179,19 @@ def apply_sync(
     timeline_duration) tuples expected by set_internal_segment_speeds.
     Subtracts the Group's mediaStart so positions are source-media offsets.
     """
-    from camtasia.timing import ticks_to_seconds
+    from camtasia.timing import parse_scalar, ticks_to_seconds
     group_start_ticks = int(Fraction(str(group._data.get('start', 0))))
     media_start_ticks = int(Fraction(str(group._data.get('mediaStart', 0))))
+    group_scalar = parse_scalar(group._data.get('scalar', 1))
     tuples = []
     for seg in segments:
+        tl_offset = seg.video_start_ticks - group_start_ticks
+        src_offset = int(tl_offset / group_scalar) if group_scalar != 0 else tl_offset
+        tl_offset_end = seg.video_end_ticks - group_start_ticks
+        src_offset_end = int(tl_offset_end / group_scalar) if group_scalar != 0 else tl_offset_end
         tuples.append((
-            ticks_to_seconds(seg.video_start_ticks - group_start_ticks + media_start_ticks),
-            ticks_to_seconds(seg.video_end_ticks - group_start_ticks + media_start_ticks),
+            ticks_to_seconds(src_offset + media_start_ticks),
+            ticks_to_seconds(src_offset_end + media_start_ticks),
             seg.audio_end_seconds - seg.audio_start_seconds,
         ))
     group.set_internal_segment_speeds(tuples)

@@ -30,12 +30,14 @@ def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
     gap_ticks = seconds_to_ticks(gap_seconds)
     cursor = 0
     any_shifted = False
-    for m in medias:
+    for i, m in enumerate(medias):
         if _to_ticks(m.get('start', 0)) != cursor:
             any_shifted = True
         m['start'] = cursor
         _propagate_start_to_unified(m)
-        cursor += _to_ticks(m.get('duration', 0)) + gap_ticks
+        cursor += _to_ticks(m.get('duration', 0))
+        if i < len(medias) - 1:
+            cursor += gap_ticks
     if any_shifted:
         track._data['transitions'] = []
 

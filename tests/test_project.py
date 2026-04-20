@@ -1820,3 +1820,21 @@ class TestRepairPreservesOrderWithRemovals:
         ids = [m['id'] for m in track._data['medias']]
         # id=1 removed, but id=3 and id=2 should keep original order [3, 2]
         assert ids == [3, 2]
+
+
+class TestValidateMissingSourceFileNotSkipped:
+    """Bug 1: Missing source file check must run even when type-specific checks continue."""
+
+    def test_audio_missing_source_tracks_still_reports_missing_file(self, project):
+        """An audio media with missing sourceTracks should still report missing source file."""
+        project._data['sourceBin'].append({
+            'id': 999,
+            'src': './media/nonexistent_audio.wav',
+            'sourceTracks': [],
+            'rect': [0, 0, 100, 100],
+            'lastMod': '20260101T000000',
+            'dur': 1000,
+        })
+        issues = project.validate()
+        msgs = [i.message for i in issues]
+        assert any('Missing source file' in m and 'nonexistent_audio.wav' in m for m in msgs)

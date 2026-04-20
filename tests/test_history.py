@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import json
 from typing import Any
 
 import jsonpatch
@@ -415,3 +416,21 @@ class TestUndoRedoStackOverflow:
         # Now undo twice to push back onto redo (already at 3 = max)
         history.undo(project_data)  # redo_count=4 > 3 = max, triggers truncation to 3
         assert history.redo_count == 3
+
+
+class TestTotalPatchSizeBytesReturnsBytes:
+    """Bug 2: total_patch_size_bytes must return byte count, not char count."""
+
+    def test_non_ascii_patch_counts_bytes(self) -> None:
+        history = ChangeHistory()
+        before: dict[str, Any] = {"text": "hello"}
+        after: dict[str, Any] = {"text": "\u00e9\u00e8\u00ea"}  # multi-byte UTF-8 chars
+        history.record("add accents", before, after)
+        size = history.total_patch_size_bytes
+        # json.dumps produces ASCII escapes for non-ASCII by default,
+        # but .encode('utf-8') should still give correct byte count
+        expected = 0
+        for rec in history._undo_stack + history._redo_stack:
+            expected += len(json.dumps(rec.forward_patch.patch).encode('utf-8'))
+            expected += len(json.dumps(rec.inverse_patch.patch).encode('utf-8'))
+        assert size == expected

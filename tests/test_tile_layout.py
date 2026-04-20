@@ -148,3 +148,22 @@ class TestTileLayoutNegativeDuration:
         images = [dummy] * 6
         placed = layout.add_grid(images, start_seconds=0, end_seconds=5, stagger_seconds=2)
         assert [p.clip_type for p in placed] == ['IMFile'] * 3
+
+
+class TestAddGridZeroDimensions:
+    """Bug 8: add_grid must raise ValueError for zero or negative grid dimensions."""
+
+    def test_zero_rows_raises(self, project):
+        layout = TileLayout(project)
+        with pytest.raises(ValueError, match='grid dimensions must be positive'):
+            layout.add_grid([DUMMY_IMAGE], start_seconds=0, end_seconds=10, grid=(0, 2))
+
+    def test_zero_cols_raises(self, project):
+        layout = TileLayout(project)
+        with pytest.raises(ValueError, match='grid dimensions must be positive'):
+            layout.add_grid([DUMMY_IMAGE], start_seconds=0, end_seconds=10, grid=(2, 0))
+
+    def test_negative_rows_raises(self, project):
+        layout = TileLayout(project)
+        with pytest.raises(ValueError, match='grid dimensions must be positive'):
+            layout.add_grid([DUMMY_IMAGE], start_seconds=0, end_seconds=10, grid=(-1, 2))

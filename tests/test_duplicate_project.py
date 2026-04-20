@@ -49,7 +49,9 @@ def test_duplicate_clear_media_removes_media_dir(source_project, tmp_path):
     # Ensure source has a media dir
     assert (source_project.file_path / "media").exists()
     duplicate_project(source_project.file_path, dst, clear_media=True)
-    assert not (dst / "media").exists()
+    # Media dir should exist but be empty (recreated after rmtree)
+    assert (dst / "media").exists()
+    assert list((dst / "media").iterdir()) == []
 
 
 def test_duplicate_existing_dest_raises(source_project, tmp_path):

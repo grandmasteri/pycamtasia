@@ -161,8 +161,8 @@ class ChangeHistory:
         """Approximate memory usage of stored patches in bytes."""
         total_size: int = 0
         for record in self._undo_stack + self._redo_stack:
-            total_size += len(json.dumps(record.forward_patch.patch))
-            total_size += len(json.dumps(record.inverse_patch.patch))
+            total_size += len(json.dumps(record.forward_patch.patch).encode('utf-8'))
+            total_size += len(json.dumps(record.inverse_patch.patch).encode('utf-8'))
         return total_size
 
 

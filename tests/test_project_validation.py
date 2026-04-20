@@ -35,8 +35,8 @@ def test_validate_detects_zero_range_audio(project):
 
     actual_issues = project.validate()
     expected_issues = [
-        ValidationIssue('error', 'Zero-range audio source: media/test.wav', 100),
         ValidationIssue('warning', 'Missing source file: media/test.wav', 100),
+        ValidationIssue('error', 'Zero-range audio source: media/test.wav', 100),
         ValidationIssue('warning', 'Orphaned media not used by any clip: media/test.wav', 100),
     ]
     assert actual_issues == expected_issues
@@ -59,8 +59,8 @@ def test_validate_detects_zero_dimension_image(project):
 
     actual_issues = project.validate()
     expected_issues = [
-        ValidationIssue('error', 'Zero-dimension image source: media/test.png', 200),
         ValidationIssue('warning', 'Missing source file: media/test.png', 200),
+        ValidationIssue('error', 'Zero-dimension image source: media/test.png', 200),
         ValidationIssue('warning', 'Orphaned media not used by any clip: media/test.png', 200),
     ]
     assert actual_issues == expected_issues

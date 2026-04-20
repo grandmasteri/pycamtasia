@@ -869,6 +869,11 @@ class Project:
         for media in self.media_bin:
             raw = media._data
 
+            # Missing source file (check first, before type-specific checks that may continue)
+            src_path = self._file_path / media.source if self._file_path.is_dir() else self._file_path.parent / media.source
+            if not src_path.exists():
+                issues.append(ValidationIssue('warning', f'Missing source file: {media.source}', media.id))
+
             # Zero-range audio
             if media.type == MediaType.Audio:
                 try:
@@ -888,11 +893,6 @@ class Project:
                     continue
                 if rect == [0, 0, 0, 0]:
                     issues.append(ValidationIssue('error', f'Zero-dimension image source: {media.source}', media.id))
-
-            # Missing source file
-            src_path = self._file_path / media.source if self._file_path.is_dir() else self._file_path.parent / media.source
-            if not src_path.exists():
-                issues.append(ValidationIssue('warning', f'Missing source file: {media.source}', media.id))
 
         # Collect all clip source references
         referenced_ids: set[int] = set()

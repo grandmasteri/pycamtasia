@@ -95,8 +95,9 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                 inner["duration"] = _scale_tick(inner["duration"], factor)
                 inner["mediaStart"] = _scale_tick(inner.get("mediaStart", 0), factor)
                 inner["mediaDuration"] = _scale_tick(inner.get("mediaDuration", 0), factor)
-                # Only propagate scalar if inner doesn't have its own speed change
-                if not _has_speed_change(inner):
+                # Only propagate scalar if inner doesn't have its own non-unity scalar
+                inner_scalar = parse_scalar(inner.get('scalar', 1))
+                if inner_scalar == 1:
                     inner["scalar"] = clip.get("scalar", 1)
                 # Only scale effects here for non-UnifiedMedia; UnifiedMedia handles its own via _process_clip
                 for effect in inner.get('effects', []):

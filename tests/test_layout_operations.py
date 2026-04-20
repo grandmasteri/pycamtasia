@@ -367,3 +367,20 @@ class TestSnapToGridRoundHalfUp:
         track = _make_track([{'id': 1, 'start': pos, 'duration': seconds_to_ticks(1.0)}])
         snap_to_grid(track, grid_seconds=grid)
         assert track._data['medias'][0]['start'] == 2 * grid_ticks
+
+
+class TestPackTrackNoTrailingGap:
+    """Bug 6: pack_track must not add a gap after the last clip."""
+
+    def test_no_trailing_gap(self):
+        track = _make_track([
+            _clip(1, 0.0, 2.0),
+            _clip(2, 5.0, 3.0),
+        ])
+        gap = 1.0
+        pack_track(track, gap_seconds=gap)
+        medias = track._data['medias']
+        last_end = medias[-1]['start'] + medias[-1]['duration']
+        # Total should be 2s + 1s gap + 3s = 6s, NOT 2s + 1s + 3s + 1s = 7s
+        expected = seconds_to_ticks(2.0) + seconds_to_ticks(1.0) + seconds_to_ticks(3.0)
+        assert last_end == expected

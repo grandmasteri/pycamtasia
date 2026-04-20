@@ -39,6 +39,8 @@ class TileLayout:
             fade_in_seconds: Fade-in duration for each tile.
         """
         rows, cols = grid
+        if rows <= 0 or cols <= 0:
+            raise ValueError(f'grid dimensions must be positive, got rows={rows}, cols={cols}')
         canvas_w = self._project.width
         canvas_h = self._project.height
         cell_w = canvas_w / cols

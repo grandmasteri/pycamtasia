@@ -4,31 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 12 domains 4-6)
-
-**Project/history:**
-
-1. [verified] `validate()` continue skips "Missing source file" check for malformed media entries. (project.py ~L874, L884)
-
-2. [verified] `history.py total_patch_size_bytes` returns character count instead of byte count. (history.py)
-
-**Operations:**
-
-3. [verified] `diff.py diff_projects` uses trackIndex as list position; IndexError on non-contiguous indices. (diff.py)
-
-4. [verified] `sync.py apply_sync` ignores Group scalar when converting timeline→source offsets. (sync.py)
-
-5. [verified] `speed.py _process_clip` StitchedMedia overwrites inner clip scalar based on clipSpeedAttribute alone, missing non-unity scalars without the attribute. (speed.py)
-
-6. [verified] `layout.py pack_track` adds trailing gap after last clip. (layout.py)
-
-7. [verified] `template.py duplicate_project(clear_media=True)` deletes media/ directory without recreating. (template.py)
-
-**Supporting:**
-
-8. [verified] `builders/tile_layout.py add_grid()` ZeroDivisionError when grid=(0,N) or grid=(N,0). (tile_layout.py ~L41)
-
-9. [verified] `builders/screenplay_builder.py` no default pause between consecutive sections' VO blocks. Last VO of section N and first VO of section N+1 placed back-to-back. (screenplay_builder.py ~L75)
+(none currently)
 
 ## TechSmith Tutorial Analysis
 
