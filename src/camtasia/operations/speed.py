@@ -24,7 +24,10 @@ def _frac(value: int | float | str) -> Fraction:
 
 def _scale_tick(value: int | float | str, factor: Fraction) -> int | str:
     """Scale a tick value by *factor*, preserving type for fraction strings."""
-    f = _frac(value) * factor
+    if isinstance(value, float):
+        f = Fraction(value).limit_denominator(10**9) * factor
+    else:
+        f = _frac(value) * factor
     if isinstance(value, str) and "/" in value:
         return f"{f.numerator}/{f.denominator}" if f.denominator != 1 else int(f)
     return round(float(f))
@@ -165,6 +168,14 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
                     if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group', 'UnifiedMedia'):
                         md = _frac(medias[i]['duration']) / s
                         medias[i]['mediaDuration'] = int(md) if md == int(md) else f'{md.numerator}/{md.denominator}'
+                    # Adjust child effects for UnifiedMedia sub-clips
+                    if medias[i].get('_type') == 'UnifiedMedia':
+                        from camtasia.timeline.track import _adjust_effects_after_split
+                        new_dur = medias[i]['duration']
+                        for sub_key in ('video', 'audio'):
+                            sub = medias[i].get(sub_key)
+                            if sub is not None:
+                                _adjust_effects_after_split(sub, new_dur)
                     from camtasia.timeline.track import _propagate_start_to_unified
                     _propagate_start_to_unified(medias[i])
 

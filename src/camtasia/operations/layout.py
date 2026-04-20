@@ -31,7 +31,7 @@ def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
     cursor = 0
     any_shifted = False
     for m in medias:
-        if m['start'] != cursor:
+        if _to_ticks(m.get('start', 0)) != cursor:
             any_shifted = True
         m['start'] = cursor
         _propagate_start_to_unified(m)

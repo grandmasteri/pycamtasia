@@ -198,3 +198,22 @@ def test_track_attributes_count_matches_passes():
     )
     issues = _check_track_attributes_count(data)
     assert issues == []
+
+
+# --- Callout excluded from timing consistency ---
+
+def test_callout_excluded_from_timing_consistency():
+    """Bug 2: Callout clips should be excluded from mediaDuration consistency check."""
+    from camtasia.validation import _check_timing_consistency
+    data = _make_data([{
+        'medias': [{
+            'id': 1,
+            '_type': 'Callout',
+            'start': 0,
+            'duration': 1000,
+            'mediaDuration': 500,
+            'scalar': '1/2',
+        }],
+    }])
+    issues = _check_timing_consistency(data)
+    assert issues == []

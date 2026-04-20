@@ -68,3 +68,11 @@ class TestImportMediaCompressedAudio:
         expected_samples = int(10000.0 * 44100 / 1000)  # 441000
         actual_range = media._data["sourceTracks"][0]["range"]
         assert actual_range == [0, expected_samples]
+
+
+    def test_rounding_not_truncation(self):
+        """Bug 10: _compute_audio_duration should round, not truncate."""
+        # 999.9ms * 44100 / 1000 = 44095.59 -> should round to 44096, not truncate to 44095
+        track = {"duration": 999.9}
+        result = _compute_audio_duration(track, 44100)
+        assert result == 44096

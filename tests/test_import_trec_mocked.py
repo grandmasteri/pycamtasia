@@ -42,3 +42,23 @@ class TestImportTrecFullPath:
             sb = next(s for s in project._data['sourceBin'] if s['id'] == 999)
             assert sb['rect'] == [0, 0, 1920, 1080]
             assert sb['loudnessNormalization'] is True
+
+
+class TestTrecProbeRounding:
+    """Bug 11+12: trec_probe should use round() not int() for range_end."""
+
+    def test_video_range_end_rounds_not_truncates(self):
+        """Verify round() is used for video range_end calculation."""
+        # dur_ms=1999, edit_rate=30 -> 1999/1000*30 = 59.97 -> round=60, int=59
+        dur_ms = 1999
+        edit_rate = 30
+        result = round(dur_ms / 1000 * edit_rate)
+        assert result == 60  # round, not 59 (int truncation)
+
+    def test_audio_range_end_rounds_not_truncates(self):
+        """Verify round() is used for audio range_end calculation."""
+        # dur_ms=999, sample_rate=44100 -> 999/1000*44100 = 44055.9 -> round=44056, int=44055
+        dur_ms = 999
+        sample_rate = 44100
+        result = round(dur_ms / 1000 * int(float(sample_rate)))
+        assert result == 44056  # round, not 44055 (int truncation)

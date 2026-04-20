@@ -269,3 +269,15 @@ class TestHighlightFlatValues:
     def test_no_stroke_width_key(self):
         result = highlight()
         assert 'stroke-width' not in result
+
+
+class TestSquareDefaultStrokeColor:
+    """Bug 13: square() default stroke_color should use float 0.0, not int 0."""
+
+    def test_default_stroke_color_is_valid(self):
+        result = square("test", "Helvetica", "Bold")
+        # stroke-color-red should be 0.0 (float), not 0 (int)
+        assert result['stroke-color-red'] == 0.0
+        assert isinstance(result['stroke-color-red'], float)
+        assert result['stroke-color-green'] == 0.5
+        assert result['stroke-color-blue'] == 0.5

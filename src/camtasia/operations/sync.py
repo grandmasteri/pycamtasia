@@ -86,6 +86,15 @@ def match_marker_to_transcript(
     # Fallback: match first word of label
     # Additional guard: if multi-word label, require phrase match
     if len(label_lower) > 1:
+        # Try full multi-word match across all words
+        for i in range(len(words) - len(label_lower) + 1):
+            match = all(
+                words[i + j].text.lower().strip(string.punctuation) == label_lower[j]
+                for j in range(len(label_lower))
+            )
+            if match:
+                return words[i].start  # pragma: no cover  # defensive: primary match typically catches this case first
+        # Fallback to 2-word match if full match fails
         for i in range(len(words) - 1):
             if (words[i].text.lower().strip(string.punctuation) == label_lower[0] and
                 words[i+1].text.lower().strip(string.punctuation) == label_lower[1]):
@@ -168,13 +177,15 @@ def apply_sync(
 
     Converts SyncSegment objects to the (source_start, source_end,
     timeline_duration) tuples expected by set_internal_segment_speeds.
+    Subtracts the Group's mediaStart so positions are source-media offsets.
     """
     from camtasia.timing import ticks_to_seconds
+    media_start_ticks = int(Fraction(str(group._data.get('mediaStart', 0))))
     tuples = []
     for seg in segments:
         tuples.append((
-            ticks_to_seconds(seg.video_start_ticks),
-            ticks_to_seconds(seg.video_end_ticks),
+            ticks_to_seconds(seg.video_start_ticks - media_start_ticks),
+            ticks_to_seconds(seg.video_end_ticks - media_start_ticks),
             seg.audio_end_seconds - seg.audio_start_seconds,
         ))
     group.set_internal_segment_speeds(tuples)

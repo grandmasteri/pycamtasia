@@ -138,3 +138,29 @@ def test_apply_sync():
     assert abs(ticks_to_seconds(second['duration']) - 37.0) < 0.01
     assert abs(ticks_to_seconds(second['mediaStart']) - 20.0) < 0.01
     assert abs(ticks_to_seconds(second['mediaDuration']) - 40.0) < 0.01
+
+
+def test_apply_sync_subtracts_media_start():
+    """Bug 8: apply_sync should subtract Group's mediaStart from video positions."""
+    media_start_s = 10.0
+    group_data = _make_group_data(dur_s=50.0, source_s=50.0)
+    group_data['mediaStart'] = seconds_to_ticks(media_start_s)
+    group = Group(group_data)
+
+    segments = [
+        SyncSegment(
+            video_start_ticks=seconds_to_ticks(10.0),
+            video_end_ticks=seconds_to_ticks(30.0),
+            audio_start_seconds=0.0,
+            audio_end_seconds=18.0,
+            scalar=Fraction(20, 18),
+        ),
+    ]
+
+    apply_sync(group, segments)
+
+    internal_medias = group._data['tracks'][1]['medias']
+    first = internal_medias[0]
+    # After subtracting mediaStart (10s), source_start should be 0s, source_end 20s
+    assert abs(ticks_to_seconds(first['mediaStart'])) < 0.01
+    assert abs(ticks_to_seconds(first['mediaDuration']) - 20.0) < 0.01

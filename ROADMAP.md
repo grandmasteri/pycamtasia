@@ -4,41 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 5 domains 4-6)
-
-**Project/validation/history:**
-
-1. [verified] `add_background_music` no guard against overlapping fade regions when fade_in + fade_out > clip_duration. Hold keyframe gets negative duration. (project.py)
-
-2. [verified] `validation._check_timing_consistency` exclusion list missing `Callout`. May trigger false-positive warnings for speed-changed Callouts. (validation.py ~L225)
-
-**Operations:**
-
-3. [verified] `pack_track` type-mismatch `m['start'] != cursor`. String fraction vs int — always unequal, triggers spurious transition clearing. (layout.py L34)
-
-4. [verified] `ripple_insert`/`ripple_delete`/`snap_to_grid` lossy int conversion when writing back start from string-fraction. Changes representation type. (layout.py)
-
-5. [verified] `merge_tracks()` loses source track attributes (audioMuted, videoHidden, solo). Creates new track with defaults. (merge.py)
-
-6. [verified] `_scale_tick` float precision loss: `Fraction(float_value)` creates enormous denominators; `round(float(f))` loses precision. (speed.py L28)
-
-7. [verified] `rescale_project` overlap fix doesn't adjust child effects. Effects that referenced old duration boundary extend past new clip end. (speed.py ~L157)
-
-8. [verified] `apply_sync` passes timeline positions instead of source-media offsets. Wrong when Group's mediaStart != 0. (sync.py ~L175)
-
-9. [verified] `match_marker_to_transcript` fallback only checks first 2 words of multi-word labels. False-positive matches. (sync.py ~L113)
-
-**Supporting:**
-
-10. [verified] `_compute_audio_duration` uses `int()` truncation. Off by up to 1 sample. (media_bin/media_bin.py L487)
-
-11. [verified] `trec_probe.probe_trec` video `range_end` uses `int()` truncation. Last frame may be excluded. (trec_probe.py L93)
-
-12. [verified] `trec_probe.probe_trec` audio `range_end` uses `int()` truncation. Same pattern. (trec_probe.py L105)
-
-13. [verified] `square()` default `stroke_color` passes `int(0)` where `float(0.0)` expected by Camtasia format. (annotations/callouts.py L89)
-
-14. [verified] `_format_timecode` silently clamps negative seconds to 0. Wrong timecodes without warning. (export/edl.py L12)
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

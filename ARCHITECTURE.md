@@ -134,3 +134,12 @@ clip.effects.add(DropShadow(offset=15.0, blur=25.0, opacity=0.2))
 - High-level operations that coordinate across multiple clips/tracks
 - speed.rescale_project(project, factor) — what we tested successfully
 - sync.sync_to_transcript(project, transcript, markers) — V3 workflow
+
+## Known Design Decisions
+
+### Layout operations coerce string-fraction starts to int
+`ripple_insert`, `ripple_delete`, and `snap_to_grid` in `operations/layout.py`
+coerce string-fraction start values (e.g. `"705600000/2"`) to `int` on
+write-back. Camtasia accepts both formats, so this is a safe lossy
+conversion. Preserving the original type would add complexity for no
+practical benefit.

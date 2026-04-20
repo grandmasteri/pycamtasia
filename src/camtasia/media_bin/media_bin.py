@@ -508,7 +508,7 @@ def _compute_audio_duration(track: dict[str, Any], sample_rate: int | None) -> i
     duration_ms = float(track.get("duration", 0))
     if not sample_rate or sample_rate <= 0:
         return 0  # Can't compute sample count without sample rate
-    return int(duration_ms * sample_rate / 1000)
+    return round(duration_ms * sample_rate / 1000)
 
 
 def _get_media_type(track: dict[str, Any]) -> MediaType:

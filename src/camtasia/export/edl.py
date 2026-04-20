@@ -11,7 +11,10 @@ if TYPE_CHECKING:
 
 def _format_timecode(seconds: float, fps: int = 30) -> str:
     """Format seconds as SMPTE timecode HH:MM:SS:FF."""
-    seconds = max(0.0, seconds)
+    if seconds < 0:
+        import warnings
+        warnings.warn(f'Negative timecode {seconds}s clamped to 00:00:00:00', stacklevel=2)
+        seconds = 0.0
     h = int(seconds // 3600)
     m = int((seconds % 3600) // 60)
     s = int(seconds % 60)

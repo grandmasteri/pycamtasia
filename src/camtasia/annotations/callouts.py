@@ -94,7 +94,7 @@ def square(text,
     if fill_color is None:
         fill_color = Color(1.0, 1.0, 1.0)
     if stroke_color is None:
-        stroke_color = Color(0, 0.5, 0.5)
+        stroke_color = Color(0.0, 0.5, 0.5)
     return {
         "kind": "remix",
         "shape": "text-rectangle",

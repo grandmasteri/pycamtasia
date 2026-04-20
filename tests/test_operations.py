@@ -1030,3 +1030,85 @@ class TestUnifiedMediaChildMediaDurationConsistency:
         assert clip['mediaDuration'] == 2000
         assert clip['video']['mediaDuration'] == 2000
         assert clip['audio']['mediaDuration'] == 2000
+
+
+class TestScaleTickFloatPrecision:
+    """Bug 6: _scale_tick should handle float inputs without precision loss."""
+
+    def test_float_input_does_not_produce_huge_denominator(self):
+        from camtasia.operations.speed import _scale_tick
+        result = _scale_tick(0.1, Fraction(2))
+        # Should produce a clean result, not a huge fraction
+        assert isinstance(result, int)
+        assert result == 0  # 0.1 * 2 = 0.2, rounded to 0
+
+
+class TestRescaleOverlapFixAdjustsEffects:
+    """Bug 7: overlap fix in rescale_project should adjust UnifiedMedia child effects."""
+
+    def test_unified_media_effects_trimmed_on_overlap_fix(self):
+        project_data = _make_project(tracks=[{
+            'medias': [
+                {
+                    '_type': 'UnifiedMedia', 'id': 1, 'src': 0,
+                    'start': 0, 'duration': 1000,
+                    'mediaStart': 0, 'mediaDuration': 1000,
+                    'scalar': 1, 'metadata': {}, 'parameters': {},
+                    'effects': [], 'attributes': {}, 'animationTracks': {},
+                    'video': {
+                        '_type': 'VMFile', 'id': 2, 'src': 0,
+                        'start': 0, 'duration': 1000,
+                        'mediaDuration': 1000, 'scalar': 1,
+                        'metadata': {}, 'parameters': {},
+                        'effects': [{'effectName': 'test', 'start': 0, 'duration': 1000}],
+                    },
+                    'audio': {
+                        '_type': 'AMFile', 'id': 3, 'src': 0,
+                        'start': 0, 'duration': 1000,
+                        'mediaDuration': 1000, 'scalar': 1,
+                        'metadata': {}, 'effects': [],
+                    },
+                },
+                {
+                    '_type': 'VMFile', 'id': 4, 'src': 0,
+                    'start': 999, 'duration': 500,
+                    'mediaStart': 0, 'mediaDuration': 500,
+                    'scalar': 1, 'metadata': {}, 'parameters': {},
+                    'effects': [], 'attributes': {}, 'animationTracks': {},
+                },
+            ],
+            'transitions': [],
+        }])
+        # The overlap fix should trim clip 1's duration and adjust video effects
+        rescale_project(project_data, Fraction(1))
+        tracks = project_data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']
+        um = tracks[0]['medias'][0]
+        video_effects = um.get('video', {}).get('effects', [])
+        for eff in video_effects:
+            if 'duration' in eff:
+                assert eff['duration'] <= um['duration']
+
+
+class TestMatchMarkerMultiWordFallback:
+    """Bug 9: match_marker_to_transcript should check ALL words in fallback."""
+
+    def test_three_word_fallback_matches(self):
+        words = [
+            Word(word_id='', text="the", start=0.0, end=0.1),
+            Word(word_id='', text="quick", start=0.1, end=0.2),
+            Word(word_id='', text="brown", start=0.2, end=0.3),
+            Word(word_id='', text="fox", start=0.3, end=0.4),
+        ]
+        # "quick brown fox" should match via full multi-word fallback
+        result = match_marker_to_transcript("quick brown fox", words)
+        assert result == 0.1
+
+    def test_three_word_no_match_returns_none(self):
+        words = [
+            Word(word_id='', text="the", start=0.0, end=0.1),
+            Word(word_id='', text="quick", start=0.1, end=0.2),
+            Word(word_id='', text="brown", start=0.2, end=0.3),
+            Word(word_id='', text="fox", start=0.3, end=0.4),
+        ]
+        result = match_marker_to_transcript("quick red fox", words)
+        assert result is None

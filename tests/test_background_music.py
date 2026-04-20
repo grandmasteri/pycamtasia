@@ -83,3 +83,15 @@ def test_fade_in_only_has_sustain_keyframe(project):
     # Last keyframe should hold the target volume until end of clip
     assert keyframes[-1]['value'] == 0.3
     assert keyframes[-1]['endTime'] > keyframes[1]['endTime']
+
+
+def test_overlapping_fades_clamped(project):
+    """Bug 1: fade_in + fade_out > total should not produce negative hold duration."""
+    clip = project.add_background_music(
+        EMPTY_WAV, fade_in_seconds=50.0, fade_out_seconds=50.0,
+    )
+    volume_param = clip._data.get('parameters', {}).get('volume', {})
+    keyframes = volume_param.get('keyframes', [])
+    # All keyframe durations must be non-negative
+    for kf in keyframes:
+        assert kf.get('duration', 0) >= 0, f"Negative duration in keyframe: {kf}"

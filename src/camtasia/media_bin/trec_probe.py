@@ -91,7 +91,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
 
             dur_ms = track.duration or 0
             edit_rate = round(float(fps))
-            range_end = int(dur_ms / 1000 * edit_rate)
+            range_end = round(dur_ms / 1000 * edit_rate)
 
             source_tracks.append({
                 'range': [0, range_end],
@@ -113,7 +113,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
             channels = int(str(raw_ch).split('/')[0].strip())
             sample_rate = track.sampling_rate or 44100
             dur_ms = track.duration or 0
-            range_end = int(dur_ms / 1000 * int(float(sample_rate)))
+            range_end = round(dur_ms / 1000 * int(float(sample_rate)))
 
             tag = 0
 

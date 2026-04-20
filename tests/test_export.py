@@ -442,3 +442,14 @@ class TestEdlAudioMediaDurationFallback:
         audio_line = next(l for l in lines if '  A  ' in l)
         # Audio src_out should reflect 10s media_duration, not 5s duration
         assert '00:00:10:00' in audio_line
+
+
+def test_format_timecode_negative_warns():
+    """Bug 14: _format_timecode should warn when clamping negative seconds."""
+    import warnings
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        result = _format_timecode(-5.0)
+        assert result == '00:00:00:00'
+        assert len(w) == 1
+        assert 'Negative timecode' in str(w[0].message)

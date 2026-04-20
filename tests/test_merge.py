@@ -223,3 +223,19 @@ class TestMergeStringFractionStart:
         merged_start = new_track._data['medias'][0]['start']
         expected = 352_800_000 + seconds_to_ticks(1.0)
         assert merged_start == expected
+
+
+class TestMergeCopiesTrackAttributes:
+    """Bug 5: merge_tracks should copy source track attributes."""
+
+    def test_audio_muted_copied(self, project):
+        source = load_project(RESOURCES / 'new.cmproj')
+        _populate_source(source)
+        # Set audioMuted on the source track
+        source_track = next(t for t in source.timeline.tracks if len(t) > 0)
+        source_track._data['audioMuted'] = True
+
+        merge_tracks(source, project)
+
+        new_track = list(project.timeline.tracks)[-1]
+        assert new_track._data.get('audioMuted') is True

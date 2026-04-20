@@ -97,6 +97,10 @@ def merge_tracks(
             continue
 
         new_track = target.timeline.add_track(track.name)
+        # Copy relevant attributes from source track
+        for attr in ('audioMuted', 'videoHidden', 'solo', 'magnetic', 'matte'):
+            if attr in track._data:
+                new_track._data[attr] = track._data[attr]
         id_counter = [target.next_available_id]
 
         clip_id_map: dict[int, int] = {}

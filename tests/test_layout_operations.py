@@ -331,3 +331,15 @@ class TestSnapToGridTransitions:
         ]
         snap_to_grid(track, grid_seconds=1.0)
         assert track._data['transitions'] == []
+
+
+class TestPackTrackStringFractionStart:
+    def test_pack_track_handles_string_fraction_starts(self):
+        """Bug 3: pack_track should use _to_ticks() for comparison, not raw value."""
+        track = _make_track([
+            {'id': 1, 'start': '0/1', 'duration': seconds_to_ticks(2.0)},
+            {'id': 2, 'start': str(seconds_to_ticks(5)), 'duration': seconds_to_ticks(3.0)},
+        ])
+        pack_track(track)
+        # After packing, clip 2 should start right after clip 1
+        assert track._data['medias'][1]['start'] == seconds_to_ticks(2.0)
