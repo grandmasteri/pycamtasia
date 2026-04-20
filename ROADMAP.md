@@ -4,7 +4,33 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 13 domains 1-3)
+
+**Leaf clips:**
+
+1. [verified] `set_speed()` Group branch doesn't recalculate inner clip `mediaDuration` for regular types (VMFile/AMFile/Callout). Invariant `duration = mediaDuration * scalar` broken for those inner clips. (base.py ~L270)
+
+2. [verified] `is_audio` returns False for standalone audio-only UnifiedMedia (not inside StitchedMedia). Top-level check only matches AMFile. (base.py ~L60)
+
+3. [verified] `set_speed()` StitchedMedia branch: `start` positions use `round()` of individual durations while `duration` fields store exact fractions. `start[i] + duration[i] != start[i+1]`. (base.py ~L230)
+
+4. [verified] `set_speed()` Group→StitchedMedia branch uses `int()` truncation instead of `round()` used in top-level StitchedMedia branch. Inconsistent rounding. (base.py ~L300)
+
+**Compound clips:**
+
+5. [verified] `set_internal_segment_speeds()` `next_id` auto-detection only checks top-level IDs. `_collect_all_ids` helper exists but not used. (group.py ~L670)
+
+6. [verified] `ungroup()` doesn't scale `parameters.*.keyframes` or `animationTracks.visual` when group_scalar != 1. Effects are scaled but animations are not. (group.py ~L200-335)
+
+7. [verified] `ungroup()` StitchedMedia rounding-gap adjustment doesn't update `mediaDuration` on last segment or propagate to UnifiedMedia sub-clips. (group.py ~L278)
+
+8. [verified] `ungroup()` nested Group mediaDuration not recalculated after rounding. Minor invariant violation. (group.py ~L285)
+
+**Track/timeline:**
+
+9. [verified] `scale_all_durations()` corrupts Group clip scalar. `duration` scaled but `mediaDuration` unchanged, so recalculated scalar = factor instead of 1. Same for StitchedMedia. (track.py)
+
+10. [verified] `scale_all_durations()` doesn't scale Group internal clip `start`/`duration`/`mediaDuration`/`mediaStart`. Effects scaled but clips not. Internal timeline inconsistent with outer duration. (track.py)
 
 ## TechSmith Tutorial Analysis
 
