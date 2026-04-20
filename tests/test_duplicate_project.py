@@ -44,6 +44,14 @@ def test_duplicate_clear_media(source_project, tmp_path):
     assert len(list(copy.media_bin)) == 0
 
 
+def test_duplicate_clear_media_removes_media_dir(source_project, tmp_path):
+    dst = tmp_path / "copy.cmproj"
+    # Ensure source has a media dir
+    assert (source_project.file_path / "media").exists()
+    duplicate_project(source_project.file_path, dst, clear_media=True)
+    assert not (dst / "media").exists()
+
+
 def test_duplicate_existing_dest_raises(source_project, tmp_path):
     dst = tmp_path / "copy.cmproj"
     dst.mkdir()

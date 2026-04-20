@@ -145,6 +145,8 @@ class ChangeHistory:
             self._redo_stack.append(record) # pragma: no cover
             raise # pragma: no cover
         self._undo_stack.append(record)
+        if len(self._undo_stack) > self._max_history_depth:
+            self._undo_stack = self._undo_stack[-self._max_history_depth:]
         return record.description
 
     def clear(self) -> None:

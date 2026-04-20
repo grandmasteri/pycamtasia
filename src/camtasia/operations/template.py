@@ -128,4 +128,8 @@ def duplicate_project(
             toc['keyframes'] = []
         proj.save()
 
+        media_dir = dst / 'media' if dst.is_dir() else None
+        if media_dir and media_dir.exists():
+            shutil.rmtree(media_dir)
+
     return proj

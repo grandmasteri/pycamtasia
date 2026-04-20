@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from fractions import Fraction
 from typing import TYPE_CHECKING
 
 from camtasia.timeline.track import _propagate_start_to_unified
@@ -94,7 +95,7 @@ def merge_tracks(
         for clip_data in track._data.get('medias', []):
             new_clip = copy.deepcopy(clip_data)
             _remap_clip_ids(new_clip, id_counter, clip_id_map, src_id_map)
-            new_clip['start'] = new_clip.get('start', 0) + offset_ticks
+            new_clip['start'] = int(Fraction(str(new_clip.get('start', 0)))) + offset_ticks
             _propagate_start_to_unified(new_clip)
             new_track._data.setdefault('medias', []).append(new_clip)
 

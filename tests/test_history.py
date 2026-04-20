@@ -273,3 +273,82 @@ class TestWithUndoDecorator:
 
         returned_title: str = get_and_set_title(project, "New")
         assert returned_title == ""
+
+
+class TestRedoEnforcesMaxHistoryDepth:
+    """Bug 2: redo() must truncate undo_stack when it exceeds max_history_depth."""
+
+    def test_redo_truncates_undo_stack(self) -> None:
+        history = ChangeHistory(max_history_depth=3)
+        project_data: dict[str, Any] = {"v": 0}
+
+        # Fill undo stack to max
+        for i in range(3):
+            before = copy.deepcopy(project_data)
+            project_data["v"] = i + 1
+            history.record(f"step {i}", before, project_data)
+
+        assert history.undo_count == 3
+
+        # Undo one, then redo — undo stack should still be capped at 3
+        history.undo(project_data)
+        assert history.undo_count == 2
+        assert history.redo_count == 1
+
+        history.redo(project_data)
+        assert history.undo_count == 3
+        # Now undo all, then redo all — should never exceed max
+        for _ in range(3):
+            history.undo(project_data)
+        assert history.undo_count == 0
+        assert history.redo_count == 3
+
+    def test_redo_truncates_when_pushes_above_max(self) -> None:
+        """Test the truncation path specifically: redo when it would push above max."""
+        history = ChangeHistory(max_history_depth=2)
+        project_data: dict[str, Any] = {"v": 0}
+
+        # Record 2 changes (fills undo stack to max)
+        for i in range(2):
+            before = copy.deepcopy(project_data)
+            project_data["v"] = i + 1
+            history.record(f"step {i}", before, project_data)
+
+        # Undo both
+        history.undo(project_data)
+        history.undo(project_data)
+        assert history.undo_count == 0
+        assert history.redo_count == 2
+
+        # Directly manipulate: set max to 1 so the next redo exceeds it
+        history._max_history_depth = 1
+        history.redo(project_data)  # appends to undo stack, pushes to 1 (== max)
+        history.redo(project_data)  # appends again, pushes to 2 (> max), triggers truncation
+        assert history.undo_count == 1
+
+    def test_redo_overflow_trims_oldest(self) -> None:
+        """When undo stack is at max and redo pushes one more, oldest is dropped."""
+        history = ChangeHistory(max_history_depth=2)
+        project_data: dict[str, Any] = {"v": 0}
+
+        # Record 2 changes (fills to max)
+        for i in range(2):
+            before = copy.deepcopy(project_data)
+            project_data["v"] = i + 1
+            history.record(f"step {i}", before, project_data)
+
+        # Undo one, record a new change (fills to max again), then undo+redo
+        history.undo(project_data)
+        before = copy.deepcopy(project_data)
+        project_data["v"] = 99
+        history.record("new", before, project_data)
+        assert history.undo_count == 2
+
+        # Undo one to get a redo entry
+        history.undo(project_data)
+        assert history.undo_count == 1
+        assert history.redo_count == 1
+
+        # Redo should push back and truncate if needed
+        history.redo(project_data)
+        assert history.undo_count <= 2

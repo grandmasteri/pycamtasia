@@ -34,6 +34,18 @@ class TestFindAudioFile:
         actual = _find_audio_file(tmp_path, '99.99')
         assert actual is None
 
+    def test_three_part_vo_id(self, tmp_path):
+        (tmp_path / '01-02-03-narration.wav').write_bytes(b'\x00' * 44)
+        actual = _find_audio_file(tmp_path, '1.2.3')
+        assert actual is not None
+        assert '01-02-03-' in actual.name
+
+    def test_four_part_vo_id(self, tmp_path):
+        (tmp_path / '01-02-03-04-deep.wav').write_bytes(b'\x00' * 44)
+        actual = _find_audio_file(tmp_path, '1.2.3.4')
+        assert actual is not None
+        assert '01-02-03-04-' in actual.name
+
 
 class TestBuildFromScreenplay:
     def test_places_clips(self, project, tmp_path):

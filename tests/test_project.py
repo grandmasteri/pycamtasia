@@ -1644,3 +1644,43 @@ class TestNormalizeAudioNoDuplicateCount:
         # The audio dict appears both as UnifiedMedia.audio and as a standalone AMFile
         # in all_clips, but should only be counted once.
         assert count == 1
+
+
+class TestRepairWritesSortedOrder:
+    """Bug 1: repair() must write the sorted media list back to the track."""
+
+    def test_repair_preserves_sorted_order(self, tmp_path):
+        """After repair, medias should be in start-time order."""
+        data = {
+            "title": "Unsorted",
+            "sourceBin": [],
+            "timeline": {
+                "id": 1,
+                "parameters": {"toc": {"type": "string", "keyframes": []}},
+                "sceneTrack": {
+                    "scenes": [{
+                        "csml": {
+                            "tracks": [{
+                                "trackIndex": 0,
+                                "medias": [
+                                    {"id": 3, "_type": "VMFile", "start": 200, "duration": 100, "scalar": 1, "metadata": {}},
+                                    {"id": 1, "_type": "VMFile", "start": 0, "duration": 100, "scalar": 1, "metadata": {}},
+                                    {"id": 2, "_type": "VMFile", "start": 100, "duration": 100, "scalar": 1, "metadata": {}},
+                                ],
+                                "transitions": [],
+                            }],
+                        },
+                    }],
+                },
+                "trackAttributes": [{"ident": ""}],
+            },
+        }
+        proj_dir = tmp_path / "unsorted.cmproj"
+        proj_dir.mkdir()
+        (proj_dir / "project.tscproj").write_text(json.dumps(data))
+        project = Project(proj_dir)
+
+        project.repair()
+
+        ids = [m['id'] for m in project.timeline.tracks[0]._data['medias']]
+        assert ids == [1, 2, 3], f"Expected sorted order [1,2,3], got {ids}"

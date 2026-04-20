@@ -87,6 +87,7 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                 inner["duration"] = _scale_tick(inner["duration"], factor)
                 inner["mediaStart"] = _scale_tick(inner.get("mediaStart", 0), factor)
                 inner["mediaDuration"] = _scale_tick(inner.get("mediaDuration", 0), factor)
+                inner["scalar"] = clip.get("scalar", 1)
                 # Only scale effects here for non-UnifiedMedia; UnifiedMedia handles its own via _process_clip
                 for effect in inner.get('effects', []):
                     if 'start' in effect:
@@ -243,6 +244,10 @@ def set_audio_speed(
                     parent_clip['scalar'] = target_clip['scalar']
                     parent_clip['duration'] = target_clip['duration']
                     parent_clip['mediaDuration'] = target_clip['mediaDuration']
+                    # Update parent's own clipSpeedAttribute
+                    parent_clip.setdefault('metadata', {}).setdefault(
+                        'clipSpeedAttribute', {'type': 'bool', 'value': False}
+                    )['value'] = final_speed_attr
                     video = parent_clip.get('video')
                     if video and isinstance(video, dict):
                         video.setdefault('metadata', {}).setdefault(

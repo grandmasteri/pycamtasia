@@ -346,8 +346,8 @@ class MediaBin:
             )
         else:
             if media_type == MediaType.Image:
-                _bit_depth = 32
-                _edit_rate = 10000000
+                _bit_depth = 0
+                _edit_rate = 600
             else:
                 _bit_depth = 24
                 _edit_rate = round(_detected_fps) if _detected_fps else 30

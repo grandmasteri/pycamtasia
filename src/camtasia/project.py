@@ -935,7 +935,7 @@ class Project:
                     from camtasia.timeline.track import _propagate_start_to_unified
                     _propagate_start_to_unified(medias[i])
                     fixes_applied['overlaps_fixed'] += 1
-            track._data['medias'] = [m for m in track._data['medias'] if m.get('duration', 1) > 0]
+            track._data['medias'] = [m for m in medias if m.get('duration', 1) > 0]
         return fixes_applied
 
     def save(self) -> None:

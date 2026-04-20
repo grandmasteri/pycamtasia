@@ -116,7 +116,7 @@ def _find_audio_file(audio_dir: Path, vo_id: str) -> Path | None:
     parts = [p for p in vo_id.split('.') if p]
     if len(parts) >= 2:
         try:
-            prefix = f'{int(parts[0]):02d}-{int(parts[1]):02d}-'
+            prefix = '-'.join(f'{int(p):02d}' for p in parts) + '-'
         except ValueError:
             return None
         for ext in _EXTENSIONS:

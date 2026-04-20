@@ -266,3 +266,35 @@ class TestStringFractionTicks:
         snap_to_grid(track, grid_seconds=1.0)
         # 352800000 ticks = 0.5s; banker's rounding snaps to 0
         assert track._data['medias'][0]['start'] == 0
+
+
+class TestRippleDeleteDoesNotPropagateUnshiftedClips:
+    """Bug 6: ripple_delete must only call _propagate_start_to_unified for shifted clips."""
+
+    def test_unshifted_clip_not_propagated(self):
+        """A clip before the deleted clip should not have its start modified."""
+        track = _make_track([
+            _clip(1, 0.0, 2.0),
+            _clip(2, 2.0, 3.0),
+            _clip(3, 5.0, 1.0),
+        ])
+        # Add UnifiedMedia-style nested data to clip 1 to detect unwanted propagation
+        track._data['medias'][0]['_type'] = 'UnifiedMedia'
+        track._data['medias'][0]['video'] = {
+            '_type': 'VMFile', 'start': 999, 'duration': seconds_to_ticks(2.0),
+        }
+        original_video_start = track._data['medias'][0]['video']['start']
+
+        ripple_delete(track, clip_id=2)
+
+        # Clip 1 was NOT shifted, so its video.start should be untouched
+        assert track._data['medias'][0]['video']['start'] == original_video_start
+
+
+class TestRippleInsertNegativeDuration:
+    """Bug 7: ripple_insert must reject negative duration_seconds."""
+
+    def test_negative_duration_raises(self):
+        track = _make_track([_clip(1, 0.0, 2.0)])
+        with pytest.raises(ValueError, match='duration_seconds must be non-negative'):
+            ripple_insert(track, position_seconds=0.0, duration_seconds=-1.0)

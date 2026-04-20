@@ -204,3 +204,27 @@ class TestRemapClipIdsAssetProperties:
         src_map: dict[int, int] = {}
         _remap_clip_ids(clip, id_counter, id_map, src_map)
         assert clip["attributes"]["assetProperties"][0]["objects"][0] == 77
+
+
+class TestMergeStringFractionStart:
+    """Bug 5: merge_tracks must handle string-fraction start values."""
+
+    def test_string_fraction_start_does_not_crash(self, project):
+        source = load_project(RESOURCES / 'new.cmproj')
+        _add_source(source, 10, 'clip')
+        track = source.timeline.add_track('Frac Track')
+        clip = {
+            '_type': 'VMFile', 'id': 1, 'src': 10,
+            'start': '705600000/2', 'duration': seconds_to_ticks(5.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+            'scalar': 1, 'metadata': {}, 'parameters': {},
+            'effects': [], 'attributes': {}, 'animationTracks': {},
+        }
+        track._data.setdefault('medias', []).append(clip)
+
+        merge_tracks(source, project, offset_seconds=1.0)
+
+        new_track = list(project.timeline.tracks)[-1]
+        merged_start = new_track._data['medias'][0]['start']
+        expected = 352_800_000 + seconds_to_ticks(1.0)
+        assert merged_start == expected

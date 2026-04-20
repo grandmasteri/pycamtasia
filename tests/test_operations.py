@@ -886,3 +886,49 @@ class TestUnifiedMediaMediaDurationSpeedChanged:
         _process_clip(clip, Fraction(2))
         # mediaDuration SHOULD be scaled for non-speed-changed UnifiedMedia
         assert clip['mediaDuration'] == 2000
+
+
+class TestSetAudioSpeedUpdatesParentClipSpeedAttribute:
+    """Bug 3: set_audio_speed must update parent UnifiedMedia's clipSpeedAttribute."""
+
+    def test_parent_unified_gets_clip_speed_attribute(self):
+        audio = _make_audio_clip(clip_id=14, scalar="93/100", speed_changed=True)
+        audio["mediaDuration"] = 113_484_000_000
+        unified = {
+            "id": 50,
+            "_type": "UnifiedMedia",
+            "start": 0,
+            "duration": audio["duration"],
+            "mediaDuration": audio["mediaDuration"],
+            "scalar": audio["scalar"],
+            "metadata": {},
+            "audio": audio,
+        }
+        project = _make_project(tracks=[{"medias": [unified], "transitions": []}])
+
+        set_audio_speed(project, target_speed=1.0)
+
+        parent = project["timeline"]["sceneTrack"]["scenes"][0]["csml"]["tracks"][0]["medias"][0]
+        # Parent must have clipSpeedAttribute set to False (speed normalized to 1.0)
+        parent_csa = parent.get("metadata", {}).get("clipSpeedAttribute", {})
+        assert "value" in parent_csa, "Parent UnifiedMedia missing clipSpeedAttribute"
+        assert parent_csa["value"] is False
+
+
+class TestStitchedMediaScalarPropagation:
+    """Bug 4: _process_clip must propagate scalar to non-UnifiedMedia inner clips in StitchedMedia."""
+
+    def test_inner_clips_get_parent_scalar(self):
+        from camtasia.operations.speed import _process_clip
+
+        stitched = _make_stitched_clip()
+        # Give the parent a speed change so scalar is adjusted
+        stitched["metadata"] = {"clipSpeedAttribute": {"type": "bool", "value": True}}
+        stitched["scalar"] = "93/100"
+
+        _process_clip(stitched, Fraction(2))
+
+        for inner in stitched["medias"]:
+            assert inner["scalar"] == stitched["scalar"], (
+                f"Inner clip scalar {inner['scalar']} != parent {stitched['scalar']}"
+            )

@@ -218,6 +218,11 @@ def keystroke_callout(
         'hasDropShadow': 0.0,
         'width': 400.0,
         'height': 100.0,
+        'word-wrap': 1.0,
+        'line-spacing': 0.0,
+        'horizontal-alignment': 'center',
+        'vertical-alignment': 'center',
+        'resize-behavior': 'resizeText',
         'font': {
             'color-blue': font_color.blue,
             'color-green': font_color.green,

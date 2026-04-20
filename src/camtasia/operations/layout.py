@@ -45,6 +45,8 @@ def ripple_insert(track: Track, position_seconds: float, duration_seconds: float
 
     Creates a gap at the insertion point.
     """
+    if duration_seconds < 0:
+        raise ValueError(f'duration_seconds must be non-negative, got {duration_seconds}')
     pos_ticks = seconds_to_ticks(position_seconds)
     shift_ticks = seconds_to_ticks(duration_seconds)
     shifted = False
@@ -84,7 +86,7 @@ def ripple_delete(track: Track, clip_id: int) -> None:
     for m in medias:
         if _to_ticks(m.get('start', 0)) >= target_start + gap:
             m['start'] = _to_ticks(m.get('start', 0)) - gap
-        _propagate_start_to_unified(m)
+            _propagate_start_to_unified(m)
 
 
 def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:

@@ -170,3 +170,27 @@ class TestKeystrokeCalloutDropShadowType:
         assert result['hasDropShadow'] == 0.0
         assert isinstance(result['hasDropShadow'], float)
         assert not isinstance(result['hasDropShadow'], bool)
+
+
+class TestKeystrokeCalloutStandardKeys:
+    """keystroke_callout must include the same layout keys as text()."""
+
+    def test_has_word_wrap(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['word-wrap'] == 1.0
+
+    def test_has_line_spacing(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['line-spacing'] == 0.0
+
+    def test_has_horizontal_alignment(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['horizontal-alignment'] == 'center'
+
+    def test_has_vertical_alignment(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['vertical-alignment'] == 'center'
+
+    def test_has_resize_behavior(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['resize-behavior'] == 'resizeText'

@@ -408,3 +408,25 @@ class TestMediaBinEdgeCases:
     def test_unsupported_stream_type_raises(self):
         with pytest.raises(ValueError, match='Unsupported'):
             _get_media_type({'kind_of_stream': 'Subtitle'})
+
+
+class TestImportImageEditRateAndBitDepth:
+    """Image imports must use editRate=600 and bitDepth=0 (Camtasia v10 format)."""
+
+    def test_image_edit_rate_is_600(self, project, tmp_path):
+        img = tmp_path / 'test.png'
+        img.write_bytes(b'\x89PNG\r\n\x1a\n')
+        media = project.media_bin.import_media(
+            img, media_type=MediaType.Image, width=100, height=100,
+        )
+        track = media._data['sourceTracks'][0]
+        assert track['editRate'] == 600
+
+    def test_image_bit_depth_is_zero(self, project, tmp_path):
+        img = tmp_path / 'test.png'
+        img.write_bytes(b'\x89PNG\r\n\x1a\n')
+        media = project.media_bin.import_media(
+            img, media_type=MediaType.Image, width=100, height=100,
+        )
+        track = media._data['sourceTracks'][0]
+        assert track['bitDepth'] == 0
