@@ -69,6 +69,7 @@ def _remap_clip_ids_with_map(clip_data: dict, id_counter: list[int], id_map: dic
         if 'objects' in ap:
             ap['objects'] = [
             {**oid, 'media': id_map.get(oid['media'], oid['media'])} if isinstance(oid, dict) and 'media' in oid
+            else oid if isinstance(oid, dict)
             else id_map.get(oid, oid)
             for oid in ap['objects']
         ]

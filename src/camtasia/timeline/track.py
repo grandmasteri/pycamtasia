@@ -57,6 +57,53 @@ def _propagate_start_to_unified(media_dict: dict[str, Any]) -> None:
                         sub[field] = media_dict[field]  # type: ignore[index]
 
 
+def _adjust_effects_after_split(clip_data: dict[str, Any], new_duration: int) -> None:
+    """Adjust effects on the left half after a split.
+
+    Remove effects that start at or past the new duration.
+    Trim effects that extend past the new duration.
+    """
+    effects = clip_data.get('effects', [])
+    kept: list[dict[str, Any]] = []
+    for eff in effects:
+        if 'start' not in eff or 'duration' not in eff:
+            kept.append(eff)
+            continue
+        if eff['start'] >= new_duration:
+            continue  # entirely past the left half
+        if eff['start'] + eff['duration'] > new_duration:
+            eff['duration'] = new_duration - eff['start']
+        kept.append(eff)
+    clip_data['effects'] = kept
+
+
+def _adjust_effects_after_split_right(clip_data: dict[str, Any], split_offset: int) -> None:
+    """Adjust effects on the right half after a split.
+
+    Shift effect start times back by split_offset.
+    Remove effects entirely in the left half.
+    Trim effects that span the split boundary.
+    """
+    effects = clip_data.get('effects', [])
+    kept: list[dict[str, Any]] = []
+    for eff in effects:
+        if 'start' not in eff or 'duration' not in eff:
+            kept.append(eff)
+            continue
+        eff_end = eff['start'] + eff['duration']
+        if eff_end <= split_offset:
+            continue  # entirely in the left half
+        if eff['start'] < split_offset:
+            # spans the boundary — trim the beginning
+            trimmed = split_offset - eff['start']
+            eff['start'] = 0
+            eff['duration'] -= trimmed
+        else:
+            eff['start'] -= split_offset
+        kept.append(eff)
+    clip_data['effects'] = kept
+
+
 class Track:
     """A track on the timeline.
 
@@ -1925,6 +1972,10 @@ class Track:
 
         # Insert right half after left half
         medias.insert(left_idx + 1, right_data)
+
+        # Adjust effect timing for split halves
+        _adjust_effects_after_split(left_data, split_offset)
+        _adjust_effects_after_split_right(right_data, split_offset)
 
         # Cascade: remove transitions referencing the split clip
         transitions = self._data.get('transitions', [])

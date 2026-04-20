@@ -74,3 +74,34 @@ def test_square_callout_line_spacing():
     assert result['line-spacing'] == 1.5
     assert result['kind'] == 'remix'
     assert result['shape'] == 'text-rectangle'
+
+
+# ── Bug fix: keystroke_callout missing textAttributes ────────────────
+
+
+class TestKeystrokeCalloutTextAttributes:
+    def test_has_text_attributes(self):
+        result = keystroke_callout('Ctrl+C')
+        assert 'textAttributes' in result
+        assert result['textAttributes']['type'] == 'textAttributeList'
+        kfs = result['textAttributes']['keyframes']
+        assert len(kfs) == 1
+        attrs = kfs[0]['value']
+        names = {a['name'] for a in attrs}
+        assert 'fontSize' in names
+        assert 'fontName' in names
+        assert 'fgColor' in names
+
+    def test_has_standard_keys(self):
+        result = keystroke_callout('Ctrl+C')
+        assert 'corner-radius' in result
+        assert 'enable-ligatures' in result
+        assert 'hasDropShadow' in result
+        assert 'width' in result
+        assert 'height' in result
+
+    def test_text_attributes_range_matches_text(self):
+        result = keystroke_callout('Cmd+Shift+S')
+        kf = result['textAttributes']['keyframes'][0]
+        for attr in kf['value']:
+            assert attr['rangeEnd'] == len('Cmd+Shift+S')

@@ -207,14 +207,31 @@ def keystroke_callout(
         keys: Key combination string (e.g. 'Ctrl+C', 'Cmd+Shift+S').
         font_size: Font size for the keystroke text.
     """
+    font_color = Color(1.0, 1.0, 1.0)
     return {
         'kind': 'remix',
         'shape': 'text',
         'style': 'keystroke',
         'text': keys,
+        'corner-radius': 5.0,
+        'enable-ligatures': 0.0,
+        'hasDropShadow': False,
+        'width': 400.0,
+        'height': 100.0,
         'font': {
             'name': 'Montserrat',
             'weight': 'Bold',
             'size': font_size,
+        },
+        'textAttributes': {
+            'type': 'textAttributeList',
+            'keyframes': [
+                {
+                    'endTime': 0,
+                    'time': 0,
+                    'value': _text_attributes(keys, 'Montserrat', 'Bold', font_size, font_color),
+                    'duration': 0,
+                }
+            ],
         },
     }

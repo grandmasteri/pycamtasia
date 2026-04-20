@@ -847,3 +847,33 @@ class TestAllEffectsNestedClips:
         effs = tl.all_effects
         names = {e[2]["effectName"] for e in effs}
         assert names >= {"vid_eff", "aud_eff"}
+
+
+# ── Bug fix: _remap_clip_ids_with_map on dict without 'media' ────────
+
+
+class TestRemapDictWithoutMedia:
+    def test_dict_oid_without_media_key_does_not_crash(self):
+        """A dict object in assetProperties without 'media' should be kept as-is."""
+        clip_data = {
+            'id': 10,
+            '_type': 'Group',
+            'attributes': {
+                'assetProperties': [
+                    {
+                        'objects': [
+                            {'some_key': 'value'},  # dict without 'media'
+                            42,                      # plain int
+                        ]
+                    }
+                ]
+            },
+        }
+        id_map: dict[int, int] = {42: 99}
+        id_counter = [100]
+        _remap_clip_ids_with_map(clip_data, id_counter, id_map)
+        objects = clip_data['attributes']['assetProperties'][0]['objects']
+        # dict without 'media' should be preserved unchanged
+        assert objects[0] == {'some_key': 'value'}
+        # int should be remapped
+        assert objects[1] == 99

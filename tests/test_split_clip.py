@@ -177,3 +177,90 @@ class TestSplitClipRemapsAssetProperties:
         # The right half's assetProperties should have remapped IDs
         right_asset_ids = [o['id'] for o in right._data.get('assetProperties', {}).get('objects', [])]
         assert all(rid != 1 for rid in right_asset_ids)
+
+
+# ── Bug fix: split_clip effect timing ────────────────────────────────
+
+
+def _effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=None):
+    return {
+        'id': clip_id,
+        '_type': 'VMFile',
+        'src': 1,
+        'trackNumber': 0,
+        'start': seconds_to_ticks(start_s),
+        'duration': seconds_to_ticks(dur_s),
+        'mediaStart': 0,
+        'mediaDuration': seconds_to_ticks(dur_s),
+        'scalar': 1,
+        'metadata': {},
+        'parameters': {},
+        'effects': effects or [],
+        'animationTracks': {},
+    }
+
+
+def _make_effect_track(*medias):
+    attrs = {'ident': 'test', 'audioMuted': False, 'videoHidden': False}
+    data = {'trackIndex': 0, 'medias': list(medias)}
+    return Track(attrs, data)
+
+
+class TestSplitClipEffectTiming:
+    def test_left_half_removes_effect_past_new_end(self):
+        """Effect starting past the split point should be removed from left half."""
+        eff = {'effectName': 'Glow', 'start': seconds_to_ticks(7.0), 'duration': seconds_to_ticks(2.0), 'parameters': {}}
+        track = _make_effect_track(_effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=[eff]))
+        left, _right = track.split_clip(1, 5.0)
+        assert len(left._data['effects']) == 0
+
+    def test_left_half_trims_effect_spanning_split(self):
+        """Effect spanning the split point should be trimmed on the left half."""
+        eff = {'effectName': 'Glow', 'start': seconds_to_ticks(3.0), 'duration': seconds_to_ticks(5.0), 'parameters': {}}
+        track = _make_effect_track(_effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=[eff]))
+        left, _right = track.split_clip(1, 5.0)
+        left_eff = left._data['effects'][0]
+        assert left_eff['start'] == seconds_to_ticks(3.0)
+        assert left_eff['duration'] == seconds_to_ticks(2.0)
+
+    def test_right_half_shifts_effect_start(self):
+        """Effect in the right portion should have start shifted by split offset."""
+        eff = {'effectName': 'Glow', 'start': seconds_to_ticks(7.0), 'duration': seconds_to_ticks(2.0), 'parameters': {}}
+        track = _make_effect_track(_effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=[eff]))
+        _left, right = track.split_clip(1, 5.0)
+        right_eff = right._data['effects'][0]
+        assert right_eff['start'] == seconds_to_ticks(2.0)
+        assert right_eff['duration'] == seconds_to_ticks(2.0)
+
+    def test_right_half_removes_effect_entirely_in_left(self):
+        """Effect entirely before the split point should be removed from right half."""
+        eff = {'effectName': 'Glow', 'start': seconds_to_ticks(1.0), 'duration': seconds_to_ticks(2.0), 'parameters': {}}
+        track = _make_effect_track(_effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=[eff]))
+        _left, right = track.split_clip(1, 5.0)
+        assert len(right._data['effects']) == 0
+
+    def test_right_half_trims_effect_spanning_split(self):
+        """Effect spanning the split boundary should be trimmed on the right half."""
+        eff = {'effectName': 'Glow', 'start': seconds_to_ticks(3.0), 'duration': seconds_to_ticks(5.0), 'parameters': {}}
+        track = _make_effect_track(_effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=[eff]))
+        _left, right = track.split_clip(1, 5.0)
+        right_eff = right._data['effects'][0]
+        assert right_eff['start'] == 0
+        assert right_eff['duration'] == seconds_to_ticks(3.0)
+
+    def test_effect_without_start_duration_preserved_on_both(self):
+        """Effects without start/duration fields should be kept on both halves."""
+        eff = {'effectName': 'ColorAdjust', 'parameters': {'brightness': 0.5}}
+        track = _make_effect_track(_effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=[eff]))
+        left, right = track.split_clip(1, 5.0)
+        assert len(left._data['effects']) == 1
+        assert len(right._data['effects']) == 1
+
+    def test_left_half_keeps_effect_fully_within(self):
+        """Effect fully within the left half should be kept unchanged."""
+        eff = {'effectName': 'Glow', 'start': seconds_to_ticks(1.0), 'duration': seconds_to_ticks(2.0), 'parameters': {}}
+        track = _make_effect_track(_effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=[eff]))
+        left, _right = track.split_clip(1, 5.0)
+        left_eff = left._data['effects'][0]
+        assert left_eff['start'] == seconds_to_ticks(1.0)
+        assert left_eff['duration'] == seconds_to_ticks(2.0)
