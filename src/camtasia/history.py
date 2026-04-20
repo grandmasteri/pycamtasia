@@ -190,14 +190,19 @@ class ChangeHistory:
         try:
             restored_history: ChangeHistory = cls(max_history_depth=raw_data.get('max_history_depth', 100))
             def _restore_stack(records: list[dict[str, Any]]) -> list[ChangeRecord]:
-                return [
-                    ChangeRecord(
+                result: list[ChangeRecord] = []
+                for r in records:
+                    fwd = r['forward_patch']
+                    inv = r['inverse_patch']
+                    for op in fwd + inv:
+                        if not isinstance(op, dict) or 'op' not in op or 'path' not in op:
+                            raise ValueError(f'Malformed patch operation: {op}')
+                    result.append(ChangeRecord(
                         description=r['description'],
-                        forward_patch=jsonpatch.JsonPatch(r['forward_patch']),
-                        inverse_patch=jsonpatch.JsonPatch(r['inverse_patch']),
-                    )
-                    for r in records
-                ]
+                        forward_patch=jsonpatch.JsonPatch(fwd),
+                        inverse_patch=jsonpatch.JsonPatch(inv),
+                    ))
+                return result
             restored_history._undo_stack = _restore_stack(raw_data.get('undo_stack', []))
             restored_history._redo_stack = _restore_stack(raw_data.get('redo_stack', []))
             restored_history._undo_stack = restored_history._undo_stack[-restored_history._max_history_depth:]

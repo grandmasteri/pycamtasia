@@ -60,3 +60,75 @@ def test_load_history_missing_file_is_noop(tmp_project: Project) -> None:
 
     # History should remain at its default (lazy-initialized empty)
     assert tmp_project.history.undo_count == 0
+
+
+class TestFromJsonValidatesPatchStructure:
+    """from_json must reject patch operations missing 'op' or 'path' keys."""
+
+    def test_rejects_patch_missing_op_key(self) -> None:
+        import json
+
+        from camtasia.history import ChangeHistory
+
+        bad_json = json.dumps({
+            'undo_stack': [{
+                'description': 'bad',
+                'forward_patch': [{'path': '/title'}],  # missing 'op'
+                'inverse_patch': [{'op': 'replace', 'path': '/title', 'value': 'old'}],
+            }],
+            'redo_stack': [],
+            'max_history_depth': 100,
+        })
+        with pytest.raises(ValueError, match='Malformed'):
+            ChangeHistory.from_json(bad_json)
+
+    def test_rejects_patch_missing_path_key(self) -> None:
+        import json
+
+        from camtasia.history import ChangeHistory
+
+        bad_json = json.dumps({
+            'undo_stack': [{
+                'description': 'bad',
+                'forward_patch': [{'op': 'replace', 'path': '/title', 'value': 'new'}],
+                'inverse_patch': [{'op': 'replace'}],  # missing 'path'
+            }],
+            'redo_stack': [],
+            'max_history_depth': 100,
+        })
+        with pytest.raises(ValueError, match='Malformed'):
+            ChangeHistory.from_json(bad_json)
+
+    def test_rejects_non_dict_patch_operation(self) -> None:
+        import json
+
+        from camtasia.history import ChangeHistory
+
+        bad_json = json.dumps({
+            'undo_stack': [{
+                'description': 'bad',
+                'forward_patch': ["not a dict"],
+                'inverse_patch': [{'op': 'replace', 'path': '/title', 'value': 'old'}],
+            }],
+            'redo_stack': [],
+            'max_history_depth': 100,
+        })
+        with pytest.raises(ValueError, match='Malformed'):
+            ChangeHistory.from_json(bad_json)
+
+    def test_accepts_valid_patch_operations(self) -> None:
+        import json
+
+        from camtasia.history import ChangeHistory
+
+        good_json = json.dumps({
+            'undo_stack': [{
+                'description': 'valid',
+                'forward_patch': [{'op': 'replace', 'path': '/title', 'value': 'new'}],
+                'inverse_patch': [{'op': 'replace', 'path': '/title', 'value': 'old'}],
+            }],
+            'redo_stack': [],
+            'max_history_depth': 100,
+        })
+        history = ChangeHistory.from_json(good_json)
+        assert history.undo_count == 1

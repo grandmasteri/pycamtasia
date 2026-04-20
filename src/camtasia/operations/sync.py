@@ -186,9 +186,13 @@ def apply_sync(
     tuples = []
     for seg in segments:
         tl_offset = seg.video_start_ticks - group_start_ticks
-        src_offset = int(tl_offset / group_scalar) if group_scalar != 0 else tl_offset
         tl_offset_end = seg.video_end_ticks - group_start_ticks
-        src_offset_end = int(tl_offset_end / group_scalar) if group_scalar != 0 else tl_offset_end
+        if group_scalar != 0:
+            src_offset = round(Fraction(tl_offset) / group_scalar)
+            src_offset_end = round(Fraction(tl_offset_end) / group_scalar)
+        else:
+            src_offset = tl_offset
+            src_offset_end = tl_offset_end
         tuples.append((
             ticks_to_seconds(src_offset + media_start_ticks),
             ticks_to_seconds(src_offset_end + media_start_ticks),

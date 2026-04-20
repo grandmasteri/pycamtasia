@@ -111,18 +111,22 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
         elif track.track_type == 'Audio':
             raw_ch = track.channel_s or '1'
             channels = int(str(raw_ch).split('/')[0].strip())
-            sample_rate = track.sampling_rate or 44100
+            sample_rate_raw = track.sampling_rate or 44100
+            if isinstance(sample_rate_raw, str) and '/' in sample_rate_raw:
+                sample_rate_int = int(sample_rate_raw.split('/')[0].strip())
+            else:
+                sample_rate_int = int(float(sample_rate_raw))
             dur_ms = float(track.duration or 0)
-            range_end = round(dur_ms / 1000 * int(float(sample_rate)))
+            range_end = round(dur_ms / 1000 * sample_rate_int)
 
             tag = 0
 
             source_tracks.append({
                 'range': [0, range_end],
                 'type': 2,
-                'editRate': int(float(sample_rate)),
+                'editRate': sample_rate_int,
                 'trackRect': [0, 0, 0, 0],
-                'sampleRate': int(float(sample_rate)),
+                'sampleRate': sample_rate_int,
                 'bitDepth': 16,
                 'numChannels': channels,
                 'integratedLUFS': 100.0,

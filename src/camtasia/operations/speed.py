@@ -183,10 +183,10 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
                     medias[i]['duration'] = int(_frac(medias[i]['duration'])) - overlap
                     # Recalculate mediaDuration
                     if _has_speed_change(medias[i]):
-                        md_old = _frac(medias[i].get('mediaDuration', 0))
-                        if md_old != 0:
-                            new_scalar = _frac(medias[i]['duration']) / md_old
-                            medias[i]['scalar'] = scalar_to_string(new_scalar)
+                        s = _frac(medias[i].get('scalar', 1))
+                        if s != 0:
+                            md = _frac(medias[i]['duration']) / s
+                            medias[i]['mediaDuration'] = int(md) if md == int(md) else f'{md.numerator}/{md.denominator}'
                     else:
                         s = _frac(medias[i].get('scalar', 1))
                         if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group'):

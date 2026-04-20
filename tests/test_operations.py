@@ -1201,25 +1201,25 @@ class TestOverlapFixSpeedChanged:
         # rescale by factor=1 so only the overlap fix runs
         rescale_project(project, Fraction(1))
         clip = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
-        # mediaDuration should be preserved (not recalculated from duration/scalar)
-        # Without the fix, it would be recalculated as 1000 / (1/2) = 2000
-        assert clip['mediaDuration'] == 2002
+        # mediaDuration should be recalculated from duration/scalar
+        # duration was trimmed by 1 (overlap), so new duration = 1000
+        # mediaDuration = 1000 / (1/2) = 2000
+        assert clip['mediaDuration'] == 2000
 
     def test_unified_media_preserves_media_duration_when_speed_changed(self):
-        """Bug 5: speed-changed UnifiedMedia should preserve mediaDuration in overlap fix."""
-        original_md = 3000
+        """Bug 5: speed-changed UnifiedMedia should recalculate mediaDuration in overlap fix."""
         project = _make_project([{
             'medias': [
                 {
                     '_type': 'UnifiedMedia', 'id': 1, 'src': 1,
-                    'start': 0, 'duration': 502, 'mediaDuration': original_md,
+                    'start': 0, 'duration': 502, 'mediaDuration': 3000,
                     'scalar': 1, 'effects': [],
                     'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
                     'video': {'_type': 'VMFile', 'id': 10, 'src': 1,
-                              'start': 0, 'duration': 502, 'mediaDuration': original_md,
+                              'start': 0, 'duration': 502, 'mediaDuration': 3000,
                               'scalar': 1, 'effects': []},
                     'audio': {'_type': 'AMFile', 'id': 11, 'src': 1,
-                              'start': 0, 'duration': 502, 'mediaDuration': original_md,
+                              'start': 0, 'duration': 502, 'mediaDuration': 3000,
                               'scalar': 1, 'effects': []},
                 },
                 {
@@ -1231,7 +1231,8 @@ class TestOverlapFixSpeedChanged:
         }])
         rescale_project(project, Fraction(1))
         clip = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
-        assert clip['mediaDuration'] == original_md
+        # duration trimmed by 1 → 501, mediaDuration = 501 / 1 = 501
+        assert clip['mediaDuration'] == 501
 
 
 # --- Bug 6: _walk_clips should recurse into nested StitchedMedia ---
@@ -1326,9 +1327,9 @@ class TestUnifiedMediaSpeedChildDuration:
 
 
 class TestOverlapFixSpeedChangedScalar:
-    """Bug 5: Overlap fix should recalculate scalar, not skip, for speed-changed clips."""
+    """Bug 5: Overlap fix should preserve scalar and recalculate mediaDuration for speed-changed clips."""
 
-    def test_overlap_fix_recalculates_scalar(self):
+    def test_overlap_fix_preserves_scalar_recalculates_media_duration(self):
         project = _make_project([{
             'medias': [
                 {
@@ -1348,10 +1349,12 @@ class TestOverlapFixSpeedChangedScalar:
         }])
         rescale_project(project, Fraction(1))
         clip_a = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
-        # mediaDuration should be unchanged (55), scalar should be recalculated
-        assert clip_a['mediaDuration'] == 55
+        # scalar should be preserved (not recalculated)
+        assert parse_scalar(clip_a['scalar']) == Fraction(2)
         # duration was reduced by overlap (10), so new duration = 100
         assert clip_a['duration'] == 100
+        # mediaDuration should be recalculated: 100 / 2 = 50
+        assert clip_a['mediaDuration'] == 50
 
 
 class TestStitchedMediaInnerScalarPreservation:
@@ -1565,3 +1568,104 @@ class TestStitchedMediaInnerScalarPreserved:
         _process_clip(clip, Fraction(1))
         # Inner scalar should be preserved, not overwritten to 1
         assert clip['medias'][0]['scalar'] == '1/2'
+
+
+class TestRescaleProjectPreservesSpeedChangedScalar:
+    """Bug fix: overlap fix must preserve scalar and recalculate mediaDuration for speed-changed clips."""
+
+    def test_scalar_preserved_media_duration_recalculated(self):
+        project = _make_project([{
+            'medias': [
+                {
+                    '_type': 'VMFile', 'id': 1, 'src': 0,
+                    'start': 0, 'duration': 1001, 'mediaDuration': 2002,
+                    'scalar': '1/2', 'effects': [],
+                    'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+                },
+                {
+                    '_type': 'VMFile', 'id': 2, 'src': 0,
+                    'start': 1000, 'duration': 1000, 'mediaDuration': 1000,
+                    'scalar': 1, 'effects': [], 'metadata': {},
+                },
+            ],
+            'transitions': [],
+        }])
+        rescale_project(project, Fraction(1))
+        clip = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        # Scalar should be preserved (not recalculated)
+        assert parse_scalar(clip['scalar']) == Fraction(1, 2)
+        # mediaDuration should be recalculated from duration / scalar
+        # duration was trimmed by 1 (overlap), so new duration = 1000
+        # mediaDuration = 1000 / (1/2) = 2000
+        assert clip['mediaDuration'] == 2000
+
+
+class TestApplySyncConsistentSegmentBoundaries:
+    """Bug fix: apply_sync must use round() not int() to avoid truncation-induced drift."""
+
+    def test_round_vs_int_for_fractional_scalar(self):
+        from unittest.mock import MagicMock
+
+        from camtasia.operations.sync import SyncSegment
+
+        group = MagicMock()
+        group._data = {
+            'start': 0,
+            'mediaStart': 0,
+            'scalar': '3/2',  # fractional scalar that causes int() truncation
+            'tracks': [{'medias': []}],
+        }
+        seg = SyncSegment(
+            video_start_ticks=0,
+            video_end_ticks=100,
+            audio_start_seconds=0.0,
+            audio_end_seconds=1.0,
+            scalar=Fraction(1),
+        )
+        apply_sync(group, [seg])
+        call_args = group.set_internal_segment_speeds.call_args[0][0]
+        # With scalar=3/2, 100 / (3/2) = 200/3 ≈ 66.667
+        # round() gives 67, int() gives 66 — round is correct
+        from camtasia.timing import ticks_to_seconds
+        expected_end = ticks_to_seconds(round(Fraction(100) / Fraction(3, 2)))
+        assert call_args[0][1] == expected_end
+
+
+class TestApplySyncExported:
+    """Bug fix: apply_sync must be importable from camtasia.operations."""
+
+    def test_apply_sync_in_operations_all(self):
+        import camtasia.operations
+        assert 'apply_sync' in camtasia.operations.__all__
+
+    def test_apply_sync_importable(self):
+        from camtasia.operations import apply_sync as fn
+        assert callable(fn)
+
+
+class TestApplySyncZeroScalarFallback:
+    """apply_sync must handle group_scalar == 0 without division error."""
+
+    def test_zero_scalar_uses_raw_offsets(self):
+        from unittest.mock import MagicMock
+
+        from camtasia.operations.sync import SyncSegment
+
+        group = MagicMock()
+        group._data = {
+            'start': 0,
+            'mediaStart': 0,
+            'scalar': 0,
+            'tracks': [{'medias': []}],
+        }
+        seg = SyncSegment(
+            video_start_ticks=0,
+            video_end_ticks=EDIT_RATE,
+            audio_start_seconds=0.0,
+            audio_end_seconds=1.0,
+            scalar=Fraction(1),
+        )
+        apply_sync(group, [seg])
+        call_args = group.set_internal_segment_speeds.call_args[0][0]
+        from camtasia.timing import ticks_to_seconds
+        assert call_args[0][1] == ticks_to_seconds(EDIT_RATE)

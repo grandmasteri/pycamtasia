@@ -245,7 +245,7 @@ def test_edl_unified_clip_emits_audio_event(project, tmp_path):
 class TestEdlMinuteOverflow:
     def test_minute_overflow(self):
         actual_result = _format_timecode(3599.999, fps=30)
-        assert actual_result == '01:00:00:00'
+        assert actual_result == '00:59:59:29'
 
 
 def _inject_unified(project):
@@ -453,3 +453,46 @@ def test_format_timecode_negative_warns():
         assert result == '00:00:00:00'
         assert len(w) == 1
         assert 'Negative timecode' in str(w[0].message)
+
+
+class TestReportUsesSingularClip:
+    """Bug fix: report must use 'clip' (singular) when count is 1."""
+
+    def test_singular_clip_word(self, project, tmp_path):
+        from camtasia.export.report import export_project_report
+        from camtasia.timing import seconds_to_ticks
+
+        track = project.timeline.get_or_create_track('Solo')
+        track.add_clip('VMFile', 0, 0, seconds_to_ticks(5.0))
+        out = tmp_path / 'report.md'
+        export_project_report(project, out, format='markdown')
+        text = out.read_text()
+        assert '1 clip:' in text
+
+    def test_plural_clips_word(self, project, tmp_path):
+        from camtasia.export.report import export_project_report
+        from camtasia.timing import seconds_to_ticks
+
+        track = project.timeline.get_or_create_track('Multi')
+        track.add_clip('VMFile', 0, 0, seconds_to_ticks(3.0))
+        track.add_clip('VMFile', 0, seconds_to_ticks(3.0), seconds_to_ticks(3.0))
+        out = tmp_path / 'report.md'
+        export_project_report(project, out, format='markdown')
+        text = out.read_text()
+        assert '2 clips:' in text
+
+
+class TestFormatTimecodeUsesFloorForFrameCount:
+    """Bug fix: _format_timecode must use int() (floor) not round() for frame count."""
+
+    def test_frame_count_floors_not_rounds(self):
+        # At 30fps, 0.9999... seconds * 30 = 29.997 frames
+        # round() would give 30 (which overflows), int() gives 29
+        result = _format_timecode(0.9999, fps=30)
+        # Should be 00:00:00:29 (floor), not carry over to 00:00:01:00 (round)
+        assert result == '00:00:00:29'
+
+    def test_exact_boundary_still_works(self):
+        # At exactly 1.0 seconds, frame count should be 0
+        result = _format_timecode(1.0, fps=30)
+        assert result == '00:00:01:00'

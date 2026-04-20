@@ -16,12 +16,13 @@ from camtasia.operations.diff import ProjectDiff, diff_projects
 from camtasia.operations.layout import pack_track, ripple_delete, ripple_insert, snap_to_grid
 from camtasia.operations.merge import merge_tracks
 from camtasia.operations.speed import rescale_project, set_audio_speed
-from camtasia.operations.sync import SyncSegment, match_marker_to_transcript, plan_sync
+from camtasia.operations.sync import SyncSegment, apply_sync, match_marker_to_transcript, plan_sync
 from camtasia.operations.template import clone_project_structure, duplicate_project, replace_media_source
 
 __all__ = [
     "ProjectDiff",
     "SyncSegment",
+    "apply_sync",
     "apply_to_all_tracks",
     "apply_to_clips",
     "apply_to_track",

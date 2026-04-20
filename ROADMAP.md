@@ -4,31 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 13 domains 4-6)
-
-**Project/history:**
-
-1. [verified] `history.from_json()` doesn't validate jsonpatch structure. Corrupted patches deserialize successfully but crash later with `jsonpatch.InvalidJsonPatch` on undo/redo. (history.py ~L175)
-
-**Operations:**
-
-2. [verified] `rescale_project()` overlap fix changes playback speed of speed-changed clips. Trims `duration` then recalculates `scalar = new_duration / old_mediaDuration` (speed change). Should preserve scalar and recalc mediaDuration. (speed.py ~L184)
-
-3. [verified] `apply_sync()` independently truncates `src_offset` and `src_offset_end`. Consecutive segments' boundaries don't match; 1-tick gaps/overlaps in source media. (sync.py ~L168)
-
-4. [verified] `apply_sync` not exported in `operations/__init__.py`. Defined but not importable via `camtasia.operations`. (operations/__init__.py)
-
-**Supporting:**
-
-5. [verified] `export/report.py` says "1 clips" instead of "1 clip" for singular count. (report.py ~L82)
-
-6. [verified] `media_bin.import_media` `sample_rate or track.get("sampling_rate")` treats explicit 0 as falsy. (media_bin.py ~L312)
-
-7. [verified] `media_bin.import_media` `num_channels or track.get("channel_s")` treats explicit 0 as falsy. (media_bin.py ~L320)
-
-8. [verified] `trec_probe.py` audio branch `int(float(sample_rate))` crashes on dual-rate pymediainfo strings like `"44100 / 48000"`. Video branch handles this with Fraction.limit_denominator but audio does not. (trec_probe.py ~L107)
-
-9. [verified] `export/edl.py _format_timecode` uses `round()` (banker's rounding) for frame count. SMPTE timecode frame index should use `int()` (floor) per industry convention. (edl.py ~L22)
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

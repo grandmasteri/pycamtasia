@@ -309,14 +309,14 @@ class MediaBin:
             media_type = _get_media_type(track)
             width = width if width is not None else track.get("width")
             height = height if height is not None else track.get("height")
-            sample_rate = sample_rate or track.get("sampling_rate")
+            sample_rate = sample_rate if sample_rate is not None else track.get("sampling_rate")
             if sample_rate is not None and not isinstance(sample_rate, int):
                 try:
                     sample_rate = int(float(sample_rate))
                 except (ValueError, TypeError):
                     sample_rate = None
             bit_depth = bit_depth if bit_depth is not None else track.get("bit_depth", 0)
-            num_channels = num_channels or track.get("channel_s")
+            num_channels = num_channels if num_channels is not None else track.get("channel_s")
             if num_channels is not None:
                 num_channels = int(str(num_channels).split('/')[0].strip())
             if duration is None:

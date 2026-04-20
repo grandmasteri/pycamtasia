@@ -106,3 +106,48 @@ class TestTrecProbeStringDuration:
         finally:
             os.unlink(tmp)
             importlib.reload(tp)
+
+
+class TestTrecProbeHandlesDualRateSampleRate:
+    """Bug fix: trec_probe must handle dual-rate audio strings like '44100 / 48000'."""
+
+    def test_dual_rate_audio_does_not_crash(self):
+        import importlib
+        import os
+        import tempfile
+
+        import camtasia.media_bin.trec_probe as tp
+
+        general_track = MagicMock()
+        general_track.track_type = 'General'
+        general_track.tagged_date = None
+        general_track.encoded_date = None
+
+        audio_track = MagicMock()
+        audio_track.track_type = 'Audio'
+        audio_track.channel_s = '2'
+        audio_track.sampling_rate = '44100 / 48000'  # dual-rate string
+        audio_track.duration = '5000'
+
+        mock_mi = MagicMock()
+        mock_mi.tracks = [general_track, audio_track]
+
+        mock_pymediainfo = MagicMock()
+        mock_pymediainfo.MediaInfo.parse.return_value = mock_mi
+
+        with tempfile.NamedTemporaryFile(suffix='.trec', delete=False) as f:
+            f.write(b'\x00')
+            tmp = f.name
+        try:
+            with patch.dict('sys.modules', {'pymediainfo': mock_pymediainfo}):
+                importlib.reload(tp)
+                result = tp.probe_trec(tmp)
+                assert len(result['sourceTracks']) == 1
+                st = result['sourceTracks'][0]
+                # Should use first rate (44100), not crash on int(float('44100 / 48000'))
+                assert st['editRate'] == 44100
+                assert st['sampleRate'] == 44100
+                assert st['range'][1] == round(5000 / 1000 * 44100)
+        finally:
+            os.unlink(tmp)
+            importlib.reload(tp)

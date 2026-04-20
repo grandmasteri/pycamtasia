@@ -81,7 +81,8 @@ def _build_markdown_report(project: Project) -> str:
         else:
             type_str = '(empty)'
         lines.append(f'### Track {track.index}: {track.name or "(unnamed)"}')
-        lines.append(f'- {clip_count} clips: {type_str}')
+        clip_word = 'clip' if clip_count == 1 else 'clips'
+        lines.append(f'- {clip_count} {clip_word}: {type_str}')
         lines.append('')
     lines.append('## Media Bin')
     lines.append('')

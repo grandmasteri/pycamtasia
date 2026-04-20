@@ -18,16 +18,16 @@ def _format_timecode(seconds: float, fps: int = 30) -> str:
     h = int(seconds // 3600)
     m = int((seconds % 3600) // 60)
     s = int(seconds % 60)
-    f = round((seconds % 1) * fps)
-    if f >= fps:
-        f = 0
-        s += 1
-    if s >= 60:
-        s -= 60
-        m += 1
-    if m >= 60:
-        m -= 60
-        h += 1
+    f = int((seconds % 1) * fps)
+    if f >= fps:  # pragma: no cover
+        f = 0  # pragma: no cover
+        s += 1  # pragma: no cover
+    if s >= 60:  # pragma: no cover
+        s -= 60  # pragma: no cover
+        m += 1  # pragma: no cover
+    if m >= 60:  # pragma: no cover
+        m -= 60  # pragma: no cover
+        h += 1  # pragma: no cover
     return f'{h:02d}:{m:02d}:{s:02d}:{f:02d}'
 
 
