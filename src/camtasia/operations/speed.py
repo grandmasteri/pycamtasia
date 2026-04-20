@@ -87,11 +87,12 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                 inner["duration"] = _scale_tick(inner["duration"], factor)
                 inner["mediaStart"] = _scale_tick(inner.get("mediaStart", 0), factor)
                 inner["mediaDuration"] = _scale_tick(inner.get("mediaDuration", 0), factor)
-            for effect in inner.get('effects', []):
-                if 'start' in effect:
-                    effect['start'] = _scale_tick(effect['start'], factor)
-                if 'duration' in effect:
-                    effect['duration'] = _scale_tick(effect['duration'], factor)
+                # Only scale effects here for non-UnifiedMedia; UnifiedMedia handles its own via _process_clip
+                for effect in inner.get('effects', []):
+                    if 'start' in effect:
+                        effect['start'] = _scale_tick(effect['start'], factor)
+                    if 'duration' in effect:
+                        effect['duration'] = _scale_tick(effect['duration'], factor)
 
     elif ctype == "Group":
         if "mediaDuration" in clip:
@@ -103,7 +104,9 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                 _process_clip(inner, factor)
 
     elif ctype == "UnifiedMedia":
-        if 'mediaDuration' in clip:
+        # Only scale mediaDuration for non-speed-changed clips;
+        # speed-changed clips have mediaDuration invariant (handled by _adjust_scalar above)
+        if 'mediaDuration' in clip and not _has_speed_change(clip):
             clip['mediaDuration'] = _scale_tick(clip['mediaDuration'], factor)
         for child_key in ("video", "audio"):
             child = clip.get(child_key)

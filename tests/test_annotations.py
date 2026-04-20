@@ -105,3 +105,68 @@ class TestKeystrokeCalloutTextAttributes:
         kf = result['textAttributes']['keyframes'][0]
         for attr in kf['value']:
             assert attr['rangeEnd'] == len('Cmd+Shift+S')
+
+
+# ── Bug 8: _text_attributes uses round() not int() for colors ──
+
+
+class TestTextAttributesColorRounding:
+    """Color values should use round() to avoid truncation errors."""
+
+    def test_color_rounds_not_truncates(self):
+        from camtasia.annotations.callouts import _text_attributes
+        from camtasia.annotations.types import Color
+
+        # 0.502 * 255 = 128.01 → int() gives 128, round() gives 128 — same
+        # 0.999 * 255 = 254.745 → int() gives 254, round() gives 255
+        color = Color(0.999, 0.999, 0.999, 0.999)
+        attrs = _text_attributes('X', 'Arial', 'Regular', 12.0, color)
+        fg = next(a for a in attrs if a['name'] == 'fgColor')
+        # With round(), all channels should be 255
+        assert fg['value'] == '(255,255,255,255)'
+
+    def test_color_half_value_rounds_correctly(self):
+        from camtasia.annotations.callouts import _text_attributes
+        from camtasia.annotations.types import Color
+
+        # 0.5 * 255 = 127.5 → int() gives 127, round() gives 128
+        color = Color(0.5, 0.5, 0.5, 0.5)
+        attrs = _text_attributes('X', 'Arial', 'Regular', 12.0, color)
+        fg = next(a for a in attrs if a['name'] == 'fgColor')
+        assert fg['value'] == '(128,128,128,128)'
+
+
+# ── Bug 9: keystroke_callout font dict includes color and tracking ──
+
+
+class TestKeystrokeCalloutFontColor:
+    """keystroke_callout font dict must include color-* and tracking keys."""
+
+    def test_font_has_color_keys(self):
+        result = keystroke_callout('Ctrl+C')
+        font = result['font']
+        assert 'color-red' in font
+        assert 'color-green' in font
+        assert 'color-blue' in font
+        assert 'color-opacity' in font
+        assert font['color-red'] == 1.0
+        assert font['color-green'] == 1.0
+        assert font['color-blue'] == 1.0
+        assert font['color-opacity'] == 1.0
+
+    def test_font_has_tracking(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['font']['tracking'] == 0.0
+
+
+# ── Bug 10: keystroke_callout hasDropShadow should be 0.0 not False ──
+
+
+class TestKeystrokeCalloutDropShadowType:
+    """hasDropShadow must be 0.0 (float), not False (bool)."""
+
+    def test_has_drop_shadow_is_float(self):
+        result = keystroke_callout('Ctrl+C')
+        assert result['hasDropShadow'] == 0.0
+        assert isinstance(result['hasDropShadow'], float)
+        assert not isinstance(result['hasDropShadow'], bool)

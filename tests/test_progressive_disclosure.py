@@ -160,3 +160,24 @@ def test_progressive_disclosure_replace_previous_without_fade_out(project, image
         prev_end = clips[i].start + clips[i].duration
         next_start = clips[i + 1].start
         assert prev_end == next_start, f"Clip {i} end {prev_end} should equal clip {i+1} start {next_start}"
+
+
+def test_progressive_disclosure_replace_previous_with_fade_out_truncates_duration(project, images: list[Path]):
+    """When replace_previous=True and fade_out_seconds>0, each previous clip's
+    duration is truncated so the fade-out ends near when the next clip starts,
+    not at the end of the entire sequence."""
+    from camtasia.timing import seconds_to_ticks
+
+    clips = project.add_progressive_disclosure(
+        images, start_seconds=0.0, per_step_seconds=5.0,
+        fade_in_seconds=0.0, fade_out_seconds=1.0,
+        replace_previous=True,
+    )
+    assert len(clips) == 3
+
+    # Clip 0 should be truncated: new_duration = (next_start - prev_start) + fade_out ticks
+    expected_dur_0 = seconds_to_ticks(5.0) + seconds_to_ticks(1.0)
+    assert clips[0].duration == expected_dur_0
+
+    expected_dur_1 = seconds_to_ticks(5.0) + seconds_to_ticks(1.0)
+    assert clips[1].duration == expected_dur_1

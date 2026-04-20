@@ -9,7 +9,7 @@ from .types import Color, FillStyle, HorizontalAlignment, StrokeStyle, VerticalA
 def _text_attributes(text: str, font_name: str, font_weight: str | int, font_size: float, font_color: Color) -> list[dict]:
     """Build the 8 standard text attribute dicts for Camtasia."""
     text_len = len(text)
-    fg_color = f"({int(font_color.red*255)},{int(font_color.green*255)},{int(font_color.blue*255)},{int(font_color.opacity*255)})"
+    fg_color = f"({round(font_color.red*255)},{round(font_color.green*255)},{round(font_color.blue*255)},{round(font_color.opacity*255)})"
     weight_int = _WEIGHT_MAP.get(font_weight, 400) if isinstance(font_weight, str) else int(font_weight)
     return [
         {"name": "underline", "rangeEnd": text_len, "rangeStart": 0, "value": 0, "valueType": "int"},
@@ -215,13 +215,18 @@ def keystroke_callout(
         'text': keys,
         'corner-radius': 5.0,
         'enable-ligatures': 0.0,
-        'hasDropShadow': False,
+        'hasDropShadow': 0.0,
         'width': 400.0,
         'height': 100.0,
         'font': {
+            'color-blue': font_color.blue,
+            'color-green': font_color.green,
+            'color-red': font_color.red,
+            'color-opacity': font_color.opacity,
+            'size': font_size,
+            'tracking': 0.0,
             'name': 'Montserrat',
             'weight': 'Bold',
-            'size': font_size,
         },
         'textAttributes': {
             'type': 'textAttributeList',

@@ -292,3 +292,27 @@ class TestVersionParsing:
     def test_garbage_version_defaults_to_zero(self):
         issues = _check_group_required_fields(self._data_with_version('not-a-version'))
         assert isinstance(issues, list)
+
+
+class TestSourceBinMissingId:
+    """Bug 4: _check_source_bin_ids should flag entries with missing id."""
+
+    def test_missing_id_flagged_as_error(self):
+        data = {
+            "sourceBin": [
+                {"id": 1, "src": "good.wav"},
+                {"src": "missing_id.wav"},
+            ],
+        }
+        issues = _check_source_bin_ids(data)
+        errors = [i for i in issues if i.level == 'error']
+        assert len(errors) == 1
+        assert 'missing id' in errors[0].message.lower()
+        assert 'missing_id.wav' in errors[0].message
+
+    def test_missing_id_no_src(self):
+        data = {"sourceBin": [{"rect": [0, 0, 0, 0]}]}
+        issues = _check_source_bin_ids(data)
+        errors = [i for i in issues if i.level == 'error']
+        assert len(errors) == 1
+        assert '<no src>' in errors[0].message

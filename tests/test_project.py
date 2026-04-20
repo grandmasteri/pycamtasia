@@ -1121,7 +1121,7 @@ class TestNormalizeAudio:
             'audio': {'_type': 'AMFile', 'attributes': {'gain': 0.5}},
         }]
         count = project.normalize_audio(target_gain=0.8)
-        assert count == 2
+        assert count == 1
 
     def test_normalize_amfile(self, project):
         track = project.timeline.tracks[0]
@@ -1569,3 +1569,78 @@ class TestAddBackgroundMusicVolumeFade:
             assert 'keyframes' not in vol or vol.get('keyframes') is None
         else:
             assert vol == 0.5
+
+
+class TestSaveWithHistoryTscprojFile:
+    """Bug 2: save_with_history / load_history should work when file_path is a .tscproj file."""
+
+    def test_save_with_history_on_tscproj_file(self, tmp_path: Path):
+        proj_dir = _create_cmproj(tmp_path)
+        tscproj = proj_dir / "project.tscproj"
+        project = Project(tscproj)
+
+        with project.track_changes("test edit"):
+            project._data["title"] = "changed"
+
+        project.save_with_history()
+
+        sidecar = proj_dir / '.pycamtasia_history.json'
+        assert sidecar.exists()
+        assert "test edit" in sidecar.read_text()
+
+    def test_load_history_on_tscproj_file(self, tmp_path: Path):
+        proj_dir = _create_cmproj(tmp_path)
+        tscproj = proj_dir / "project.tscproj"
+        project = Project(tscproj)
+
+        with project.track_changes("first"):
+            project._data["title"] = "v1"
+
+        project.save_with_history()
+
+        fresh = Project(tscproj)
+        assert fresh.history.undo_count == 0
+        fresh.load_history()
+        assert fresh.history.undo_count == 1
+
+
+class TestNormalizeAudioNoDuplicateCount:
+    """Bug 3: normalize_audio should not double-count UnifiedMedia audio."""
+
+    def test_unified_media_audio_counted_once(self, tmp_path: Path):
+        audio_dict = {"_type": "AMFile", "id": 10, "src": 1, "start": 0, "duration": 100, "attributes": {}}
+        data = {
+            "editRate": 705600000,
+            "sourceBin": [{"id": 1, "src": "test.wav", "rect": [0, 0, 0, 0],
+                           "sourceTracks": [{"range": [0, 48000], "type": 1, "editRate": 48000}]}],
+            "timeline": {
+                "id": 1,
+                "sceneTrack": {
+                    "scenes": [{
+                        "csml": {
+                            "tracks": [{
+                                "trackIndex": 0,
+                                "medias": [{
+                                    "_type": "UnifiedMedia",
+                                    "id": 5,
+                                    "src": 1,
+                                    "start": 0,
+                                    "duration": 100,
+                                    "audio": audio_dict,
+                                }],
+                            }],
+                        },
+                    }],
+                },
+                "trackAttributes": [{"ident": "", "audioMuted": False, "videoHidden": False, "magnetic": False, "metadata": {"IsLocked": "False"}}],
+            },
+        }
+        proj_dir = tmp_path / "unified.cmproj"
+        proj_dir.mkdir()
+        (proj_dir / "project.tscproj").write_text(json.dumps(data))
+        project = Project(proj_dir)
+
+        count = project.normalize_audio(target_gain=0.8)
+        # The audio dict appears both as UnifiedMedia.audio and as a standalone AMFile
+        # in all_clips, but should only be counted once.
+        assert count == 1

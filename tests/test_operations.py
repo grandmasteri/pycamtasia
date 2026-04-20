@@ -763,3 +763,126 @@ class TestSetAudioSpeedNested:
             'sourceBin': [],
         }
         set_audio_speed(project_data, 1.0)
+
+
+# ── Bug 6: StitchedMedia should not double-scale effects on UnifiedMedia inners ──
+
+
+class TestStitchedMediaUnifiedMediaEffectsNotDoubleScaled:
+    """Effects on UnifiedMedia children inside StitchedMedia must be scaled
+    exactly once (via _process_clip), not twice."""
+
+    def test_effects_scaled_once_for_unified_media_inner(self):
+        from camtasia.operations.speed import _process_clip
+
+        clip = {
+            '_type': 'StitchedMedia',
+            'start': 0,
+            'duration': 1000,
+            'mediaStart': 0,
+            'mediaDuration': 1000,
+            'scalar': 1,
+            'medias': [{
+                '_type': 'UnifiedMedia',
+                'start': 0,
+                'duration': 1000,
+                'mediaDuration': 1000,
+                'scalar': 1,
+                'metadata': {},
+                'effects': [{'start': 100, 'duration': 200}],
+                'video': {
+                    '_type': 'VMFile', 'start': 0, 'duration': 1000,
+                    'mediaDuration': 1000, 'scalar': 1, 'metadata': {},
+                    'effects': [], 'parameters': {},
+                },
+            }],
+            'metadata': {},
+            'effects': [],
+            'parameters': {},
+        }
+        _process_clip(clip, Fraction(2))
+        inner = clip['medias'][0]
+        # Effects should be scaled by factor=2 exactly once, not factor²=4
+        assert inner['effects'][0]['start'] == 200
+        assert inner['effects'][0]['duration'] == 400
+
+    def test_effects_still_scaled_for_non_unified_media_inner(self):
+        from camtasia.operations.speed import _process_clip
+
+        clip = {
+            '_type': 'StitchedMedia',
+            'start': 0,
+            'duration': 1000,
+            'mediaStart': 0,
+            'mediaDuration': 1000,
+            'scalar': 1,
+            'medias': [{
+                '_type': 'AMFile',
+                'start': 0,
+                'duration': 1000,
+                'mediaStart': 0,
+                'mediaDuration': 1000,
+                'scalar': 1,
+                'metadata': {},
+                'effects': [{'start': 100, 'duration': 200}],
+            }],
+            'metadata': {},
+            'effects': [],
+            'parameters': {},
+        }
+        _process_clip(clip, Fraction(2))
+        inner = clip['medias'][0]
+        assert inner['effects'][0]['start'] == 200
+        assert inner['effects'][0]['duration'] == 400
+
+
+# ── Bug 7: UnifiedMedia mediaDuration should not be scaled when speed-changed ──
+
+
+class TestUnifiedMediaMediaDurationSpeedChanged:
+    """For speed-changed UnifiedMedia, mediaDuration is invariant and should
+    not be scaled by factor (it's already handled by _adjust_scalar)."""
+
+    def test_media_duration_unchanged_when_speed_changed(self):
+        from camtasia.operations.speed import _process_clip
+
+        clip = {
+            '_type': 'UnifiedMedia',
+            'start': 0,
+            'duration': 1000,
+            'mediaDuration': 2000,
+            'scalar': '1/2',
+            'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+            'effects': [],
+            'parameters': {},
+            'video': {
+                '_type': 'VMFile', 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1, 'metadata': {},
+                'effects': [], 'parameters': {},
+            },
+        }
+        _process_clip(clip, Fraction(2))
+        # mediaDuration should NOT be scaled for speed-changed UnifiedMedia
+        assert clip['mediaDuration'] == 2000
+
+    def test_media_duration_scaled_when_not_speed_changed(self):
+        from camtasia.operations.speed import _process_clip
+
+        clip = {
+            '_type': 'UnifiedMedia',
+            'start': 0,
+            'duration': 1000,
+            'mediaDuration': 1000,
+            'scalar': 1,
+            'metadata': {},
+            'effects': [],
+            'parameters': {},
+            'video': {
+                '_type': 'VMFile', 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1, 'metadata': {},
+                'effects': [], 'parameters': {},
+            },
+        }
+        _process_clip(clip, Fraction(2))
+        # mediaDuration SHOULD be scaled for non-speed-changed UnifiedMedia
+        assert clip['mediaDuration'] == 2000

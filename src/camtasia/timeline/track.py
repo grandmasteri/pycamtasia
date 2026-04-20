@@ -867,6 +867,29 @@ class Track:
                     if 'duration' in eff:
                         eff['duration'] = dur_ticks
 
+        # Scale line clip keyframes (track index 2) proportionally
+        original_line_dur = 7220640000  # original line clip duration from template
+        line_scale = dur_ticks / original_line_dur if original_line_dur > 0 else 1
+        if len(tpl.get('tracks', [])) >= 3:
+            for line_media in tpl['tracks'][2].get('medias', []):
+                # Scale def keyframes
+                for _key, val in line_media.get('def', {}).items():
+                    if isinstance(val, dict) and 'keyframes' in val:
+                        for kf in val['keyframes']:
+                            if 'time' in kf:
+                                kf['time'] = int(kf['time'] * line_scale)
+                            if 'endTime' in kf:
+                                kf['endTime'] = int(kf['endTime'] * line_scale)
+                            if 'duration' in kf:
+                                kf['duration'] = int(kf['duration'] * line_scale)
+                # Scale animationTracks.visual
+                for track_kfs in line_media.get('animationTracks', {}).values():
+                    for kf in track_kfs:
+                        if 'endTime' in kf:
+                            kf['endTime'] = int(kf['endTime'] * line_scale)
+                        if 'duration' in kf:
+                            kf['duration'] = int(kf['duration'] * line_scale)
+
         # --- Replace text ---
         # Title is clip id_map[86] on tracks[0].medias[0].tracks[1].medias[0]
         title_clip = text_group['tracks'][1]['medias'][0]

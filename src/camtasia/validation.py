@@ -323,10 +323,12 @@ def _check_source_bin_ids(data: dict[str, Any]) -> list[ValidationIssue]:
     seen: dict[int, str] = {}
     for entry in data.get('sourceBin', []):
         eid = entry.get('id')
-        if eid is not None:
-            if eid in seen:
-                issues.append(ValidationIssue('error', f'Duplicate sourceBin ID {eid}'))
-            seen[eid] = entry.get('src', '')
+        if eid is None:
+            issues.append(ValidationIssue('error', f'sourceBin entry missing id field: {entry.get("src", "<no src>")}'))
+            continue
+        if eid in seen:
+            issues.append(ValidationIssue('error', f'Duplicate sourceBin ID {eid}'))
+        seen[eid] = entry.get('src', '')
     return issues
 
 

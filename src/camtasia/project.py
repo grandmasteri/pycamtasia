@@ -1577,16 +1577,17 @@ class Project:
             placed_clips.append(clip)
 
         if replace_previous and len(placed_clips) > 1:
-            if fade_out_seconds > 0:
-                for i in range(1, len(placed_clips)):
-                    placed_clips[i - 1].fade_out(fade_out_seconds)
-            else:
-                for i in range(1, len(placed_clips)):
-                    prev = placed_clips[i - 1]
-                    next_start = placed_clips[i].start
+            for i in range(1, len(placed_clips)):
+                prev = placed_clips[i - 1]
+                next_start = placed_clips[i].start
+                if fade_out_seconds > 0:
+                    new_duration = next_start - prev.start + seconds_to_ticks(fade_out_seconds)
+                else:
                     new_duration = next_start - prev.start
-                    if new_duration > 0:
-                        prev.duration = new_duration
+                if new_duration > 0:
+                    prev.duration = new_duration
+                if fade_out_seconds > 0:
+                    prev.fade_out(fade_out_seconds)
 
         if fade_out_seconds > 0 and placed_clips:
             if replace_previous:
@@ -1872,13 +1873,15 @@ class Project:
     def save_with_history(self) -> None:
         """Save the project and persist undo history to a sidecar file."""
         self.save()
-        history_file_path: Path = self.file_path / '.pycamtasia_history.json'
+        base = self.file_path if self.file_path.is_dir() else self.file_path.parent
+        history_file_path: Path = base / '.pycamtasia_history.json'
         history_file_path.write_text(self.history.to_json())
 
     def load_history(self) -> None:
         """Load persisted undo history from the sidecar file."""
         from camtasia.history import ChangeHistory
-        history_file_path: Path = self.file_path / '.pycamtasia_history.json'
+        base = self.file_path if self.file_path.is_dir() else self.file_path.parent
+        history_file_path: Path = base / '.pycamtasia_history.json'
         if history_file_path.exists():
             self._history = ChangeHistory.from_json(history_file_path.read_text())
 
@@ -2383,15 +2386,22 @@ class Project:
 
     def normalize_audio(self, target_gain: float = 1.0) -> int:
         """Set all audio clips to the same gain level. Returns count adjusted."""
+        seen_ids: set[int] = set()
         count: int = 0
         for _, clip in self.all_clips:
             if clip.clip_type == 'UnifiedMedia':
                 audio = clip._data.get('audio')
                 if audio is not None:
+                    if id(audio) in seen_ids:
+                        continue  # pragma: no cover  # defensive: unreachable in practice since UnifiedMedia comes before its audio child in all_clips
                     audio.setdefault('attributes', {})['gain'] = target_gain
+                    seen_ids.add(id(audio))
                     count += 1
             elif clip.clip_type == 'AMFile' and clip.is_audio:
+                if id(clip._data) in seen_ids:
+                    continue
                 clip.gain = target_gain
+                seen_ids.add(id(clip._data))
                 count += 1
         return count
 

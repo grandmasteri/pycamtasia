@@ -198,3 +198,76 @@ class TestLowerThirdScaleOverrideWithDictParam:
         actual = clip._data['parameters']
         assert actual['scale0']['defaultValue'] == 0.5
         assert actual['scale1']['defaultValue'] == 0.5
+
+
+# ── Bug 11: add_lower_third scales line clip keyframed animation timing ──
+
+
+class TestLowerThirdLineClipKeyframeScaling:
+    """Line clip (track index 2) keyframes must be scaled proportionally
+    to the requested duration."""
+
+    ORIGINAL_LINE_DUR = 7220640000  # original line clip duration from template
+
+    def _get_line_keyframe_times(self, group_data: dict) -> list[int]:
+        """Collect all 'time' values from def keyframes on the line clip."""
+        line_clip = _get_line_clip(group_data)
+        times = []
+        for _key, val in line_clip.get('def', {}).items():
+            if isinstance(val, dict) and 'keyframes' in val:
+                for kf in val['keyframes']:
+                    if 'time' in kf:
+                        times.append(kf['time'])
+        return times
+
+    def _get_line_animation_end_times(self, group_data: dict) -> list[int]:
+        """Collect all 'endTime' values from animationTracks on the line clip."""
+        line_clip = _get_line_clip(group_data)
+        end_times = []
+        for track_kfs in line_clip.get('animationTracks', {}).values():
+            for kf in track_kfs:
+                if 'endTime' in kf:
+                    end_times.append(kf['endTime'])
+        return end_times
+
+    def test_line_def_keyframes_scaled(self):
+        track = _make_track()
+        dur_seconds = 10.0
+        clip = track.add_lower_third("Name", "Sub", 0, dur_seconds)
+        dur_ticks = seconds_to_ticks(dur_seconds)
+        line_scale = dur_ticks / self.ORIGINAL_LINE_DUR
+
+        times = self._get_line_keyframe_times(clip._data)
+        # All non-zero times should be scaled from the original template values
+        original_times = [0, 352800000, 705600000, 6773760000]
+        expected_nonzero = [int(t * line_scale) for t in original_times if t > 0]
+        actual_nonzero = [t for t in times if t > 0]
+        # Each expected time should appear at least once (multiple def keys share same times)
+        for exp in expected_nonzero:
+            assert exp in actual_nonzero, f"Expected scaled time {exp} not found in {actual_nonzero}"
+
+    def test_line_animation_tracks_scaled(self):
+        track = _make_track()
+        dur_seconds = 10.0
+        clip = track.add_lower_third("Name", "Sub", 0, dur_seconds)
+        dur_ticks = seconds_to_ticks(dur_seconds)
+        line_scale = dur_ticks / self.ORIGINAL_LINE_DUR
+
+        end_times = self._get_line_animation_end_times(clip._data)
+        original_end_times = [352800000, 705600000, 1411200000, 7197120000]
+        expected = [int(t * line_scale) for t in original_end_times]
+        assert sorted(end_times) == sorted(expected)
+
+    def test_line_keyframes_match_at_original_duration(self):
+        """When duration matches the original template, keyframes should be unchanged."""
+        track = _make_track()
+        # Use the original template duration in seconds
+        dur_seconds = self.ORIGINAL_LINE_DUR / seconds_to_ticks(1.0)
+        clip = track.add_lower_third("Name", "Sub", 0, dur_seconds)
+
+        line_clip = _get_line_clip(clip._data)
+        # Check that a known def keyframe time is preserved
+        width_kfs = line_clip['def']['width']['keyframes']
+        times = [kf['time'] for kf in width_kfs]
+        assert 352800000 in times
+        assert 705600000 in times
