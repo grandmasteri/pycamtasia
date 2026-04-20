@@ -8,31 +8,31 @@ _This section is the authoritative list of bugs reported by adversarial reviewer
 
 **Project-level orchestration:**
 
-1. `repair()` doesn't write sorted media order back to track. Detects/fixes overlaps on a sorted copy, but the final filter preserves original insertion order. Subsequent overlap detection may see different pairs; Camtasia expects chronological order. (project.py ~L918/L938)
+1. [verified] `repair()` doesn't write sorted media order back to track. Detects/fixes overlaps on a sorted copy, but the final filter preserves original insertion order. Subsequent overlap detection may see different pairs; Camtasia expects chronological order. (project.py ~L918/L938)
 
-2. `ChangeHistory.redo()` bypasses `max_history_depth` when re-appending to undo stack. `record()` truncates the undo stack, but `redo()` appends without truncation. Unbounded growth in undo/redo cycles. (history.py ~L147)
+2. [verified] `ChangeHistory.redo()` bypasses `max_history_depth` when re-appending to undo stack. `record()` truncates the undo stack, but `redo()` appends without truncation. Unbounded growth in undo/redo cycles. (history.py ~L147)
 
 **Operations:**
 
-3. `set_audio_speed()` doesn't update parent UnifiedMedia's own `clipSpeedAttribute`. Updates audio and video children correctly, but parent stays `True` after normalization to 1.0x. Subsequent `rescale_project()` sees `_has_speed_change(parent)` = True and corrupts scalar. HIGH severity cascading corruption. (speed.py ~L238)
+3. [verified] `set_audio_speed()` doesn't update parent UnifiedMedia's own `clipSpeedAttribute`. Updates audio and video children correctly, but parent stays `True` after normalization to 1.0x. Subsequent `rescale_project()` sees `_has_speed_change(parent)` = True and corrupts scalar. HIGH severity cascading corruption. (speed.py ~L238)
 
-4. `_process_clip()` StitchedMedia branch doesn't propagate new scalar to inner non-UnifiedMedia clips. `_adjust_scalar` updates parent's scalar; inner clips keep stale scalar. Divergent state; inconsistent with `set_speed()` which propagates. (speed.py ~L78)
+4. [verified] `_process_clip()` StitchedMedia branch doesn't propagate new scalar to inner non-UnifiedMedia clips. `_adjust_scalar` updates parent's scalar; inner clips keep stale scalar. Divergent state; inconsistent with `set_speed()` which propagates. (speed.py ~L78)
 
-5. `merge_tracks()` crashes on string-fraction start values with `TypeError`. `new_clip['start'] = new_clip.get('start', 0) + offset_ticks` adds int to str when source was previously rescaled. (merge.py ~L97)
+5. [verified] `merge_tracks()` crashes on string-fraction start values with `TypeError`. `new_clip['start'] = new_clip.get('start', 0) + offset_ticks` adds int to str when source was previously rescaled. (merge.py ~L97)
 
-6. `ripple_delete()` calls `_propagate_start_to_unified()` for every clip including those not shifted. Silently clobbers non-shifted UnifiedMedia children's timing if parent and children were out of sync. (layout.py ~L95)
+6. [verified] `ripple_delete()` calls `_propagate_start_to_unified()` for every clip including those not shifted. Silently clobbers non-shifted UnifiedMedia children's timing if parent and children were out of sync. (layout.py ~L95)
 
-7. `ripple_insert()` accepts negative `duration_seconds` with no validation. Produces negative shift, can create negative starts (invalid in Camtasia format). `pack_track` validates but `ripple_insert` doesn't. (layout.py ~L55)
+7. [verified] `ripple_insert()` accepts negative `duration_seconds` with no validation. Produces negative shift, can create negative starts (invalid in Camtasia format). `pack_track` validates but `ripple_insert` doesn't. (layout.py ~L55)
 
-8. `duplicate_project(clear_media=True)` doesn't remove media files from disk. Clears sourceBin entries in JSON but leaves the files from `shutil.copytree()` in the bundle. Defeats the purpose of the template workflow. (template.py ~L110)
+8. [verified] `duplicate_project(clear_media=True)` doesn't remove media files from disk. Clears sourceBin entries in JSON but leaves the files from `shutil.copytree()` in the bundle. Defeats the purpose of the template workflow. (template.py ~L110)
 
 **Supporting subsystems:**
 
-9. `import_media()` uses wrong `editRate` and `bitDepth` for images. Sets `editRate=10000000` and `bitDepth=32`, but real Camtasia uses `editRate=600` and `bitDepth=0` for image source tracks. Verified against fixtures. (media_bin/media_bin.py)
+9. [verified] `import_media()` uses wrong `editRate` and `bitDepth` for images. Sets `editRate=10000000` and `bitDepth=32`, but real Camtasia uses `editRate=600` and `bitDepth=0` for image source tracks. Verified against fixtures. (media_bin/media_bin.py)
 
-10. `_find_audio_file()` truncates VO IDs with 3+ parts. For `[VO-1.2.3]`, numbered-prefix fallback generates `01-02-` instead of `01-02-03-`, silently dropping the third part. Could match wrong audio file. (builders/screenplay_builder.py)
+10. [verified] `_find_audio_file()` truncates VO IDs with 3+ parts. For `[VO-1.2.3]`, numbered-prefix fallback generates `01-02-` instead of `01-02-03-`, silently dropping the third part. Could match wrong audio file. (builders/screenplay_builder.py)
 
-11. `keystroke_callout()` missing `word-wrap`, `resize-behavior`, `horizontal-alignment`, `vertical-alignment`, `line-spacing` keys that Camtasia expects for text callouts. Text may not wrap, alignment may default unexpectedly. (annotations/callouts.py)
+11. [verified] `keystroke_callout()` missing `word-wrap`, `resize-behavior`, `horizontal-alignment`, `vertical-alignment`, `line-spacing` keys that Camtasia expects for text callouts. Text may not wrap, alignment may default unexpectedly. (annotations/callouts.py)
 
 ## TechSmith Tutorial Analysis
 
