@@ -200,3 +200,45 @@ class TestPackTrackNegativeGap:
         track = _make_track([_clip(1, 0.0, 2.0)])
         with pytest.raises(ValueError, match='gap_seconds must be non-negative'):
             pack_track(track, gap_seconds=-1.0)
+
+
+class TestStringFractionTicks:
+    """Verify layout operations handle string-fraction start/duration values."""
+
+    @staticmethod
+    def _frac_clip(clip_id: int, start: str, duration: str) -> dict:
+        return {'id': clip_id, 'start': start, 'duration': duration}
+
+    def test_pack_track_with_fraction_duration(self):
+        track = _make_track([
+            self._frac_clip(1, 0, '705600000/2'),
+            self._frac_clip(2, '705600000', '705600000/2'),
+        ])
+        pack_track(track)
+        assert track._data['medias'][0]['start'] == 0
+        assert track._data['medias'][1]['start'] == 352800000
+
+    def test_ripple_insert_with_fraction_start(self):
+        track = _make_track([
+            self._frac_clip(1, '705600000/2', '705600000'),
+        ])
+        ripple_insert(track, position_seconds=0.0, duration_seconds=1.0)
+        assert track._data['medias'][0]['start'] == 352800000 + seconds_to_ticks(1.0)
+
+    def test_ripple_delete_with_fraction_values(self):
+        track = _make_track([
+            self._frac_clip(1, 0, '705600000/2'),
+            self._frac_clip(2, '705600000/2', '705600000'),
+            self._frac_clip(3, '705600000/2', '705600000'),
+        ])
+        # Clip 3 starts at 352800000 which is >= 0 + 352800000, so it shifts
+        ripple_delete(track, clip_id=1)
+        assert len(track._data['medias']) == 2
+
+    def test_snap_to_grid_with_fraction_start(self):
+        track = _make_track([
+            self._frac_clip(1, '705600000/2', '705600000'),
+        ])
+        snap_to_grid(track, grid_seconds=1.0)
+        # 352800000 ticks = 0.5s; banker's rounding snaps to 0
+        assert track._data['medias'][0]['start'] == 0

@@ -1575,9 +1575,17 @@ class Project:
                 clip.fade_in(fade_in_seconds)
             placed_clips.append(clip)
 
-        if replace_previous and len(placed_clips) > 1 and fade_out_seconds > 0:
-            for i in range(1, len(placed_clips)):
-                placed_clips[i - 1].fade_out(fade_out_seconds)
+        if replace_previous and len(placed_clips) > 1:
+            if fade_out_seconds > 0:
+                for i in range(1, len(placed_clips)):
+                    placed_clips[i - 1].fade_out(fade_out_seconds)
+            else:
+                for i in range(1, len(placed_clips)):
+                    prev = placed_clips[i - 1]
+                    next_start = placed_clips[i].start
+                    new_duration = next_start - prev.start
+                    if new_duration > 0:
+                        prev.duration = new_duration
 
         if fade_out_seconds > 0 and placed_clips:
             if replace_previous:

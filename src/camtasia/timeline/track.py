@@ -2423,7 +2423,7 @@ class _PerMediaMarkers:
             .get('keyframes', [])
         )
         start = self._data.get('start', 0)
-        media_start = int(Fraction(str(self._data.get('mediaStart', 0))))
+        media_start = Fraction(str(self._data.get('mediaStart', 0)))
         media_dur_raw = self._data.get('mediaDuration', self._data.get('duration', 0))
         media_dur = int(Fraction(str(media_dur_raw))) if media_dur_raw else 0
         scalar = _parse_scalar(self._data.get('scalar', 1))
@@ -2435,7 +2435,7 @@ class _PerMediaMarkers:
                 continue  # marker beyond clip's visible end
             yield Marker(
                 name=kf['value'],
-                time=start + int(Fraction(media_offset) * scalar),
+                time=start + round(media_offset * scalar),
             )
 
     def __len__(self) -> int:

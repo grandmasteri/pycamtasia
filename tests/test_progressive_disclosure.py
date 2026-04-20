@@ -145,3 +145,18 @@ def test_progressive_disclosure_fade_out_without_replace(project, images: list[P
         images, fade_out_seconds=0.5, replace_previous=False,
     )
     assert [hasattr(c, 'start_seconds') for c in clips] == [True, True, True]
+
+
+def test_progressive_disclosure_replace_previous_without_fade_out(project, images: list[Path]):
+    """When replace_previous=True and fade_out_seconds=0, each previous clip is trimmed to end at next clip's start."""
+    clips = project.add_progressive_disclosure(
+        images, start_seconds=0.0, per_step_seconds=5.0,
+        fade_in_seconds=0.0, fade_out_seconds=0.0,
+        replace_previous=True,
+    )
+    assert len(clips) == 3
+    # Each previous clip should be trimmed to end at next clip's start
+    for i in range(len(clips) - 1):
+        prev_end = clips[i].start + clips[i].duration
+        next_start = clips[i + 1].start
+        assert prev_end == next_start, f"Clip {i} end {prev_end} should equal clip {i+1} start {next_start}"

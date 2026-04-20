@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from fractions import Fraction
+from typing import TYPE_CHECKING, Any
 
 from camtasia.timeline.track import _propagate_start_to_unified
 from camtasia.timing import seconds_to_ticks
 
 if TYPE_CHECKING:
     from camtasia.timeline.track import Track
+
+
+def _to_ticks(v: Any) -> int:
+    """Convert a tick value (int, str fraction like ``'705600000/2'``, etc.) to int."""
+    return int(Fraction(str(v))) if v is not None else 0
 
 
 def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
@@ -21,13 +27,13 @@ def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
     if not medias:
         return
     track._data['transitions'] = []
-    medias.sort(key=lambda m: m.get('start', 0))
+    medias.sort(key=lambda m: _to_ticks(m.get('start', 0)))
     gap_ticks = seconds_to_ticks(gap_seconds)
     cursor = 0
     for m in medias:
         m['start'] = cursor
         _propagate_start_to_unified(m)
-        cursor += m.get('duration', 0) + gap_ticks
+        cursor += _to_ticks(m.get('duration', 0)) + gap_ticks
 
 
 def ripple_insert(track: Track, position_seconds: float, duration_seconds: float) -> None:
@@ -38,8 +44,8 @@ def ripple_insert(track: Track, position_seconds: float, duration_seconds: float
     pos_ticks = seconds_to_ticks(position_seconds)
     shift_ticks = seconds_to_ticks(duration_seconds)
     for m in track._data.get('medias', []):
-        if m.get('start', 0) >= pos_ticks:
-            m['start'] += shift_ticks
+        if _to_ticks(m.get('start', 0)) >= pos_ticks:
+            m['start'] = _to_ticks(m.get('start', 0)) + shift_ticks
             _propagate_start_to_unified(m)
 
 
@@ -59,8 +65,8 @@ def ripple_delete(track: Track, clip_id: int) -> None:
             f"No clip with id={clip_id} on track index={track.index}. "
             f"Available clip IDs: {available}"
         )
-    gap = target.get('duration', 0)
-    target_start = target.get('start', 0)
+    gap = _to_ticks(target.get('duration', 0))
+    target_start = _to_ticks(target.get('start', 0))
     medias.pop(target_idx)
     transitions = track._data.get('transitions', [])
     track._data['transitions'] = [
@@ -68,8 +74,8 @@ def ripple_delete(track: Track, clip_id: int) -> None:
         if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
     ]
     for m in medias:
-        if m.get('start', 0) >= target_start + gap:
-            m['start'] -= gap
+        if _to_ticks(m.get('start', 0)) >= target_start + gap:
+            m['start'] = _to_ticks(m.get('start', 0)) - gap
         _propagate_start_to_unified(m)
 
 
@@ -86,7 +92,7 @@ def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:
     if grid_ticks <= 0:
         raise ValueError(f'Grid must be positive, got {grid_seconds}')
     for m in track._data.get('medias', []):
-        start = m.get('start', 0)
+        start = _to_ticks(m.get('start', 0))
         quotient, remainder = divmod(start, grid_ticks)
         if 2 * remainder > grid_ticks or (2 * remainder == grid_ticks and quotient % 2 == 1):
             quotient += 1
