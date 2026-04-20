@@ -79,20 +79,19 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
         clip["mediaStart"] = _scale_tick(clip.get("mediaStart", 0), factor)
         clip["mediaDuration"] = _scale_tick(clip.get("mediaDuration", 0), factor)
         for inner in clip.get("medias", []):
-            inner["start"] = _scale_tick(inner["start"], factor)
-            inner["duration"] = _scale_tick(inner["duration"], factor)
-            inner["mediaStart"] = _scale_tick(inner.get("mediaStart", 0), factor)
-            inner["mediaDuration"] = _scale_tick(inner.get("mediaDuration", 0), factor)
+            if inner.get('_type') == 'UnifiedMedia':
+                # Let _process_clip handle UnifiedMedia path including video/audio children
+                _process_clip(inner, factor)
+            else:
+                inner["start"] = _scale_tick(inner["start"], factor)
+                inner["duration"] = _scale_tick(inner["duration"], factor)
+                inner["mediaStart"] = _scale_tick(inner.get("mediaStart", 0), factor)
+                inner["mediaDuration"] = _scale_tick(inner.get("mediaDuration", 0), factor)
             for effect in inner.get('effects', []):
                 if 'start' in effect:
                     effect['start'] = _scale_tick(effect['start'], factor)
                 if 'duration' in effect:
                     effect['duration'] = _scale_tick(effect['duration'], factor)
-            if inner.get('_type') == 'UnifiedMedia':
-                for child_key in ('video', 'audio'):
-                    child = inner.get(child_key)
-                    if child:
-                        _process_clip(child, factor)
 
     elif ctype == "Group":
         if "mediaDuration" in clip:

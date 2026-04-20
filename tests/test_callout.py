@@ -470,3 +470,13 @@ class TestCalloutFillColorAnimatedSetter:
         assert data['def']['fill-color-red']['defaultValue'] == 0.9
         assert 'keyframes' not in data['def']['fill-color-red']
         assert data['def']['fill-color-blue'] == 0.7
+
+
+class TestSetFontWeightValidation:
+    """set_font() rejects non-standard int weights."""
+
+    def test_rejects_unrecognized_int_weight(self, project):
+        track = project.timeline.tracks[0]
+        clip = track.add_callout('Hello', start_seconds=0.0, duration_seconds=2.0)
+        with pytest.raises(ValueError, match=r"not a standard font weight"):
+            clip.set_font(name='Arial', weight=450)

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fractions import Fraction
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -16,6 +17,7 @@ from camtasia.timeline.markers import Marker, MarkerList
 from camtasia.timeline.track import (
     _GROUP_DEFAULT_PARAMETERS,
     Track,
+    _parse_scalar,
     _propagate_start_to_unified,
 )
 from camtasia.timing import seconds_to_ticks, ticks_to_seconds
@@ -795,7 +797,17 @@ class Timeline:
                 new_start = m.get('start', 0) + offset
                 if new_start < 0:
                     clamped = True
-                m['start'] = max(0, new_start)
+                    clamp_amount = -new_start
+                    m['start'] = 0
+                    old_duration = int(Fraction(str(m.get('duration', 0))))
+                    new_duration = max(0, old_duration - clamp_amount)
+                    m['duration'] = new_duration
+                    scalar = _parse_scalar(m.get('scalar', 1))
+                    old_media_start = Fraction(str(m.get('mediaStart', 0)))
+                    new_media_start = old_media_start + clamp_amount * scalar
+                    m['mediaStart'] = int(new_media_start) if new_media_start == int(new_media_start) else str(new_media_start)
+                else:
+                    m['start'] = new_start
                 _propagate_start_to_unified(m)
             if clamped:
                 track._data['transitions'] = []

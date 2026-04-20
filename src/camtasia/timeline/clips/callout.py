@@ -300,7 +300,12 @@ class Callout(BaseClip):
         font = self._data.setdefault('def', {}).setdefault('font', {})  # type: ignore[typeddict-item]
         font['name'] = name
         if isinstance(weight, int):
-            font['weight'] = _WEIGHT_REVERSE.get(weight, 'Regular')
+            if weight not in _WEIGHT_REVERSE:
+                raise ValueError(
+                    f'weight {weight} is not a standard font weight. '
+                    f'Valid weights: {sorted(_WEIGHT_REVERSE.keys())}'
+                )
+            font['weight'] = _WEIGHT_REVERSE[weight]
         else:
             font['weight'] = weight
         font['size'] = size
