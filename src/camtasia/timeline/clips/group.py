@@ -244,6 +244,14 @@ class Group(BaseClip):
                                         sub['start'] = inner['start']
                                         if 'mediaDuration' in inner:
                                             sub['mediaDuration'] = inner['mediaDuration']
+                                        # Scale effects on sub-clips
+                                        for effect in sub.get('effects', []):
+                                            if 'start' in effect:
+                                                orig = Fraction(str(effect['start']))
+                                                effect['start'] = round(orig * group_scalar)
+                                            if 'duration' in effect:
+                                                orig = Fraction(str(effect['duration']))
+                                                effect['duration'] = round(orig * group_scalar)
                         cursor = 0
                         for inner in cloned_data.get('medias', []):
                             inner['start'] = cursor
@@ -254,6 +262,16 @@ class Group(BaseClip):
                         if total_inner != wrapper_dur and cloned_data.get('medias'):
                             last = cloned_data['medias'][-1]
                             last['duration'] = round(Fraction(str(last['duration']))) + (wrapper_dur - total_inner)
+                    if cloned_data.get('_type') == 'Group' and group_scalar != 1:
+                        for inner_track in cloned_data.get('tracks', []):
+                            for nested_clip in inner_track.get('medias', []):
+                                orig_n_start = Fraction(str(nested_clip.get('start', 0)))
+                                orig_n_dur = Fraction(str(nested_clip.get('duration', 0)))
+                                nested_clip['start'] = round(orig_n_start * group_scalar)
+                                nested_clip['duration'] = round(orig_n_dur * group_scalar)
+                                nested_scalar = _parse_scalar(nested_clip.get('scalar', 1))
+                                composed = nested_scalar * group_scalar
+                                nested_clip['scalar'] = int(composed) if composed == int(composed) else str(composed)
                 cloned_start = Fraction(str(cloned_data.get('start', 0)))
                 new_start = cloned_start + group_start
                 cloned_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
@@ -460,8 +478,19 @@ class Group(BaseClip):
         if len(tracks_snapshot) <= 1:
             return tracks_snapshot[0]
         target_track: GroupTrack = tracks_snapshot[0]
+        # Collect existing IDs to detect collisions
+        from camtasia.timeline.timeline import _remap_clip_ids_with_map
+        existing_ids: set[int] = set()
+        for m in target_track._data.get('medias', []):
+            existing_ids.add(m.get('id'))
+        max_id = max(existing_ids) if existing_ids else 0
+        id_counter = [max_id + 1]
         for source_track in tracks_snapshot[1:]:
             for media_dict in source_track._data.get('medias', []):
+                if media_dict.get('id') in existing_ids:
+                    id_map: dict[int, int] = {}
+                    _remap_clip_ids_with_map(media_dict, id_counter, id_map)
+                existing_ids.add(media_dict.get('id'))
                 target_track._data.setdefault('medias', []).append(media_dict)
         # Remove all tracks except the first
         self._data['tracks'] = [self._data['tracks'][0]]
@@ -758,6 +787,9 @@ class Group(BaseClip):
                                         sub['duration'] = seg['duration']
                                         if 'mediaDuration' in seg:
                                             sub['mediaDuration'] = seg['mediaDuration']
+                                        sub['scalar'] = seg.get('scalar', 1)
+                                        sub['mediaStart'] = seg.get('mediaStart', 0)
+                                        sub['start'] = seg.get('start', 0)
                     from camtasia.timeline.track import _propagate_start_to_unified as _psu
                     _psu(m)
         return self

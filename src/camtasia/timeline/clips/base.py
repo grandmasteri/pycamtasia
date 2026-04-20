@@ -350,9 +350,9 @@ class BaseClip:
             for inner in self._data.get('medias', []):
                 inner['start'] = cursor
                 dur_val = inner['duration']
-                cursor += int(Fraction(str(dur_val)))
+                cursor += round(Fraction(str(dur_val)))
             # Compute new wrapper duration as sum of segment durations
-            new_wrapper_dur = sum(int(Fraction(str(inner['duration']))) for inner in self._data.get('medias', []))
+            new_wrapper_dur = sum(round(Fraction(str(inner['duration']))) for inner in self._data.get('medias', []))
             self._data['duration'] = new_wrapper_dur
             # Recalculate mediaDuration to maintain invariant
             if scalar_fraction != 0:
@@ -365,7 +365,7 @@ class BaseClip:
             wrapper_dur = Fraction(str(self._data.get('duration', 0)))
             orig_wrapper_dur = wrapper_dur / wrapper_scalar if wrapper_scalar != 0 else wrapper_dur
             grp_new_dur = orig_wrapper_dur * scalar_fraction
-            self._data['duration'] = int(grp_new_dur) if grp_new_dur == int(grp_new_dur) else str(grp_new_dur)  # type: ignore[typeddict-item]
+            self._data['duration'] = round(grp_new_dur)  # type: ignore[typeddict-item]
             self._data['scalar'] = int(scalar_fraction) if scalar_fraction == int(scalar_fraction) else str(scalar_fraction)
             # Recalculate mediaDuration to maintain invariant
             if scalar_fraction != 0:
@@ -379,8 +379,8 @@ class BaseClip:
                     new_inner_dur = orig_inner_dur * scalar_fraction
                     new_inner_start = orig_inner_start * scalar_fraction
                     inner_clip_data['scalar'] = int(scalar_fraction) if scalar_fraction == int(scalar_fraction) else str(scalar_fraction)
-                    inner_clip_data['start'] = int(new_inner_start) if new_inner_start == int(new_inner_start) else str(new_inner_start)
-                    inner_clip_data['duration'] = int(new_inner_dur) if new_inner_dur == int(new_inner_dur) else str(new_inner_dur)
+                    inner_clip_data['start'] = round(new_inner_start)
+                    inner_clip_data['duration'] = round(new_inner_dur)
                     # Set clipSpeedAttribute metadata
                     inner_clip_data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
                     # Propagate to UnifiedMedia sub-dicts
@@ -1492,6 +1492,10 @@ class BaseClip:
             p = params.get(parameter)
             if isinstance(p, dict):
                 p.pop('keyframes', None)
+            if parameter == 'opacity':
+                tracks = self._data.get('animationTracks', {})
+                if 'visual' in tracks:
+                    tracks['visual'] = []
         else:  # pragma: no cover
             for p in params.values():
                 if isinstance(p, dict):

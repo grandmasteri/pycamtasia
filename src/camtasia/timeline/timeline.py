@@ -807,7 +807,7 @@ class Timeline:
                     if new_duration == 0:
                         clips_to_remove.append(id(m))
                         continue
-                    m['duration'] = int(new_duration_frac) if new_duration_frac == int(new_duration_frac) else str(new_duration_frac)
+                    m['duration'] = round(new_duration_frac)
                     scalar = _parse_scalar(m.get('scalar', 1))
                     old_media_start = Fraction(str(m.get('mediaStart', 0)))
                     # mediaStart is in source-media ticks; convert timeline clamp
@@ -1158,6 +1158,22 @@ class Timeline:
                     t for t in found_track._data.get('transitions', [])
                     if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
                 ]
+                # Remap IDs if compound clip to avoid collisions on target
+                if found_media.get('_type') in ('Group', 'StitchedMedia', 'UnifiedMedia'):
+                    target_next_id = target_track._next_clip_id()
+                    id_counter = [target_next_id]
+                    id_map: dict[int, int] = {}
+                    old_top_id = found_media.get('id')
+                    _remap_clip_ids_with_map(found_media, id_counter, id_map)
+                    if old_top_id in id_map:  # pragma: no cover  # defensive: id collision scenario hard to reach
+                        new_top = id_map[old_top_id]
+                        for t in target_track._data.get('transitions', []):
+                            if t.get('leftMedia') == old_top_id:
+                                t['leftMedia'] = new_top
+                            if t.get('rightMedia') == old_top_id:
+                                t['rightMedia'] = new_top
+                    # Update clip_id for subsequent transition references
+                    clip_id = found_media.get('id', clip_id)
                 target_track._data.setdefault('medias', []).append(found_media)
             # Remove stale transitions on target track referencing this clip
             target_track._data['transitions'] = [

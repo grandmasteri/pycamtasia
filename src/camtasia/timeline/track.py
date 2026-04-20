@@ -2135,16 +2135,14 @@ class Track:
         medias = self._data.get('medias', [])
         for i, m in enumerate(medias):
             if m.get('id') == clip_id:
-                old_top_id = new_clip_data.get('id')
                 new_id = self._next_clip_id()
-                new_clip_data['id'] = new_id  # ensure id exists for remap
+                # Ensure clip has an id so remapper can process it
+                if 'id' not in new_clip_data:
+                    new_clip_data['id'] = new_id
                 from camtasia.timeline.timeline import _remap_clip_ids_with_map
-                id_counter = [new_id + 1]
+                id_counter = [new_id]
                 id_map: dict[int, int] = {}
                 _remap_clip_ids_with_map(new_clip_data, id_counter, id_map)
-                new_clip_data['id'] = new_id  # restore top-level id
-                if old_top_id is not None and old_top_id not in id_map:
-                    id_map[old_top_id] = new_id
                 from camtasia.operations.merge import _remap_asset_properties
                 _remap_asset_properties(new_clip_data, id_map)
                 new_clip_data['start'] = m['start']
@@ -2367,6 +2365,21 @@ class Track:
         """
         at_ticks: int = seconds_to_ticks(at_seconds)
         medias = sorted(self._data.get('medias', []), key=lambda m: m.get('start', 0))
+        # Check leading gap (from time 0 to first clip)
+        if medias and medias[0].get('start', 0) > 0:
+            lead_gap_end = medias[0]['start']
+            if 0 <= at_ticks < lead_gap_end:
+                gap_size = lead_gap_end
+                shifted_clip_ids: set[int] = set()
+                for m in self._data.get('medias', []):
+                    m['start'] = m.get('start', 0) - gap_size
+                    _propagate_start_to_unified(m)
+                    shifted_clip_ids.add(m.get('id'))
+                self._data['transitions'] = [
+                    t for t in self._data.get('transitions', [])
+                    if not ((t.get('leftMedia') in shifted_clip_ids) ^ (t.get('rightMedia') in shifted_clip_ids))
+                ]
+                return
         gap_start: int | None = None
         gap_end: int | None = None
         for i in range(len(medias) - 1):
@@ -2379,15 +2392,15 @@ class Track:
         if gap_start is None or gap_end is None:
             return
         gap_ticks: int = gap_end - gap_start
-        shifted_clip_ids: set[int] = set()
+        gap_shifted_ids: set[int] = set()
         for media_dict in self._data.get('medias', []):
             if media_dict.get('start', 0) >= gap_end:
                 media_dict['start'] = media_dict.get('start', 0) - gap_ticks
                 _propagate_start_to_unified(media_dict)
-                shifted_clip_ids.add(media_dict.get('id'))
+                gap_shifted_ids.add(media_dict.get('id'))
         self._data['transitions'] = [
             t for t in self._data.get('transitions', [])
-            if not ((t.get('leftMedia') in shifted_clip_ids) ^ (t.get('rightMedia') in shifted_clip_ids))
+            if not ((t.get('leftMedia') in gap_shifted_ids) ^ (t.get('rightMedia') in gap_shifted_ids))
         ]
 
     def shift_all_clips(self, offset_seconds: float) -> None:
@@ -2412,7 +2425,7 @@ class Track:
                 if new_duration == 0:
                     clips_to_remove.append(id(m))
                     continue
-                m['duration'] = int(new_duration_frac) if new_duration_frac == int(new_duration_frac) else str(new_duration_frac)
+                m['duration'] = round(new_duration_frac)
                 scalar = _parse_scalar(m.get('scalar', 1))
                 old_media_start = Fraction(str(m.get('mediaStart', 0)))
                 if scalar != 0:

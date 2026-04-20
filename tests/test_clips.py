@@ -2099,3 +2099,104 @@ def test_set_speed_group_scalar_reset_not_composed() -> None:
     # Should be 1/3, not 1/2 * 1/3 = 1/6
     assert inner_scalar_2 == Fraction(1, 3)
     assert inner_scalar_1 == Fraction(1, 2)
+
+
+def _vmfile(start: int = 0, duration: int = 600, **kw) -> dict:
+    d = {
+        "id": 1, "_type": "VMFile", "src": 1,
+        "start": start, "duration": duration,
+        "mediaStart": 0, "mediaDuration": duration, "scalar": 1,
+    }
+    d.update(kw)
+    return d
+
+
+def _group(inner_clips: list[dict], duration: int = 600, scalar=1) -> dict:
+    return {
+        "id": 10, "_type": "Group", "start": 0,
+        "duration": duration, "mediaDuration": duration,
+        "scalar": scalar,
+        "tracks": [{"medias": inner_clips, "trackIndex": 0}],
+        "attributes": {"ident": "G"},
+    }
+
+
+def _stitched(segments: list[dict], duration: int | None = None) -> dict:
+    total = sum(s.get("duration", 0) for s in segments)
+    return {
+        "id": 20, "_type": "StitchedMedia", "start": 0,
+        "duration": duration or total, "mediaDuration": total,
+        "scalar": 1, "medias": segments,
+    }
+
+
+# -- Bug 1: Group set_speed stores duration/start as int, not string --
+
+class TestBug1GroupSetSpeedIntDuration:
+    def test_group_duration_is_int_after_fractional_speed(self):
+        inner = _vmfile(start=0, duration=600)
+        grp = _group([inner], duration=600)
+        clip = BaseClip(grp)
+        clip.set_speed(3.0)
+        assert isinstance(clip._data["duration"], int)
+
+    def test_group_inner_start_is_int_after_fractional_speed(self):
+        inner = _vmfile(start=100, duration=600)
+        grp = _group([inner], duration=700)
+        clip = BaseClip(grp)
+        clip.set_speed(3.0)
+        inner_data = clip._data["tracks"][0]["medias"][0]
+        assert isinstance(inner_data["start"], int)
+        assert isinstance(inner_data["duration"], int)
+
+    def test_group_duration_rounded_correctly(self):
+        inner = _vmfile(start=0, duration=100)
+        grp = _group([inner], duration=100)
+        clip = BaseClip(grp)
+        clip.set_speed(3.0)
+        # scalar = 1/3, duration = 100 * 1/3 ≈ 33
+        assert clip._data["duration"] == 33
+
+
+# -- Bug 2: StitchedMedia cursor uses round --
+
+class TestBug2StitchedCursorRound:
+    def test_stitched_cursor_uses_round(self):
+        seg1 = {"id": 21, "_type": "VMFile", "start": 0, "duration": 100,
+                "mediaDuration": 100, "scalar": 1, "src": 1}
+        seg2 = {"id": 22, "_type": "VMFile", "start": 100, "duration": 100,
+                "mediaDuration": 100, "scalar": 1, "src": 1}
+        st = _stitched([seg1, seg2])
+        clip = BaseClip(st)
+        clip.set_speed(3.0)
+        # After speed change, segments should have int starts
+        for seg in clip._data["medias"]:
+            assert isinstance(seg["start"], int)
+        assert isinstance(clip._data["duration"], int)
+
+
+# -- Bug 3: clear_keyframes('opacity') clears animationTracks.visual --
+
+class TestBug3ClearKeyframesOpacity:
+    def test_clear_opacity_clears_animation_tracks_visual(self):
+        d = _vmfile()
+        d["parameters"] = {
+            "opacity": {"type": "double", "defaultValue": 1.0,
+                        "keyframes": [{"time": 0, "value": 1.0}]},
+        }
+        d["animationTracks"] = {"visual": [{"time": 0, "value": 1.0}]}
+        clip = BaseClip(d)
+        clip.clear_keyframes("opacity")
+        assert "keyframes" not in clip._data["parameters"]["opacity"]
+        assert clip._data["animationTracks"]["visual"] == []
+
+    def test_clear_non_opacity_does_not_touch_animation_tracks(self):
+        d = _vmfile()
+        d["parameters"] = {
+            "scale0": {"type": "double", "defaultValue": 1.0,
+                       "keyframes": [{"time": 0, "value": 1.0}]},
+        }
+        d["animationTracks"] = {"visual": [{"time": 0, "value": 1.0}]}
+        clip = BaseClip(d)
+        clip.clear_keyframes("scale0")
+        assert clip._data["animationTracks"]["visual"] == [{"time": 0, "value": 1.0}]

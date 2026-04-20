@@ -1127,3 +1127,42 @@ class TestBuildSectionTimelineStaleTransitions:
             # No transition should have c1 as rightMedia (old stale one)
             if t.get('leftMedia') == c1.id and t.get('rightMedia') == c2.id:
                 pytest.fail("Stale transition c1↔c2 was not removed")
+
+
+class TestBug11BuildSectionTimelineIdRemap:
+    def test_compound_clip_ids_remapped_on_track_move(self, project):
+        tl = project.timeline
+        t0 = tl.tracks[0]
+        t1 = tl.get_or_create_track("Track2")
+        # Add a simple clip on t0 at 10s (outside group range)
+        c1 = t0.add_video(1, start_seconds=10, duration_seconds=2)
+        # Create clips on t1 and group them
+        t1.add_video(1, start_seconds=0, duration_seconds=2)
+        t1.add_video(1, start_seconds=2, duration_seconds=2)
+        grp = tl.group_clips_in_range(0, 4, t1.index)
+        group_id = grp.id
+        # Move group from t1 to t0 via build_section_timeline
+        tl.build_section_timeline(
+            [(c1.id, None), (group_id, None)],
+            target_track_index=0,
+        )
+        target_medias = t0._data["medias"]
+        ids = [m["id"] for m in target_medias]
+        assert len(ids) == len(set(ids)), f"Duplicate IDs: {ids}"
+
+    def test_simple_clip_not_remapped(self, project):
+        tl = project.timeline
+        t0 = tl.tracks[0]
+        t1 = tl.get_or_create_track("Track2")
+        c1 = t0.add_video(1, start_seconds=0, duration_seconds=2)
+        c2 = t1.add_video(1, start_seconds=0, duration_seconds=2)
+        old_c2_id = c2.id
+        tl.build_section_timeline(
+            [(c1.id, None), (old_c2_id, None)],
+            target_track_index=0,
+        )
+        target_medias = t0._data["medias"]
+        # Simple VMFile clips keep their IDs (no compound remap)
+        assert target_medias[0]["id"] == c1.id
+        assert target_medias[1]["id"] == old_c2_id
+

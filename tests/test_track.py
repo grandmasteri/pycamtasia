@@ -2256,3 +2256,109 @@ def test_timeline_shift_all_preserves_fractional_duration() -> None:
     assert dur > 0
     # No clamping needed (start was 1s, shift is -0.5s), so duration unchanged
     assert dur == Fraction('7056000001/3')
+
+
+def _make_track_cycle10(medias: list[dict] | None = None) -> Track:
+    attrs: dict[str, Any] = {"ident": "Track 1"}
+    data: dict[str, Any] = {
+        "trackIndex": 0,
+        "medias": medias or [],
+        "transitions": [],
+    }
+    return Track(attrs, data)
+
+
+def _vmfile(uid: int, start: int, duration: int) -> dict[str, Any]:
+    return {
+        "id": uid, "_type": "VMFile", "src": 1,
+        "start": start, "duration": duration,
+        "mediaStart": 0, "mediaDuration": duration, "scalar": 1,
+    }
+
+
+# -- Bug 8: shift_all_clips stores duration as int, not string --
+
+class TestBug8ShiftAllClipsDurationInt:
+    def test_duration_is_int_after_negative_shift(self):
+        start_ticks = seconds_to_ticks(1.0)
+        dur_ticks = seconds_to_ticks(5.0)
+        clip = _vmfile(1, start=start_ticks, duration=dur_ticks)
+        track = _make_track_cycle10([clip])
+        track.shift_all_clips(-3.0)  # shift back 3s, clamps at 0
+        m = track._data["medias"][0]
+        assert isinstance(m["duration"], int)
+
+    def test_duration_is_int_after_fractional_clamp(self):
+        start_ticks = seconds_to_ticks(0.5)
+        dur_ticks = seconds_to_ticks(5.0)
+        clip = _vmfile(1, start=start_ticks, duration=dur_ticks)
+        track = _make_track_cycle10([clip])
+        track.shift_all_clips(-2.0)
+        m = track._data["medias"][0]
+        assert isinstance(m["duration"], int)
+
+
+# -- Bug 9: remove_gap_at detects leading gap --
+
+class TestBug9RemoveGapAtLeadingGap:
+    def test_leading_gap_removed(self):
+        start_ticks = seconds_to_ticks(5.0)
+        dur_ticks = seconds_to_ticks(3.0)
+        clip = _vmfile(1, start=start_ticks, duration=dur_ticks)
+        track = _make_track_cycle10([clip])
+        track.remove_gap_at(0.0)
+        m = track._data["medias"][0]
+        assert m["start"] == 0
+
+    def test_leading_gap_at_midpoint(self):
+        start_ticks = seconds_to_ticks(10.0)
+        dur_ticks = seconds_to_ticks(3.0)
+        clip = _vmfile(1, start=start_ticks, duration=dur_ticks)
+        track = _make_track_cycle10([clip])
+        track.remove_gap_at(5.0)  # 5s is within leading gap [0, 10s)
+        m = track._data["medias"][0]
+        assert m["start"] == 0
+
+    def test_no_leading_gap_no_change(self):
+        clip = _vmfile(1, start=0, duration=seconds_to_ticks(3.0))
+        track = _make_track_cycle10([clip])
+        track.remove_gap_at(0.0)
+        m = track._data["medias"][0]
+        assert m["start"] == 0
+
+
+# -- Bug 10: replace_clip no double-remap --
+
+class TestBug10ReplaceClipNoDoubleRemap:
+    def test_replace_clip_id_is_new_id(self):
+        track = _make_track_cycle10()
+        original = track.add_callout("A", 0, 5)
+        old_id = original.id
+        new_data: dict[str, Any] = {
+            "_type": "Callout", "id": 999,
+            "duration": 10, "start": 0,
+            "mediaStart": 0, "mediaDuration": 10,
+        }
+        result = track.replace_clip(old_id, new_data)
+        assert result.id != old_id
+        assert result.id != 999  # should be remapped
+
+    def test_replace_compound_clip_nested_ids_remapped(self):
+        track = _make_track_cycle10()
+        original = track.add_callout("A", 0, 5)
+        old_id = original.id
+        new_data: dict[str, Any] = {
+            "_type": "UnifiedMedia", "id": 100,
+            "duration": 10, "start": 0,
+            "mediaStart": 0, "mediaDuration": 10, "scalar": 1,
+            "video": {"id": 101, "_type": "VMFile", "duration": 10,
+                      "start": 0, "mediaDuration": 10, "scalar": 1, "src": 1},
+            "audio": {"id": 102, "_type": "AMFile", "duration": 10,
+                      "start": 0, "mediaDuration": 10, "scalar": 1, "src": 1},
+        }
+        result = track.replace_clip(old_id, new_data)
+        top_id = result._data["id"]
+        vid_id = result._data["video"]["id"]
+        aud_id = result._data["audio"]["id"]
+        assert len({top_id, vid_id, aud_id}) == 3
+        assert top_id not in (100, 101, 102)

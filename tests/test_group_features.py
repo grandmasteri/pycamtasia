@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import copy
 from fractions import Fraction
+from typing import Any
 
 import pytest
 
@@ -1184,3 +1185,128 @@ def test_set_internal_segment_speeds_integer_cursor() -> None:
     for i in range(1, len(medias)):
         expected = medias[i - 1]['start'] + medias[i - 1]['duration']
         assert medias[i]['start'] == expected
+
+
+def _unified(uid: int = 30, start: int = 0, duration: int = 300, scalar=1,
+             effects: list | None = None) -> dict[str, Any]:
+    base = {
+        "id": uid, "_type": "UnifiedMedia", "start": start,
+        "duration": duration, "mediaDuration": duration, "scalar": scalar,
+        "video": {"id": uid + 1, "_type": "VMFile", "start": start,
+                  "duration": duration, "mediaDuration": duration, "scalar": scalar,
+                  "effects": effects or [], "src": 1},
+        "audio": {"id": uid + 2, "_type": "AMFile", "start": start,
+                  "duration": duration, "mediaDuration": duration, "scalar": scalar,
+                  "effects": [], "src": 1},
+    }
+    return base
+
+
+def _group(inner_clips: list[dict], duration: int = 600, scalar=1) -> dict[str, Any]:
+    return {
+        "id": 10, "_type": "Group", "start": 0,
+        "duration": duration, "mediaDuration": duration,
+        "scalar": scalar,
+        "tracks": [{"medias": inner_clips, "trackIndex": 0}],
+        "attributes": {"ident": "G"},
+    }
+
+
+# -- Bug 4: ungroup scales effects on UnifiedMedia sub-clips inside StitchedMedia --
+
+class TestBug4UngroupStitchedUnifiedEffects:
+    def test_effects_on_video_sub_scaled(self):
+        seg = _unified(uid=30, start=0, duration=300,
+                       effects=[{"start": 0, "duration": 100, "name": "fx"}])
+        stitched = {
+            "id": 20, "_type": "StitchedMedia", "start": 0,
+            "duration": 300, "mediaDuration": 300, "scalar": 1,
+            "medias": [seg],
+        }
+        grp = _group([stitched], duration=600, scalar="1/2")
+        gc = Group(grp)
+        clips = gc.ungroup()
+        assert len(clips) == 1
+        inner_seg = clips[0]._data["medias"][0]
+        video = inner_seg["video"]
+        fx = video["effects"][0]
+        # scalar=1/2 means group_scalar=Fraction(1,2), effects scaled by 1/2
+        assert fx["start"] == 0
+        assert fx["duration"] == round(Fraction(100) * Fraction(1, 2))
+
+
+# -- Bug 5: ungroup recursively scales nested Group --
+
+class TestBug5UngroupNestedGroup:
+    def test_nested_group_clips_scaled(self):
+        inner_clip = {
+            "id": 50, "_type": "VMFile", "start": 0, "duration": 300,
+            "mediaDuration": 300, "scalar": 1, "src": 1,
+        }
+        nested_group = {
+            "id": 40, "_type": "Group", "start": 0,
+            "duration": 300, "mediaDuration": 300, "scalar": 1,
+            "tracks": [{"medias": [inner_clip], "trackIndex": 0}],
+            "attributes": {"ident": "Inner"},
+        }
+        outer = _group([nested_group], duration=600, scalar="1/2")
+        gc = Group(outer)
+        clips = gc.ungroup()
+        assert len(clips) == 1
+        nested = clips[0]._data
+        assert nested["_type"] == "Group"
+        inner = nested["tracks"][0]["medias"][0]
+        assert inner["start"] == round(Fraction(0) * Fraction(1, 2))
+        assert inner["duration"] == round(Fraction(300) * Fraction(1, 2))
+
+
+# -- Bug 6: sync_internal_durations propagates scalar/mediaStart/start --
+
+class TestBug6SyncInternalDurationsPropagation:
+    def test_unified_in_stitched_gets_scalar_and_start(self):
+        seg = _unified(uid=30, start=100, duration=300, scalar="1/2")
+        seg["mediaStart"] = 50
+        stitched = {
+            "id": 20, "_type": "StitchedMedia", "start": 0,
+            "duration": 500, "mediaDuration": 500, "scalar": 1,
+            "medias": [seg],
+        }
+        # Group duration shorter than stitched → triggers trimming
+        grp = _group([stitched], duration=400)
+        gc = Group(grp)
+        gc.sync_internal_durations()
+        # After sync, stitched duration trimmed to 400
+        stitched_data = gc._data["tracks"][0]["medias"][0]
+        inner_seg = stitched_data["medias"][0]
+        video = inner_seg["video"]
+        assert video["scalar"] == "1/2"
+        assert video["mediaStart"] == 50
+        assert video["start"] == 100
+
+
+# -- Bug 7: merge_internal_tracks remaps duplicate IDs --
+
+class TestBug7MergeInternalTracksDuplicateIds:
+    def test_duplicate_ids_remapped(self):
+        clip_a = {
+            "id": 1, "_type": "VMFile", "start": 0, "duration": 300,
+            "mediaDuration": 300, "scalar": 1, "src": 1,
+        }
+        clip_b = {
+            "id": 1, "_type": "VMFile", "start": 300, "duration": 300,
+            "mediaDuration": 300, "scalar": 1, "src": 2,
+        }
+        grp_data = {
+            "id": 10, "_type": "Group", "start": 0,
+            "duration": 600, "mediaDuration": 600, "scalar": 1,
+            "tracks": [
+                {"medias": [clip_a], "trackIndex": 0},
+                {"medias": [clip_b], "trackIndex": 1},
+            ],
+            "attributes": {"ident": "G"},
+        }
+        gc = Group(grp_data)
+        gc.merge_internal_tracks()
+        merged = gc._data["tracks"][0]["medias"]
+        ids = [m["id"] for m in merged]
+        assert len(ids) == len(set(ids)), f"Duplicate IDs found: {ids}"
