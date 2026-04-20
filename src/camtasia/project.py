@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 import copy
+from fractions import Fraction
 from importlib import resources as importlib_resources
 import json
 from pathlib import Path
@@ -2014,12 +2015,26 @@ class Project:
             duration_seconds=timeline_duration,
         )
         clip.volume = volume
-        if fade_in_seconds > 0 and fade_out_seconds > 0:
-            clip.fade(fade_in_seconds=fade_in_seconds, fade_out_seconds=fade_out_seconds)
-        elif fade_in_seconds > 0:
-            clip.fade_in(fade_in_seconds)
-        elif fade_out_seconds > 0:
-            clip.fade_out(fade_out_seconds)
+        if fade_in_seconds > 0 or fade_out_seconds > 0:
+            total_ticks = int(Fraction(str(clip._data.get('duration', 0))))
+            fade_in_ticks = seconds_to_ticks(fade_in_seconds)
+            fade_out_ticks = seconds_to_ticks(fade_out_seconds)
+            keyframes: list[dict[str, Any]] = []
+            if fade_in_ticks > 0:
+                keyframes.append({'endTime': 0, 'time': 0, 'value': 0.0, 'duration': 0})
+                keyframes.append({'endTime': fade_in_ticks, 'time': 0, 'value': volume, 'duration': fade_in_ticks})
+            else:
+                keyframes.append({'endTime': 0, 'time': 0, 'value': volume, 'duration': 0})
+            if fade_out_ticks > 0 and total_ticks > fade_out_ticks:
+                fade_out_start = total_ticks - fade_out_ticks
+                keyframes.append({'endTime': fade_out_start, 'time': fade_in_ticks, 'value': volume, 'duration': fade_out_start - fade_in_ticks})
+                keyframes.append({'endTime': total_ticks, 'time': fade_out_start, 'value': 0.0, 'duration': fade_out_ticks})
+            clip._data.setdefault('parameters', {})['volume'] = {
+                'type': 'double',
+                'defaultValue': volume,
+                'interp': 'linr',
+                'keyframes': keyframes,
+            }
         return clip
 
     def apply_to_all_groups(self, operation: Callable[[Group], Any]) -> int:

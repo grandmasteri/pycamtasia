@@ -68,6 +68,6 @@ def test_media_imported_to_bin(project):
 
 def test_custom_fade_values(project):
     clip = project.add_background_music(EMPTY_WAV, fade_in_seconds=1.0, fade_out_seconds=5.0)
-    opacity = clip._data.get('parameters', {}).get('opacity')
-    assert isinstance(opacity, dict)
-    assert len(opacity['keyframes']) == 2
+    volume = clip._data.get('parameters', {}).get('volume')
+    assert isinstance(volume, dict)
+    assert len(volume['keyframes']) >= 2

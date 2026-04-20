@@ -438,7 +438,11 @@ class BaseClip:
     def is_silent(self) -> bool:
         """Whether this clip has zero volume (gain == 0 or volume == 0)."""
         if self._data.get('_type') == 'UnifiedMedia':
-            return bool(self._data.get('audio', {}).get('attributes', {}).get('gain', 1.0) == 0.0)
+            audio_gain = self._data.get('audio', {}).get('attributes', {}).get('gain', 1.0)
+            volume = self._data.get('parameters', {}).get('volume', 1.0)
+            if isinstance(volume, dict):
+                volume = volume.get('defaultValue', 1.0)
+            return bool(audio_gain == 0.0 or volume == 0.0)
         return self.gain == 0.0 or self.volume == 0.0
 
     @property

@@ -1532,3 +1532,40 @@ class TestAddEndCardPosition:
     def test_placed_at_timeline_end(self, project):
         clip = project.add_end_card()
         assert clip.start_seconds == pytest.approx(0.0, abs=0.1)
+
+
+# ------------------------------------------------------------------
+# Bug fix: add_background_music uses volume keyframes, not opacity
+# ------------------------------------------------------------------
+
+class TestAddBackgroundMusicVolumeFade:
+    def test_fade_uses_volume_keyframes(self, project, tmp_path):
+        audio = tmp_path / 'bg.wav'
+        audio.write_bytes(b'\x00' * 100)
+        with patch.object(proj_mod, '_probe_media', return_value={'duration_seconds': 60.0, 'sample_rate': 44100, '_backend': 'ffprobe'}):
+            clip = project.add_background_music(audio, volume=0.3, fade_in_seconds=2.0, fade_out_seconds=3.0)
+        vol = clip._data['parameters']['volume']
+        assert isinstance(vol, dict)
+        assert vol['type'] == 'double'
+        assert vol['defaultValue'] == 0.3
+        assert len(vol['keyframes']) >= 2
+        # First keyframe should start at 0 volume (fade in from silence)
+        assert vol['keyframes'][0]['value'] == 0.0
+        # Last keyframe should end at 0 volume (fade out to silence)
+        assert vol['keyframes'][-1]['value'] == 0.0
+        # Opacity should NOT have keyframes (no visual fade on audio)
+        opacity = clip._data.get('parameters', {}).get('opacity')
+        assert opacity is None
+
+    def test_no_fade_sets_volume_only(self, project, tmp_path):
+        audio = tmp_path / 'bg.wav'
+        audio.write_bytes(b'\x00' * 100)
+        with patch.object(proj_mod, '_probe_media', return_value={'duration_seconds': 60.0, 'sample_rate': 44100, '_backend': 'ffprobe'}):
+            clip = project.add_background_music(audio, volume=0.5, fade_in_seconds=0, fade_out_seconds=0)
+        assert clip.volume == 0.5
+        vol = clip._data.get('parameters', {}).get('volume')
+        # No keyframes when no fades
+        if isinstance(vol, dict):
+            assert 'keyframes' not in vol or vol.get('keyframes') is None
+        else:
+            assert vol == 0.5

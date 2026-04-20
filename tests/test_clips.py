@@ -1527,3 +1527,46 @@ def test_base_clip_source_path_deprecation():
         result = clip.source_path
         assert result == 42
         assert 'deprecated' in str(w[0].message).lower()
+
+
+# ------------------------------------------------------------------
+# Bug fix: is_silent checks parameters.volume for UnifiedMedia
+# ------------------------------------------------------------------
+
+class TestIsSilentUnifiedMedia:
+    def test_silent_when_audio_gain_zero(self):
+        clip = BaseClip({
+            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
+            'audio': {'_type': 'AMFile', 'attributes': {'gain': 0.0}},
+        })
+        assert clip.is_silent is True
+
+    def test_silent_when_volume_zero_scalar(self):
+        clip = BaseClip({
+            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
+            'audio': {'_type': 'AMFile', 'attributes': {'gain': 1.0}},
+            'parameters': {'volume': 0.0},
+        })
+        assert clip.is_silent is True
+
+    def test_silent_when_volume_zero_dict(self):
+        clip = BaseClip({
+            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
+            'audio': {'_type': 'AMFile', 'attributes': {'gain': 1.0}},
+            'parameters': {'volume': {'type': 'double', 'defaultValue': 0.0}},
+        })
+        assert clip.is_silent is True
+
+    def test_not_silent_when_both_nonzero(self):
+        clip = BaseClip({
+            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
+            'audio': {'_type': 'AMFile', 'attributes': {'gain': 0.8}},
+            'parameters': {'volume': 0.5},
+        })
+        assert clip.is_silent is False
+
+    def test_not_silent_defaults(self):
+        clip = BaseClip({
+            '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,
+        })
+        assert clip.is_silent is False

@@ -9,6 +9,7 @@ from camtasia.app_validation import camtasia_validate
 from camtasia.timing import seconds_to_ticks as _s2t
 from camtasia.validation import (
     _check_edit_rate,
+    _check_group_required_fields,
     _check_source_bin_ids,
     _get_tracks,
     validate_all,
@@ -239,3 +240,55 @@ class TestValidationEdgeCases:
         }
         issues = validate_all(data)
         assert any('metadata' in str(i) for i in issues)
+
+
+# ------------------------------------------------------------------
+# Bug fix: version parsing handles multi-part version strings
+# ------------------------------------------------------------------
+
+class TestVersionParsing:
+    def _data_with_version(self, version_str):
+        return {
+            'version': version_str,
+            'editRate': 705600000,
+            'sourceBin': [],
+            'timeline': {
+                'sceneTrack': {
+                    'scenes': [{
+                        'csml': {
+                            'tracks': [{
+                                'trackIndex': 0,
+                                'medias': [{
+                                    '_type': 'Group', 'id': 1, 'start': 0,
+                                    'duration': _s2t(10.0),
+                                    'mediaDuration': _s2t(10.0), 'mediaStart': 0,
+                                    'scalar': 1, 'parameters': {}, 'effects': [],
+                                    'metadata': {},
+                                    'tracks': [{'trackIndex': 0, 'medias': []}],
+                                }],
+                            }],
+                        }
+                    }]
+                },
+                'parameters': {},
+                'trackAttributes': [{}],
+            },
+        }
+
+    def test_multi_part_version_does_not_crash(self):
+        """Version '10.0.1' previously raised ValueError from float()."""
+        issues = _check_group_required_fields(self._data_with_version('10.0.1'))
+        # Should not raise; should still detect missing metadata
+        assert isinstance(issues, list)
+
+    def test_major_version_10_checks_color_attribute(self):
+        issues = _check_group_required_fields(self._data_with_version('10.0.1'))
+        assert any('colorAttribute' in str(i) for i in issues)
+
+    def test_simple_version_still_works(self):
+        issues = _check_group_required_fields(self._data_with_version('9'))
+        assert isinstance(issues, list)
+
+    def test_garbage_version_defaults_to_zero(self):
+        issues = _check_group_required_fields(self._data_with_version('not-a-version'))
+        assert isinstance(issues, list)
