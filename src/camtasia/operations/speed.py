@@ -181,17 +181,34 @@ def set_audio_speed(
         raise ValueError(f'target_speed must be positive, got {target_speed}')
     scene = project_data["timeline"]["sceneTrack"]["scenes"][0]["csml"]
 
+    def _find_speed_audio(clip: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]] | None:
+        """Return (parent_unified_or_none, target_amfile) or None."""
+        ctype = clip.get("_type", "")
+        if ctype == "AMFile" and _has_speed_change(clip):
+            return (clip, clip)
+        if ctype == "UnifiedMedia":
+            audio = clip.get("audio")
+            if audio and audio.get("_type") == "AMFile" and _has_speed_change(audio):
+                return (clip, audio)
+        if ctype == "StitchedMedia":
+            for inner in clip.get("medias", []):
+                result = _find_speed_audio(inner)
+                if result is not None:
+                    return result
+        if ctype == "Group":
+            for inner_track in clip.get("tracks", []):
+                for inner in inner_track.get("medias", []):
+                    result = _find_speed_audio(inner)
+                    if result is not None:
+                        return result
+        return None
+
     # Find the first audio clip with a speed change
     for track in scene["tracks"]:
         for clip in track.get("medias", []):
-            target_clip = None
-            if clip.get("_type") == "AMFile" and _has_speed_change(clip):
-                target_clip = clip
-            elif clip.get("_type") == "UnifiedMedia":
-                audio = clip.get("audio")
-                if audio and audio.get("_type") == "AMFile" and _has_speed_change(audio):
-                    target_clip = audio
-            if target_clip is not None:
+            found = _find_speed_audio(clip)
+            if found is not None:
+                parent_clip, target_clip = found
                 current = parse_scalar(target_clip["scalar"])
                 # scalar < 1 means audio was sped up; we need to stretch
                 # factor = current_scalar / target_scalar
@@ -219,17 +236,17 @@ def set_audio_speed(
                 target_clip["duration"] = round(float(Fraction(final_duration) * Fraction(1) / target)) if target != 1 else final_duration
                 target_clip["metadata"]["clipSpeedAttribute"]["value"] = final_speed_attr
                 target_clip["mediaDuration"] = final_duration
-                if clip.get('_type') == 'UnifiedMedia':
-                    clip['scalar'] = target_clip['scalar']
-                    clip['duration'] = target_clip['duration']
-                    clip['mediaDuration'] = target_clip['mediaDuration']
-                    video = clip.get('video')
+                if parent_clip.get('_type') == 'UnifiedMedia' and parent_clip is not target_clip:
+                    parent_clip['scalar'] = target_clip['scalar']
+                    parent_clip['duration'] = target_clip['duration']
+                    parent_clip['mediaDuration'] = target_clip['mediaDuration']
+                    video = parent_clip.get('video')
                     if video and isinstance(video, dict):
                         video.setdefault('metadata', {}).setdefault(
                             'clipSpeedAttribute', {'type': 'bool', 'value': False}
                         )['value'] = final_speed_attr
                     from camtasia.timeline.track import _propagate_start_to_unified
-                    _propagate_start_to_unified(clip)
+                    _propagate_start_to_unified(parent_clip)
                 return factor
 
     raise ValueError("No speed-changed audio clips found")

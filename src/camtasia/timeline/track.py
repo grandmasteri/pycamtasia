@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 from camtasia.annotations import callouts
 from camtasia.timeline.clips import AMFile, BaseClip, Callout, Group, IMFile, VMFile, clip_from_dict
+from camtasia.timeline.clips.callout import _WEIGHT_REVERSE
 from camtasia.timeline.marker import Marker
 from camtasia.timeline.markers import MarkerList
 from camtasia.timeline.transitions import Transition, TransitionList
@@ -732,7 +733,7 @@ class Track:
         clip = self.add_callout(
             builder.text, start_seconds, duration_seconds,
             font_name=builder._font_name,
-            font_weight='Bold' if builder._font_weight >= 700 else 'Regular',
+            font_weight=_WEIGHT_REVERSE.get(builder._font_weight, 'Regular'),
             font_size=builder._font_size,
         )
         clip.move_to(builder._x, builder._y)
@@ -1805,6 +1806,11 @@ class Track:
                             sub['mediaDuration'] = m['mediaDuration']
                             sub['mediaStart'] = m['mediaStart']
                             sub['scalar'] = m.get('scalar', 1)
+                # Adjust effect timing after trim
+                if trim_start > 0:
+                    _adjust_effects_after_split_right(m, trim_start)
+                if trim_end > 0:
+                    _adjust_effects_after_split(m, m['duration'])
                 return
         raise KeyError(f'No clip with id={clip_id}')
 

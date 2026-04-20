@@ -708,3 +708,53 @@ class TestOverlapFixWithUnified:
         a_end = medias[0]['start'] + medias[0]['duration']
         b_start = medias[1]['start']
         assert a_end <= b_start
+
+
+class TestSetAudioSpeedNested:
+    """set_audio_speed finds audio clips inside StitchedMedia and Group."""
+
+    def test_finds_audio_in_stitched_media(self):
+        from camtasia.operations.speed import set_audio_speed
+        # Build a project with a StitchedMedia containing a speed-changed AMFile
+        project_data = {
+            'timeline': {'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+                'medias': [{
+                    '_type': 'StitchedMedia', 'id': 10, 'start': 0, 'duration': 200,
+                    'mediaStart': 0, 'mediaDuration': 200, 'scalar': 1,
+                    'medias': [{
+                        '_type': 'AMFile', 'id': 11, 'src': 1,
+                        'start': 0, 'duration': 200, 'mediaStart': 0,
+                        'mediaDuration': 400, 'scalar': '1/2', 'trackNumber': 0,
+                        'channelNumber': 0,
+                        'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+                        'parameters': {}, 'effects': [], 'attributes': {'gain': 1.0},
+                        'animationTracks': {},
+                    }],
+                }],
+            }]}}]}},
+            'sourceBin': [],
+        }
+        # set_audio_speed should find the nested audio and not raise
+        set_audio_speed(project_data, 1.0)
+
+    def test_finds_audio_in_group(self):
+        from camtasia.operations.speed import set_audio_speed
+        project_data = {
+            'timeline': {'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+                'medias': [{
+                    '_type': 'Group', 'id': 20, 'start': 0, 'duration': 200,
+                    'mediaStart': 0, 'mediaDuration': 200, 'scalar': 1,
+                    'tracks': [{'trackIndex': 0, 'medias': [{
+                        '_type': 'AMFile', 'id': 21, 'src': 1,
+                        'start': 0, 'duration': 200, 'mediaStart': 0,
+                        'mediaDuration': 400, 'scalar': '1/2', 'trackNumber': 0,
+                        'channelNumber': 0,
+                        'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+                        'parameters': {}, 'effects': [], 'attributes': {'gain': 1.0},
+                        'animationTracks': {},
+                    }]}],
+                }],
+            }]}}]}},
+            'sourceBin': [],
+        }
+        set_audio_speed(project_data, 1.0)

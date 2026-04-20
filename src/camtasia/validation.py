@@ -273,7 +273,7 @@ def _check_timing_consistency(data: dict) -> list[ValidationIssue]:
             scalar_raw = media.get('scalar', 1)
             duration = media.get('duration')
             media_dur = media.get('mediaDuration')
-            if duration is not None and media_dur is not None and scalar_raw not in (1, 1.0, '1', '1/1') and media.get('_type') not in ('IMFile', 'ScreenIMFile'):
+            if duration is not None and media_dur is not None and scalar_raw not in (1, 1.0, '1', '1/1') and media.get('_type') not in ('IMFile', 'ScreenIMFile', 'Group', 'StitchedMedia', 'UnifiedMedia'):
                 from fractions import Fraction
                 try:
                     scalar = Fraction(str(scalar_raw))

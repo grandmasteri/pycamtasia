@@ -877,3 +877,18 @@ class TestRemapDictWithoutMedia:
         assert objects[0] == {'some_key': 'value'}
         # int should be remapped
         assert objects[1] == 99
+
+
+class TestShiftAllClampScalarZero:
+    """shift_all with clamping handles scalar=0 without division."""
+
+    def test_clamp_with_zero_scalar(self, project):
+        from camtasia.timing import seconds_to_ticks
+        track = project.timeline.tracks[0]
+        clip = track.add_clip('VMFile', 0, seconds_to_ticks(5.0), seconds_to_ticks(10.0))
+        # Force scalar=0 (invalid but should not crash)
+        clip._data['scalar'] = 0
+        clip._data['mediaStart'] = seconds_to_ticks(2.0)
+        project.timeline.shift_all(-10.0)
+        # mediaStart should remain unchanged since scalar=0
+        assert clip._data['mediaStart'] == seconds_to_ticks(2.0)

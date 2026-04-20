@@ -804,8 +804,17 @@ class Timeline:
                     m['duration'] = new_duration
                     scalar = _parse_scalar(m.get('scalar', 1))
                     old_media_start = Fraction(str(m.get('mediaStart', 0)))
-                    new_media_start = old_media_start + clamp_amount * scalar
+                    # mediaStart is in source-media ticks; convert timeline clamp
+                    # to source ticks: source_ticks = timeline_ticks / scalar
+                    if scalar != 0:
+                        new_media_start = old_media_start + Fraction(clamp_amount) / scalar
+                    else:
+                        new_media_start = old_media_start
                     m['mediaStart'] = int(new_media_start) if new_media_start == int(new_media_start) else str(new_media_start)
+                    # Recalculate mediaDuration from new duration to maintain invariant
+                    if m.get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group', 'UnifiedMedia') and scalar != 0:
+                        new_md = Fraction(new_duration) / scalar
+                        m['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
                 else:
                     m['start'] = new_start
                 _propagate_start_to_unified(m)
