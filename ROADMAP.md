@@ -4,7 +4,43 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 5 domains 1-3)
+
+**Leaf clips:**
+
+1. `set_speed()` on Group doesn't propagate `mediaDuration`/`mediaStart` to UnifiedMedia sub-dicts. Top-level UnifiedMedia branch propagates all four fields; Group branch only propagates scalar/start/duration. (base.py Group branch)
+
+2. `set_speed()` on Group doesn't set `clipSpeedAttribute` metadata on inner clips. Top-level sets it on wrapper, UnifiedMedia sub-dicts, and StitchedMedia segments; Group branch sets nothing. (base.py)
+
+3. `clear_keyframes(None)` leaves stale `animationTracks.visual` entries. Clears parameters.*.keyframes but not animationTracks. `clear_all_keyframes()` correctly clears both. (base.py ~L720)
+
+4. `scalar.setter` has a duplicate `sub['mediaDuration']` write. Dead code / copy-paste error. (base.py ~L290)
+
+**Compound clips:**
+
+5. `sync_internal_durations()` doesn't recalculate `mediaDuration` on trimmed StitchedMedia segments. Reduces duration but leaves mediaDuration and scalar unchanged. Breaks invariant for speed-changed segments. (group.py ~L666)
+
+6. `ungroup()` doesn't scale effect `start`/`duration` when group scalar != 1. Inconsistent with `rescale_project` which does scale effects. (group.py ~L188)
+
+7. `UnifiedMedia.audio` raises opaque `KeyError('audio')` when audio absent. Should raise descriptive error or return None. (unified.py L42)
+
+8. `set_internal_segment_speeds()` doesn't validate `src_start < src_end`. Zero src_dur raises ZeroDivisionError; negative src_dur produces nonsensical negative scalar. (group.py ~L535)
+
+9. `set_internal_segment_speeds()` sets wrong `mediaDuration` on companion tracks. Uses `total_tl` but actual source content is `sum(src_end - src_start)`. Causes A/V desync when segments have non-1x speeds. (group.py ~L614)
+
+**Track/timeline:**
+
+10. `replace_clip()` starts `id_counter` at `new_clip_data['id']` instead of `+1`. Top-level ID gets double-remapped by coincidence. Compare with `duplicate_clip`/`move_clip_to_track`. (track.py ~L1050)
+
+11. `trim_clip()` doesn't adjust effects on UnifiedMedia sub-clips. Only parent clip's effects are adjusted; sub-clip effects become stale. (track.py ~L870)
+
+12. `shift_all_clips()` doesn't adjust effects on clamped clips. When clamping negative shift, effect start times relative to clip beginning become misaligned. (track.py ~L1150)
+
+13. `Timeline.shift_all()` has same bug as #12. Effects on clamped clips not adjusted. (timeline.py ~L490)
+
+14. `extend_clip()` doesn't trim effects extending past new duration. When shortening, effects can extend past clip boundary. `trim_clip` correctly handles this. (track.py ~L640)
+
+15. `group_clips_across_tracks()` drops transitions between grouped clips. Filter removes ALL transitions referencing grouped clips; should preserve internal transitions by remapping to internal tracks. (timeline.py ~L640)
 
 ## TechSmith Tutorial Analysis
 
