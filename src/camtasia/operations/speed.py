@@ -146,6 +146,11 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                             effect['duration'] = _scale_tick(effect['duration'], factor)
                 else:
                     _process_clip(child, factor)
+                    # After recursive scaling of child, ensure its mediaStart matches
+                    # the wrapper's mediaStart (wrapper's was scaled above but
+                    # _scale_clip_timing doesn't touch mediaStart on the child).
+                    if 'mediaStart' in clip:
+                        child['mediaStart'] = clip['mediaStart']
 
 
 def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:

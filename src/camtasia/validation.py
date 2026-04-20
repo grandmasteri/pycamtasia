@@ -342,6 +342,64 @@ def _check_source_bin_ids(data: dict[str, Any]) -> list[ValidationIssue]:
     return issues
 
 
+def _check_compound_invariants(data: dict[str, Any]) -> list[ValidationIssue]:
+    """Check structural invariants on compound clips.
+
+    Invariants (verified against real TechSmith fixtures):
+    - UnifiedMedia: wrapper.start/duration/mediaDuration/mediaStart/scalar == video/audio sub-clip values.
+    - StitchedMedia: inner.start and inner.duration are integers (not string fractions).
+
+    (StitchedMedia sum-of-inner-durations and Group inner-end-fit-wrapper were tried but fire
+    on real TechSmith projects that legitimately trim/replay compound content — not invariants.)
+    """
+    issues: list[ValidationIssue] = []
+
+    def _check(media: dict, path: str) -> None:
+        mid = media.get('id')
+        mtype = media.get('_type')
+
+        if mtype == 'UnifiedMedia':
+            for sub_key in ('video', 'audio'):
+                sub = media.get(sub_key)
+                if sub is None:
+                    continue
+                for field in ('start', 'duration', 'mediaDuration', 'mediaStart', 'scalar'):
+                    if field in media and field in sub and str(media[field]) != str(sub[field]):
+                        issues.append(ValidationIssue(
+                            'warning',
+                            f'{path} UnifiedMedia id={mid} {sub_key}.{field}={sub[field]} '
+                            f'!= wrapper.{field}={media[field]}',
+                        ))
+
+        if mtype == 'StitchedMedia':
+            for i, inner in enumerate(media.get('medias', [])):
+                for field in ('start', 'duration'):
+                    raw = inner.get(field)
+                    if isinstance(raw, str) and '/' in raw:
+                        issues.append(ValidationIssue(
+                            'error',
+                            f'{path} StitchedMedia id={mid} segment[{i}].{field}={raw!r} '
+                            f'is a string fraction (must be integer tick)',
+                        ))
+
+        # Recurse
+        for inner_track in media.get('tracks', []):
+            for inner in inner_track.get('medias', []):
+                _check(inner, f'{path}/group{mid}')
+        for inner in media.get('medias', []):
+            _check(inner, f'{path}/stitched{mid}')
+        for key in ('video', 'audio'):
+            sub = media.get(key)
+            if sub is not None:
+                _check(sub, f'{path}/{key}{mid}')
+
+    tracks = _get_tracks(data)
+    for ti, track in enumerate(tracks):
+        for media in track.get('medias', []):
+            _check(media, f'track[{ti}]')
+    return issues
+
+
 def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     """Run all structural validation checks on project data."""
     issues: list[ValidationIssue] = []
@@ -356,6 +414,7 @@ def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     issues.extend(_check_edit_rate(data))
     issues.extend(_check_source_bin_ids(data))
     issues.extend(_check_timing_consistency(data))
+    issues.extend(_check_compound_invariants(data))
     return issues
 
 
