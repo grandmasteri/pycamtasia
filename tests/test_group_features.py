@@ -9,6 +9,7 @@ from fractions import Fraction
 import pytest
 
 from camtasia.timeline.clips import AMFile, BaseClip, Group, GroupTrack, IMFile
+from camtasia.timeline.clips.base import EDIT_RATE
 from camtasia.timing import seconds_to_ticks
 from camtasia.types import ClipType
 
@@ -982,3 +983,204 @@ def test_set_internal_segment_speeds_updates_unified_media_on_companion_track():
     assert companion_media['audio']['mediaDuration'] == companion_media['mediaDuration']
     assert companion_media['video']['scalar'] == companion_media['scalar']
     assert companion_media['audio']['scalar'] == companion_media['scalar']
+
+
+def _stitched_group(group_scalar: str = '1/2') -> dict:
+    """Group with a StitchedMedia containing UnifiedMedia inner segments."""
+    inner_md = EDIT_RATE * 3
+    inner_dur = int(Fraction(inner_md) * Fraction(group_scalar))
+    return {
+        '_type': 'Group', 'id': 1,
+        'start': 0, 'duration': inner_dur * 2,
+        'mediaStart': 0, 'mediaDuration': inner_dur * 2,
+        'scalar': group_scalar,
+        'tracks': [{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia', 'id': 10,
+                'start': 0, 'duration': inner_dur * 2,
+                'mediaStart': 0, 'mediaDuration': inner_dur * 2, 'scalar': 1,
+                'medias': [
+                    {
+                        '_type': 'UnifiedMedia', 'id': 11,
+                        'start': 0, 'duration': inner_dur,
+                        'mediaStart': 0, 'mediaDuration': inner_md, 'scalar': 1,
+                        'video': {
+                            '_type': 'VMFile', 'id': 12, 'src': 1,
+                            'start': 0, 'duration': inner_dur,
+                            'mediaStart': 0, 'mediaDuration': inner_md, 'scalar': 1,
+                            'effects': [],
+                        },
+                        'audio': {
+                            '_type': 'AMFile', 'id': 13, 'src': 1,
+                            'start': 0, 'duration': inner_dur,
+                            'mediaStart': 0, 'mediaDuration': inner_md, 'scalar': 1,
+                            'effects': [],
+                        },
+                        'effects': [{'effectName': 'Glow', 'start': 0, 'duration': inner_dur}],
+                    },
+                    {
+                        '_type': 'UnifiedMedia', 'id': 14,
+                        'start': inner_dur, 'duration': inner_dur,
+                        'mediaStart': 0, 'mediaDuration': inner_md, 'scalar': 1,
+                        'video': {
+                            '_type': 'VMFile', 'id': 15, 'src': 1,
+                            'start': inner_dur, 'duration': inner_dur,
+                            'mediaStart': 0, 'mediaDuration': inner_md, 'scalar': 1,
+                            'effects': [],
+                        },
+                        'audio': None,
+                        'effects': [],
+                    },
+                ],
+                'effects': [],
+            }],
+        }],
+        'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {},
+    }
+
+
+def test_ungroup_stitched_media_propagates_media_duration() -> None:
+    """Bug 3: ungroup should propagate mediaDuration to UnifiedMedia sub-dicts."""
+    data = _stitched_group()
+    group = Group(data)
+    clips = group.ungroup()
+    assert len(clips) == 1
+    stitched = clips[0]._data
+    for inner in stitched.get('medias', []):
+        if inner.get('_type') == 'UnifiedMedia':
+            video = inner.get('video')
+            if video is not None:
+                assert 'mediaDuration' in video
+                assert video['mediaDuration'] == inner.get('mediaDuration', inner['duration'])
+
+
+def test_ungroup_stitched_media_scales_inner_effects() -> None:
+    """Bug 4: ungroup should scale effects on StitchedMedia inner segments."""
+    data = _stitched_group()
+    group = Group(data)
+    orig_eff_dur = data['tracks'][0]['medias'][0]['medias'][0]['effects'][0]['duration']
+    clips = group.ungroup()
+    stitched = clips[0]._data
+    inner0 = stitched['medias'][0]
+    assert len(inner0.get('effects', [])) == 1
+    eff = inner0['effects'][0]
+    # Effect duration should be scaled by group_scalar (1/2)
+    expected = round(Fraction(orig_eff_dur) * Fraction('1/2'))
+    assert eff['duration'] == expected
+
+
+def test_ungroup_stitched_rounding_sum_matches_wrapper() -> None:
+    """Bug 5: sum of inner segment durations should match wrapper duration."""
+    # Use a scalar that causes rounding issues
+    data = {
+        '_type': 'Group', 'id': 1,
+        'start': 0, 'duration': 999,
+        'mediaStart': 0, 'mediaDuration': 999,
+        'scalar': '1/3',
+        'tracks': [{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia', 'id': 10,
+                'start': 0, 'duration': 999,
+                'mediaStart': 0, 'mediaDuration': 999, 'scalar': 1,
+                'medias': [
+                    {'_type': 'VMFile', 'id': 11, 'start': 0, 'duration': 333,
+                     'mediaStart': 0, 'mediaDuration': 999, 'scalar': 1, 'effects': []},
+                    {'_type': 'VMFile', 'id': 12, 'start': 333, 'duration': 333,
+                     'mediaStart': 0, 'mediaDuration': 999, 'scalar': 1, 'effects': []},
+                    {'_type': 'VMFile', 'id': 13, 'start': 666, 'duration': 333,
+                     'mediaStart': 0, 'mediaDuration': 999, 'scalar': 1, 'effects': []},
+                ],
+                'effects': [],
+            }],
+        }],
+        'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {},
+    }
+    group = Group(data)
+    clips = group.ungroup()
+    stitched = clips[0]._data
+    wrapper_dur = round(Fraction(str(stitched['duration'])))
+    total_inner = sum(round(Fraction(str(inner['duration']))) for inner in stitched.get('medias', []))
+    assert total_inner == wrapper_dur
+
+
+def test_set_internal_segment_speeds_resets_start() -> None:
+    """Bug 6: set_internal_segment_speeds should reset start=0 on non-media-track clips."""
+    data = {
+        '_type': 'Group', 'id': 1,
+        'start': 0, 'duration': EDIT_RATE * 10,
+        'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+        'tracks': [
+            {
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'UnifiedMedia', 'id': 10,
+                    'start': 100, 'duration': EDIT_RATE * 10,
+                    'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                    'video': {
+                        '_type': 'ScreenVMFile', 'id': 11, 'src': 2,
+                        'start': 100, 'duration': EDIT_RATE * 10,
+                        'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                        'trackNumber': 0, 'attributes': {'ident': ''},
+                        'parameters': {}, 'effects': [],
+                    },
+                    'audio': None,
+                }],
+            },
+            {
+                'trackIndex': 1,
+                'medias': [{
+                    '_type': 'AMFile', 'id': 12, 'src': 2,
+                    'start': 500, 'duration': EDIT_RATE * 10,
+                    'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                    'trackNumber': 1, 'attributes': {'ident': ''},
+                    'parameters': {}, 'effects': [],
+                }],
+            },
+        ],
+        'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {},
+        'attributes': {'ident': '', 'widthAttr': 1920, 'heightAttr': 1080},
+    }
+    group = Group(data)
+    group.set_internal_segment_speeds(
+        [(0.0, 5.0, 5.0), (5.0, 10.0, 5.0)],
+        next_id=100,
+    )
+    # Non-media-track clips should have start=0
+    am_clip = data['tracks'][1]['medias'][0]
+    assert am_clip['start'] == 0
+
+
+def test_set_internal_segment_speeds_integer_cursor() -> None:
+    """Bug 7: cursor_ticks should use integer accumulation."""
+    data = {
+        '_type': 'Group', 'id': 1,
+        'start': 0, 'duration': EDIT_RATE * 10,
+        'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+        'tracks': [{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'ScreenVMFile', 'id': 10, 'src': 2,
+                'start': 0, 'duration': EDIT_RATE * 10,
+                'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                'trackNumber': 0, 'attributes': {'ident': ''},
+                'parameters': {}, 'effects': [],
+            }],
+        }],
+        'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {},
+        'attributes': {'ident': '', 'widthAttr': 1920, 'heightAttr': 1080},
+    }
+    group = Group(data)
+    group.set_internal_segment_speeds(
+        [(0.0, 3.0, 3.0), (3.0, 7.0, 4.0), (7.0, 10.0, 3.0)],
+        next_id=100,
+    )
+    medias = data['tracks'][0]['medias']
+    # All starts should be integers
+    for m in medias:
+        assert isinstance(m['start'], int), f"start should be int, got {type(m['start'])}"
+    # Starts should be sequential
+    for i in range(1, len(medias)):
+        expected = medias[i - 1]['start'] + medias[i - 1]['duration']
+        assert medias[i]['start'] == expected

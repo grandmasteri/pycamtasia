@@ -2031,3 +2031,71 @@ class TestIsVideoStitchedMediaFallback:
             'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
         })
         assert clip.is_video is False
+
+
+def _group_data(inner_dur: int = EDIT_RATE * 5) -> dict:
+    return {
+        '_type': 'Group', 'id': 1,
+        'start': 0, 'duration': inner_dur * 2,
+        'mediaStart': 0, 'mediaDuration': inner_dur * 2, 'scalar': 1,
+        'tracks': [{
+            'trackIndex': 0,
+            'medias': [
+                {'_type': 'VMFile', 'id': 20, 'src': 1,
+                 'start': 0, 'duration': inner_dur,
+                 'mediaStart': 0, 'mediaDuration': inner_dur, 'scalar': 1},
+                {'_type': 'VMFile', 'id': 21, 'src': 1,
+                 'start': inner_dur, 'duration': inner_dur,
+                 'mediaStart': 0, 'mediaDuration': inner_dur, 'scalar': 1},
+            ],
+        }],
+        'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {},
+    }
+
+
+def test_set_speed_group_idempotent() -> None:
+    """Calling set_speed twice with the same value should produce the same result."""
+    data = _group_data()
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    dur_after_first = data['duration']
+    inner0_dur_first = data['tracks'][0]['medias'][0]['duration']
+    inner1_start_first = data['tracks'][0]['medias'][1]['start']
+
+    clip.set_speed(2.0)
+    assert data['duration'] == dur_after_first
+    assert data['tracks'][0]['medias'][0]['duration'] == inner0_dur_first
+    assert data['tracks'][0]['medias'][1]['start'] == inner1_start_first
+
+
+def test_set_speed_group_then_reset() -> None:
+    """set_speed(2.0) then set_speed(1.0) should restore original values."""
+    inner_dur = EDIT_RATE * 5
+    data = _group_data(inner_dur)
+    orig_dur = data['duration']
+    orig_inner_dur = data['tracks'][0]['medias'][0]['duration']
+    orig_inner1_start = data['tracks'][0]['medias'][1]['start']
+
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    assert data['duration'] != orig_dur
+
+    clip.set_speed(1.0)
+    assert data['duration'] == orig_dur
+    assert data['tracks'][0]['medias'][0]['duration'] == orig_inner_dur
+    assert data['tracks'][0]['medias'][1]['start'] == orig_inner1_start
+
+
+def test_set_speed_group_scalar_reset_not_composed() -> None:
+    """Inner scalar should be set to scalar_fraction, not composed with old."""
+    data = _group_data()
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    inner_scalar_1 = Fraction(str(data['tracks'][0]['medias'][0]['scalar']))
+
+    clip.set_speed(3.0)
+    inner_scalar_2 = Fraction(str(data['tracks'][0]['medias'][0]['scalar']))
+
+    # Should be 1/3, not 1/2 * 1/3 = 1/6
+    assert inner_scalar_2 == Fraction(1, 3)
+    assert inner_scalar_1 == Fraction(1, 2)

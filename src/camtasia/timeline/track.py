@@ -1385,6 +1385,8 @@ class Track:
                             sub['duration'] = m['duration']
                             sub['mediaDuration'] = m['mediaDuration']
                             sub['scalar'] = m.get('scalar', 1)
+                            if extend < 0:
+                                _adjust_effects_after_split(sub, new_dur)
                 if extend < 0:
                     _adjust_effects_after_split(m, new_dur)
                 return
@@ -1889,17 +1891,24 @@ class Track:
 
         new_data = copy.deepcopy(source)
         new_id = self._next_clip_id()
-        new_data['id'] = new_id
+        old_top_id = source.get('id')
 
         # Use the timeline-level remapper which only touches known clip-containing
         # paths (video/audio/tracks[].medias[]/medias[]), not arbitrary 'id' keys
         # in effects/metadata/parameters.
         from camtasia.timeline.timeline import _remap_clip_ids_with_map
-        id_counter = [new_id + 1]
+        id_counter = [new_id]
         id_map: dict[int, int] = {}
-        assigned_id = new_data['id']
         _remap_clip_ids_with_map(new_data, id_counter, id_map)
-        new_data['id'] = assigned_id  # restore — don't double-remap the top level
+
+        # Ensure top-level id is set correctly (remap already handled it)
+        # Add old_top_id -> new_id to id_map for assetProperties remap
+        if old_top_id is not None and old_top_id not in id_map:
+            id_map[old_top_id] = new_data['id']  # pragma: no cover  # defensive: _remap_clip_ids_with_map should have added this
+
+        # Re-remap assetProperties with the complete id_map
+        from camtasia.operations.merge import _remap_asset_properties
+        _remap_asset_properties(new_data, id_map)
 
         new_data['start'] = source['start'] + source.get('duration', 0) + seconds_to_ticks(offset_seconds)
         _propagate_start_to_unified(new_data)
@@ -2126,13 +2135,18 @@ class Track:
         medias = self._data.get('medias', [])
         for i, m in enumerate(medias):
             if m.get('id') == clip_id:
-                new_clip_data['id'] = self._next_clip_id()
+                old_top_id = new_clip_data.get('id')
+                new_id = self._next_clip_id()
+                new_clip_data['id'] = new_id  # ensure id exists for remap
                 from camtasia.timeline.timeline import _remap_clip_ids_with_map
-                new_id = new_clip_data['id']
                 id_counter = [new_id + 1]
                 id_map: dict[int, int] = {}
                 _remap_clip_ids_with_map(new_clip_data, id_counter, id_map)
-                new_clip_data['id'] = new_id
+                new_clip_data['id'] = new_id  # restore top-level id
+                if old_top_id is not None and old_top_id not in id_map:
+                    id_map[old_top_id] = new_id
+                from camtasia.operations.merge import _remap_asset_properties
+                _remap_asset_properties(new_clip_data, id_map)
                 new_clip_data['start'] = m['start']
                 _propagate_start_to_unified(new_clip_data)
                 medias[i] = new_clip_data
@@ -2373,7 +2387,7 @@ class Track:
                 shifted_clip_ids.add(media_dict.get('id'))
         self._data['transitions'] = [
             t for t in self._data.get('transitions', [])
-            if t.get('leftMedia') not in shifted_clip_ids and t.get('rightMedia') not in shifted_clip_ids
+            if not ((t.get('leftMedia') in shifted_clip_ids) ^ (t.get('rightMedia') in shifted_clip_ids))
         ]
 
     def shift_all_clips(self, offset_seconds: float) -> None:
@@ -2392,12 +2406,13 @@ class Track:
                 clamped = True
                 clamp_amount = -new_start
                 m['start'] = 0
-                old_duration = int(Fraction(str(m.get('duration', 0))))
-                new_duration = max(0, old_duration - clamp_amount)
+                old_duration = Fraction(str(m.get('duration', 0)))
+                new_duration_frac = old_duration - clamp_amount
+                new_duration = max(0, int(new_duration_frac))
                 if new_duration == 0:
                     clips_to_remove.append(id(m))
                     continue
-                m['duration'] = new_duration
+                m['duration'] = int(new_duration_frac) if new_duration_frac == int(new_duration_frac) else str(new_duration_frac)
                 scalar = _parse_scalar(m.get('scalar', 1))
                 old_media_start = Fraction(str(m.get('mediaStart', 0)))
                 if scalar != 0:
@@ -2406,7 +2421,7 @@ class Track:
                     new_media_start = old_media_start
                 m['mediaStart'] = int(new_media_start) if new_media_start == int(new_media_start) else str(new_media_start)
                 if m.get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group') and scalar != 0:
-                    new_md = Fraction(new_duration) / scalar
+                    new_md = new_duration_frac / scalar
                     m['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
                 _adjust_effects_after_split_right(m, clamp_amount)
                 if m.get('_type') == 'UnifiedMedia':

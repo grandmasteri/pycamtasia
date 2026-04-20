@@ -1,12 +1,5 @@
 from __future__ import annotations
 
-import sys
-
-if sys.version_info >= (3, 11):  # pragma: no cover
-    pass
-else:  # pragma: no cover
-    pass
-
 from typing import NoReturn
 
 from camtasia.timeline.clips.base import BaseClip

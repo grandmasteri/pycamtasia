@@ -1,6 +1,7 @@
 """Tests for Track convenience methods."""
 from __future__ import annotations
 
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
@@ -8,6 +9,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from camtasia.project import Project, load_project
+from camtasia.timeline.clips.base import EDIT_RATE
 from camtasia.timeline.timeline import Timeline
 from camtasia.timeline.track import Track, _PerMediaMarkers
 from camtasia.timing import seconds_to_ticks
@@ -2046,3 +2048,211 @@ class TestDuplicateClipNestedIds:
         assert nested_um['id'] > top_id
         assert video_id > top_id
         assert audio_id > top_id
+
+
+
+def _make_track_bug_fix_helper(**overrides: Any) -> Track:
+    attrs: dict[str, Any] = {'ident': 'Test', 'audioMuted': False, 'videoHidden': False,
+                              'magnetic': False, 'matte': 0, 'solo': False}
+    data: dict[str, Any] = {'trackIndex': 0, 'medias': [], 'transitions': [], 'parameters': {}}
+    data.update(overrides)
+    return Track(attrs, data)
+
+
+def _make_group_with_asset_properties() -> dict[str, Any]:
+    """Create a Group clip with assetProperties referencing internal clip IDs."""
+    return {
+        '_type': 'Group', 'id': 50,
+        'start': 0, 'duration': EDIT_RATE * 5,
+        'mediaStart': 0, 'mediaDuration': EDIT_RATE * 5, 'scalar': 1,
+        'attributes': {
+            'ident': '', 'widthAttr': 1920, 'heightAttr': 1080,
+            'assetProperties': [
+                {'objects': [51, 52], 'property': 'test'},
+            ],
+        },
+        'tracks': [{
+            'trackIndex': 0,
+            'medias': [
+                {'_type': 'VMFile', 'id': 51, 'src': 1,
+                 'start': 0, 'duration': EDIT_RATE * 5,
+                 'mediaStart': 0, 'mediaDuration': EDIT_RATE * 5, 'scalar': 1,
+                 'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                 'attributes': {'ident': ''}, 'trackNumber': 0},
+                {'_type': 'VMFile', 'id': 52, 'src': 1,
+                 'start': 0, 'duration': EDIT_RATE * 5,
+                 'mediaStart': 0, 'mediaDuration': EDIT_RATE * 5, 'scalar': 1,
+                 'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                 'attributes': {'ident': ''}, 'trackNumber': 0},
+            ],
+        }],
+        'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {},
+    }
+
+
+def test_duplicate_clip_asset_properties_remap() -> None:
+    """Bug 8: duplicate_clip should correctly remap assetProperties."""
+    track = _make_track_bug_fix_helper()
+    group_data = _make_group_with_asset_properties()
+    track._data['medias'].append(group_data)
+
+    result = track.duplicate_clip(50)
+    dup_data = result._data
+    # assetProperties should reference the NEW internal clip IDs, not the old ones
+    ap = dup_data.get('attributes', {}).get('assetProperties', [])
+    assert len(ap) == 1
+    # The objects should NOT contain the original IDs (51, 52)
+    for obj_id in ap[0]['objects']:
+        assert obj_id not in (51, 52), f'assetProperties still references old ID {obj_id}'
+    # The objects should reference IDs that exist in the duplicated clip's internal tracks
+    internal_ids = {m['id'] for t in dup_data.get('tracks', []) for m in t.get('medias', [])}
+    for obj_id in ap[0]['objects']:
+        assert obj_id in internal_ids, f'assetProperties references non-existent ID {obj_id}'
+
+
+def test_replace_clip_asset_properties_remap() -> None:
+    """Bug 9: replace_clip should correctly remap assetProperties."""
+    track = _make_track_bug_fix_helper()
+    # Add a placeholder clip to replace
+    track._data['medias'].append({
+        '_type': 'VMFile', 'id': 1, 'src': 1,
+        'start': 0, 'duration': EDIT_RATE,
+        'mediaStart': 0, 'mediaDuration': EDIT_RATE, 'scalar': 1,
+        'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {},
+        'attributes': {'ident': ''}, 'trackNumber': 0,
+    })
+    replacement = _make_group_with_asset_properties()
+    result = track.replace_clip(1, replacement)
+    dup_data = result._data
+    ap = dup_data.get('attributes', {}).get('assetProperties', [])
+    assert len(ap) == 1
+    internal_ids = {m['id'] for t in dup_data.get('tracks', []) for m in t.get('medias', [])}
+    for obj_id in ap[0]['objects']:
+        assert obj_id in internal_ids
+
+
+def test_extend_clip_trims_unified_sub_effects() -> None:
+    """Bug 10: extend_clip should trim effects on UnifiedMedia sub-clips when shortening."""
+    dur = EDIT_RATE * 10
+    eff_dur = EDIT_RATE * 8
+    track = _make_track_bug_fix_helper()
+    track._data['medias'].append({
+        '_type': 'UnifiedMedia', 'id': 1,
+        'start': 0, 'duration': dur,
+        'mediaStart': 0, 'mediaDuration': dur, 'scalar': 1,
+        'video': {
+            '_type': 'VMFile', 'id': 2, 'src': 1,
+            'start': 0, 'duration': dur,
+            'mediaStart': 0, 'mediaDuration': dur, 'scalar': 1,
+            'effects': [{'effectName': 'Glow', 'start': 0, 'duration': eff_dur}],
+            'trackNumber': 0, 'attributes': {'ident': ''},
+        },
+        'audio': None,
+        'effects': [{'effectName': 'Glow', 'start': 0, 'duration': eff_dur}],
+    })
+    # Shorten by 5 seconds
+    track.extend_clip(1, extend_seconds=-5.0)
+    new_dur = dur + (-EDIT_RATE * 5)
+    video = track._data['medias'][0]['video']
+    # Video sub-clip effects should be trimmed to new_dur
+    for eff in video['effects']:
+        assert eff['duration'] <= new_dur
+
+
+def test_remove_gap_at_preserves_both_shifted_transitions() -> None:
+    """Bug 11: remove_gap_at should preserve transitions where both endpoints shifted."""
+    dur = EDIT_RATE * 5
+    gap = EDIT_RATE * 2
+    track = _make_track_bug_fix_helper()
+    # Clip A at 0, Clip B after gap, Clip C after B
+    track._data['medias'] = [
+        {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': dur,
+         'mediaStart': 0, 'mediaDuration': dur, 'scalar': 1},
+        {'_type': 'VMFile', 'id': 2, 'start': dur + gap, 'duration': dur,
+         'mediaStart': 0, 'mediaDuration': dur, 'scalar': 1},
+        {'_type': 'VMFile', 'id': 3, 'start': dur + gap + dur, 'duration': dur,
+         'mediaStart': 0, 'mediaDuration': dur, 'scalar': 1},
+    ]
+    # Transition between clips 2 and 3 (both will be shifted)
+    track._data['transitions'] = [
+        {'leftMedia': 2, 'rightMedia': 3, 'duration': EDIT_RATE},
+    ]
+    from camtasia.timing import ticks_to_seconds
+    gap_time = ticks_to_seconds(dur + gap // 2)  # middle of the gap
+    track.remove_gap_at(gap_time)
+    # Transition between 2 and 3 should be PRESERVED (both shifted equally)
+    assert len(track._data['transitions']) == 1
+    assert track._data['transitions'][0]['leftMedia'] == 2
+    assert track._data['transitions'][0]['rightMedia'] == 3
+
+
+def test_remove_gap_at_removes_split_transitions() -> None:
+    """Bug 11: remove_gap_at should remove transitions where only one endpoint shifted."""
+    dur = EDIT_RATE * 5
+    gap = EDIT_RATE * 2
+    track = _make_track_bug_fix_helper()
+    track._data['medias'] = [
+        {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': dur,
+         'mediaStart': 0, 'mediaDuration': dur, 'scalar': 1},
+        {'_type': 'VMFile', 'id': 2, 'start': dur + gap, 'duration': dur,
+         'mediaStart': 0, 'mediaDuration': dur, 'scalar': 1},
+    ]
+    # Transition between clip 1 (not shifted) and clip 2 (shifted)
+    track._data['transitions'] = [
+        {'leftMedia': 1, 'rightMedia': 2, 'duration': EDIT_RATE},
+    ]
+    from camtasia.timing import ticks_to_seconds
+    gap_time = ticks_to_seconds(dur + gap // 2)
+    track.remove_gap_at(gap_time)
+    # Transition should be REMOVED (only one endpoint shifted)
+    assert len(track._data['transitions']) == 0
+
+
+def test_shift_all_preserves_fractional_duration() -> None:
+    """Bug 12: shift_all should not truncate non-integer durations."""
+    track = _make_track_bug_fix_helper()
+    track._data['medias'].append({
+        '_type': 'VMFile', 'id': 1,
+        'start': EDIT_RATE * 3, 'duration': '7056000001/2',
+        'mediaStart': 0, 'mediaDuration': '7056000001/2', 'scalar': 1,
+        'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {},
+        'attributes': {'ident': ''}, 'trackNumber': 0,
+    })
+    track.shift_all_clips(-1.0)
+    m = track._data['medias'][0]
+    # Duration should still be a Fraction-compatible value, not truncated
+    dur = Fraction(str(m['duration']))
+    assert dur > 0
+    # The original duration was 7056000001/2 = 3528000000.5
+    # After shifting back 1s (705600000 ticks), start goes from 3*ER to 2*ER
+    # No clamping needed, so duration should be unchanged
+    assert dur == Fraction('7056000001/2')
+
+
+def test_timeline_shift_all_preserves_fractional_duration() -> None:
+    """Bug 12: Timeline.shift_all should not truncate non-integer durations."""
+    from camtasia.timeline.timeline import Timeline
+    tl_data = {
+        'id': 0,
+        'sceneTrack': {'scenes': [{'csml': {'tracks': [{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'VMFile', 'id': 1,
+                'start': EDIT_RATE, 'duration': '7056000001/3',
+                'mediaStart': 0, 'mediaDuration': '7056000001/3', 'scalar': 1,
+                'effects': [],
+            }],
+            'transitions': [],
+            'parameters': {},
+        }]}}]},
+        'trackAttributes': [{'ident': 'T', 'audioMuted': False, 'videoHidden': False,
+                             'magnetic': False, 'matte': 0, 'solo': False}],
+        'parameters': {},
+    }
+    tl = Timeline(tl_data)
+    tl.shift_all(-0.5)
+    m = tl_data['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+    dur = Fraction(str(m['duration']))
+    assert dur > 0
+    # No clamping needed (start was 1s, shift is -0.5s), so duration unchanged
+    assert dur == Fraction('7056000001/3')

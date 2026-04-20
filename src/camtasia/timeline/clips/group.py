@@ -226,6 +226,14 @@ class Group(BaseClip):
                             inner_md = Fraction(str(inner.get('mediaDuration', 0)))
                             new_inner_dur = inner_md * composed_inner
                             inner['duration'] = round(new_inner_dur)
+                            # Scale effects on inner segments
+                            for effect in inner.get('effects', []):
+                                if 'start' in effect:
+                                    orig_eff_start = Fraction(str(effect['start']))
+                                    effect['start'] = round(orig_eff_start * group_scalar)
+                                if 'duration' in effect:
+                                    orig_eff_dur = Fraction(str(effect['duration']))
+                                    effect['duration'] = round(orig_eff_dur * group_scalar)
                             # Propagate to UnifiedMedia segments
                             if inner.get('_type') == 'UnifiedMedia':
                                 for sub_key in ('video', 'audio'):
@@ -234,10 +242,18 @@ class Group(BaseClip):
                                         sub['scalar'] = inner['scalar']
                                         sub['duration'] = inner['duration']
                                         sub['start'] = inner['start']
+                                        if 'mediaDuration' in inner:
+                                            sub['mediaDuration'] = inner['mediaDuration']
                         cursor = 0
                         for inner in cloned_data.get('medias', []):
                             inner['start'] = cursor
                             cursor += round(Fraction(str(inner['duration'])))
+                        # Adjust last segment to close rounding gap
+                        wrapper_dur = round(Fraction(str(cloned_data['duration'])))
+                        total_inner = sum(round(Fraction(str(inner['duration']))) for inner in cloned_data.get('medias', []))
+                        if total_inner != wrapper_dur and cloned_data.get('medias'):
+                            last = cloned_data['medias'][-1]
+                            last['duration'] = round(Fraction(str(last['duration']))) + (wrapper_dur - total_inner)
                 cloned_start = Fraction(str(cloned_data.get('start', 0)))
                 new_start = cloned_start + group_start
                 cloned_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
@@ -663,12 +679,14 @@ class Group(BaseClip):
             total_src_span = seconds_to_ticks(last_seg_src_end - first_seg_src_start)
             for m in track.get('medias', []):
                 if m.get('_type') in ('VMFile', 'ScreenVMFile', 'AMFile'):
+                    m['start'] = 0
                     m['duration'] = total_tl
                     m['mediaDuration'] = total_src_span
                     m['mediaStart'] = first_seg_src_start_ticks
                     ratio = Fraction(total_tl) / Fraction(total_src_span) if total_src_span != 0 else Fraction(1)
                     m['scalar'] = int(ratio) if ratio == int(ratio) else str(ratio)
                 elif m.get('_type') == 'UnifiedMedia':
+                    m['start'] = 0
                     m['duration'] = total_tl
                     m['mediaDuration'] = total_src_span
                     m['mediaStart'] = first_seg_src_start_ticks

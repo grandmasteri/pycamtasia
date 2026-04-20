@@ -4,37 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 9 domains 1-3)
-
-**Leaf clips:**
-
-1. [verified] `set_speed()` non-idempotent for Group clips. Composes new scalar with existing inner scalars. Calling twice gives 4x not 2x. (base.py ~L260)
-
-2. [verified] `placeholder.py` has dead `import sys` and version-gated no-op blocks. (placeholder.py)
-
-**Compound clips:**
-
-3. [verified] `ungroup()` doesn't propagate `mediaDuration` to UnifiedMedia sub-clips inside StitchedMedia segments. (group.py ~L230)
-
-4. [verified] `ungroup()` doesn't scale effects on StitchedMedia inner segments when group_scalar != 1. Timed effects misaligned. (group.py ~L200)
-
-5. [verified] `ungroup()` StitchedMedia inner segment duration uses `round(Fraction)` (banker's rounding) inconsistently. Sum of inner durations may not equal wrapper duration. (group.py ~L227)
-
-6. [verified] `set_internal_segment_speeds()` doesn't reset `start=0` on non-media-track clips. Clips with non-zero start offsets extend past Group boundary. (group.py ~L430)
-
-7. [verified] `set_internal_segment_speeds()` `cursor_ticks` accumulates rounding error across segments via seconds_to_ticks. Distinct from known mediaStart drift. (group.py ~L393)
-
-**Track/timeline:**
-
-8. [verified] `duplicate_clip()` double-remap corrupts `assetProperties.objects` for compound clips. Same pattern as move_clip_to_track (known), but duplicate_clip not listed. (track.py ~L870)
-
-9. [verified] `replace_clip()` double-remap corrupts `assetProperties.objects`. Same pattern. (track.py ~L920)
-
-10. [verified] `extend_clip()` doesn't trim effects on UnifiedMedia sub-clips when shortening. Wrapper effects trimmed but video/audio sub-clip effects dangle past new duration. (track.py ~L620)
-
-11. [verified] `remove_gap_at()` over-aggressively removes transitions between two shifted clips that maintained relative positions. (track.py ~L1000)
-
-12. [verified] `shift_all()` and `shift_all_clips()` truncate string-fraction duration values via `int(Fraction(str(dur)))`. Silently destroys clips with non-integer duration. (timeline.py ~L430, track.py)
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

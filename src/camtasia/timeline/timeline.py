@@ -801,12 +801,13 @@ class Timeline:
                     clamped = True
                     clamp_amount = -new_start
                     m['start'] = 0
-                    old_duration = int(Fraction(str(m.get('duration', 0))))
-                    new_duration = max(0, old_duration - clamp_amount)
+                    old_duration = Fraction(str(m.get('duration', 0)))
+                    new_duration_frac = old_duration - clamp_amount
+                    new_duration = max(0, int(new_duration_frac))
                     if new_duration == 0:
                         clips_to_remove.append(id(m))
                         continue
-                    m['duration'] = new_duration
+                    m['duration'] = int(new_duration_frac) if new_duration_frac == int(new_duration_frac) else str(new_duration_frac)
                     scalar = _parse_scalar(m.get('scalar', 1))
                     old_media_start = Fraction(str(m.get('mediaStart', 0)))
                     # mediaStart is in source-media ticks; convert timeline clamp
@@ -818,7 +819,7 @@ class Timeline:
                     m['mediaStart'] = int(new_media_start) if new_media_start == int(new_media_start) else str(new_media_start)
                     # Recalculate mediaDuration from new duration to maintain invariant
                     if m.get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group') and scalar != 0:
-                        new_md = Fraction(new_duration) / scalar
+                        new_md = new_duration_frac / scalar
                         m['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
                     _adjust_effects_after_split_right(m, clamp_amount)
                     if m.get('_type') == 'UnifiedMedia':

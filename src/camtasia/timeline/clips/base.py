@@ -318,6 +318,8 @@ class BaseClip:
         if speed <= 0:
             raise ValueError(f'speed must be > 0, got {speed}')
         scalar_fraction = Fraction(1) / Fraction(speed).limit_denominator(100000)
+        # Save old scalar before mutation for Group idempotency
+        _old_scalar = Fraction(str(self._data.get('scalar', 1))) if isinstance(self._data.get('scalar', 1), str) else Fraction(self._data.get('scalar', 1))
         self._data['scalar'] = 1 if scalar_fraction == 1 else str(scalar_fraction)
         md = Fraction(self.duration) / scalar_fraction
         self._data['mediaDuration'] = int(md) if md == int(md) else str(md)  # type: ignore[typeddict-item]
@@ -358,26 +360,27 @@ class BaseClip:
                 self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
         if self._data.get('_type') == 'Group':
             from camtasia.timing import parse_scalar
-            # Scale wrapper duration first
-            orig_wrapper_dur = Fraction(str(self._data.get('duration', 0)))
+            # Undo existing scalar to recover original duration, then apply new scalar
+            wrapper_scalar = _old_scalar
+            wrapper_dur = Fraction(str(self._data.get('duration', 0)))
+            orig_wrapper_dur = wrapper_dur / wrapper_scalar if wrapper_scalar != 0 else wrapper_dur
             grp_new_dur = orig_wrapper_dur * scalar_fraction
-            self._data['duration'] = int(grp_new_dur)  # type: ignore[typeddict-item]
+            self._data['duration'] = int(grp_new_dur) if grp_new_dur == int(grp_new_dur) else str(grp_new_dur)  # type: ignore[typeddict-item]
+            self._data['scalar'] = int(scalar_fraction) if scalar_fraction == int(scalar_fraction) else str(scalar_fraction)
             # Recalculate mediaDuration to maintain invariant
             if scalar_fraction != 0:
-                grp_md = Fraction(int(grp_new_dur)) / scalar_fraction
+                grp_md = Fraction(str(self._data['duration'])) / scalar_fraction
                 self._data['mediaDuration'] = int(grp_md) if grp_md == int(grp_md) else str(grp_md)
             for inner_track in self._data.get('tracks', []):
                 for inner_clip_data in inner_track.get('medias', []):
-                    inner_scalar_old = parse_scalar(inner_clip_data.get('scalar', 1))
-                    composed_scalar = inner_scalar_old * scalar_fraction
-                    inner_clip_data['scalar'] = int(composed_scalar) if composed_scalar == int(composed_scalar) else str(composed_scalar)
-                    # Scale start (relative to group) so clips stay sequential
-                    orig_start = Fraction(str(inner_clip_data.get('start', 0)))
-                    new_start = orig_start * scalar_fraction
-                    inner_clip_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
-                    orig_dur = Fraction(str(inner_clip_data.get('duration', 0)))
-                    new_dur = orig_dur * scalar_fraction
-                    inner_clip_data['duration'] = int(new_dur) if new_dur == int(new_dur) else str(new_dur)
+                    inner_scalar_curr = parse_scalar(inner_clip_data.get('scalar', 1))
+                    orig_inner_dur = Fraction(str(inner_clip_data.get('duration', 0))) / inner_scalar_curr if inner_scalar_curr != 0 else Fraction(str(inner_clip_data.get('duration', 0)))
+                    orig_inner_start = Fraction(str(inner_clip_data.get('start', 0))) / wrapper_scalar if wrapper_scalar != 0 else Fraction(str(inner_clip_data.get('start', 0)))
+                    new_inner_dur = orig_inner_dur * scalar_fraction
+                    new_inner_start = orig_inner_start * scalar_fraction
+                    inner_clip_data['scalar'] = int(scalar_fraction) if scalar_fraction == int(scalar_fraction) else str(scalar_fraction)
+                    inner_clip_data['start'] = int(new_inner_start) if new_inner_start == int(new_inner_start) else str(new_inner_start)
+                    inner_clip_data['duration'] = int(new_inner_dur) if new_inner_dur == int(new_inner_dur) else str(new_inner_dur)
                     # Set clipSpeedAttribute metadata
                     inner_clip_data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
                     # Propagate to UnifiedMedia sub-dicts
@@ -396,11 +399,10 @@ class BaseClip:
                     # Re-layout StitchedMedia nested segments
                     elif inner_clip_data.get('_type') == 'StitchedMedia':
                         for inner_seg in inner_clip_data.get('medias', []):
-                            seg_scalar_old = parse_scalar(inner_seg.get('scalar', 1))
-                            seg_composed = seg_scalar_old * scalar_fraction
-                            inner_seg['scalar'] = int(seg_composed) if seg_composed == int(seg_composed) else str(seg_composed)
-                            seg_orig_dur = Fraction(str(inner_seg.get('duration', 0)))
+                            seg_scalar_curr = parse_scalar(inner_seg.get('scalar', 1))
+                            seg_orig_dur = Fraction(str(inner_seg.get('duration', 0))) / seg_scalar_curr if seg_scalar_curr != 0 else Fraction(str(inner_seg.get('duration', 0)))
                             seg_new_dur = seg_orig_dur * scalar_fraction
+                            inner_seg['scalar'] = int(scalar_fraction) if scalar_fraction == int(scalar_fraction) else str(scalar_fraction)
                             inner_seg['duration'] = int(seg_new_dur) if seg_new_dur == int(seg_new_dur) else str(seg_new_dur)
                             inner_seg.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
                         # Re-layout starts sequentially

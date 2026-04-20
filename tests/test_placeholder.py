@@ -1,9 +1,12 @@
 """Tests for camtasia.timeline.clips.placeholder — PlaceholderMedia clip type."""
 from __future__ import annotations
 
+import ast
+import inspect
+
 import pytest
 
-from camtasia.timeline.clips import clip_from_dict
+from camtasia.timeline.clips import clip_from_dict, placeholder
 from camtasia.timeline.clips.placeholder import PlaceholderMedia
 from camtasia.timing import seconds_to_ticks
 
@@ -68,3 +71,16 @@ def test_placeholder_subtitle_null_returns_empty_string():
     clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 3, 'start': 0, 'duration': 100,
                            'metadata': {'placeHolderSubTitle': None}})
     assert clip.subtitle == ''
+
+
+
+def test_no_sys_import() -> None:
+    """placeholder.py should not import sys."""
+    source = inspect.getsource(placeholder)
+    tree = ast.parse(source)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                assert alias.name != 'sys', 'sys should not be imported in placeholder.py'
+        if isinstance(node, ast.ImportFrom) and node.module == 'sys':
+            raise AssertionError('sys should not be imported in placeholder.py')
