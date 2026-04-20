@@ -28,8 +28,8 @@ class TestBaseClipIsBetween:
     def test_clip_ends_after_range(self, project: Project) -> None:
         track = project.timeline.add_track('T')
         clip = track.add_clip('VMFile', 1, EDIT_RATE * 2, EDIT_RATE * 5)
-        # is_between checks start position only: start_ticks <= clip.start < end_ticks
-        assert clip.is_between(2.0, 5.0) is True
+        # is_between checks full containment: start AND end must be within range
+        assert clip.is_between(2.0, 5.0) is False
 
 
 class TestBaseClipIntersects:
@@ -145,3 +145,25 @@ class TestIntersectsTickSpace:
         track = project.timeline.add_track('T')
         clip = track.add_clip('VMFile', 1, EDIT_RATE * 5, EDIT_RATE * 2)
         assert clip.intersects(1.0, 5.0) is False
+
+
+class TestIsBetweenFullContainment:
+    """Bug 1: is_between must check full containment, not just start."""
+
+    def test_clip_end_exceeds_range_is_not_between(self, project: Project) -> None:
+        track = project.timeline.add_track('T')
+        # Clip: 2s-7s, Range: 2s-5s → end exceeds range
+        clip = track.add_clip('VMFile', 1, EDIT_RATE * 2, EDIT_RATE * 5)
+        assert clip.is_between(2.0, 5.0) is False
+
+    def test_clip_fully_contained(self, project: Project) -> None:
+        track = project.timeline.add_track('T')
+        # Clip: 2s-4s, Range: 1s-5s → fully contained
+        clip = track.add_clip('VMFile', 1, EDIT_RATE * 2, EDIT_RATE * 2)
+        assert clip.is_between(1.0, 5.0) is True
+
+    def test_clip_end_exactly_at_range_end(self, project: Project) -> None:
+        track = project.timeline.add_track('T')
+        # Clip: 2s-5s, Range: 2s-5s → exactly contained
+        clip = track.add_clip('VMFile', 1, EDIT_RATE * 2, EDIT_RATE * 3)
+        assert clip.is_between(2.0, 5.0) is True

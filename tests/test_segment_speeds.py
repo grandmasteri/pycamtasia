@@ -642,3 +642,61 @@ class TestRescaleOverlapFixUnifiedMedia:
         um = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
         # mediaDuration should have been recalculated (not excluded)
         assert um['mediaDuration'] == um['duration']
+
+
+class TestNonContiguousSegmentMediaDuration:
+    """Bug 5: companion track mediaDuration must span first_src_start to last_src_end."""
+
+    def test_companion_media_duration_spans_full_source(self) -> None:
+        """Non-contiguous segments: mediaDuration = last_src_end - first_src_start."""
+        group_data = {
+            'id': 1, '_type': 'Group',
+            'start': 0, 'duration': seconds_to_ticks(10),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10),
+            'scalar': 1,
+            'metadata': {}, 'parameters': {}, 'effects': [],
+            'attributes': {'ident': '', 'widthAttr': 1920, 'heightAttr': 1080},
+            'animationTracks': {},
+            'tracks': [
+                {'medias': [{
+                    'id': 10, '_type': 'UnifiedMedia', 'src': 1,
+                    'start': 0, 'duration': seconds_to_ticks(10),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10),
+                    'scalar': 1, 'metadata': {}, 'parameters': {},
+                    'effects': [], 'attributes': {}, 'animationTracks': {},
+                    'video': {
+                        'id': 12, '_type': 'ScreenVMFile', 'src': 1,
+                        'trackNumber': 0,
+                        'start': 0, 'duration': seconds_to_ticks(10),
+                        'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10),
+                        'scalar': 1, 'parameters': {}, 'effects': [],
+                        'attributes': {'ident': ''}, 'animationTracks': {},
+                    },
+                    'audio': {
+                        'id': 13, '_type': 'AMFile', 'src': 1,
+                        'trackNumber': 1,
+                        'start': 0, 'duration': seconds_to_ticks(10),
+                        'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10),
+                        'scalar': 1, 'parameters': {}, 'effects': [],
+                        'attributes': {'ident': ''}, 'animationTracks': {},
+                    },
+                }]},
+                {'medias': [{
+                    'id': 11, '_type': 'AMFile', 'src': 1,
+                    'start': 0, 'duration': seconds_to_ticks(10),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10),
+                    'scalar': 1, 'metadata': {}, 'parameters': {},
+                    'effects': [], 'attributes': {}, 'animationTracks': {},
+                }]},
+            ],
+        }
+        group = Group(group_data)
+        # Non-contiguous: 0-2s, then 5-8s (gap from 2-5s)
+        group.set_internal_segment_speeds([
+            (0.0, 2.0, 2.0),   # 2s source → 2s timeline
+            (5.0, 8.0, 3.0),   # 3s source → 3s timeline
+        ])
+        companion = group_data['tracks'][1]['medias'][0]
+        # mediaDuration should be 8s - 0s = 8s (full span), not 2+3=5s
+        expected_span = seconds_to_ticks(8.0)
+        assert companion['mediaDuration'] == expected_span

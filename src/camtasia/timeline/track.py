@@ -2398,6 +2398,11 @@ class Track:
                     new_md = Fraction(new_duration) / scalar
                     m['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
                 _adjust_effects_after_split_right(m, clamp_amount)
+                if m.get('_type') == 'UnifiedMedia':
+                    for sub_key in ('video', 'audio'):
+                        sub = m.get(sub_key)
+                        if sub is not None:
+                            _adjust_effects_after_split_right(sub, clamp_amount)
             else:
                 m['start'] = new_start
             _propagate_start_to_unified(m)

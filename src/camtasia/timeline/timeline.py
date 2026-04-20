@@ -894,7 +894,7 @@ class Timeline:
         for track in self.tracks:
             for media_dict in track._data.get('medias', []):
                 cs: int = media_dict.get('start', 0)
-                if position_ticks < cs < position_ticks + gap_ticks:
+                if position_ticks <= cs < position_ticks + gap_ticks:
                     raise ValueError(
                         f'Cannot remove gap: clip at position {ticks_to_seconds(cs)}s '
                         f'overlaps with gap region'

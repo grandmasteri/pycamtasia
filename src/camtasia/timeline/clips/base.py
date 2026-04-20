@@ -184,7 +184,7 @@ class BaseClip:
         from camtasia.timing import seconds_to_ticks
         start_ticks = seconds_to_ticks(range_start_seconds)
         end_ticks = seconds_to_ticks(range_end_seconds)
-        return start_ticks <= self.start < end_ticks
+        return start_ticks <= self.start and self.start + self.duration <= end_ticks
 
     def intersects(self, range_start_seconds: float, range_end_seconds: float) -> bool:
         """Whether this clip overlaps with the given time range at all."""

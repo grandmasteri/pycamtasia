@@ -247,3 +247,46 @@ class TestScaleAllDurationsPropagationOrder:
         assert Fraction(str(audio['scalar'])) == expected_scalar
         assert video['duration'] == wrapper['duration']
         assert audio['duration'] == wrapper['duration']
+
+
+class TestShiftAllClipsUnifiedMediaEffects:
+    """Bug 8: shift_all_clips must adjust effects on UnifiedMedia sub-clips."""
+
+    def test_unified_media_sub_clip_effects_adjusted(self) -> None:
+        from camtasia.timeline.track import Track
+        EDIT_RATE = 705_600_000
+        data = {
+            'trackIndex': 0,
+            'medias': [{
+                'id': 1, '_type': 'UnifiedMedia',
+                'start': EDIT_RATE * 2, 'duration': EDIT_RATE * 10,
+                'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                'video': {
+                    'id': 2, '_type': 'ScreenVMFile', 'src': 1,
+                    'start': EDIT_RATE * 2, 'duration': EDIT_RATE * 10,
+                    'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                    'effects': [{'effectName': 'Glow', 'start': EDIT_RATE * 1, 'duration': EDIT_RATE * 5}],
+                    'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                },
+                'audio': {
+                    'id': 3, '_type': 'AMFile', 'src': 1,
+                    'start': EDIT_RATE * 2, 'duration': EDIT_RATE * 10,
+                    'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                    'effects': [{'effectName': 'Emphasize', 'start': EDIT_RATE * 2, 'duration': EDIT_RATE * 3}],
+                    'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                },
+                'effects': [],
+                'parameters': {}, 'metadata': {}, 'animationTracks': {},
+            }],
+            'transitions': [],
+        }
+        track = Track({'ident': 'T'}, data)
+        # Shift back 5s — clip at 2s gets clamped, clamp_amount = 3s
+        track.shift_all_clips(-5.0)
+        video_eff = data['medias'][0]['video']['effects'][0]
+        # Original effect start was 1s. After clamping 3s: start should be max(0, 1s-3s)=0
+        # and duration trimmed accordingly
+        assert video_eff['start'] == 0
+        audio_eff = data['medias'][0]['audio']['effects'][0]
+        # Original audio effect start was 2s. After clamping 3s: start should be max(0, 2s-3s)=0
+        assert audio_eff['start'] == 0

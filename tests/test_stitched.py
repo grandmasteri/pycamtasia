@@ -239,3 +239,20 @@ class TestClearSegmentsResetsScalarAndMediaStart:
 class TestMinMediaStartDocstring:
     def test_docstring_says_ticks(self):
         assert 'ticks' in StitchedMedia.min_media_start.fget.__doc__
+
+
+class TestClearSegmentsResetsMinMediaStart:
+    """Bug 4: clear_segments must reset minMediaStart to 0."""
+
+    def test_clear_segments_resets_min_media_start(self):
+        data = {
+            '_type': 'StitchedMedia', 'id': 1, 'start': 0,
+            'duration': 1000, 'mediaDuration': 2000,
+            'scalar': '1/2', 'mediaStart': 500, 'minMediaStart': 42,
+            'medias': [{'_type': 'VMFile', 'id': 10, 'start': 0,
+                        'duration': 1000, 'mediaDuration': 2000, 'scalar': '1/2'}],
+            'metadata': {}, 'parameters': {}, 'effects': [], 'animationTracks': {},
+        }
+        clip = StitchedMedia(data)
+        clip.clear_segments()
+        assert data['minMediaStart'] == 0

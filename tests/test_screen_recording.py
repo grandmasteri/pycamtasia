@@ -74,7 +74,7 @@ def test_screen_vmfile_cursor_scale_setter_mutates_dict() -> None:
 def test_screen_vmfile_cursor_scale_default() -> None:
     data = _base_clip_dict(_type="ScreenVMFile")
     clip = ScreenVMFile(data)
-    assert clip.cursor_scale == 5.0
+    assert clip.cursor_scale == 1.0
 
 
 def test_screen_vmfile_cursor_opacity_default() -> None:
@@ -276,3 +276,10 @@ class TestScreenVMFileSetSourceRaises:
         clip = ScreenVMFile(data)
         with pytest.raises(TypeError, match='Cannot change source on screen recording video clips'):
             clip.set_source(1)
+
+
+def test_cursor_scale_default_is_one() -> None:
+    """Bug 2: cursor_scale default should be 1.0, not 5.0."""
+    data = _base_clip_dict(_type="ScreenVMFile")
+    clip = ScreenVMFile(data)
+    assert clip.cursor_scale == 1.0

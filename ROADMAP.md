@@ -4,31 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 7 domains 1-3)
-
-**Leaf clips:**
-
-1. [verified] `is_between()` only checks clip start, not full containment. Docstring says "entirely within" but 30-second clip at 1s passes `is_between(0, 2)` because only `start_ticks <= self.start < end_ticks` is checked. (base.py ~L140)
-
-2. [verified] `ScreenVMFile.cursor_scale` default is 5.0 (should be 1.0). Previous cycle 3 claimed to fix this but commit 2e27a6d didn't actually touch the file. (screen_recording.py)
-
-**Compound clips:**
-
-3. [verified] `Group.ungroup()` stores string fractions for effect `start`/`duration`. Should use `round()` (effect fields must be integer ticks, not scalars). Clip-level start/duration correctly use round(). (group.py ~L165)
-
-4. [verified] `StitchedMedia.clear_segments()` doesn't reset `minMediaStart`. Stale metadata after clearing. (stitched.py)
-
-5. [verified] `set_internal_segment_speeds()` computes `total_src` as sum of segment source durations for companion tracks. Wrong when segments are non-contiguous in source (e.g., cut out a section). Should span `first_src_start` to `last_src_end`. (group.py ~L435)
-
-6. [verified] `Group.ungroup()` StitchedMedia inner segment `duration` stored as string fraction. Should use `round()`. (group.py ~L180)
-
-7. [verified] `Group.ungroup()` StitchedMedia inner segment `start` uses `int(Fraction(...))` truncation instead of round(). Causes cumulative timing drift across segments. (group.py ~L184)
-
-**Track/timeline:**
-
-8. [verified] `Track.shift_all_clips()` doesn't adjust effects on UnifiedMedia sub-clips during clamping. Compare with `Timeline.shift_all()` which correctly handles this. (track.py ~L1088)
-
-9. [verified] `Timeline.remove_gap()` validation uses exclusive lower bound `position_ticks < cs`. Clip starting exactly at `position_ticks` is not flagged as inside gap AND not shifted backward. Orphaned in place. (timeline.py ~L897)
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

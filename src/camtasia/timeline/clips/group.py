@@ -201,11 +201,11 @@ class Group(BaseClip):
                         if 'start' in effect:
                             orig_eff_start = Fraction(str(effect['start']))
                             new_eff_start = orig_eff_start * group_scalar
-                            effect['start'] = int(new_eff_start) if new_eff_start == int(new_eff_start) else str(new_eff_start)
+                            effect['start'] = round(new_eff_start)
                         if 'duration' in effect:
                             orig_eff_dur = Fraction(str(effect['duration']))
                             new_eff_dur = orig_eff_dur * group_scalar
-                            effect['duration'] = int(new_eff_dur) if new_eff_dur == int(new_eff_dur) else str(new_eff_dur)
+                            effect['duration'] = round(new_eff_dur)
                     if cloned_data.get('_type') == 'StitchedMedia' and group_scalar != 1:
                         for inner in cloned_data.get('medias', []):
                             inner_orig_scalar = _parse_scalar(inner.get('scalar', 1))
@@ -213,11 +213,11 @@ class Group(BaseClip):
                             inner['scalar'] = int(composed_inner) if composed_inner == int(composed_inner) else str(composed_inner)
                             inner_md = Fraction(str(inner.get('mediaDuration', 0)))
                             new_inner_dur = inner_md * composed_inner
-                            inner['duration'] = int(new_inner_dur) if new_inner_dur == int(new_inner_dur) else str(new_inner_dur)
+                            inner['duration'] = round(new_inner_dur)
                         cursor = 0
                         for inner in cloned_data.get('medias', []):
                             inner['start'] = cursor
-                            cursor += int(Fraction(str(inner['duration'])))
+                            cursor += round(Fraction(str(inner['duration'])))
                 cloned_start = Fraction(str(cloned_data.get('start', 0)))
                 new_start = cloned_start + group_start
                 cloned_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
@@ -634,18 +634,19 @@ class Group(BaseClip):
         self._data['scalar'] = 1
 
         # Keep VMFile on other tracks but extend to cover full source
-        total_src = sum(seconds_to_ticks(src_end - src_start) for src_start, src_end, _tl_dur in segments)
         for track in self._data.get('tracks', []):
             if track is media_track:
                 continue
             first_seg_src_start = segments[0][0] if segments else 0
+            last_seg_src_end = segments[-1][1] if segments else 0
             first_seg_src_start_ticks = seconds_to_ticks(first_seg_src_start)
+            total_src_span = seconds_to_ticks(last_seg_src_end - first_seg_src_start)
             for m in track.get('medias', []):
                 if m.get('_type') in ('VMFile', 'ScreenVMFile', 'AMFile'):
                     m['duration'] = total_tl
-                    m['mediaDuration'] = total_src
+                    m['mediaDuration'] = total_src_span
                     m['mediaStart'] = first_seg_src_start_ticks
-                    ratio = Fraction(total_tl) / Fraction(total_src) if total_src != 0 else Fraction(1)
+                    ratio = Fraction(total_tl) / Fraction(total_src_span) if total_src_span != 0 else Fraction(1)
                     m['scalar'] = int(ratio) if ratio == int(ratio) else str(ratio)
 
     def sync_internal_durations(self) -> Self:

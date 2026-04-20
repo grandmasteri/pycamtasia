@@ -291,3 +291,90 @@ class TestUngroupClip:
 
         assert 200 in track
         assert {c.clip_type for c in track.clips} == {'VMFile', 'AMFile'}
+
+
+# ---------------------------------------------------------------------------
+# Bug 3: ungroup effect timing must be integer ticks, not string fractions
+# Bug 6: StitchedMedia inner duration must be integer ticks
+# Bug 7: StitchedMedia inner start must use round(), not int() truncation
+# ---------------------------------------------------------------------------
+
+def _make_group_with_scalar(inner_clips, scalar='1', start=0, duration=100):
+    """Build a Group dict with a custom scalar for ungroup tests."""
+    return Group({
+        '_type': 'Group', 'id': 100,
+        'start': start, 'duration': duration,
+        'mediaStart': 0, 'mediaDuration': duration, 'scalar': scalar,
+        'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        'attributes': {'ident': 'Test'},
+        'tracks': [{'trackIndex': 0, 'medias': inner_clips, 'transitions': []}],
+    })
+
+
+class TestUngroupEffectTimingIntegerTicks:
+    """Bug 3: Effect start/duration must be int after ungroup with non-unit scalar."""
+
+    def test_effect_timing_is_int_after_ungroup(self) -> None:
+        clip = {'id': 10, '_type': 'VMFile', 'src': 1,
+                'start': 0, 'duration': 100,
+                'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+                'effects': [{'effectName': 'Glow', 'start': 30, 'duration': 60}],
+                'parameters': {}, 'metadata': {}, 'animationTracks': {}}
+        group = _make_group_with_scalar([clip], scalar='2/3')
+        clips = group.ungroup()
+        eff = clips[0]._data['effects'][0]
+        assert isinstance(eff['start'], int)
+        assert isinstance(eff['duration'], int)
+
+
+class TestUngroupStitchedMediaInnerDurationInt:
+    """Bug 6: StitchedMedia inner duration must be int after ungroup."""
+
+    def test_inner_duration_is_int(self) -> None:
+        inner_seg = {
+            'id': 20, '_type': 'ScreenVMFile', 'src': 1,
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        stitched = {
+            'id': 10, '_type': 'StitchedMedia',
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'medias': [inner_seg],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        group = _make_group_with_scalar([stitched], scalar='2/3')
+        clips = group.ungroup()
+        for inner in clips[0]._data.get('medias', []):
+            assert isinstance(inner['duration'], int), f"inner duration is {type(inner['duration'])}"
+
+
+class TestUngroupStitchedMediaInnerStartRound:
+    """Bug 7: StitchedMedia inner start must use round(), not int() truncation."""
+
+    def test_inner_starts_are_consistent(self) -> None:
+        seg1 = {
+            'id': 20, '_type': 'ScreenVMFile', 'src': 1,
+            'start': 0, 'duration': 50,
+            'mediaStart': 0, 'mediaDuration': 50, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        seg2 = {
+            'id': 21, '_type': 'ScreenVMFile', 'src': 1,
+            'start': 50, 'duration': 50,
+            'mediaStart': 50, 'mediaDuration': 50, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        stitched = {
+            'id': 10, '_type': 'StitchedMedia',
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'medias': [seg1, seg2],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        group = _make_group_with_scalar([stitched], scalar='2/3')
+        clips = group.ungroup()
+        medias = clips[0]._data.get('medias', [])
+        # Second segment start should equal first segment duration (no gap)
+        assert medias[1]['start'] == medias[0]['duration']

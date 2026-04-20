@@ -1051,3 +1051,19 @@ class TestTimelineRemoveGapValidation:
 
         clips = sorted(track._data['medias'], key=lambda m: m['start'])
         assert clips[1]['start'] == seconds_to_ticks(3.0)
+
+
+class TestRemoveGapClipAtGapStart:
+    """Bug 9: remove_gap must reject clips at the exact gap start position."""
+
+    def test_raises_when_clip_starts_at_gap_position(self, project):
+        import pytest
+
+        from camtasia.timing import seconds_to_ticks
+        track = project.timeline.tracks[0]
+        track.add_clip('VMFile', 1, seconds_to_ticks(0.0), seconds_to_ticks(2.0))
+        # Clip starts exactly at gap start (3.0s)
+        track.add_clip('VMFile', 1, seconds_to_ticks(3.0), seconds_to_ticks(1.0))
+
+        with pytest.raises(ValueError, match='Cannot remove gap'):
+            project.timeline.remove_gap(3.0, 5.0)
