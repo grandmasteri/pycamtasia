@@ -2660,3 +2660,78 @@ class TestScalarSetterStitchedMediaRelayout:
         seg1 = data['medias'][1]
         assert seg0['start'] == 0
         assert seg1['start'] == seg0['duration']
+
+
+class TestSetSpeedStitchedInGroupDurationAlwaysInt:
+    """Bug 2: set_speed on Group with StitchedMedia inner segments must produce int duration."""
+
+    def test_duration_is_int_not_string(self):
+        data = {
+            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': 1,
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                '_type': 'StitchedMedia', 'id': 2, 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1,
+                'medias': [
+                    {'_type': 'VMFile', 'id': 3, 'start': 0, 'duration': 500,
+                     'mediaDuration': 500, 'scalar': 1},
+                    {'_type': 'VMFile', 'id': 4, 'start': 500, 'duration': 500,
+                     'mediaDuration': 500, 'scalar': 1},
+                ],
+            }]}],
+            'parameters': {}, 'effects': [], 'metadata': {},
+        }
+        clip = BaseClip(data)
+        clip.set_speed(3.0)
+        for seg in data['tracks'][0]['medias'][0]['medias']:
+            assert isinstance(seg['duration'], int), f"duration should be int, got {type(seg['duration'])}"
+
+
+class TestDurationSetterStitchedMediaUnifiedMediaPropagation:
+    """Bug 3: duration setter on StitchedMedia must propagate to UnifiedMedia sub-clips."""
+
+    def test_inner_unified_media_gets_start_and_duration(self):
+        data = {
+            '_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': 1,
+            'medias': [{
+                '_type': 'UnifiedMedia', 'id': 2, 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1,
+                'video': {'_type': 'VMFile', 'id': 3, 'start': 0, 'duration': 1000,
+                          'mediaDuration': 1000, 'scalar': 1},
+                'audio': {'_type': 'AMFile', 'id': 4, 'start': 0, 'duration': 1000,
+                          'mediaDuration': 1000, 'scalar': 1},
+            }],
+        }
+        clip = BaseClip(data)
+        clip.duration = 2000
+        inner = data['medias'][0]
+        assert inner['video']['start'] == inner['start']
+        assert inner['video']['duration'] == inner['duration']
+        assert inner['audio']['start'] == inner['start']
+        assert inner['audio']['duration'] == inner['duration']
+
+
+class TestScalarSetterStitchedMediaUnifiedMediaPropagation:
+    """Bug 4: scalar setter on StitchedMedia must propagate to UnifiedMedia sub-clips."""
+
+    def test_inner_unified_media_gets_start_and_duration(self):
+        data = {
+            '_type': 'StitchedMedia', 'id': 1, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': 1,
+            'medias': [{
+                '_type': 'UnifiedMedia', 'id': 2, 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1,
+                'video': {'_type': 'VMFile', 'id': 3, 'start': 0, 'duration': 1000,
+                          'mediaDuration': 1000, 'scalar': 1},
+                'audio': {'_type': 'AMFile', 'id': 4, 'start': 0, 'duration': 1000,
+                          'mediaDuration': 1000, 'scalar': 1},
+            }],
+        }
+        clip = BaseClip(data)
+        clip.scalar = Fraction(1, 2)
+        inner = data['medias'][0]
+        assert inner['video']['start'] == inner['start']
+        assert inner['video']['duration'] == inner['duration']
+        assert inner['audio']['start'] == inner['start']
+        assert inner['audio']['duration'] == inner['duration']

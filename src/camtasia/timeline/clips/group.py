@@ -333,12 +333,26 @@ class Group(BaseClip):
                                 nested_scalar = _parse_scalar(nested_clip.get('scalar', 1))
                                 composed = nested_scalar * group_scalar
                                 nested_clip['scalar'] = 1 if composed == 1 else str(composed)
+                                # Bug 5: recalc mediaDuration for non-image, non-compound inner clips
+                                if nested_clip.get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group', 'UnifiedMedia'):
+                                    if composed != 0:
+                                        nested_md = Fraction(nested_clip['duration']) / composed
+                                        nested_clip['mediaDuration'] = int(nested_md) if nested_md == int(nested_md) else str(nested_md)
+                                elif nested_clip.get('_type') in ('IMFile', 'ScreenIMFile'):
+                                    nested_clip['mediaDuration'] = 1
                                 # Scale effects (Bug 5)
                                 for effect in nested_clip.get('effects', []):
                                     if 'start' in effect:
                                         effect['start'] = round(Fraction(str(effect['start'])) * group_scalar)
                                     if 'duration' in effect:
                                         effect['duration'] = round(Fraction(str(effect['duration'])) * group_scalar)
+                                # Bug 6: scale keyframes and tracks on nested clips
+                                _scale_keyframes_and_tracks(nested_clip, group_scalar)
+                                if nested_clip.get('_type') == 'UnifiedMedia':
+                                    for sub_key in ('video', 'audio'):
+                                        sub = nested_clip.get(sub_key)
+                                        if sub is not None:
+                                            _scale_keyframes_and_tracks(sub, group_scalar)
                                 # Propagate to UnifiedMedia sub-clips (Bug 6)
                                 from camtasia.timeline.track import _propagate_start_to_unified
                                 _propagate_start_to_unified(nested_clip)
@@ -356,6 +370,8 @@ class Group(BaseClip):
                                                 effect['start'] = round(Fraction(str(effect['start'])) * group_scalar)
                                             if 'duration' in effect:
                                                 effect['duration'] = round(Fraction(str(effect['duration'])) * group_scalar)
+                                        # Bug 7: scale keyframes on inner segments
+                                        _scale_keyframes_and_tracks(inner_seg, group_scalar)
                                         # Propagate to UnifiedMedia sub-clips (Bug 5)
                                         if inner_seg.get('_type') == 'UnifiedMedia':
                                             for sub_key in ('video', 'audio'):
@@ -363,6 +379,7 @@ class Group(BaseClip):
                                                 if sub is not None:
                                                     sub['scalar'] = inner_seg['scalar']
                                                     sub['duration'] = inner_seg['duration']
+                                                    _scale_keyframes_and_tracks(sub, group_scalar)
                                                     for effect in sub.get('effects', []):
                                                         if 'start' in effect:
                                                             effect['start'] = round(Fraction(str(effect['start'])) * group_scalar)
@@ -373,6 +390,12 @@ class Group(BaseClip):
                                     for inner_seg in nested_clip.get('medias', []):
                                         inner_seg['start'] = cursor
                                         cursor += round(Fraction(str(inner_seg.get('duration', 0))))
+                                        # Bug 8: propagate start to UnifiedMedia sub-clips
+                                        if inner_seg.get('_type') == 'UnifiedMedia':
+                                            for sub_key in ('video', 'audio'):
+                                                sub = inner_seg.get(sub_key)
+                                                if sub is not None:
+                                                    sub['start'] = inner_seg['start']
                         # Recalculate nested Group's own mediaDuration after rounding
                         nested_grp_scalar = _parse_scalar(cloned_data.get('scalar', 1))
                         if nested_grp_scalar != 0:
@@ -664,6 +687,8 @@ class Group(BaseClip):
             Group.  If you need more segments, consider merging adjacent
             segments with similar speeds to stay under the limit.
         """
+        if not segments:
+            raise ValueError('segments list must not be empty')
         if len(segments) > 8:
             import warnings
             warnings.warn(

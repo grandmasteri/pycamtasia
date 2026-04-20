@@ -58,6 +58,31 @@ def _propagate_start_to_unified(media_dict: dict[str, Any]) -> None:
                         sub[field] = media_dict[field]  # type: ignore[index]
 
 
+def _scale_animation_tracks(data_dict: dict[str, Any], factor: Fraction) -> None:
+    """Scale animationTracks.visual entries by *factor*."""
+    for track_entry in data_dict.get('animationTracks', {}).get('visual', []):
+        for field in ('time', 'endTime', 'duration'):
+            if field in track_entry:
+                track_entry[field] = int(Fraction(str(track_entry[field])) * factor)
+        if 'range' in track_entry and isinstance(track_entry['range'], list) and len(track_entry['range']) == 2:
+            track_entry['range'] = [
+                int(Fraction(str(track_entry['range'][0])) * factor),
+                int(Fraction(str(track_entry['range'][1])) * factor),
+            ]
+
+
+def _scale_parameters_keyframes(data_dict: dict[str, Any], factor: Fraction) -> None:
+    """Scale parameters keyframes by *factor*."""
+    for _, pval in data_dict.get('parameters', {}).items():
+        if isinstance(pval, dict) and 'keyframes' in pval:
+            for kf in pval['keyframes']:
+                for field in ('time', 'endTime'):
+                    if field in kf:
+                        kf[field] = int(Fraction(str(kf[field])) * factor)
+                if 'duration' in kf:
+                    kf['duration'] = int(Fraction(str(kf['duration'])) * factor)
+
+
 def _adjust_effects_after_split(clip_data: dict[str, Any], new_duration: int) -> None:
     """Adjust effects on the left half after a split.
 
@@ -2513,6 +2538,15 @@ class Track:
                     effect['start'] = int(effect['start'] * factor)
                 if 'duration' in effect:
                     effect['duration'] = int(effect['duration'] * factor)
+            _frac_factor = Fraction(factor)
+            _scale_animation_tracks(media_dict, _frac_factor)
+            _scale_parameters_keyframes(media_dict, _frac_factor)
+            if media_dict.get('_type') == 'UnifiedMedia':
+                for _sk in ('video', 'audio'):
+                    _sub = media_dict.get(_sk)
+                    if _sub is not None:
+                        _scale_animation_tracks(_sub, _frac_factor)
+                        _scale_parameters_keyframes(_sub, _frac_factor)
             if media_dict.get('_type') == 'Group':
                 for inner_track in media_dict.get('tracks', []):
                     for inner_clip in inner_track.get('medias', []):
@@ -2542,6 +2576,8 @@ class Track:
                                 effect['start'] = int(effect['start'] * factor)
                             if 'duration' in effect:
                                 effect['duration'] = int(effect['duration'] * factor)
+                        _scale_animation_tracks(inner_clip, _frac_factor)
+                        _scale_parameters_keyframes(inner_clip, _frac_factor)
                         if inner_clip.get('_type') == 'UnifiedMedia':
                             for sub_key in ('video', 'audio'):
                                 sub = inner_clip.get(sub_key)
@@ -2551,6 +2587,8 @@ class Track:
                                             effect['start'] = int(effect['start'] * factor)
                                         if 'duration' in effect:
                                             effect['duration'] = int(effect['duration'] * factor)
+                                    _scale_animation_tracks(sub, _frac_factor)
+                                    _scale_parameters_keyframes(sub, _frac_factor)
         for t in self._data.get('transitions', []):
             t['duration'] = int(t.get('duration', 0) * factor)
             if 'start' in t:

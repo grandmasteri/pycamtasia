@@ -1231,6 +1231,10 @@ class _TrackAccessor:
     def __getitem__(self, track_index: int) -> Track:
         """Get a track by its ``trackIndex``.
 
+        Note: pairs track data with ``trackAttributes`` by array position.
+        If ``trackIndex`` values do not match array positions (corrupt data),
+        the attributes may be paired incorrectly.
+
         Args:
             track_index: The track index.
 

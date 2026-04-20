@@ -660,3 +660,93 @@ class TestScaleAllDurationsGroupUnifiedMediaSubClipPropagation:
         assert video['scalar'] == ic['scalar']
         assert audio['mediaDuration'] == ic['mediaDuration']
         assert audio['scalar'] == ic['scalar']
+
+
+class TestScaleAllDurationsScalesAnimationTracks:
+    """Bug 11: scale_all_durations must scale animationTracks.visual entries."""
+
+    def test_visual_animation_tracks_scaled(self):
+        clip: dict[str, Any] = {
+            '_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': 1,
+            'parameters': {}, 'effects': [],
+            'animationTracks': {'visual': [
+                {'time': 0, 'endTime': 100, 'duration': 100, 'range': [0, 100]},
+            ]},
+        }
+        attrs: dict[str, Any] = {'ident': 'T'}
+        data: dict[str, Any] = {'trackIndex': 0, 'medias': [clip], 'transitions': []}
+        track = Track(attrs, data)
+        track.scale_all_durations(2.0)
+        vis = clip['animationTracks']['visual'][0]
+        assert vis['endTime'] == 200
+        assert vis['duration'] == 200
+        assert vis['range'] == [0, 200]
+
+    def test_group_internal_animation_tracks_scaled(self):
+        inner_clip: dict[str, Any] = {
+            '_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': 1,
+            'parameters': {}, 'effects': [],
+            'animationTracks': {'visual': [
+                {'time': 10, 'endTime': 50, 'duration': 40, 'range': [10, 40]},
+            ]},
+        }
+        group: dict[str, Any] = {
+            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': 1,
+            'tracks': [{'trackIndex': 0, 'medias': [inner_clip]}],
+            'parameters': {}, 'effects': [], 'animationTracks': {},
+        }
+        attrs: dict[str, Any] = {'ident': 'T'}
+        data: dict[str, Any] = {'trackIndex': 0, 'medias': [group], 'transitions': []}
+        track = Track(attrs, data)
+        track.scale_all_durations(3.0)
+        vis = inner_clip['animationTracks']['visual'][0]
+        assert vis['time'] == 30
+        assert vis['endTime'] == 150
+        assert vis['duration'] == 120
+
+
+class TestScaleAllDurationsScalesParametersKeyframes:
+    """Bug 12: scale_all_durations must scale parameters keyframes."""
+
+    def test_parameters_keyframes_scaled(self):
+        clip: dict[str, Any] = {
+            '_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': 1,
+            'parameters': {'opacity': {'type': 'double', 'defaultValue': 1.0,
+                                       'keyframes': [{'time': 0, 'endTime': 100, 'duration': 100, 'value': 1.0}]}},
+            'effects': [], 'animationTracks': {},
+        }
+        attrs: dict[str, Any] = {'ident': 'T'}
+        data: dict[str, Any] = {'trackIndex': 0, 'medias': [clip], 'transitions': []}
+        track = Track(attrs, data)
+        track.scale_all_durations(2.0)
+        kf = clip['parameters']['opacity']['keyframes'][0]
+        assert kf['time'] == 0
+        assert kf['endTime'] == 200
+        assert kf['duration'] == 200
+
+    def test_group_internal_parameters_keyframes_scaled(self):
+        inner_clip: dict[str, Any] = {
+            '_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': 1,
+            'parameters': {'opacity': {'type': 'double', 'defaultValue': 1.0,
+                                       'keyframes': [{'time': 50, 'endTime': 200, 'duration': 150, 'value': 0.5}]}},
+            'effects': [], 'animationTracks': {},
+        }
+        group: dict[str, Any] = {
+            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': 1,
+            'tracks': [{'trackIndex': 0, 'medias': [inner_clip]}],
+            'parameters': {}, 'effects': [], 'animationTracks': {},
+        }
+        attrs: dict[str, Any] = {'ident': 'T'}
+        data: dict[str, Any] = {'trackIndex': 0, 'medias': [group], 'transitions': []}
+        track = Track(attrs, data)
+        track.scale_all_durations(2.0)
+        kf = inner_clip['parameters']['opacity']['keyframes'][0]
+        assert kf['time'] == 100
+        assert kf['endTime'] == 400
+        assert kf['duration'] == 300

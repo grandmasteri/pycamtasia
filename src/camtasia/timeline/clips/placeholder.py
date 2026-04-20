@@ -26,9 +26,9 @@ class PlaceholderMedia(BaseClip):
     @property
     def width(self) -> float:
         """Width of the placeholder in pixels."""
-        return float(self._data.get('attributes', {}).get('width', 0.0))
+        return float(self._data.get('attributes', {}).get('widthAttr', 0.0))
 
     @property
     def height(self) -> float:
         """Height of the placeholder in pixels."""
-        return float(self._data.get('attributes', {}).get('height', 0.0))
+        return float(self._data.get('attributes', {}).get('heightAttr', 0.0))

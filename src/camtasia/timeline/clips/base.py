@@ -180,6 +180,14 @@ class BaseClip:
                 if inner_scalar != 0:
                     inner_md = Fraction(new_inner_dur) / inner_scalar
                     inner['mediaDuration'] = int(inner_md) if inner_md == int(inner_md) else str(inner_md)
+                if inner.get('_type') == 'UnifiedMedia':
+                    for sub_key in ('video', 'audio'):
+                        sub = inner.get(sub_key)  # type: ignore[assignment]
+                        if sub is not None:
+                            sub['start'] = inner['start']
+                            sub['duration'] = inner['duration']
+                            if 'mediaDuration' in inner:
+                                sub['mediaDuration'] = inner['mediaDuration']
 
     @property
     def end_seconds(self) -> float:
@@ -352,6 +360,14 @@ class BaseClip:
                 if inner_scalar != 0:
                     inner_md = Fraction(new_inner_dur) / inner_scalar
                     inner['mediaDuration'] = int(inner_md) if inner_md == int(inner_md) else str(inner_md)
+                if inner.get('_type') == 'UnifiedMedia':
+                    for sub_key in ('video', 'audio'):
+                        sub = inner.get(sub_key)  # type: ignore[assignment]
+                        if sub is not None:
+                            sub['start'] = inner['start']
+                            sub['duration'] = inner['duration']
+                            if 'mediaDuration' in inner:
+                                sub['mediaDuration'] = inner['mediaDuration']
 
     def set_speed(self, speed: float) -> Self:
         """Set playback speed multiplier.
@@ -467,7 +483,7 @@ class BaseClip:
                             seg_orig_dur = Fraction(str(inner_seg.get('duration', 0))) / seg_scalar_curr if seg_scalar_curr != 0 else Fraction(str(inner_seg.get('duration', 0)))
                             seg_new_dur = seg_orig_dur * scalar_fraction
                             inner_seg['scalar'] = 1 if scalar_fraction == 1 else str(scalar_fraction)
-                            inner_seg['duration'] = int(seg_new_dur) if seg_new_dur == int(seg_new_dur) else str(seg_new_dur)
+                            inner_seg['duration'] = round(seg_new_dur)
                             inner_seg.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
                             if inner_seg.get('_type') == 'UnifiedMedia':
                                 for sub_key in ('video', 'audio'):

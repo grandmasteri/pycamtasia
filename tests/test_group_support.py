@@ -1228,3 +1228,195 @@ class TestUngroupStartIsAlwaysInt:
         for clip in extracted:
             assert isinstance(clip._data['start'], int), \
                 f"Expected int start, got {type(clip._data['start'])}: {clip._data['start']}"
+
+
+class TestUngroupNestedGroupMediaDurationRecalc:
+    """Bug 5: ungroup nested Group must recalculate mediaDuration for non-compound clips."""
+
+    def test_nested_vmfile_mediaDuration_recalculated(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': '1/2',
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                '_type': 'Group', 'id': 2, 'start': 0, 'duration': 500,
+                'mediaDuration': 500, 'scalar': 1,
+                'tracks': [{'trackIndex': 0, 'medias': [{
+                    '_type': 'VMFile', 'id': 3, 'start': 0, 'duration': 500,
+                    'mediaDuration': 500, 'scalar': 1,
+                    'parameters': {}, 'effects': [], 'animationTracks': {},
+                }]}],
+                'parameters': {}, 'effects': [], 'animationTracks': {},
+                'attributes': {},
+            }]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {},
+        }
+        group = Group(group_data)
+        extracted = group.ungroup()
+        nested_group = extracted[0]
+        inner_clip = nested_group._data['tracks'][0]['medias'][0]
+        composed = Fraction(1) * Fraction(1, 2)  # nested_scalar * group_scalar
+        expected_md = Fraction(inner_clip['duration']) / composed
+        actual_md = Fraction(str(inner_clip['mediaDuration']))
+        assert actual_md == expected_md
+
+    def test_nested_imfile_mediaDuration_is_one(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': '1/2',
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                '_type': 'Group', 'id': 2, 'start': 0, 'duration': 500,
+                'mediaDuration': 500, 'scalar': 1,
+                'tracks': [{'trackIndex': 0, 'medias': [{
+                    '_type': 'IMFile', 'id': 3, 'start': 0, 'duration': 500,
+                    'mediaDuration': 1, 'scalar': 1,
+                    'parameters': {}, 'effects': [], 'animationTracks': {},
+                }]}],
+                'parameters': {}, 'effects': [], 'animationTracks': {},
+                'attributes': {},
+            }]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {},
+        }
+        group = Group(group_data)
+        extracted = group.ungroup()
+        inner_clip = extracted[0]._data['tracks'][0]['medias'][0]
+        assert inner_clip['mediaDuration'] == 1
+
+
+class TestUngroupNestedGroupScalesKeyframes:
+    """Bug 6: ungroup must call _scale_keyframes_and_tracks on nested Group clips."""
+
+    def test_nested_clip_keyframes_scaled(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 2000,
+            'mediaDuration': 2000, 'scalar': '1/2',
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                '_type': 'Group', 'id': 2, 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1,
+                'tracks': [{'trackIndex': 0, 'medias': [{
+                    '_type': 'VMFile', 'id': 3, 'start': 0, 'duration': 1000,
+                    'mediaDuration': 1000, 'scalar': 1,
+                    'parameters': {'opacity': {'type': 'double', 'defaultValue': 1.0,
+                                               'keyframes': [{'time': 0, 'endTime': 100, 'duration': 100, 'value': 1.0}]}},
+                    'effects': [],
+                    'animationTracks': {'visual': [{'time': 0, 'endTime': 100, 'duration': 100, 'range': [0, 100]}]},
+                }]}],
+                'parameters': {}, 'effects': [], 'animationTracks': {},
+                'attributes': {},
+            }]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {},
+        }
+        group = Group(group_data)
+        extracted = group.ungroup()
+        inner_clip = extracted[0]._data['tracks'][0]['medias'][0]
+        kf = inner_clip['parameters']['opacity']['keyframes'][0]
+        # group_scalar = 1/2, so time fields should be halved (multiplied by 1/2)
+        assert kf['time'] == 0
+        assert kf['endTime'] == 50
+        vis = inner_clip['animationTracks']['visual'][0]
+        assert vis['endTime'] == 50
+
+
+class TestUngroupNestedStitchedMediaScalesInnerKeyframes:
+    """Bug 7: ungroup must call _scale_keyframes_and_tracks on StitchedMedia inner segments in nested Groups."""
+
+    def test_inner_segment_keyframes_scaled(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 2000,
+            'mediaDuration': 2000, 'scalar': '1/2',
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                '_type': 'Group', 'id': 2, 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1,
+                'tracks': [{'trackIndex': 0, 'medias': [{
+                    '_type': 'StitchedMedia', 'id': 3, 'start': 0, 'duration': 1000,
+                    'mediaDuration': 1000, 'scalar': 1,
+                    'medias': [{
+                        '_type': 'VMFile', 'id': 4, 'start': 0, 'duration': 1000,
+                        'mediaDuration': 1000, 'scalar': 1,
+                        'parameters': {'opacity': {'type': 'double', 'defaultValue': 1.0,
+                                                   'keyframes': [{'time': 0, 'endTime': 200, 'duration': 200, 'value': 1.0}]}},
+                        'effects': [], 'animationTracks': {},
+                    }],
+                    'parameters': {}, 'effects': [], 'animationTracks': {},
+                }]}],
+                'parameters': {}, 'effects': [], 'animationTracks': {},
+                'attributes': {},
+            }]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {},
+        }
+        group = Group(group_data)
+        extracted = group.ungroup()
+        inner_seg = extracted[0]._data['tracks'][0]['medias'][0]['medias'][0]
+        kf = inner_seg['parameters']['opacity']['keyframes'][0]
+        assert kf['endTime'] == 100  # 200 * 1/2
+
+
+class TestUngroupNestedStitchedMediaStartPropagation:
+    """Bug 8: ungroup re-layout must propagate start to UnifiedMedia sub-clips in nested StitchedMedia."""
+
+    def test_unified_media_sub_clips_get_start(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 2000,
+            'mediaDuration': 2000, 'scalar': '1/2',
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                '_type': 'Group', 'id': 2, 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1,
+                'tracks': [{'trackIndex': 0, 'medias': [{
+                    '_type': 'StitchedMedia', 'id': 3, 'start': 0, 'duration': 1000,
+                    'mediaDuration': 1000, 'scalar': 1,
+                    'medias': [
+                        {'_type': 'UnifiedMedia', 'id': 4, 'start': 0, 'duration': 500,
+                         'mediaDuration': 500, 'scalar': 1,
+                         'video': {'_type': 'VMFile', 'id': 5, 'start': 0, 'duration': 500,
+                                   'mediaDuration': 500, 'scalar': 1},
+                         'audio': {'_type': 'AMFile', 'id': 6, 'start': 0, 'duration': 500,
+                                   'mediaDuration': 500, 'scalar': 1},
+                         'parameters': {}, 'effects': [], 'animationTracks': {}},
+                        {'_type': 'UnifiedMedia', 'id': 7, 'start': 500, 'duration': 500,
+                         'mediaDuration': 500, 'scalar': 1,
+                         'video': {'_type': 'VMFile', 'id': 8, 'start': 500, 'duration': 500,
+                                   'mediaDuration': 500, 'scalar': 1},
+                         'audio': {'_type': 'AMFile', 'id': 9, 'start': 500, 'duration': 500,
+                                   'mediaDuration': 500, 'scalar': 1},
+                         'parameters': {}, 'effects': [], 'animationTracks': {}},
+                    ],
+                    'parameters': {}, 'effects': [], 'animationTracks': {},
+                }]}],
+                'parameters': {}, 'effects': [], 'animationTracks': {},
+                'attributes': {},
+            }]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {},
+        }
+        group = Group(group_data)
+        extracted = group.ungroup()
+        stitched = extracted[0]._data['tracks'][0]['medias'][0]
+        for seg in stitched['medias']:
+            assert seg['video']['start'] == seg['start']
+            assert seg['audio']['start'] == seg['start']
+
+
+class TestSetInternalSegmentSpeedsEmptySegmentsRaises:
+    """Bug 9: set_internal_segment_speeds must raise ValueError for empty segments."""
+
+    def test_empty_segments_raises(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0, 'duration': 1000,
+            'mediaDuration': 1000, 'scalar': 1,
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                '_type': 'UnifiedMedia', 'id': 2, 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1,
+                'video': {'_type': 'ScreenVMFile', 'id': 3, 'src': 10, 'start': 0,
+                          'duration': 1000, 'mediaDuration': 1000, 'scalar': 1,
+                          'trackNumber': 0, 'attributes': {'ident': ''}, 'parameters': {}, 'effects': []},
+                'audio': None,
+            }]}],
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'attributes': {'widthAttr': 1920, 'heightAttr': 1080},
+        }
+        group = Group(group_data)
+        with pytest.raises(ValueError, match='segments list must not be empty'):
+            group.set_internal_segment_speeds([])

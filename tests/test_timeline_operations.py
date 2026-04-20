@@ -1210,3 +1210,26 @@ def test_build_section_timeline_identity_removal() -> None:
     assert len(t0._data['medias']) == 3
     # Track 1 should be empty
     assert len(t1._data['medias']) == 0
+
+
+class TestTrackAccessorGetitemMatchesTrackIndex:
+    """Bug 13: _TrackAccessor.__getitem__ must match by trackIndex, not array position."""
+
+    def test_getitem_finds_track_by_trackIndex(self):
+        data = _make_timeline_data([
+            {'trackIndex': 0, 'medias': [], 'parameters': {}},
+            {'trackIndex': 1, 'medias': [], 'parameters': {}},
+        ])
+        tl = Timeline(data)
+        t0 = tl.tracks[0]
+        assert t0.index == 0
+        t1 = tl.tracks[1]
+        assert t1.index == 1
+
+    def test_getitem_raises_for_missing_trackIndex(self):
+        data = _make_timeline_data([
+            {'trackIndex': 0, 'medias': [], 'parameters': {}},
+        ])
+        tl = Timeline(data)
+        with pytest.raises(KeyError):
+            tl.tracks[99]
