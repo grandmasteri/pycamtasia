@@ -4,7 +4,39 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 15 domains 1-3)
+
+**Leaf clips:**
+
+1. [verified] `PlaceholderMedia.width/height` read `attributes.width`/`attributes.height` but Camtasia schema uses `widthAttr`/`heightAttr`. Always returns 0.0 on real project data. (placeholder.py ~L30)
+
+2. [verified] `set_speed()` StitchedMedia segments inside Groups store duration as string fraction via `int(x) if x == int(x) else str(x)`. Top-level StitchedMedia uses `round()`. (base.py ~L469)
+
+3. [verified] `duration` setter StitchedMedia branch doesn't propagate start/duration to UnifiedMedia sub-clips inside. (base.py ~L169)
+
+4. [verified] `scalar` setter StitchedMedia branch same as #3. (base.py ~L341)
+
+**Compound clips:**
+
+5. [verified] `Group.ungroup()` doesn't recalculate mediaDuration for nested clips inside a nested Group after scaling duration/scalar. (group.py ~L327)
+
+6. [verified] `Group.ungroup()` doesn't call `_scale_keyframes_and_tracks()` on clips inside nested Groups. (group.py ~L326)
+
+7. [verified] `Group.ungroup()` doesn't call `_scale_keyframes_and_tracks()` on StitchedMedia inner segments inside nested Groups. (group.py ~L345)
+
+8. [verified] `Group.ungroup()` StitchedMedia inner segments inside nested Groups don't propagate `start` to UnifiedMedia sub-clips after re-layout. (group.py ~L371)
+
+9. [verified] `Group.set_internal_segment_speeds()` no validation that `segments` list is non-empty. Empty list produces clips with duration=0 and mediaDuration=0. (group.py ~L571)
+
+10. [withdrawn: cycle 14 Bug 8 fixed this in opposite direction \u2014 clearing effects is safer since effects may reference cleared segments] `StitchedMedia.clear_segments()` clears wrapper effects.
+
+**Track/timeline:**
+
+11. [verified] `Track.scale_all_durations()` doesn't scale `animationTracks.visual` keyframe timing. Effects scaled but animations not. (track.py scale_all_durations)
+
+12. [verified] `Track.scale_all_durations()` doesn't scale `parameters` keyframe timing (volume automation, TOC markers). (track.py scale_all_durations)
+
+13. [verified] `_TrackAccessor.__getitem__` pairs track data with attributes via array position. If `trackIndex` doesn't match array position (corrupt data), returns wrong attributes. (timeline.py _TrackAccessor)
 
 ## TechSmith Tutorial Analysis
 
