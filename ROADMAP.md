@@ -4,7 +4,41 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 6 domains 4-6)
+
+**Project/validation:**
+
+1. [verified] `merge_projects` cursor uses float round-trip via `duration_seconds`. Should accumulate in integer ticks directly from max clip end. (project.py ~L710)
+
+2. [verified] `add_background_music` keyframe #2 has `time=0` but should be `time=fade_in_ticks`. Malformed keyframe timing. (project.py ~L2032)
+
+3. [verified] `validate()` orphan check uses `self.timeline.all_clips()` which doesn't collect UnifiedMedia sub-clip `src` references. Media referenced only by video/audio children gets flagged as orphaned and deleted by compact(). (project.py ~L860)
+
+4. [verified] `_collect_ids()` doesn't recurse into UnifiedMedia video/audio sub-dicts. Nested Group/StitchedMedia inside UnifiedMedia have IDs unchecked. (validation.py)
+
+5. [verified] `_check_group_required_fields()` doesn't recurse into StitchedMedia/UnifiedMedia children. Nested Groups inside compound types skip required-fields check. (validation.py)
+
+6. [verified] `add_background_music` fade-out silently dropped when `total_ticks == fade_in_ticks + fade_out_ticks`. Off-by-one: `>` should be `>=`. (project.py ~L2043)
+
+**Operations:**
+
+7. [verified] `merge_tracks()` copies track attributes to wrong dict (`new_track._data` instead of `new_track._attributes`). Track properties read from `_attributes`, so copy is ineffective. (merge.py ~L100)
+
+8. [verified] `merge_tracks()` double-remaps `assetProperties.objects`. `_remap_clip_ids_with_map` handles them in first pass with partial map, then `_remap_asset_properties` re-remaps with complete map. Collisions where new ID == old ID get wrong target. (merge.py)
+
+9. [verified] `_walk_clips()` doesn't recurse into Group children of StitchedMedia. `replace_media_source` misses src references in Groups nested inside StitchedMedia. (template.py ~L47)
+
+10. [verified] `rescale_project()` overlap fix doesn't update `mediaDuration` for UnifiedMedia. UnifiedMedia in exclusion list, but duration was reduced; invariant broken. (speed.py ~L165)
+
+11. [verified] `apply_sync()` subtracts `mediaStart` from timeline positions instead of `group.start`. Wrong when Group is not at timeline start. (sync.py ~L183)
+
+**Supporting:**
+
+12. [verified] `trec_probe.py` `track.duration` can be a string; `dur_ms / 1000` raises TypeError. Missing `float()` conversion. (trec_probe.py ~L96, L112)
+
+13. [verified] `callouts.py text()/square()` include `color-opacity` in font dict. Not present in real Camtasia projects. Non-canonical output. (callouts.py)
+
+14. [verified] `media_bin.import_media` uses `or` operator for width/height/bit_depth which treats explicit 0 as falsy. (media_bin.py ~L310)
 
 ## TechSmith Tutorial Analysis
 
