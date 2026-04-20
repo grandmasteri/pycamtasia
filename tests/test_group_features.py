@@ -1214,7 +1214,7 @@ def _group(inner_clips: list[dict], duration: int = 600, scalar=1) -> dict[str, 
 
 # -- Bug 4: ungroup scales effects on UnifiedMedia sub-clips inside StitchedMedia --
 
-class TestBug4UngroupStitchedUnifiedEffects:
+class TestUngroupStitchedMediaUnifiedMediaEffectsScaled:
     def test_effects_on_video_sub_scaled(self):
         seg = _unified(uid=30, start=0, duration=300,
                        effects=[{"start": 0, "duration": 100, "name": "fx"}])
@@ -1237,7 +1237,7 @@ class TestBug4UngroupStitchedUnifiedEffects:
 
 # -- Bug 5: ungroup recursively scales nested Group --
 
-class TestBug5UngroupNestedGroup:
+class TestUngroupNestedGroupScaling:
     def test_nested_group_clips_scaled(self):
         inner_clip = {
             "id": 50, "_type": "VMFile", "start": 0, "duration": 300,
@@ -1262,7 +1262,7 @@ class TestBug5UngroupNestedGroup:
 
 # -- Bug 6: sync_internal_durations propagates scalar/mediaStart/start --
 
-class TestBug6SyncInternalDurationsPropagation:
+class TestSyncInternalDurationsPropagatesAllFields:
     def test_unified_in_stitched_gets_scalar_and_start(self):
         seg = _unified(uid=30, start=100, duration=300, scalar="1/2")
         seg["mediaStart"] = 50
@@ -1286,7 +1286,7 @@ class TestBug6SyncInternalDurationsPropagation:
 
 # -- Bug 7: merge_internal_tracks remaps duplicate IDs --
 
-class TestBug7MergeInternalTracksDuplicateIds:
+class TestMergeInternalTracksResolvesDuplicateIds:
     def test_duplicate_ids_remapped(self):
         clip_a = {
             "id": 1, "_type": "VMFile", "start": 0, "duration": 300,

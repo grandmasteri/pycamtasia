@@ -2278,7 +2278,7 @@ def _vmfile(uid: int, start: int, duration: int) -> dict[str, Any]:
 
 # -- Bug 8: shift_all_clips stores duration as int, not string --
 
-class TestBug8ShiftAllClipsDurationInt:
+class TestShiftAllClipsStoresIntDuration:
     def test_duration_is_int_after_negative_shift(self):
         start_ticks = seconds_to_ticks(1.0)
         dur_ticks = seconds_to_ticks(5.0)
@@ -2300,7 +2300,7 @@ class TestBug8ShiftAllClipsDurationInt:
 
 # -- Bug 9: remove_gap_at detects leading gap --
 
-class TestBug9RemoveGapAtLeadingGap:
+class TestRemoveGapAtHandlesLeadingGap:
     def test_leading_gap_removed(self):
         start_ticks = seconds_to_ticks(5.0)
         dur_ticks = seconds_to_ticks(3.0)
@@ -2329,7 +2329,7 @@ class TestBug9RemoveGapAtLeadingGap:
 
 # -- Bug 10: replace_clip no double-remap --
 
-class TestBug10ReplaceClipNoDoubleRemap:
+class TestReplaceClipNoDoubleRemapAssetProperties:
     def test_replace_clip_id_is_new_id(self):
         track = _make_track_cycle10()
         original = track.add_callout("A", 0, 5)

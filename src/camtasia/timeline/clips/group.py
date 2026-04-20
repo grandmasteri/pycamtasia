@@ -24,6 +24,27 @@ from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 from .base import BaseClip
 
 
+def _scale_keyframes_and_tracks(data_dict: dict[str, Any], scalar: Fraction) -> None:
+    """Scale parameters keyframes and animationTracks entries by scalar."""
+    for _, pval in data_dict.get('parameters', {}).items():
+        if isinstance(pval, dict) and 'keyframes' in pval:
+            for kf in pval['keyframes']:
+                for field in ('time', 'endTime'):
+                    if field in kf:
+                        kf[field] = round(Fraction(str(kf[field])) * scalar)
+                if 'duration' in kf:
+                    kf['duration'] = round(Fraction(str(kf['duration'])) * scalar)
+    for track_entry in data_dict.get('animationTracks', {}).get('visual', []):
+        for field in ('time', 'endTime', 'duration'):
+            if field in track_entry:
+                track_entry[field] = round(Fraction(str(track_entry[field])) * scalar)
+        if 'range' in track_entry and isinstance(track_entry['range'], list) and len(track_entry['range']) == 2:
+            track_entry['range'] = [
+                round(Fraction(str(track_entry['range'][0])) * scalar),
+                round(Fraction(str(track_entry['range'][1])) * scalar),
+            ]
+
+
 def _collect_all_ids(clip_data: dict[str, Any]) -> set[int]:
     """Recursively collect all 'id' fields from a clip and its nested structures."""
     ids: set[int] = set()
@@ -235,6 +256,16 @@ class Group(BaseClip):
                                     if 'duration' in effect:
                                         orig_dur = Fraction(str(effect['duration']))
                                         effect['duration'] = round(orig_dur * group_scalar)
+                    # Scale parameters keyframes and animationTracks
+                    _scale_keyframes_and_tracks(cloned_data, group_scalar)
+                    if cloned_data.get('_type') == 'UnifiedMedia':
+                        for sub_key in ('video', 'audio'):
+                            sub = cloned_data.get(sub_key)
+                            if sub is not None:
+                                _scale_keyframes_and_tracks(sub, group_scalar)
+                    if cloned_data.get('_type') == 'StitchedMedia':
+                        for inner in cloned_data.get('medias', []):
+                            _scale_keyframes_and_tracks(inner, group_scalar)
                     if cloned_data.get('_type') == 'StitchedMedia' and group_scalar != 1:
                         for inner in cloned_data.get('medias', []):
                             inner_orig_scalar = _parse_scalar(inner.get('scalar', 1))
@@ -278,7 +309,20 @@ class Group(BaseClip):
                         total_inner = sum(round(Fraction(str(inner['duration']))) for inner in cloned_data.get('medias', []))
                         if total_inner != wrapper_dur and cloned_data.get('medias'):
                             last = cloned_data['medias'][-1]
-                            last['duration'] = round(Fraction(str(last['duration']))) + (wrapper_dur - total_inner)
+                            old_dur = round(Fraction(str(last['duration'])))
+                            adjusted_dur = old_dur + (wrapper_dur - total_inner)
+                            last['duration'] = adjusted_dur
+                            last_scalar = _parse_scalar(last.get('scalar', 1))
+                            if last_scalar != 0:
+                                new_md = Fraction(adjusted_dur) / last_scalar
+                                last['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
+                            if last.get('_type') == 'UnifiedMedia':
+                                for sub_key in ('video', 'audio'):
+                                    sub = last.get(sub_key)
+                                    if sub is not None:
+                                        sub['duration'] = adjusted_dur
+                                        if 'mediaDuration' in last:
+                                            sub['mediaDuration'] = last['mediaDuration']
                     if cloned_data.get('_type') == 'Group' and group_scalar != 1:
                         for inner_track in cloned_data.get('tracks', []):
                             for nested_clip in inner_track.get('medias', []):
@@ -329,6 +373,11 @@ class Group(BaseClip):
                                     for inner_seg in nested_clip.get('medias', []):
                                         inner_seg['start'] = cursor
                                         cursor += round(Fraction(str(inner_seg.get('duration', 0))))
+                        # Recalculate nested Group's own mediaDuration after rounding
+                        nested_grp_scalar = _parse_scalar(cloned_data.get('scalar', 1))
+                        if nested_grp_scalar != 0:
+                            nested_md = Fraction(cloned_data['duration']) / nested_grp_scalar
+                            cloned_data['mediaDuration'] = int(nested_md) if nested_md == int(nested_md) else str(nested_md)
                 cloned_start = Fraction(str(cloned_data.get('start', 0)))
                 new_start = cloned_start + group_start
                 cloned_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
@@ -673,11 +722,11 @@ class Group(BaseClip):
                     break
 
         if next_id is None:
-            max_id = 0
+            all_ids: set[int] = set()
             for track in self._data.get('tracks', []):
                 for m in track.get('medias', []):
-                    max_id = max(max_id, m.get('id', 0))
-            next_id = max_id + 1
+                    all_ids.update(_collect_all_ids(m))
+            next_id = (max(all_ids) if all_ids else 0) + 1
         cid = next_id
 
         for src_start, src_end, tl_dur in segments:

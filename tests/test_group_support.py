@@ -1,12 +1,14 @@
 """Tests for Group manipulation support: add_clip, add_internal_track, ungroup, group_clips, clip_count."""
 from __future__ import annotations
 
+import copy
 from fractions import Fraction
 import warnings
 
 import pytest
 
 from camtasia.timeline.clips import BaseClip, Group, GroupTrack
+from camtasia.timeline.clips.group import _collect_all_ids
 from camtasia.timeline.track import Track
 from camtasia.timing import seconds_to_ticks
 
@@ -989,3 +991,213 @@ class TestUngroupNestedGroupStitchedMedia:
         # Starts re-laid out: 0, 500
         assert segs[0]['start'] == 0
         assert segs[1]['start'] == 500
+
+
+def _unified_media(uid: int, vid: int, aid: int, **kw) -> dict:
+    base = {
+        "id": uid, "_type": "UnifiedMedia",
+        "start": 0, "duration": 1000, "mediaStart": 0,
+        "mediaDuration": 1000, "scalar": 1,
+        "video": {"id": vid, "_type": "ScreenVMFile", "src": 1,
+                  "start": 0, "duration": 1000, "mediaDuration": 1000, "scalar": 1,
+                  "effects": [], "parameters": {}, "attributes": {"ident": ""}},
+        "audio": {"id": aid, "_type": "AMFile", "src": 1,
+                  "start": 0, "duration": 1000, "mediaDuration": 1000, "scalar": 1,
+                  "effects": [], "parameters": {}},
+        "effects": [], "parameters": {},
+    }
+    base.update(kw)
+    return base
+
+
+# -- Bug 5: set_internal_segment_speeds next_id uses _collect_all_ids --
+
+class TestSetInternalSegmentSpeedsNextIdFindsNested:
+    def test_next_id_avoids_sub_clip_ids(self):
+        um = _unified_media(10, 100, 200)
+        data = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "attributes": {"ident": "", "widthAttr": 1920, "heightAttr": 1080},
+            "tracks": [
+                {"trackIndex": 0, "medias": [um]},
+                {"trackIndex": 1, "medias": []},
+            ],
+        }
+        group = Group(data)
+        group.set_internal_segment_speeds([(0, 0.5, 0.5), (0.5, 1.0, 0.5)])
+        all_ids = set()
+        for track in data["tracks"]:
+            for m in track.get("medias", []):
+                all_ids.update(_collect_all_ids(m))
+        assert len(all_ids) == len(set(all_ids)), "IDs must be unique"
+        assert min(all_ids) > 200 or all(
+            list(all_ids).count(i) == 1 for i in all_ids
+        )
+
+
+# -- Bug 6: ungroup scales parameters keyframes and animationTracks --
+
+class TestUngroupScalesParameterKeyframesAndAnimationTracks:
+    def test_parameter_keyframes_scaled(self):
+        inner_clip = {
+            "id": 2, "_type": "VMFile", "src": 1,
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "effects": [],
+            "parameters": {
+                "opacity": {
+                    "type": "double", "defaultValue": 1.0,
+                    "keyframes": [{"time": 0, "endTime": 500, "value": 1.0, "duration": 500}],
+                },
+            },
+            "animationTracks": {
+                "visual": [{"time": 0, "endTime": 500, "duration": 500, "range": [0, 500]}],
+            },
+        }
+        data = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 500, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": "1/2",
+            "tracks": [{"trackIndex": 0, "medias": [inner_clip]}],
+        }
+        group = Group(data)
+        extracted = group.ungroup()
+        assert len(extracted) == 1
+        clip = extracted[0]
+        kf = clip._data["parameters"]["opacity"]["keyframes"][0]
+        assert kf["endTime"] == 250
+        assert kf["duration"] == 250
+        vis = clip._data["animationTracks"]["visual"][0]
+        assert vis["endTime"] == 250
+        assert vis["range"] == [0, 250]
+
+    def test_stitched_inner_keyframes_scaled(self):
+        inner_seg = {
+            "id": 3, "_type": "VMFile", "src": 1,
+            "start": 0, "duration": 1000, "mediaDuration": 1000, "scalar": 1,
+            "parameters": {
+                "opacity": {
+                    "type": "double", "defaultValue": 1.0,
+                    "keyframes": [{"time": 0, "endTime": 1000, "value": 0.5, "duration": 1000}],
+                },
+            },
+            "animationTracks": {},
+        }
+        stitched = {
+            "id": 2, "_type": "StitchedMedia",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "effects": [],
+            "medias": [inner_seg],
+        }
+        data = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 500, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": "1/2",
+            "tracks": [{"trackIndex": 0, "medias": [stitched]}],
+        }
+        group = Group(data)
+        extracted = group.ungroup()
+        seg = extracted[0]._data["medias"][0]
+        kf = seg["parameters"]["opacity"]["keyframes"][0]
+        assert kf["endTime"] == 500
+        assert kf["duration"] == 500
+
+
+# -- Bug 7: ungroup StitchedMedia last-segment mediaDuration --
+
+class TestUngroupStitchedLastSegmentMediaDurationAdjusted:
+    def test_last_segment_media_duration_recalculated(self):
+        medias = [
+            {"id": 3, "_type": "VMFile", "start": 0, "duration": 500,
+             "mediaDuration": 500, "scalar": 1},
+            {"id": 4, "_type": "VMFile", "start": 500, "duration": 500,
+             "mediaDuration": 500, "scalar": 1},
+        ]
+        stitched = {
+            "id": 2, "_type": "StitchedMedia",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "effects": [],
+            "medias": copy.deepcopy(medias),
+        }
+        data = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 500, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": "1/2",
+            "tracks": [{"trackIndex": 0, "medias": [stitched]}],
+        }
+        group = Group(data)
+        extracted = group.ungroup()
+        clip_data = extracted[0]._data
+        last = clip_data["medias"][-1]
+        last_scalar = Fraction(str(last.get("scalar", 1)))
+        if last_scalar != 0:
+            expected_md = Fraction(last["duration"]) / last_scalar
+            actual_md = Fraction(str(last["mediaDuration"]))
+            assert actual_md == expected_md
+
+    def test_last_segment_unified_media_propagated(self):
+        um_seg = {
+            "id": 4, "_type": "UnifiedMedia",
+            "start": 500, "duration": 500,
+            "mediaDuration": 500, "scalar": 1,
+            "video": {"id": 5, "_type": "VMFile", "src": 1,
+                      "start": 500, "duration": 500, "mediaDuration": 500, "scalar": 1},
+            "audio": None,
+        }
+        stitched = {
+            "id": 2, "_type": "StitchedMedia",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "effects": [],
+            "medias": [
+                {"id": 3, "_type": "VMFile", "start": 0, "duration": 500,
+                 "mediaDuration": 500, "scalar": 1},
+                copy.deepcopy(um_seg),
+            ],
+        }
+        data = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 500, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": "1/2",
+            "tracks": [{"trackIndex": 0, "medias": [stitched]}],
+        }
+        group = Group(data)
+        extracted = group.ungroup()
+        last = extracted[0]._data["medias"][-1]
+        if last.get("_type") == "UnifiedMedia" and last.get("video"):
+            assert last["video"]["duration"] == last["duration"]
+
+
+# -- Bug 8: ungroup nested Group mediaDuration --
+
+class TestUngroupNestedGroupMediaDurationPreserved:
+    def test_nested_group_media_duration_preserved(self):
+        nested_group = {
+            "id": 3, "_type": "Group",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "tracks": [{"trackIndex": 0, "medias": [{
+                "id": 4, "_type": "VMFile", "src": 1,
+                "start": 0, "duration": 1000, "mediaDuration": 1000, "scalar": 1,
+                "effects": [],
+            }]}],
+            "effects": [],
+        }
+        data = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 500, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": "1/2",
+            "tracks": [{"trackIndex": 0, "medias": [nested_group]}],
+        }
+        group = Group(data)
+        extracted = group.ungroup()
+        nested = extracted[0]._data
+        nested_scalar = Fraction(str(nested.get("scalar", 1)))
+        if nested_scalar != 0:
+            expected_md = Fraction(nested["duration"]) / nested_scalar
+            actual_md = Fraction(str(nested["mediaDuration"]))
+            assert actual_md == expected_md

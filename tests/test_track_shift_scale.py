@@ -439,3 +439,138 @@ def test_scale_all_durations_group_unified_media_effects() -> None:
     video_eff = data['medias'][0]['tracks'][0]['medias'][0]['video']['effects'][0]
     assert video_eff['start'] == 40  # 20 * 2
     assert video_eff['duration'] == 60  # 30 * 2
+
+
+def _make_track_cycle13(medias: list[dict]) -> Track:
+    attrs = {"ident": "test", "audioMuted": False, "videoHidden": False}
+    data = {"trackIndex": 0, "medias": medias, "transitions": []}
+    return Track(attrs, data)
+
+
+# -- Bug 9: scale_all_durations Group/StitchedMedia scalar corruption --
+
+class TestScaleAllDurationsPreservesGroupScalar:
+    def test_group_media_duration_equals_duration(self):
+        group = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "tracks": [{"trackIndex": 0, "medias": [{
+                "id": 2, "_type": "VMFile", "src": 1,
+                "start": 0, "duration": 1000, "mediaDuration": 1000, "scalar": 1,
+            }]}],
+        }
+        track = _make_track_cycle13([group])
+        track.scale_all_durations(2.0)
+        assert group["mediaDuration"] == group["duration"]
+        assert group["duration"] == 2000
+
+    def test_stitched_media_duration_equals_duration(self):
+        stitched = {
+            "id": 1, "_type": "StitchedMedia",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "medias": [
+                {"id": 2, "_type": "VMFile", "start": 0, "duration": 500,
+                 "mediaDuration": 500, "scalar": 1},
+                {"id": 3, "_type": "VMFile", "start": 500, "duration": 500,
+                 "mediaDuration": 500, "scalar": 1},
+            ],
+        }
+        track = _make_track_cycle13([stitched])
+        track.scale_all_durations(2.0)
+        assert stitched["mediaDuration"] == stitched["duration"]
+        assert stitched["duration"] == 2000
+
+
+# -- Bug 10: scale_all_durations Group internal clips not scaled --
+
+class TestScaleAllDurationsScalesGroupInternalClips:
+    def test_inner_clip_timing_scaled(self):
+        group = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 2000, "mediaStart": 0,
+            "mediaDuration": 2000, "scalar": 1,
+            "tracks": [{"trackIndex": 0, "medias": [
+                {"id": 2, "_type": "VMFile", "src": 1,
+                 "start": 0, "duration": 1000, "mediaStart": 0,
+                 "mediaDuration": 1000, "scalar": 1, "effects": []},
+                {"id": 3, "_type": "VMFile", "src": 1,
+                 "start": 1000, "duration": 1000, "mediaStart": 1000,
+                 "mediaDuration": 1000, "scalar": 1, "effects": []},
+            ]}],
+        }
+        track = _make_track_cycle13([group])
+        track.scale_all_durations(2.0)
+        inner = group["tracks"][0]["medias"]
+        assert inner[0]["start"] == 0
+        assert inner[0]["duration"] == 2000
+        assert inner[0]["mediaStart"] == 0
+        assert inner[1]["start"] == 2000
+        assert inner[1]["duration"] == 2000
+        assert inner[1]["mediaStart"] == 2000
+
+    def test_inner_imfile_keeps_media_duration_1(self):
+        group = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "tracks": [{"trackIndex": 0, "medias": [{
+                "id": 2, "_type": "IMFile", "src": 1,
+                "start": 0, "duration": 1000, "mediaStart": 0,
+                "mediaDuration": 1, "scalar": 1, "effects": [],
+            }]}],
+        }
+        track = _make_track_cycle13([group])
+        track.scale_all_durations(2.0)
+        inner = group["tracks"][0]["medias"][0]
+        assert inner["mediaDuration"] == 1
+        assert inner["duration"] == 2000
+
+    def test_inner_unified_media_propagated(self):
+        um = {
+            "id": 2, "_type": "UnifiedMedia",
+            "start": 0, "duration": 1000, "mediaStart": 100,
+            "mediaDuration": 1000, "scalar": 1,
+            "video": {"id": 3, "_type": "VMFile", "src": 1,
+                      "start": 0, "duration": 1000, "mediaStart": 100,
+                      "mediaDuration": 1000, "scalar": 1},
+            "audio": {"id": 4, "_type": "AMFile", "src": 1,
+                      "start": 0, "duration": 1000, "mediaStart": 100,
+                      "mediaDuration": 1000, "scalar": 1},
+            "effects": [],
+        }
+        group = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "tracks": [{"trackIndex": 0, "medias": [um]}],
+        }
+        track = _make_track_cycle13([group])
+        track.scale_all_durations(2.0)
+        inner = group["tracks"][0]["medias"][0]
+        assert inner["duration"] == 2000
+        assert inner["video"]["duration"] == 2000
+        assert inner["video"]["start"] == 0
+        assert inner["video"]["mediaStart"] == 200
+        assert inner["audio"]["duration"] == 2000
+        assert inner["audio"]["start"] == 0
+        assert inner["audio"]["mediaStart"] == 200
+
+    def test_inner_effects_scaled(self):
+        group = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "tracks": [{"trackIndex": 0, "medias": [{
+                "id": 2, "_type": "VMFile", "src": 1,
+                "start": 0, "duration": 1000, "mediaStart": 0,
+                "mediaDuration": 1000, "scalar": 1,
+                "effects": [{"effectName": "Glow", "start": 100, "duration": 200}],
+            }]}],
+        }
+        track = _make_track_cycle13([group])
+        track.scale_all_durations(2.0)
+        eff = group["tracks"][0]["medias"][0]["effects"][0]
+        assert eff["start"] == 200
+        assert eff["duration"] == 400

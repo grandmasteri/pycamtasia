@@ -313,6 +313,8 @@ When adversarial reviewers report bugs, follow this workflow:
    - Claiming fixes that weren't actually applied — verify each fix via `git diff src/ --stat` and spot-check with `grep` that the change landed.
    - Appending imports mid-file causing E402 violations — append imports to the top-of-file import block.
    - Redefining helper functions with same name as existing ones in destination file — rename the appended helper to avoid conflicts.
+   - **Naming test classes `TestBugN...` based on the temporary cycle numbering** (e.g., `TestBug5NextIdCollectsAllIds`). This is ambiguous across cycles (Bug 5 in cycle 10 ≠ Bug 5 in cycle 13), creates duplicates in the same file, and becomes meaningless once the cycle is over. Always use descriptive names that describe the behavior being tested (e.g., `TestSetInternalSegmentSpeedsNextIdFindsNested`). When fixing this in a subagent's output, rename all `TestBugN...` classes to descriptive names before committing.
+   - **Mechanically appending tests to module-mirroring files without checking for overlap with existing test classes** — before appending a new test class, check if an existing class in the destination file already covers the same method/behavior. If so, add the new tests as methods on that existing class rather than creating a duplicate class.
 
 This prevents bugs from being silently lost if the agent gets interrupted, context-compacted, or forgets to circle back. The ROADMAP is the source of truth.
 

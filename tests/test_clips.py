@@ -2132,7 +2132,7 @@ def _stitched(segments: list[dict], duration: int | None = None) -> dict:
 
 # -- Bug 1: Group set_speed stores duration/start as int, not string --
 
-class TestBug1GroupSetSpeedIntDuration:
+class TestSetSpeedGroupStoresIntDuration:
     def test_group_duration_is_int_after_fractional_speed(self):
         inner = _vmfile(start=0, duration=600)
         grp = _group([inner], duration=600)
@@ -2160,7 +2160,7 @@ class TestBug1GroupSetSpeedIntDuration:
 
 # -- Bug 2: StitchedMedia cursor uses round --
 
-class TestBug2StitchedCursorRound:
+class TestSetSpeedStitchedCursorUsesRound:
     def test_stitched_cursor_uses_round(self):
         seg1 = {"id": 21, "_type": "VMFile", "start": 0, "duration": 100,
                 "mediaDuration": 100, "scalar": 1, "src": 1}
@@ -2177,7 +2177,7 @@ class TestBug2StitchedCursorRound:
 
 # -- Bug 3: clear_keyframes('opacity') clears animationTracks.visual --
 
-class TestBug3ClearKeyframesOpacity:
+class TestClearKeyframesOpacityClearsAnimationTracks:
     def test_clear_opacity_clears_animation_tracks_visual(self):
         d = _vmfile()
         d["parameters"] = {
@@ -2290,3 +2290,175 @@ class TestAnimateFadeOutLongerThanFadeInLeaves:
         kfs = opacity.get('keyframes', [])
         for kf in kfs:
             assert kf.get('time', 0) >= 0
+
+
+def _group_with_vmfile_inner() -> dict:
+    """Group containing a VMFile inner clip."""
+    return {
+        "id": 1, "_type": "Group",
+        "start": 0, "duration": 1000, "mediaStart": 0,
+        "mediaDuration": 1000, "scalar": 1,
+        "tracks": [{"trackIndex": 0, "medias": [{
+            "id": 2, "_type": "VMFile", "src": 1,
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+        }]}],
+    }
+
+
+def _group_with_callout_inner() -> dict:
+    """Group containing a Callout inner clip."""
+    return {
+        "id": 1, "_type": "Group",
+        "start": 0, "duration": 1000, "mediaStart": 0,
+        "mediaDuration": 1000, "scalar": 1,
+        "tracks": [{"trackIndex": 0, "medias": [{
+            "id": 2, "_type": "Callout",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+        }]}],
+    }
+
+
+# -- Bug 1: Group inner mediaDuration recalculated for regular clips --
+
+class TestSetSpeedGroupRecalculatesInnerMediaDuration:
+    def test_vmfile_inner_gets_media_duration_recalculated(self):
+        data = _group_with_vmfile_inner()
+        clip = BaseClip(data)
+        clip.set_speed(2.0)
+        inner = data["tracks"][0]["medias"][0]
+        scalar = Fraction(str(inner["scalar"]))
+        assert scalar != 0
+        expected_md = Fraction(inner["duration"]) / scalar
+        actual_md = Fraction(str(inner["mediaDuration"]))
+        assert actual_md == expected_md
+
+    def test_callout_inner_gets_media_duration_recalculated(self):
+        data = _group_with_callout_inner()
+        clip = BaseClip(data)
+        clip.set_speed(0.5)
+        inner = data["tracks"][0]["medias"][0]
+        scalar = Fraction(str(inner["scalar"]))
+        expected_md = Fraction(inner["duration"]) / scalar
+        actual_md = Fraction(str(inner["mediaDuration"]))
+        assert actual_md == expected_md
+
+    def test_imfile_inner_keeps_media_duration_1(self):
+        data = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 1000, "mediaStart": 0,
+            "mediaDuration": 1000, "scalar": 1,
+            "tracks": [{"trackIndex": 0, "medias": [{
+                "id": 2, "_type": "IMFile", "src": 1,
+                "start": 0, "duration": 1000, "mediaStart": 0,
+                "mediaDuration": 1, "scalar": 1,
+            }]}],
+        }
+        clip = BaseClip(data)
+        clip.set_speed(2.0)
+        assert data["tracks"][0]["medias"][0]["mediaDuration"] == 1
+
+
+# -- Bug 2: UnifiedMedia is_audio --
+
+class TestIsAudioStandaloneUnifiedMedia:
+    def test_audio_only_unified_media(self):
+        data = {
+            "id": 1, "_type": "UnifiedMedia",
+            "video": None,
+            "audio": {"id": 2, "_type": "AMFile"},
+            "start": 0, "duration": 1000,
+        }
+        clip = BaseClip(data)
+        assert clip.is_audio is True
+
+    def test_video_unified_media_not_audio(self):
+        data = {
+            "id": 1, "_type": "UnifiedMedia",
+            "video": {"id": 2, "_type": "VMFile"},
+            "audio": {"id": 3, "_type": "AMFile"},
+            "start": 0, "duration": 1000,
+        }
+        clip = BaseClip(data)
+        assert clip.is_audio is False
+
+    def test_no_video_key_unified_media(self):
+        data = {
+            "id": 1, "_type": "UnifiedMedia",
+            "audio": {"id": 2, "_type": "AMFile"},
+            "start": 0, "duration": 1000,
+        }
+        clip = BaseClip(data)
+        assert clip.is_audio is True
+
+
+# -- Bug 3: StitchedMedia set_speed start/duration consistency --
+
+class TestSetSpeedStitchedStartsMatchDurations:
+    def test_starts_are_consistent_with_durations(self):
+        data = {
+            "id": 1, "_type": "StitchedMedia",
+            "start": 0, "duration": 3000, "mediaStart": 0,
+            "mediaDuration": 3000, "scalar": 1,
+            "medias": [
+                {"id": 2, "_type": "VMFile", "start": 0, "duration": 1000,
+                 "mediaDuration": 1000, "scalar": 1},
+                {"id": 3, "_type": "VMFile", "start": 1000, "duration": 1000,
+                 "mediaDuration": 1000, "scalar": 1},
+                {"id": 4, "_type": "VMFile", "start": 2000, "duration": 1000,
+                 "mediaDuration": 1000, "scalar": 1},
+            ],
+        }
+        clip = BaseClip(data)
+        clip.set_speed(3.0)
+        medias = data["medias"]
+        for i in range(len(medias) - 1):
+            assert medias[i]["start"] + medias[i]["duration"] == medias[i + 1]["start"]
+        assert data["duration"] == sum(m["duration"] for m in medias)
+
+    def test_durations_are_always_int(self):
+        data = {
+            "id": 1, "_type": "StitchedMedia",
+            "start": 0, "duration": 3000, "mediaStart": 0,
+            "mediaDuration": 3000, "scalar": 1,
+            "medias": [
+                {"id": 2, "_type": "VMFile", "start": 0, "duration": 1000,
+                 "mediaDuration": 1000, "scalar": 1},
+                {"id": 3, "_type": "VMFile", "start": 1000, "duration": 2000,
+                 "mediaDuration": 2000, "scalar": 1},
+            ],
+        }
+        clip = BaseClip(data)
+        clip.set_speed(3.0)
+        for m in data["medias"]:
+            assert isinstance(m["duration"], int)
+            assert isinstance(m["start"], int)
+
+
+# -- Bug 4: Group→StitchedMedia int truncation --
+
+class TestSetSpeedGroupNestedStitchedUsesRound:
+    def test_stitched_inner_starts_use_round(self):
+        data = {
+            "id": 1, "_type": "Group",
+            "start": 0, "duration": 6000, "mediaStart": 0,
+            "mediaDuration": 6000, "scalar": 1,
+            "tracks": [{"trackIndex": 0, "medias": [{
+                "id": 2, "_type": "StitchedMedia",
+                "start": 0, "duration": 6000, "mediaStart": 0,
+                "mediaDuration": 6000, "scalar": 1,
+                "medias": [
+                    {"id": 3, "_type": "VMFile", "start": 0, "duration": 3000,
+                     "mediaDuration": 3000, "scalar": 1},
+                    {"id": 4, "_type": "VMFile", "start": 3000, "duration": 3000,
+                     "mediaDuration": 3000, "scalar": 1},
+                ],
+            }]}],
+        }
+        clip = BaseClip(data)
+        clip.set_speed(3.0)
+        inner_stitched = data["tracks"][0]["medias"][0]
+        medias = inner_stitched["medias"]
+        for i in range(len(medias) - 1):
+            assert medias[i]["start"] + round(Fraction(str(medias[i]["duration"]))) == medias[i + 1]["start"]

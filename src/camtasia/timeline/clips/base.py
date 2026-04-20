@@ -59,6 +59,8 @@ class BaseClip:
         """Whether this clip is an audio clip."""
         if self.clip_type == ClipType.AUDIO:
             return True
+        if self.clip_type == 'UnifiedMedia':
+            return self._data.get('video') is None
         if self.clip_type == 'StitchedMedia':
             medias = self._data.get('medias', [])
             if not medias:
@@ -352,18 +354,17 @@ class BaseClip:
                 # Keep inner's own mediaDuration; recalculate duration from it
                 inner_md = Fraction(str(inner.get('mediaDuration', 0)))
                 new_dur = inner_md * scalar_fraction
-                inner['duration'] = int(new_dur) if new_dur == int(new_dur) else str(new_dur)
+                inner['duration'] = round(new_dur)
                 inner.setdefault('metadata', {})['clipSpeedAttribute'] = {
                     'type': 'bool', 'value': scalar_fraction != 1
                 }
-            # Re-layout starts sequentially
+            # Re-layout starts sequentially using stored int durations
             cursor = 0
             for inner in self._data.get('medias', []):
                 inner['start'] = cursor
-                dur_val = inner['duration']
-                cursor += round(Fraction(str(dur_val)))
+                cursor += int(inner['duration'])
             # Compute new wrapper duration as sum of segment durations
-            new_wrapper_dur = sum(round(Fraction(str(inner['duration']))) for inner in self._data.get('medias', []))
+            new_wrapper_dur = cursor
             self._data['duration'] = new_wrapper_dur
             # Recalculate mediaDuration to maintain invariant
             if scalar_fraction != 0:
@@ -394,6 +395,9 @@ class BaseClip:
                     inner_clip_data['duration'] = round(new_inner_dur)
                     if inner_clip_data.get('_type') in ('IMFile', 'ScreenIMFile'):
                         inner_clip_data['mediaDuration'] = 1
+                    elif inner_clip_data.get('_type') not in ('UnifiedMedia', 'StitchedMedia', 'Group') and scalar_fraction != 0:
+                            inner_md = Fraction(inner_clip_data['duration']) / scalar_fraction
+                            inner_clip_data['mediaDuration'] = int(inner_md) if inner_md == int(inner_md) else str(inner_md)
                     # Set clipSpeedAttribute metadata
                     inner_clip_data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
                     # Propagate to UnifiedMedia sub-dicts
@@ -422,7 +426,7 @@ class BaseClip:
                         cursor = 0
                         for inner_seg in inner_clip_data.get('medias', []):
                             inner_seg['start'] = cursor
-                            cursor += int(Fraction(str(inner_seg['duration'])))
+                            cursor += round(Fraction(str(inner_seg['duration'])))
         return self
 
     @property

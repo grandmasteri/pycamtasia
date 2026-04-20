@@ -2493,6 +2493,8 @@ class Track:
             if media_dict.get('_type') in ('IMFile', 'ScreenIMFile'):
                 media_dict['mediaDuration'] = 1
                 media_dict['scalar'] = 1
+            elif media_dict.get('_type') in ('Group', 'StitchedMedia'):
+                media_dict['mediaDuration'] = media_dict['duration']
             _propagate_start_to_unified(media_dict)
             if media_dict.get('_type') == 'UnifiedMedia':
                 for sub_key in ('video', 'audio'):
@@ -2514,6 +2516,18 @@ class Track:
             if media_dict.get('_type') == 'Group':
                 for inner_track in media_dict.get('tracks', []):
                     for inner_clip in inner_track.get('medias', []):
+                        for field in ('start', 'duration', 'mediaStart'):
+                            if field in inner_clip:
+                                inner_clip[field] = int(Fraction(str(inner_clip[field])) * factor)
+                        if inner_clip.get('_type') in ('IMFile', 'ScreenIMFile'):
+                            inner_clip['mediaDuration'] = 1
+                        if inner_clip.get('_type') == 'UnifiedMedia':
+                            for sub_key in ('video', 'audio'):
+                                sub = inner_clip.get(sub_key)
+                                if sub is not None:
+                                    sub['start'] = inner_clip['start']
+                                    sub['duration'] = inner_clip['duration']
+                                    sub['mediaStart'] = inner_clip.get('mediaStart', 0)
                         for effect in inner_clip.get('effects', []):
                             if 'start' in effect:
                                 effect['start'] = int(effect['start'] * factor)

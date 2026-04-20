@@ -1129,7 +1129,7 @@ class TestBuildSectionTimelineStaleTransitions:
                 pytest.fail("Stale transition c1↔c2 was not removed")
 
 
-class TestBug11BuildSectionTimelineIdRemap:
+class TestBuildSectionTimelineRemapsCompoundClipIds:
     def test_compound_clip_ids_remapped_on_track_move(self, project):
         tl = project.timeline
         t0 = tl.tracks[0]
