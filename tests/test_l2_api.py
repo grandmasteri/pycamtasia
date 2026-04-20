@@ -163,7 +163,7 @@ class TestClearAnimations:
         clip = IMFile(_clip_data())
         clip.fade_in(1.0)
         clip.clear_animations()
-        assert clip._data["animationTracks"]["visual"] == []
+        assert clip._data["animationTracks"] == {}
 
     def test_returns_self(self):
         clip = IMFile(_clip_data())

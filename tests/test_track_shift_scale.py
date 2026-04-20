@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 
 from camtasia.timeline.track import Track
-from camtasia.timing import seconds_to_ticks
+from camtasia.timing import EDIT_RATE, seconds_to_ticks
 
 
 def _make_track() -> Track:
@@ -332,3 +332,54 @@ class TestScaleAllDurationsUnifiedMediaEffects:
         audio_eff = data['medias'][0]['audio']['effects'][0]
         assert audio_eff['start'] == EDIT_RATE * 2
         assert audio_eff['duration'] == EDIT_RATE * 6
+
+
+# ---------------------------------------------------------------------------
+# Bug 9: shift_all_clips must use int(round(...)) consistently
+# ---------------------------------------------------------------------------
+
+class TestShiftAllClipsRoundConsistency:
+    def test_clamped_duration_uses_round(self):
+        """When clamping, duration must use int(round()) not int() then round() separately."""
+        track = _make_track()
+        # Add a clip at start=1s, duration=3s
+        track._data['medias'].append({
+            '_type': 'VMFile', 'id': 1, 'src': 1,
+            'start': seconds_to_ticks(1.0),
+            'duration': seconds_to_ticks(3.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(3.0), 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        })
+        # Shift backward by 1.5s — clip at 1s gets clamped
+        track.shift_all_clips(-1.5)
+        m = track._data['medias'][0]
+        # New start should be 0, duration should be 3s - 0.5s = 2.5s
+        assert m['start'] == 0
+        expected_dur = seconds_to_ticks(2.5)
+        assert m['duration'] == expected_dur
+
+
+# ---------------------------------------------------------------------------
+# Bug 11: scale_all_durations must scale transition start
+# ---------------------------------------------------------------------------
+
+class TestScaleAllDurationsTransitionStart:
+    def test_transition_start_is_scaled(self):
+        """scale_all_durations must scale transition 'start' field, not just 'duration'."""
+        data: dict[str, Any] = {
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'VMFile', 'id': 1, 'src': 1,
+                'start': 0, 'duration': EDIT_RATE * 10,
+                'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            }],
+            'transitions': [
+                {'start': EDIT_RATE * 2, 'duration': EDIT_RATE * 1, 'leftMedia': 1, 'rightMedia': None},
+            ],
+        }
+        track = Track({'ident': 'T'}, data)
+        track.scale_all_durations(2.0)
+        t = data['transitions'][0]
+        assert t['start'] == EDIT_RATE * 4
+        assert t['duration'] == EDIT_RATE * 2

@@ -366,7 +366,7 @@ class BaseClip:
             orig_wrapper_dur = wrapper_dur / wrapper_scalar if wrapper_scalar != 0 else wrapper_dur
             grp_new_dur = orig_wrapper_dur * scalar_fraction
             self._data['duration'] = round(grp_new_dur)  # type: ignore[typeddict-item]
-            self._data['scalar'] = int(scalar_fraction) if scalar_fraction == int(scalar_fraction) else str(scalar_fraction)
+            self._data['scalar'] = 1 if scalar_fraction == 1 else str(scalar_fraction)
             # Recalculate mediaDuration to maintain invariant
             if scalar_fraction != 0:
                 grp_md = Fraction(str(self._data['duration'])) / scalar_fraction
@@ -378,9 +378,11 @@ class BaseClip:
                     orig_inner_start = Fraction(str(inner_clip_data.get('start', 0))) / wrapper_scalar if wrapper_scalar != 0 else Fraction(str(inner_clip_data.get('start', 0)))
                     new_inner_dur = orig_inner_dur * scalar_fraction
                     new_inner_start = orig_inner_start * scalar_fraction
-                    inner_clip_data['scalar'] = int(scalar_fraction) if scalar_fraction == int(scalar_fraction) else str(scalar_fraction)
+                    inner_clip_data['scalar'] = 1 if scalar_fraction == 1 else str(scalar_fraction)
                     inner_clip_data['start'] = round(new_inner_start)
                     inner_clip_data['duration'] = round(new_inner_dur)
+                    if inner_clip_data.get('_type') in ('IMFile', 'ScreenIMFile'):
+                        inner_clip_data['mediaDuration'] = 1
                     # Set clipSpeedAttribute metadata
                     inner_clip_data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
                     # Propagate to UnifiedMedia sub-dicts
@@ -402,7 +404,7 @@ class BaseClip:
                             seg_scalar_curr = parse_scalar(inner_seg.get('scalar', 1))
                             seg_orig_dur = Fraction(str(inner_seg.get('duration', 0))) / seg_scalar_curr if seg_scalar_curr != 0 else Fraction(str(inner_seg.get('duration', 0)))
                             seg_new_dur = seg_orig_dur * scalar_fraction
-                            inner_seg['scalar'] = int(scalar_fraction) if scalar_fraction == int(scalar_fraction) else str(scalar_fraction)
+                            inner_seg['scalar'] = 1 if scalar_fraction == 1 else str(scalar_fraction)
                             inner_seg['duration'] = int(seg_new_dur) if seg_new_dur == int(seg_new_dur) else str(seg_new_dur)
                             inner_seg.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
                         # Re-layout starts sequentially
@@ -957,15 +959,16 @@ class BaseClip:
         return self
 
     def clear_animations(self) -> Self:
-        """Remove all visual animation entries from the clip.
+        """Clear all animations: opacity keyframes, scale/position/rotation/crop/volume keyframes, and visual animation tracks.
 
         Returns:
             ``self`` for chaining.
         """
-        self._data.setdefault('animationTracks', {})['visual'] = []
-        op = self._data.get('parameters', {}).get('opacity')
-        if isinstance(op, dict):
-            op.pop('keyframes', None)
+        params = self._data.get('parameters', {})
+        for p in params.values():
+            if isinstance(p, dict):
+                p.pop('keyframes', None)
+        self._data['animationTracks'] = {}
         return self
 
     # ------------------------------------------------------------------

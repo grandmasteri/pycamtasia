@@ -184,3 +184,21 @@ class TestFormatDurationCsOverflow:
         ticks = round(59.995 * EDIT_RATE)
         result = format_duration(ticks)
         assert '0:60.00' not in result
+
+
+# -- Bug 1: clear_animations clears ALL parameter keyframes --
+
+def test_clear_animations_clears_all_parameter_keyframes() -> None:
+    """clear_animations must remove keyframes from all parameters, not just opacity."""
+    d = _vmfile_dict(parameters={
+        "opacity": {"type": "double", "defaultValue": 1.0, "keyframes": [{"time": 0, "value": 0.5}]},
+        "scale0": {"type": "double", "defaultValue": 1.0, "keyframes": [{"time": 0, "value": 2.0}]},
+        "translation0": {"type": "double", "defaultValue": 0.0, "keyframes": [{"time": 0, "value": 100}]},
+        "volume": {"type": "double", "defaultValue": 1.0, "keyframes": [{"time": 0, "value": 0.0}]},
+    }, animationTracks={"visual": [{"endTime": 100}]})
+    clip = VMFile(d)
+    clip.clear_animations()
+    for param_name in ("opacity", "scale0", "translation0", "volume"):
+        param = d["parameters"][param_name]
+        assert "keyframes" not in param, f"{param_name} still has keyframes"
+    assert d["animationTracks"] == {}

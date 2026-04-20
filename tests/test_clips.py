@@ -1417,7 +1417,7 @@ class TestBaseClipFadeCoverage:
         clip = BaseClip(data)
         actual_result = clip.clear_animations()
         assert actual_result is clip
-        assert data["animationTracks"]["visual"] == []
+        assert data["animationTracks"] == {}
 
 
 class TestBaseClipEffectsCoverage:
@@ -2200,3 +2200,54 @@ class TestBug3ClearKeyframesOpacity:
         clip = BaseClip(d)
         clip.clear_keyframes("scale0")
         assert clip._data["animationTracks"]["visual"] == [{"time": 0, "value": 1.0}]
+
+
+# -- Bug 2: set_speed Group inner IMFile clips get mediaDuration=1 --
+
+def test_set_speed_group_imfile_media_duration_guard() -> None:
+    """set_speed on a Group must set mediaDuration=1 for inner IMFile clips."""
+    inner_clip = {
+        "_type": "IMFile", "id": 10, "src": 1,
+        "start": 0, "duration": EDIT_RATE, "mediaStart": 0,
+        "mediaDuration": 1, "scalar": 1,
+        "parameters": {}, "effects": [], "metadata": {}, "animationTracks": {},
+    }
+    group_data = {
+        "_type": "Group", "id": 1,
+        "start": 0, "duration": EDIT_RATE, "mediaStart": 0,
+        "mediaDuration": EDIT_RATE, "scalar": 1,
+        "parameters": {}, "effects": [], "metadata": {}, "animationTracks": {},
+        "attributes": {"ident": "G"},
+        "tracks": [{"trackIndex": 0, "medias": [inner_clip]}],
+    }
+    from camtasia.timeline.clips import Group
+    group = Group(group_data)
+    group.set_speed(2.0)
+    assert inner_clip["mediaDuration"] == 1
+
+
+# -- Bug 3: set_speed Group scalar uses consistent format --
+
+def test_set_speed_group_scalar_format_consistency() -> None:
+    """set_speed on a Group must use `1` (not `int(scalar_fraction)`) for speed=1.0."""
+    inner_clip = {
+        "_type": "VMFile", "id": 10, "src": 1,
+        "start": 0, "duration": EDIT_RATE * 2, "mediaStart": 0,
+        "mediaDuration": EDIT_RATE * 2, "scalar": 1,
+        "parameters": {}, "effects": [], "metadata": {}, "animationTracks": {},
+    }
+    group_data = {
+        "_type": "Group", "id": 1,
+        "start": 0, "duration": EDIT_RATE * 2, "mediaStart": 0,
+        "mediaDuration": EDIT_RATE * 2, "scalar": 1,
+        "parameters": {}, "effects": [], "metadata": {}, "animationTracks": {},
+        "attributes": {"ident": "G"},
+        "tracks": [{"trackIndex": 0, "medias": [inner_clip]}],
+    }
+    from camtasia.timeline.clips import Group
+    group = Group(group_data)
+    # Set speed to 2x then back to 1x
+    group.set_speed(2.0)
+    group.set_speed(1.0)
+    assert group_data["scalar"] == 1
+    assert inner_clip["scalar"] == 1

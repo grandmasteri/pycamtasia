@@ -855,3 +855,137 @@ def test_ungroup_propagates_to_unified_media_inside_stitched():
     assert inner_seg['video']['duration'] == inner_seg['duration']
     assert inner_seg['audio']['scalar'] == inner_seg['scalar']
     assert inner_seg['audio']['duration'] == inner_seg['duration']
+
+
+# ---------------------------------------------------------------------------
+# Bug 5: ungroup nested Group must scale effects
+# ---------------------------------------------------------------------------
+
+class TestUngroupNestedGroupEffects:
+    def test_nested_group_effects_scaled(self) -> None:
+        """When ungrouping a Group containing a nested Group with scalar != 1,
+        effects on nested clips must have their start/duration scaled."""
+        group_data = {
+            '_type': 'Group', 'id': 1,
+            'start': 0, 'duration': 1000, 'mediaStart': 0,
+            'mediaDuration': 1000, 'scalar': '1/2',
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {'ident': 'outer'},
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                '_type': 'Group', 'id': 2,
+                'start': 0, 'duration': 1000, 'mediaStart': 0,
+                'mediaDuration': 1000, 'scalar': 1,
+                'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                'attributes': {'ident': 'inner'},
+                'effects': [],
+                'tracks': [{'trackIndex': 0, 'medias': [{
+                    '_type': 'VMFile', 'id': 10, 'src': 1,
+                    'start': 0, 'duration': 1000, 'mediaStart': 0,
+                    'mediaDuration': 1000, 'scalar': 1,
+                    'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                    'effects': [{'effectName': 'Glow', 'start': 100, 'duration': 200}],
+                }]}],
+            }]}],
+        }
+        group = Group(group_data)
+        clips = group.ungroup()
+        nested_clip = clips[0]._data['tracks'][0]['medias'][0]
+        eff = nested_clip['effects'][0]
+        # scalar is 1/2, so effect start 100 * 1/2 = 50, duration 200 * 1/2 = 100
+        assert eff['start'] == 50
+        assert eff['duration'] == 100
+
+
+# ---------------------------------------------------------------------------
+# Bug 6: ungroup nested Group must propagate to UnifiedMedia
+# ---------------------------------------------------------------------------
+
+class TestUngroupNestedGroupUnifiedMedia:
+    def test_nested_group_unified_media_propagated(self) -> None:
+        """When ungrouping a nested Group, UnifiedMedia sub-clips must have start propagated."""
+        group_data = {
+            '_type': 'Group', 'id': 1,
+            'start': 0, 'duration': 1000, 'mediaStart': 0,
+            'mediaDuration': 1000, 'scalar': '1/2',
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {'ident': 'outer'},
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                '_type': 'Group', 'id': 2,
+                'start': 200, 'duration': 800, 'mediaStart': 0,
+                'mediaDuration': 800, 'scalar': 1,
+                'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                'attributes': {'ident': 'inner'},
+                'effects': [],
+                'tracks': [{'trackIndex': 0, 'medias': [{
+                    '_type': 'UnifiedMedia', 'id': 10, 'src': 1,
+                    'start': 0, 'duration': 800, 'mediaStart': 0,
+                    'mediaDuration': 800, 'scalar': 1,
+                    'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                    'effects': [],
+                    'video': {'_type': 'VMFile', 'id': 11, 'src': 1,
+                              'start': 0, 'duration': 800, 'mediaDuration': 800,
+                              'mediaStart': 0, 'scalar': 1},
+                    'audio': {'_type': 'AMFile', 'id': 12, 'src': 1,
+                              'start': 0, 'duration': 800, 'mediaDuration': 800,
+                              'mediaStart': 0, 'scalar': 1},
+                }]}],
+            }]}],
+        }
+        group = Group(group_data)
+        clips = group.ungroup()
+        nested_um = clips[0]._data['tracks'][0]['medias'][0]
+        # After scaling by 1/2: start=0*1/2=0, duration=800*1/2=400
+        assert nested_um['start'] == 0
+        assert nested_um['duration'] == 400
+        # UnifiedMedia sub-clips must have start propagated
+        assert nested_um['video']['start'] == nested_um['start']
+        assert nested_um['audio']['start'] == nested_um['start']
+
+
+# ---------------------------------------------------------------------------
+# Bug 7: ungroup nested Group must handle StitchedMedia
+# ---------------------------------------------------------------------------
+
+class TestUngroupNestedGroupStitchedMedia:
+    def test_nested_group_stitched_media_scaled(self) -> None:
+        """When ungrouping a nested Group with StitchedMedia, inner segments must be scaled."""
+        group_data = {
+            '_type': 'Group', 'id': 1,
+            'start': 0, 'duration': 2000, 'mediaStart': 0,
+            'mediaDuration': 2000, 'scalar': '1/2',
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {'ident': 'outer'},
+            'tracks': [{'trackIndex': 0, 'medias': [{
+                '_type': 'Group', 'id': 2,
+                'start': 0, 'duration': 2000, 'mediaStart': 0,
+                'mediaDuration': 2000, 'scalar': 1,
+                'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                'attributes': {'ident': 'inner'},
+                'effects': [],
+                'tracks': [{'trackIndex': 0, 'medias': [{
+                    '_type': 'StitchedMedia', 'id': 10, 'src': 1,
+                    'start': 0, 'duration': 2000, 'mediaStart': 0,
+                    'mediaDuration': 2000, 'scalar': 1,
+                    'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                    'effects': [],
+                    'medias': [
+                        {'_type': 'VMFile', 'id': 20, 'src': 1,
+                         'start': 0, 'duration': 1000, 'mediaStart': 0,
+                         'mediaDuration': 1000, 'scalar': 1},
+                        {'_type': 'VMFile', 'id': 21, 'src': 1,
+                         'start': 1000, 'duration': 1000, 'mediaStart': 0,
+                         'mediaDuration': 1000, 'scalar': 1},
+                    ],
+                }]}],
+            }]}],
+        }
+        group = Group(group_data)
+        clips = group.ungroup()
+        stitched = clips[0]._data['tracks'][0]['medias'][0]
+        segs = stitched['medias']
+        # scalar 1/2 applied: each segment duration 1000*1/2=500
+        assert segs[0]['duration'] == 500
+        assert segs[1]['duration'] == 500
+        # Starts re-laid out: 0, 500
+        assert segs[0]['start'] == 0
+        assert segs[1]['start'] == 500

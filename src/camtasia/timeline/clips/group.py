@@ -24,6 +24,23 @@ from camtasia.timing import seconds_to_ticks, ticks_to_seconds
 from .base import BaseClip
 
 
+def _collect_all_ids(clip_data: dict[str, Any]) -> set[int]:
+    """Recursively collect all 'id' fields from a clip and its nested structures."""
+    ids: set[int] = set()
+    if 'id' in clip_data:
+        ids.add(clip_data['id'])
+    for key in ('video', 'audio'):
+        sub = clip_data.get(key)
+        if isinstance(sub, dict):
+            ids.update(_collect_all_ids(sub))
+    for track in clip_data.get('tracks', []):
+        for media in track.get('medias', []):
+            ids.update(_collect_all_ids(media))
+    for media in clip_data.get('medias', []):
+        ids.update(_collect_all_ids(media))
+    return ids
+
+
 class GroupTrack:
     """A track inside a Group clip.
 
@@ -271,7 +288,29 @@ class Group(BaseClip):
                                 nested_clip['duration'] = round(orig_n_dur * group_scalar)
                                 nested_scalar = _parse_scalar(nested_clip.get('scalar', 1))
                                 composed = nested_scalar * group_scalar
-                                nested_clip['scalar'] = int(composed) if composed == int(composed) else str(composed)
+                                nested_clip['scalar'] = 1 if composed == 1 else str(composed)
+                                # Scale effects (Bug 5)
+                                for effect in nested_clip.get('effects', []):
+                                    if 'start' in effect:
+                                        effect['start'] = round(Fraction(str(effect['start'])) * group_scalar)
+                                    if 'duration' in effect:
+                                        effect['duration'] = round(Fraction(str(effect['duration'])) * group_scalar)
+                                # Propagate to UnifiedMedia sub-clips (Bug 6)
+                                from camtasia.timeline.track import _propagate_start_to_unified
+                                _propagate_start_to_unified(nested_clip)
+                                # Handle StitchedMedia inner segments (Bug 7)
+                                if nested_clip.get('_type') == 'StitchedMedia':
+                                    for inner_seg in nested_clip.get('medias', []):
+                                        seg_scalar = _parse_scalar(inner_seg.get('scalar', 1))
+                                        seg_composed = seg_scalar * group_scalar
+                                        inner_seg['scalar'] = 1 if seg_composed == 1 else str(seg_composed)
+                                        seg_dur = Fraction(str(inner_seg.get('duration', 0)))
+                                        inner_seg['duration'] = round(seg_dur * group_scalar)
+                                    # Re-layout starts
+                                    cursor = 0
+                                    for inner_seg in nested_clip.get('medias', []):
+                                        inner_seg['start'] = cursor
+                                        cursor += round(Fraction(str(inner_seg.get('duration', 0))))
                 cloned_start = Fraction(str(cloned_data.get('start', 0)))
                 new_start = cloned_start + group_start
                 cloned_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
@@ -478,11 +517,11 @@ class Group(BaseClip):
         if len(tracks_snapshot) <= 1:
             return tracks_snapshot[0]
         target_track: GroupTrack = tracks_snapshot[0]
-        # Collect existing IDs to detect collisions
+        # Collect existing IDs (including nested) to detect collisions
         from camtasia.timeline.timeline import _remap_clip_ids_with_map
         existing_ids: set[int] = set()
         for m in target_track._data.get('medias', []):
-            existing_ids.add(m.get('id'))
+            existing_ids.update(_collect_all_ids(m))
         max_id = max(existing_ids) if existing_ids else 0
         id_counter = [max_id + 1]
         for source_track in tracks_snapshot[1:]:
@@ -490,7 +529,14 @@ class Group(BaseClip):
                 if media_dict.get('id') in existing_ids:
                     id_map: dict[int, int] = {}
                     _remap_clip_ids_with_map(media_dict, id_counter, id_map)
-                existing_ids.add(media_dict.get('id'))
+                else:
+                    # Non-colliding: still bump id_counter past this clip's nested IDs
+                    nested_ids = _collect_all_ids(media_dict)
+                    if nested_ids:
+                        max_nested = max(nested_ids)
+                        if max_nested >= id_counter[0]:
+                            id_counter[0] = max_nested + 1
+                existing_ids.update(_collect_all_ids(media_dict))
                 target_track._data.setdefault('medias', []).append(media_dict)
         # Remove all tracks except the first
         self._data['tracks'] = [self._data['tracks'][0]]

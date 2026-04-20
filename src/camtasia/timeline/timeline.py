@@ -803,11 +803,11 @@ class Timeline:
                     m['start'] = 0
                     old_duration = Fraction(str(m.get('duration', 0)))
                     new_duration_frac = old_duration - clamp_amount
-                    new_duration = max(0, int(new_duration_frac))
+                    new_duration = max(0, round(new_duration_frac))
                     if new_duration == 0:
                         clips_to_remove.append(id(m))
                         continue
-                    m['duration'] = round(new_duration_frac)
+                    m['duration'] = new_duration
                     scalar = _parse_scalar(m.get('scalar', 1))
                     old_media_start = Fraction(str(m.get('mediaStart', 0)))
                     # mediaStart is in source-media ticks; convert timeline clamp

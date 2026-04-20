@@ -261,3 +261,69 @@ class TestUngroupIntegerTicks:
         clip = extracted[0]
         assert isinstance(clip._data['start'], int)
         assert isinstance(clip._data['duration'], int)
+
+
+# ---------------------------------------------------------------------------
+# Bug 4 & 8: merge_internal_tracks must handle nested IDs and bump id_counter
+# ---------------------------------------------------------------------------
+
+class TestMergeInternalTracksNestedIds:
+    def test_non_colliding_clip_bumps_id_counter(self) -> None:
+        """When a non-colliding clip has a high ID, id_counter must be bumped past it."""
+        # Track 0 has clip id=1, Track 1 has clip id=100 (no collision)
+        # Then Track 2 has clip id=100 (collision with the just-added clip)
+        track0_clip = _clip_data('VMFile', 1, 0.0, 1.0)
+        track1_clip = _clip_data('VMFile', 100, 1.0, 1.0)
+        track2_clip = _clip_data('VMFile', 100, 2.0, 1.0)
+        group = _make_group([[track0_clip], [track1_clip], [track2_clip]])
+        group.merge_internal_tracks()
+        ids = [m['id'] for m in group._data['tracks'][0]['medias']]
+        assert len(ids) == len(set(ids)), f"Duplicate IDs found: {ids}"
+
+    def test_nested_ids_collected_from_target_track(self) -> None:
+        """Existing clips' nested IDs (e.g. UnifiedMedia video/audio) must be tracked."""
+        unified_clip = {
+            '_type': 'UnifiedMedia', 'id': 1, 'src': 1,
+            'start': 0, 'duration': seconds_to_ticks(1.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(1.0), 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'video': {'_type': 'VMFile', 'id': 50, 'src': 1, 'start': 0,
+                      'duration': seconds_to_ticks(1.0), 'mediaDuration': seconds_to_ticks(1.0),
+                      'mediaStart': 0, 'scalar': 1},
+            'audio': {'_type': 'AMFile', 'id': 51, 'src': 1, 'start': 0,
+                      'duration': seconds_to_ticks(1.0), 'mediaDuration': seconds_to_ticks(1.0),
+                      'mediaStart': 0, 'scalar': 1},
+        }
+        # Track 1 has a clip with id=50 which collides with the nested video id
+        colliding_clip = _clip_data('VMFile', 50, 1.0, 1.0)
+        group = _make_group([[unified_clip], [colliding_clip]])
+        group.merge_internal_tracks()
+        ids = []
+        for m in group._data['tracks'][0]['medias']:
+            ids.append(m['id'])
+            if 'video' in m:
+                ids.append(m['video']['id'])
+            if 'audio' in m:
+                ids.append(m['audio']['id'])
+        assert len(ids) == len(set(ids)), f"Duplicate IDs found: {ids}"
+
+
+class TestCollectAllIdsRecursion:
+    def test_collect_ids_recurses_into_group_tracks(self):
+        from camtasia.timeline.clips.group import _collect_all_ids
+        data = {
+            'id': 1,
+            'tracks': [
+                {'medias': [{'id': 10}, {'id': 11}]},
+                {'medias': [{'id': 20}]},
+            ],
+        }
+        assert _collect_all_ids(data) == {1, 10, 11, 20}
+
+    def test_collect_ids_recurses_into_stitched_medias(self):
+        from camtasia.timeline.clips.group import _collect_all_ids
+        data = {
+            'id': 1,
+            'medias': [{'id': 10}, {'id': 11}],
+        }
+        assert _collect_all_ids(data) == {1, 10, 11}

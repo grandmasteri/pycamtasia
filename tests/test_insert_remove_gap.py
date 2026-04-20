@@ -180,3 +180,40 @@ class TestRemoveGapAtPreservesTransitions:
         # Transition between A and B should be preserved
         assert len(track._data['transitions']) == 1
         assert track._data['transitions'][0]['leftMedia'] == a.id
+
+
+# ---------------------------------------------------------------------------
+# Bug 10: remove_gap_at must preserve fade transitions (None endpoints)
+# ---------------------------------------------------------------------------
+
+class TestRemoveGapPreservesFadeTransitions:
+    def test_fade_transition_with_none_endpoint_preserved_leading_gap(self):
+        """Fade transitions with leftMedia=None or rightMedia=None must not be removed."""
+        track = _make_track()
+        a = track.add_callout("A", 2, 3)  # starts at 2s, leading gap 0-2s
+        # Add a fade-in transition (leftMedia=None)
+        track._data.setdefault('transitions', []).append({
+            'name': 'FadeIn',
+            'duration': seconds_to_ticks(0.5),
+            'leftMedia': None,
+            'rightMedia': a.id,
+        })
+        track.remove_gap_at(at_seconds=0.5)
+        # Fade transition must be preserved
+        assert len(track._data['transitions']) == 1
+
+    def test_fade_transition_with_none_endpoint_preserved_mid_gap(self):
+        """Fade transitions with None endpoint must survive mid-gap removal."""
+        track = _make_track()
+        a = track.add_callout("A", 0, 3)
+        b = track.add_callout("B", 6, 3)  # gap from 3s to 6s  # noqa: F841
+        # Add a fade-out on A (rightMedia=None)
+        track._data.setdefault('transitions', []).append({
+            'name': 'FadeOut',
+            'duration': seconds_to_ticks(0.5),
+            'leftMedia': a.id,
+            'rightMedia': None,
+        })
+        track.remove_gap_at(at_seconds=4.0)
+        # Fade transition must be preserved
+        assert len(track._data['transitions']) == 1

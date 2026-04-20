@@ -4,35 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 11 domains 1-3)
-
-**Leaf clips:**
-
-1. [verified] `clear_animations()` only clears opacity keyframes and animationTracks.visual. Translation/scale/rotation/crop/volume keyframes silently preserved despite method name. (base.py ~L595)
-
-2. [verified] `set_speed()` Group block missing `mediaDuration=1` guard for IMFile/ScreenIMFile inner clips. (base.py ~L375)
-
-3. [verified] `set_speed()` Group block stores scalar as `int(2)` for non-unity integers while top-level stores `str('2')`. Inconsistent raw representation. (base.py ~L370, ~L381)
-
-**Compound clips:**
-
-4. [verified] `merge_internal_tracks()` can produce duplicate IDs when non-colliding clips have high IDs. id_counter not bumped past them. (group.py ~L487)
-
-5. [verified] `ungroup()` doesn't scale effects on clips inside nested Groups. (group.py ~L264)
-
-6. [verified] `ungroup()` doesn't propagate timing to UnifiedMedia sub-clips inside nested Groups. (group.py ~L264)
-
-7. [verified] `ungroup()` doesn't handle StitchedMedia clips inside nested Groups. Missing relayout logic. (group.py ~L264)
-
-8. [verified] `merge_internal_tracks()` doesn't collect nested IDs into existing_ids. Source clips can collide with target's compound clip children. (group.py ~L482)
-
-**Track/timeline:**
-
-9. [verified] `shift_all_clips()` and `Timeline.shift_all()` use `int()` for zero-check but `round()` for assignment. Fractional durations in (0.5, 1.0) incorrectly deleted. (track.py ~L1055, timeline.py ~L540)
-
-10. [verified] `remove_gap_at()` XOR transition filter removes fade-in/fade-out transitions where one endpoint is None. (track.py ~L1175, ~L1200)
-
-11. [verified] `scale_all_durations()` scales transition `duration` but not transition `start` (inconsistent). (track.py ~L1120)
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

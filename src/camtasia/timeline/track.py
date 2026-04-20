@@ -2377,7 +2377,10 @@ class Track:
                     shifted_clip_ids.add(m.get('id'))
                 self._data['transitions'] = [
                     t for t in self._data.get('transitions', [])
-                    if not ((t.get('leftMedia') in shifted_clip_ids) ^ (t.get('rightMedia') in shifted_clip_ids))
+                    if not (
+                        t.get('leftMedia') is not None and t.get('rightMedia') is not None
+                        and ((t.get('leftMedia') in shifted_clip_ids) ^ (t.get('rightMedia') in shifted_clip_ids))
+                    )
                 ]
                 return
         gap_start: int | None = None
@@ -2400,7 +2403,10 @@ class Track:
                 gap_shifted_ids.add(media_dict.get('id'))
         self._data['transitions'] = [
             t for t in self._data.get('transitions', [])
-            if not ((t.get('leftMedia') in gap_shifted_ids) ^ (t.get('rightMedia') in gap_shifted_ids))
+            if not (
+                t.get('leftMedia') is not None and t.get('rightMedia') is not None
+                and ((t.get('leftMedia') in gap_shifted_ids) ^ (t.get('rightMedia') in gap_shifted_ids))
+            )
         ]
 
     def shift_all_clips(self, offset_seconds: float) -> None:
@@ -2421,11 +2427,11 @@ class Track:
                 m['start'] = 0
                 old_duration = Fraction(str(m.get('duration', 0)))
                 new_duration_frac = old_duration - clamp_amount
-                new_duration = max(0, int(new_duration_frac))
+                new_duration = max(0, round(new_duration_frac))
                 if new_duration == 0:
                     clips_to_remove.append(id(m))
                     continue
-                m['duration'] = round(new_duration_frac)
+                m['duration'] = new_duration
                 scalar = _parse_scalar(m.get('scalar', 1))
                 old_media_start = Fraction(str(m.get('mediaStart', 0)))
                 if scalar != 0:
@@ -2485,6 +2491,8 @@ class Track:
                     effect['duration'] = int(effect['duration'] * factor)
         for t in self._data.get('transitions', []):
             t['duration'] = int(t.get('duration', 0) * factor)
+            if 'start' in t:
+                t['start'] = int(t['start'] * factor)
 
     def partition_by_type(self) -> dict[str, list[BaseClip]]:
         """Group clips by their type, returning a dict of type -> clip list."""
