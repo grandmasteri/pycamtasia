@@ -1,5 +1,11 @@
 # pycamtasia Roadmap
 
+## Pending Bugs
+
+_This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
+
+(none currently)
+
 ## TechSmith Tutorial Analysis
 
 Review each official Camtasia tutorial to extract insights about features pycamtasia should support.

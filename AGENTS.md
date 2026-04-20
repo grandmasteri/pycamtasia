@@ -299,6 +299,17 @@ Quality is the primary goal — every test must verify real behavior with strong
 - **Idiomatic**: Follow PEP 8 conventions.
 - **No redundant information in data models**: Don't include fields derivable from other fields in the same model.
 
+## Bug Tracking Workflow
+
+When adversarial reviewers report bugs, follow this workflow:
+
+1. **Immediately add every reported bug to the `## Pending Bugs` section of ROADMAP.md** — before verifying, before fixing. This is the authoritative list.
+2. **Verify each bug against actual source** — mark verified entries with `[verified]`, false positives with `[withdrawn: reason]`.
+3. **Fix verified bugs** — after each fix is committed and CI is green, remove that entry from Pending Bugs.
+4. **Add items not going to be fixed to `## Known Design Decisions`** — with justification.
+
+This prevents bugs from being silently lost if the agent gets interrupted, context-compacted, or forgets to circle back. The ROADMAP is the source of truth.
+
 ## Subagent Parallelism
 
 ### Maximize Parallelism Through Divide and Conquer
