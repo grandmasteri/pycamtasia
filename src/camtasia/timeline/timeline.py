@@ -793,6 +793,7 @@ class Timeline:
         offset = seconds_to_ticks(seconds)
         for track in self.tracks:
             clamped = False
+            clips_to_remove: list[int] = []
             for m in track._data.get('medias', []):
                 new_start = m.get('start', 0) + offset
                 if new_start < 0:
@@ -801,6 +802,9 @@ class Timeline:
                     m['start'] = 0
                     old_duration = int(Fraction(str(m.get('duration', 0))))
                     new_duration = max(0, old_duration - clamp_amount)
+                    if new_duration == 0:
+                        clips_to_remove.append(id(m))
+                        continue
                     m['duration'] = new_duration
                     scalar = _parse_scalar(m.get('scalar', 1))
                     old_media_start = Fraction(str(m.get('mediaStart', 0)))
@@ -818,6 +822,8 @@ class Timeline:
                 else:
                     m['start'] = new_start
                 _propagate_start_to_unified(m)
+            if clips_to_remove:
+                track._data['medias'] = [m for m in track._data['medias'] if id(m) not in clips_to_remove]
             if clamped:
                 track._data['transitions'] = []
 

@@ -335,7 +335,7 @@ class Callout(BaseClip):
         Args:
             fill: Fill color as ``(r, g, b, opacity)``, or ``None`` to skip.
             stroke: Stroke color as ``(r, g, b, opacity)``, or ``None`` to skip.
-            font_color: Font color as ``(r, g, b)``, or ``None`` to skip.
+            font_color: Font color as ``(r, g, b, opacity)``, or ``None`` to skip.
 
         Returns:
             Self for chaining.

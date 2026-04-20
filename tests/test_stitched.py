@@ -230,3 +230,12 @@ class TestClearSegmentsResetsScalarAndMediaStart:
         assert data['duration'] == 0
         assert data['mediaDuration'] == 0
         assert data['medias'] == []
+
+
+# ------------------------------------------------------------------
+# Bug 10: min_media_start docstring unit
+# ------------------------------------------------------------------
+
+class TestMinMediaStartDocstring:
+    def test_docstring_says_ticks(self):
+        assert 'ticks' in StitchedMedia.min_media_start.fget.__doc__

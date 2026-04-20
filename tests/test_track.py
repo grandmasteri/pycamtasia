@@ -263,15 +263,19 @@ def test_shift_all_forward():
 
 def test_shift_all_backward_clamps():
     start_ticks = seconds_to_ticks(1.0)
+    dur_ticks = seconds_to_ticks(10.0)
     tl = _make_timeline([
-        ('A', [{'id': 1, 'start': start_ticks, 'duration': 100}]),
-        ('B', [{'id': 2, 'start': 0, 'duration': 100}]),
+        ('A', [{'id': 1, 'start': start_ticks, 'duration': dur_ticks}]),
+        ('B', [{'id': 2, 'start': 0, 'duration': dur_ticks}]),
     ])
     tl.shift_all(-5.0)
     raw_tracks = tl._track_list
-    # Both should be clamped to 0
+    # Track A: clip survives with clamped start=0 and reduced duration
     assert raw_tracks[0]['medias'][0]['start'] == 0
+    assert raw_tracks[0]['medias'][0]['duration'] > 0
+    # Track B: clip survives with clamped start=0 and reduced duration
     assert raw_tracks[1]['medias'][0]['start'] == 0
+    assert raw_tracks[1]['medias'][0]['duration'] > 0
 
 
 

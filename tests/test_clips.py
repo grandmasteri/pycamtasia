@@ -1630,3 +1630,33 @@ class TestMediaMattePresetName:
         clip.add_media_matte()
         eff = clip._data['effects'][-1]
         assert eff['metadata']['presetName'] == 'Media Matte Luminosity'
+
+
+# ------------------------------------------------------------------
+# Bug 6: set_speed propagates to Group internal tracks' clips
+# ------------------------------------------------------------------
+
+def test_set_speed_group_propagates_to_inner_clips() -> None:
+    """set_speed on a Group clip scales inner clips' duration and scalar."""
+    inner_dur = EDIT_RATE * 10
+    data = _base_clip_dict(
+        _type='Group',
+        duration=EDIT_RATE * 10,
+        mediaDuration=EDIT_RATE * 10,
+        tracks=[{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'VMFile', 'id': 20, 'src': 1,
+                'start': 0, 'duration': inner_dur,
+                'mediaStart': 0, 'mediaDuration': inner_dur,
+                'scalar': 1,
+            }],
+        }],
+    )
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    inner = data['tracks'][0]['medias'][0]
+    # scalar: old(1) * 1/2 = 1/2
+    assert inner['scalar'] == '1/2'
+    # duration: inner_dur * 1/2
+    assert inner['duration'] == inner_dur // 2

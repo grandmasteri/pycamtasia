@@ -333,6 +333,16 @@ class BaseClip:
                 inner['start'] = cursor
                 dur_val = inner['duration']
                 cursor += int(Fraction(str(dur_val)))
+        if self._data.get('_type') == 'Group':
+            from camtasia.timing import parse_scalar
+            for inner_track in self._data.get('tracks', []):
+                for inner_clip_data in inner_track.get('medias', []):
+                    inner_scalar_old = parse_scalar(inner_clip_data.get('scalar', 1))
+                    composed_scalar = inner_scalar_old * scalar_fraction
+                    inner_clip_data['scalar'] = int(composed_scalar) if composed_scalar == int(composed_scalar) else str(composed_scalar)
+                    orig_dur = Fraction(str(inner_clip_data.get('duration', 0)))
+                    new_dur = orig_dur * scalar_fraction
+                    inner_clip_data['duration'] = int(new_dur) if new_dur == int(new_dur) else str(new_dur)
         return self
 
     @property

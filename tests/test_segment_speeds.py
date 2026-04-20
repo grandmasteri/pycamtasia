@@ -414,3 +414,89 @@ def test_retina_to_1080p_normalisation():
     for clip in data['tracks'][1]['medias']:
         assert 'scale0' in clip['parameters']
         assert 'scale1' in clip['parameters']
+
+
+# ------------------------------------------------------------------
+# Bug 7: set_internal_segment_speeds handles empty medias list
+# ------------------------------------------------------------------
+
+def test_set_internal_segment_speeds_empty_medias_no_crash():
+    """StitchedMedia template with medias=[] should not IndexError."""
+    group_data = {
+        'id': 1, '_type': 'Group',
+        'start': 0,
+        'duration': seconds_to_ticks(60),
+        'mediaStart': 0,
+        'mediaDuration': seconds_to_ticks(60),
+        'scalar': 1,
+        'metadata': {}, 'parameters': {}, 'effects': [],
+        'attributes': {'ident': ''}, 'animationTracks': {},
+        'tracks': [{
+            'trackIndex': 0,
+            'medias': [{
+                'id': 10, '_type': 'StitchedMedia',
+                'src': 5,
+                'start': 0,
+                'duration': seconds_to_ticks(60),
+                'mediaStart': 0,
+                'mediaDuration': seconds_to_ticks(60),
+                'scalar': 1,
+                'metadata': {}, 'parameters': {},
+                'effects': [], 'attributes': {'ident': ''},
+                'animationTracks': {},
+                'medias': [],  # empty!
+            }],
+        }],
+    }
+    group = Group(group_data)
+    # Should not raise IndexError; src falls back to template_media.get('src', 0)
+    group.set_internal_segment_speeds([(0, 30, 30), (30, 60, 30)])
+
+
+# ==================================================================
+# Bug 8: set_internal_segment_speeds uses first segment source start
+# ==================================================================
+
+def test_companion_media_start_uses_first_segment_source_start():
+    """Non-media tracks should get mediaStart from the first segment's source start, not 0."""
+    from camtasia.timing import seconds_to_ticks
+    group_data = {
+        '_type': 'Group', 'id': 1, 'start': 0,
+        'duration': seconds_to_ticks(60), 'mediaDuration': seconds_to_ticks(60),
+        'mediaStart': 0, 'scalar': 1,
+        'metadata': {}, 'parameters': {}, 'effects': [],
+        'attributes': {'ident': ''}, 'animationTracks': {},
+        'tracks': [
+            {
+                'trackIndex': 0,
+                'medias': [{
+                    'id': 10, '_type': 'UnifiedMedia',
+                    'start': 0, 'duration': seconds_to_ticks(60),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(60),
+                    'scalar': 1,
+                    'video': {
+                        'id': 11, '_type': 'ScreenVMFile', 'src': 5,
+                        'start': 0, 'duration': seconds_to_ticks(60),
+                        'mediaStart': 0, 'mediaDuration': seconds_to_ticks(60),
+                        'scalar': 1, 'trackNumber': 0,
+                        'attributes': {'ident': ''}, 'parameters': {},
+                        'effects': [], 'animationTracks': {},
+                    },
+                }],
+            },
+            {
+                'trackIndex': 1,
+                'medias': [{
+                    'id': 20, '_type': 'AMFile', 'src': 5,
+                    'start': 0, 'duration': seconds_to_ticks(60),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(60),
+                    'scalar': 1,
+                }],
+            },
+        ],
+    }
+    group = Group(group_data)
+    # Segments start at source time 10s, not 0
+    group.set_internal_segment_speeds([(10, 30, 20), (30, 60, 30)])
+    companion = group_data['tracks'][1]['medias'][0]
+    assert companion['mediaStart'] == seconds_to_ticks(10)

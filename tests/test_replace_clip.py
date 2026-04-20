@@ -74,3 +74,36 @@ class TestClone:
         cloned = clip.clone()
 
         assert cloned.id == -1
+
+
+# ------------------------------------------------------------------
+# Bug 15: replace_clip remaps nested IDs
+# ------------------------------------------------------------------
+
+class TestReplaceClipRemapsNestedIds:
+    def test_remaps_group_internal_clip_ids(self):
+        track = _make_track()
+        original = track.add_callout("A", 0, 5)
+        old_id = original.id
+
+        # Build a Group-like replacement with nested tracks
+        group_data: dict[str, Any] = {
+            "_type": "Group",
+            "duration": 5000,
+            "mediaStart": 0,
+            "mediaDuration": 5000,
+            "scalar": 1,
+            "tracks": [{
+                "trackIndex": 0,
+                "medias": [{"id": 999, "_type": "VMFile", "start": 0, "duration": 5000}],
+            }],
+            "attributes": {},
+            "parameters": {},
+            "effects": [],
+            "metadata": {},
+            "animationTracks": {},
+        }
+        result = track.replace_clip(old_id, group_data)
+        inner_id = result._data['tracks'][0]['medias'][0]['id']
+        # Nested ID should be remapped, not the original 999
+        assert inner_id != 999

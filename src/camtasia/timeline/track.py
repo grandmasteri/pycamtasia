@@ -2005,10 +2005,6 @@ class Track:
         id_counter = [self._next_clip_id()]
         id_map: dict[int, int] = {}
         _remap_clip_ids_with_map(right_data, id_counter, id_map)
-        for key, new_id in id_map.items():
-            for obj in right_data.get('assetProperties', {}).get('objects', []):
-                if obj.get('id') == key:
-                    obj['id'] = new_id
 
         # Insert right half after left half
         medias.insert(left_idx + 1, right_data)
@@ -2117,6 +2113,10 @@ class Track:
         for i, m in enumerate(medias):
             if m.get('id') == clip_id:
                 new_clip_data['id'] = self._next_clip_id()
+                from camtasia.timeline.timeline import _remap_clip_ids_with_map
+                id_counter = [new_clip_data['id']]
+                id_map: dict[int, int] = {}
+                _remap_clip_ids_with_map(new_clip_data, id_counter, id_map)
                 new_clip_data['start'] = m['start']
                 _propagate_start_to_unified(new_clip_data)
                 medias[i] = new_clip_data
@@ -2364,6 +2364,7 @@ class Track:
         from camtasia.timing import seconds_to_ticks
         offset_ticks: int = seconds_to_ticks(offset_seconds)
         clamped = False
+        clips_to_remove: list[int] = []
         for m in self._data.get('medias', []):
             new_start = m.get('start', 0) + offset_ticks
             if new_start < 0:
@@ -2372,6 +2373,9 @@ class Track:
                 m['start'] = 0
                 old_duration = int(Fraction(str(m.get('duration', 0))))
                 new_duration = max(0, old_duration - clamp_amount)
+                if new_duration == 0:
+                    clips_to_remove.append(id(m))
+                    continue
                 m['duration'] = new_duration
                 scalar = _parse_scalar(m.get('scalar', 1))
                 old_media_start = Fraction(str(m.get('mediaStart', 0)))
@@ -2386,6 +2390,8 @@ class Track:
             else:
                 m['start'] = new_start
             _propagate_start_to_unified(m)
+        if clips_to_remove:
+            self._data['medias'] = [m for m in self._data['medias'] if id(m) not in clips_to_remove]
         if clamped:
             self._data['transitions'] = []
 
@@ -2412,6 +2418,11 @@ class Track:
                         sub['duration'] = media_dict['duration']
                         sub['mediaDuration'] = media_dict.get('mediaDuration', media_dict['duration'])
                         sub['scalar'] = media_dict.get('scalar', 1)
+            for effect in media_dict.get('effects', []):
+                if 'start' in effect:
+                    effect['start'] = int(effect['start'] * factor)
+                if 'duration' in effect:
+                    effect['duration'] = int(effect['duration'] * factor)
         for t in self._data.get('transitions', []):
             t['duration'] = int(t.get('duration', 0) * factor)
 

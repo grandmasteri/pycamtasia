@@ -189,12 +189,26 @@ class Group(BaseClip):
                 if group_scalar != 1:
                     orig_start = Fraction(str(cloned_data.get('start', 0)))
                     orig_dur = Fraction(str(cloned_data.get('duration', 0)))
-                    cloned_data['start'] = int(orig_start * group_scalar)
-                    cloned_data['duration'] = int(orig_dur * group_scalar)
+                    new_start = orig_start * group_scalar
+                    new_dur = orig_dur * group_scalar
+                    cloned_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
+                    cloned_data['duration'] = int(new_dur) if new_dur == int(new_dur) else str(new_dur)
                     orig_scalar = _parse_scalar(cloned_data.get('scalar', 1))
                     composed = group_scalar * orig_scalar
                     cloned_data['scalar'] = int(composed) if composed == int(composed) else str(composed)
-                cloned_data['start'] = cloned_data.get('start', 0) + group_start
+                    if cloned_data.get('_type') == 'StitchedMedia':
+                        for inner in cloned_data.get('medias', []):
+                            inner['scalar'] = cloned_data['scalar']
+                            inner_md = Fraction(str(inner.get('mediaDuration', 0)))
+                            new_inner_dur = inner_md * _parse_scalar(cloned_data['scalar'])
+                            inner['duration'] = int(new_inner_dur) if new_inner_dur == int(new_inner_dur) else str(new_inner_dur)
+                        cursor = 0
+                        for inner in cloned_data.get('medias', []):
+                            inner['start'] = cursor
+                            cursor += int(Fraction(str(inner['duration'])))
+                cloned_start = Fraction(str(cloned_data.get('start', 0)))
+                new_start = cloned_start + group_start
+                cloned_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
                 from camtasia.timeline.track import _propagate_start_to_unified
                 _propagate_start_to_unified(cloned_data)
                 from camtasia.timeline.clips import clip_from_dict
@@ -406,7 +420,7 @@ class Group(BaseClip):
         source_height: float | None = None,
         source_bin: list[dict] | None = None,
     ) -> None:
-        """Replace the internal track's media with per-segment StitchedMedia clips.
+        """Replace the internal track's media with per-segment ScreenVMFile clips.
 
         Each segment maps a slice of the source recording to a timeline
         duration, allowing different playback speeds per segment.
@@ -466,7 +480,8 @@ class Group(BaseClip):
             video_effects = copy.deepcopy(video.get('effects', []))
             track_number = video.get('trackNumber', 0)
         else:
-            src = template_media.get('medias', [{}])[0].get('src', template_media.get('src', 0))
+            template_medias = template_media.get('medias') or [{}]
+            src = template_medias[0].get('src', template_media.get('src', 0)) if template_medias else template_media.get('src', 0)
             ident = template_media.get('attributes', {}).get('ident', '')
             video_params = {}
             video_effects = []
@@ -580,11 +595,13 @@ class Group(BaseClip):
         for track in self._data.get('tracks', []):
             if track is media_track:
                 continue
+            first_seg_src_start = segments[0][0] if segments else 0
+            first_seg_src_start_ticks = seconds_to_ticks(first_seg_src_start)
             for m in track.get('medias', []):
                 if m.get('_type') in ('VMFile', 'ScreenVMFile', 'AMFile'):
                     m['duration'] = total_tl
                     m['mediaDuration'] = total_tl
-                    m['mediaStart'] = 0
+                    m['mediaStart'] = first_seg_src_start_ticks
                     m['scalar'] = 1
 
     def sync_internal_durations(self) -> Self:
@@ -609,6 +626,8 @@ class Group(BaseClip):
                             m['mediaDuration'] = 1
                         else:
                             m['mediaDuration'] = 0
+                        from camtasia.timeline.track import _propagate_start_to_unified as _psu0
+                        _psu0(m)
                         continue
                     if m.get('_type') in ('IMFile', 'ScreenIMFile'):
                         m['mediaDuration'] = 1

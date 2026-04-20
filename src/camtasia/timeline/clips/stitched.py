@@ -41,7 +41,7 @@ class StitchedMedia(BaseClip):
 
     @property
     def min_media_start(self) -> float:
-        """Minimum media start offset in frames."""
+        """Minimum media start offset in ticks (editRate=705600000)."""
         return float(self._data.get('minMediaStart', 0))
 
     def clear_segments(self) -> None:

@@ -59,8 +59,8 @@ class AMFile(BaseClip):
 
     @property
     def is_muted(self) -> bool:
-        """Whether the clip's gain is zero."""
-        return self.gain == 0.0
+        """Whether the clip's gain or volume is zero."""
+        return self.gain == 0.0 or self.volume == 0.0
 
     def normalize_gain(self) -> Self:
         """Enable loudness normalization on this clip.

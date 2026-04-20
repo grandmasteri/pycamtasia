@@ -102,3 +102,73 @@ class TestScaleAllDurationsEmpty:
         track = _make_track()
         track.scale_all_durations(2.0)
         assert track._data['medias'] == []
+
+
+# ------------------------------------------------------------------
+# Bug 12: shift_all_clips removes zero-duration clips
+# ------------------------------------------------------------------
+
+class TestShiftAllClipsRemovesZeroDuration:
+    def test_removes_fully_clamped_clip(self):
+        track = _make_track()
+        track.add_callout("Short", 0, 1)  # 1s clip at t=0
+        track.shift_all_clips(-5.0)  # shift back 5s — clip fully consumed
+        assert len(track._data['medias']) == 0
+
+    def test_keeps_partially_clamped_clip(self):
+        track = _make_track()
+        track.add_callout("Long", 0, 10)  # 10s clip at t=0
+        track.shift_all_clips(-3.0)  # shift back 3s — clip partially survives
+        assert len(track._data['medias']) == 1
+        assert track._data['medias'][0]['start'] == 0
+        assert track._data['medias'][0]['duration'] > 0
+
+
+# ------------------------------------------------------------------
+# Bug 14: scale_all_durations scales effect timing
+# ------------------------------------------------------------------
+
+class TestScaleAllDurationsEffects:
+    def test_scales_effect_start_and_duration(self):
+        track = _make_track()
+        track.add_callout("A", 0, 10)
+        track._data['medias'][0]['effects'] = [
+            {'effectName': 'Glow', 'start': 100, 'duration': 200},
+        ]
+        track.scale_all_durations(2.0)
+        eff = track._data['medias'][0]['effects'][0]
+        assert eff['start'] == 200
+        assert eff['duration'] == 400
+
+    def test_effect_without_timing_unchanged(self):
+        track = _make_track()
+        track.add_callout("A", 0, 10)
+        track._data['medias'][0]['effects'] = [
+            {'effectName': 'Glow'},
+        ]
+        track.scale_all_durations(2.0)
+        eff = track._data['medias'][0]['effects'][0]
+        assert 'start' not in eff
+        assert 'duration' not in eff
+
+
+# ------------------------------------------------------------------
+# Bug 12: Timeline.shift_all removes zero-duration clips
+# ------------------------------------------------------------------
+
+class TestTimelineShiftAllRemovesZeroDuration:
+    def test_removes_fully_consumed_clip(self):
+        from camtasia.timeline.timeline import Timeline
+        tl_data = {
+            'id': 0,
+            'sceneTrack': {'scenes': [{'csml': {'tracks': [
+                {'trackIndex': 0, 'medias': [
+                    {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(1.0),
+                     'mediaStart': 0, 'mediaDuration': seconds_to_ticks(1.0), 'scalar': 1},
+                ]},
+            ]}}]},
+            'trackAttributes': [{'ident': 'A'}],
+        }
+        tl = Timeline(tl_data)
+        tl.shift_all(-5.0)
+        assert len(tl_data['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias']) == 0

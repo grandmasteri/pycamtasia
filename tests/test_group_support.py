@@ -1,6 +1,7 @@
 """Tests for Group manipulation support: add_clip, add_internal_track, ungroup, group_clips, clip_count."""
 from __future__ import annotations
 
+from fractions import Fraction
 import warnings
 
 import pytest
@@ -565,3 +566,132 @@ class TestSyncInternalDurationsZeroDuration:
         m = group_data['tracks'][0]['medias'][0]
         assert m['duration'] == 0
         assert m['mediaDuration'] == 1
+
+
+# ------------------------------------------------------------------
+# Bug 4: ungroup preserves fractional ticks instead of truncating
+# ------------------------------------------------------------------
+
+class TestUngroupFractionalTicks:
+    def test_ungroup_preserves_fractional_start_and_duration(self):
+        """When group_scalar produces non-integer ticks, store as string fraction."""
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': 3000, 'mediaDuration': 3000,
+            'scalar': '1/3',
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'VMFile', 'id': 10, 'src': 1,
+                    'start': 100, 'duration': 300,
+                    'mediaStart': 0, 'mediaDuration': 300, 'scalar': 1,
+                }],
+            }],
+        }
+        group = Group(group_data)
+        clips = group.ungroup()
+        assert len(clips) == 1
+        # 100 * 1/3 = 100/3 — not an integer, should be stored as string
+        clip_data = clips[0]._data
+        assert isinstance(clip_data['start'], str) or clip_data['start'] == Fraction(100, 3)
+        assert isinstance(clip_data['duration'], str) or clip_data['duration'] == Fraction(300, 3)
+
+    def test_ungroup_integer_result_stays_int(self):
+        """When group_scalar produces integer ticks, store as int."""
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': 2000, 'mediaDuration': 2000,
+            'scalar': '1/2',
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'VMFile', 'id': 10, 'src': 1,
+                    'start': 100, 'duration': 400,
+                    'mediaStart': 0, 'mediaDuration': 400, 'scalar': 1,
+                }],
+            }],
+        }
+        group = Group(group_data)
+        clips = group.ungroup()
+        # 100 * 1/2 = 50 (integer), 400 * 1/2 = 200 (integer)
+        clip_data = clips[0]._data
+        # start gets group_start added (0 + 50 = 50)
+        assert clip_data['start'] == 50
+        assert clip_data['duration'] == 200
+
+
+# ==================================================================
+# Bug 5: ungroup propagates composed scalar to StitchedMedia children
+# ==================================================================
+
+class TestUngroupStitchedMediaRelayout:
+    def test_ungroup_relayouts_stitched_media_inner_segments(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': 2000, 'mediaDuration': 2000,
+            'scalar': '1/2',
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'StitchedMedia', 'id': 10,
+                    'start': 0, 'duration': 1000,
+                    'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+                    'medias': [
+                        {'_type': 'ScreenVMFile', 'id': 11, 'start': 0,
+                         'duration': 500, 'mediaStart': 0, 'mediaDuration': 500, 'scalar': 1},
+                        {'_type': 'ScreenVMFile', 'id': 12, 'start': 500,
+                         'duration': 500, 'mediaStart': 500, 'mediaDuration': 500, 'scalar': 1},
+                    ],
+                }],
+            }],
+        }
+        group = Group(group_data)
+        clips = group.ungroup()
+        assert len(clips) == 1
+        inner = clips[0]._data.get('medias', [])
+        # Inner segments should have composed scalar applied
+        assert inner[0]['scalar'] == inner[1]['scalar']
+        # Inner segments should be re-laid out sequentially
+        assert inner[0]['start'] == 0
+        assert inner[1]['start'] == int(Fraction(str(inner[0]['duration'])))
+
+
+# ==================================================================
+# Bug 9: sync_internal_durations propagates start for zero-duration clips
+# ==================================================================
+
+class TestSyncInternalDurationsZeroDurationPropagation:
+    def test_zero_duration_unified_media_propagates_start(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': 100, 'mediaDuration': 100, 'scalar': 1,
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'UnifiedMedia', 'id': 10,
+                    'start': 200, 'duration': 500,
+                    'mediaStart': 0, 'mediaDuration': 500, 'scalar': 1,
+                    'video': {
+                        '_type': 'ScreenVMFile', 'id': 11,
+                        'start': 999, 'duration': 500,
+                        'mediaStart': 0, 'mediaDuration': 500, 'scalar': 1,
+                    },
+                }],
+            }],
+        }
+        group = Group(group_data)
+        group.sync_internal_durations()
+        m = group_data['tracks'][0]['medias'][0]
+        # Duration should be clamped to 0
+        assert m['duration'] == 0
+        # Video sub-clip start should be propagated (not left at 999)
+        assert m['video']['start'] == m['start']
+
+
+# ==================================================================
+# Bug 11: set_internal_segment_speeds docstring
+# ==================================================================
+
+class TestSetInternalSegmentSpeedsDocstring:
+    def test_docstring_says_screen_vmfile(self):
+        assert 'ScreenVMFile' in Group.set_internal_segment_speeds.__doc__

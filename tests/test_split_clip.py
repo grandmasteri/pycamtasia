@@ -165,17 +165,21 @@ def _collect_ids(media_dict):
 
 
 class TestSplitClipRemapsAssetProperties:
-    """Cover track.py lines 1918-1919: remap assetProperties object IDs after split."""
+    """Cover split_clip: _remap_clip_ids_with_map handles attributes.assetProperties."""
 
     def test_split_remaps_asset_property_ids(self):
         clip = _simple_clip(clip_id=1, start_s=10.0, dur_s=10.0)
-        clip['assetProperties'] = {
-            'objects': [{'id': 1, 'name': 'test'}],
+        clip['attributes'] = {
+            'assetProperties': [{'objects': [1]}],
         }
         track, _data = _make_track(clip)
         _left, right = track.split_clip(1, 15.0)
-        # The right half's assetProperties should have remapped IDs
-        right_asset_ids = [o['id'] for o in right._data.get('assetProperties', {}).get('objects', [])]
+        # The right half's attributes.assetProperties should have remapped IDs
+        right_asset_ids = [
+            oid
+            for ap in right._data.get('attributes', {}).get('assetProperties', [])
+            for oid in ap.get('objects', [])
+        ]
         assert all(rid != 1 for rid in right_asset_ids)
 
 

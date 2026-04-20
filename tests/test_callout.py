@@ -496,3 +496,20 @@ class TestSetFontInvalidStringWeight:
         callout = Callout(data)
         callout.set_font('Arial', weight='Bold')
         assert callout.font['weight'] == 'Bold'
+
+
+# ------------------------------------------------------------------
+# Bug 2: set_colors font_color accepts (r, g, b, opacity)
+# ------------------------------------------------------------------
+
+class TestSetColorsFontColorRGBA:
+    def test_set_colors_font_color_rgba_sets_opacity(self):
+        """font_color=(r,g,b,opacity) sets color-opacity on the font dict."""
+        data = _callout_dict()
+        c = Callout(data)
+        c.set_colors(font_color=(0.5, 0.5, 0.5, 0.7))
+        font = data['def']['font']
+        assert font['color-red'] == 0.5
+        assert font['color-green'] == 0.5
+        assert font['color-blue'] == 0.5
+        assert font['color-opacity'] == 0.7

@@ -94,3 +94,29 @@ class TestAMFileMissing:
 def test_non_unified_silent_when_gain_zero():
     clip = AMFile(_amfile_dict(attributes={'ident': '', 'gain': 0.0, 'mixToMono': False, 'loudnessNormalization': False}))
     assert clip.is_silent is True
+
+
+# ------------------------------------------------------------------
+# Bug 1: AMFile.is_muted checks volume too
+# ------------------------------------------------------------------
+
+def test_amfile_is_muted_when_volume_zero():
+    """is_muted returns True when volume is 0 even if gain is nonzero."""
+    data = _amfile_dict(attributes={'ident': '', 'gain': 1.0, 'mixToMono': False, 'loudnessNormalization': False})
+    data['parameters'] = {'volume': 0.0}
+    clip = AMFile(data)
+    assert clip.is_muted is True
+
+
+def test_amfile_is_muted_when_gain_zero():
+    """is_muted returns True when gain is 0."""
+    data = _amfile_dict(attributes={'ident': '', 'gain': 0.0, 'mixToMono': False, 'loudnessNormalization': False})
+    clip = AMFile(data)
+    assert clip.is_muted is True
+
+
+def test_amfile_not_muted_when_both_nonzero():
+    """is_muted returns False when both gain and volume are nonzero."""
+    data = _amfile_dict(attributes={'ident': '', 'gain': 0.8, 'mixToMono': False, 'loudnessNormalization': False})
+    clip = AMFile(data)
+    assert clip.is_muted is False
