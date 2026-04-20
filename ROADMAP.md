@@ -4,7 +4,35 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 10 domains 1-3)
+
+**Leaf clips:**
+
+1. [verified] `set_speed()` Group branch stores fractional `duration` and `start` as strings via `int(x) if x == int(x) else str(x)` pattern. `int(self._data['duration'])` accessor crashes with ValueError. (base.py ~L268)
+
+2. [verified] `set_speed()` StitchedMedia segment layout uses `int(Fraction(...))` truncation for cursor. Accumulates drift across segments, wrapper duration doesn't match sum. (base.py ~L250)
+
+3. [verified] `clear_keyframes('opacity')` removes parameters.opacity but doesn't clear `animationTracks.visual`. Only None case clears both. Orphaned animation entries. (base.py ~L680)
+
+**Compound clips:**
+
+4. [verified] `Group.ungroup()` doesn't scale effects on video/audio sub-clips of UnifiedMedia nested inside StitchedMedia segments when group_scalar != 1. Non-StitchedMedia path does it; nested path missed. (group.py)
+
+5. [verified] `Group.ungroup()` doesn't recursively scale internal tracks of nested Group clips when outer Group has non-unity scalar. (group.py)
+
+6. [verified] `Group.sync_internal_durations()` only propagates `duration`/`mediaDuration` to UnifiedMedia sub-clips inside trimmed StitchedMedia segments. Missing `scalar`/`mediaStart`/`start`. (group.py ~L425)
+
+7. [verified] `Group.merge_internal_tracks()` doesn't detect or resolve duplicate clip IDs across merged tracks. (group.py ~L265)
+
+**Track/timeline:**
+
+8. [verified] `Track.shift_all_clips()` and `Timeline.shift_all()` store `duration` as string fraction when non-integer. `duration` MUST be integer ticks; my R129 fix introduced this bug by copying the `mediaStart` pattern. HIGH. (track.py ~L2415, timeline.py ~L810)
+
+9. [verified] `Track.remove_gap_at()` doesn't detect leading gap (gap before first clip). Loop only checks inter-clip pairs. (track.py ~L2361)
+
+10. [verified] `Track.replace_clip()` double-remap: sets new_clip_data['id'] = new_id before `_remap_clip_ids_with_map` with counter at new_id+1, so id_map gets stale `new_id → new_id+1` entry. `_remap_asset_properties` corrupts self-references. (track.py ~L1960)
+
+11. [verified] `Timeline.build_section_timeline()` doesn't remap clip IDs when moving compound clips. Group/StitchedMedia/UnifiedMedia nested IDs may collide with target track's nested structures. (timeline.py ~L960)
 
 ## TechSmith Tutorial Analysis
 
