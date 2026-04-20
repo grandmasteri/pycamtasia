@@ -107,3 +107,35 @@ class TestReplaceClipRemapsNestedIds:
         inner_id = result._data['tracks'][0]['medias'][0]['id']
         # Nested ID should be remapped, not the original 999
         assert inner_id != 999
+
+    def test_replace_clip_id_counter_no_collision(self):
+        """Bug 10: id_counter should start after new_id to avoid overwriting it."""
+        track = _make_track()
+        original = track.add_callout("A", 0, 5)
+        old_id = original.id
+
+        # Create replacement with nested sub-clips (UnifiedMedia pattern)
+        new_data: dict[str, Any] = {
+            "_type": "UnifiedMedia",
+            "id": 999,
+            "duration": 10,
+            "start": 0,
+            "mediaStart": 0,
+            "mediaDuration": 10,
+            "video": {
+                "id": 998,
+                "_type": "VMFile",
+                "duration": 10,
+                "start": 0,
+                "mediaStart": 0,
+                "mediaDuration": 10,
+            },
+        }
+        result = track.replace_clip(old_id, new_data)
+
+        # The top-level id should be preserved (not overwritten by remap)
+        top_id = result.id
+        video_id = new_data.get("video", {}).get("id")
+        assert top_id != video_id, "Top-level ID must differ from sub-clip ID"
+        assert video_id is not None, "Sub-clip should have an ID"
+        assert video_id > top_id, "Sub-clip ID should be allocated after top-level ID"

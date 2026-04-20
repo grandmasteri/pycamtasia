@@ -41,7 +41,10 @@ class UnifiedMedia(BaseClip):
         """The audio child clip (AMFile)."""
         if self._audio_cache is None:
             from camtasia.timeline.clips import clip_from_dict
-            self._audio_cache = clip_from_dict(self._data['audio'])
+            audio_data = self._data.get('audio')
+            if audio_data is None:
+                raise AttributeError('UnifiedMedia has no audio child; check .has_audio first')
+            self._audio_cache = clip_from_dict(audio_data)
         return self._audio_cache
 
     @property

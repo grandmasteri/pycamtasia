@@ -782,3 +782,27 @@ class TestTrackContains:
     def test_track_contains_non_clip_returns_false(self):
         t = _proto_track_with_clips(2)
         assert ("not a clip" in t) is False
+
+
+class TestExtendClipTrimsEffects:
+    """Bug 14: extend_clip should trim effects when shortening a clip."""
+
+    def test_shorten_trims_effects_past_new_duration(self):
+        from camtasia.timing import seconds_to_ticks
+        attrs: dict[str, Any] = {"ident": "Track 1"}
+        data: dict[str, Any] = {"trackIndex": 0, "medias": []}
+        track = Track(attrs, data)
+        clip = track.add_callout("A", 0, 10.0)
+        m = track._data["medias"][0]
+        m["effects"] = [
+            {"start": 0, "duration": seconds_to_ticks(3.0), "name": "early"},
+            {"start": seconds_to_ticks(8.0), "duration": seconds_to_ticks(2.0), "name": "late"},
+        ]
+
+        track.extend_clip(clip.id, extend_seconds=-4.0)  # new duration = 6s
+
+        effects = m["effects"]
+        early = [e for e in effects if e.get("name") == "early"]
+        assert len(early) == 1, "Effect within new duration should be kept"
+        late = [e for e in effects if e.get("name") == "late"]
+        assert len(late) == 0, "Effect past new duration should be removed"

@@ -927,3 +927,25 @@ class TestBuildSectionTimelineOverlap:
         assert c1._data['start'] == 0
         assert c2._data['start'] == seconds_to_ticks(3.0)
         assert c3._data['start'] == seconds_to_ticks(6.0)
+
+
+class TestShiftAllClampEffects:
+    """Bug 13: shift_all should adjust effects on clamped clips."""
+
+    def test_clamped_clip_effects_adjusted(self, project):
+        from camtasia.timing import seconds_to_ticks
+        track = project.timeline.tracks[0]
+        clip = track.add_clip('VMFile', 0, seconds_to_ticks(2.0), seconds_to_ticks(10.0))
+        clip._data['effects'] = [
+            {'start': 0, 'duration': seconds_to_ticks(3.0), 'name': 'early'},
+            {'start': seconds_to_ticks(5.0), 'duration': seconds_to_ticks(3.0), 'name': 'mid'},
+        ]
+
+        project.timeline.shift_all(-5.0)  # clamp_amount = 3s
+
+        effects = clip._data['effects']
+        early = [e for e in effects if e.get('name') == 'early']
+        assert len(early) == 0, 'Effect in clamped region should be removed'
+        mid = [e for e in effects if e.get('name') == 'mid']
+        assert len(mid) == 1
+        assert mid[0]['start'] == seconds_to_ticks(2.0)

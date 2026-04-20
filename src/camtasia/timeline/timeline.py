@@ -17,6 +17,7 @@ from camtasia.timeline.markers import Marker, MarkerList
 from camtasia.timeline.track import (
     _GROUP_DEFAULT_PARAMETERS,
     Track,
+    _adjust_effects_after_split_right,
     _parse_scalar,
     _propagate_start_to_unified,
 )
@@ -819,6 +820,7 @@ class Timeline:
                     if m.get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group') and scalar != 0:
                         new_md = Fraction(new_duration) / scalar
                         m['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
+                    _adjust_effects_after_split_right(m, clamp_amount)
                 else:
                     m['start'] = new_start
                 _propagate_start_to_unified(m)
@@ -971,14 +973,14 @@ class Timeline:
         # Build internal tracks (one per source track)
         internal_tracks: list[dict] = []
         id_counter = [self.next_clip_id()]
+        id_map: dict[int, int] = {}
         for track_idx in sorted(clips_by_track.keys()):
             internal_medias: list[dict] = []
             for clip_data in clips_by_track[track_idx]:
                 cloned = copy.deepcopy(clip_data)
                 cloned['start'] = int(cloned.get('start', 0)) - earliest_start
                 _propagate_start_to_unified(cloned)
-                _id_map: dict[int, int] = {}
-                _remap_clip_ids_with_map(cloned, id_counter, _id_map)
+                _remap_clip_ids_with_map(cloned, id_counter, id_map)
                 internal_medias.append(cloned)
             internal_tracks.append({
                 'trackIndex': len(internal_tracks),
@@ -992,18 +994,39 @@ class Timeline:
                 'solo': False,
             })
 
-        # Remove clips from their original tracks (preserve empty tracks)
+        # Remove clips from their original tracks, preserving inter-group transitions
+        # First, collect transitions where both endpoints are in clip_id_set
+        group_transitions_by_track_idx: dict[int, list[dict]] = {}
         for track in self.tracks:
-            medias = track._data.get('medias', [])
-            track._data['medias'] = [
-                m for m in medias if m.get('id') not in clip_id_set
-            ]
             transitions = track._data.get('transitions', [])
+            for t in transitions:
+                if t.get('leftMedia') in clip_id_set and t.get('rightMedia') in clip_id_set:
+                    new_t = copy.deepcopy(t)
+                    new_t['leftMedia'] = id_map.get(t['leftMedia'], t['leftMedia'])
+                    new_t['rightMedia'] = id_map.get(t['rightMedia'], t['rightMedia'])
+                    group_transitions_by_track_idx.setdefault(track.index, []).append(new_t)
             track._data['transitions'] = [
                 t for t in transitions
                 if t.get('leftMedia') not in clip_id_set
                 and t.get('rightMedia') not in clip_id_set
             ]
+
+        for track in self.tracks:
+            medias = track._data.get('medias', [])
+            track._data['medias'] = [
+                m for m in medias if m.get('id') not in clip_id_set
+            ]
+
+        # Add preserved transitions to internal tracks
+        for itrack in internal_tracks:
+            # Find the original track index for this internal track
+            sorted_track_idxs = sorted(clips_by_track.keys())
+            internal_idx = itrack['trackIndex']
+            if internal_idx < len(sorted_track_idxs):
+                orig_track_idx = sorted_track_idxs[internal_idx]
+                itrack.setdefault('transitions', []).extend(
+                    group_transitions_by_track_idx.get(orig_track_idx, [])
+                )
 
         # Create the Group on the target track directly with tick values
         # to avoid ticks→seconds→ticks roundtrip

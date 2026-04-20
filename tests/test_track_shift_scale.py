@@ -172,3 +172,32 @@ class TestTimelineShiftAllRemovesZeroDuration:
         tl = Timeline(tl_data)
         tl.shift_all(-5.0)
         assert len(tl_data['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias']) == 0
+
+
+class TestShiftAllClipsEffectsOnClamp:
+    """Bug 12: shift_all_clips should adjust effects when clips are clamped."""
+
+    def test_clamped_clip_effects_adjusted(self):
+        track = _make_track()
+        track.add_callout("A", 2.0, 10.0)
+        # Add an effect at the start and one later
+        m = track._data["medias"][0]
+        m["effects"] = [
+            {"start": 0, "duration": seconds_to_ticks(3.0), "name": "early"},
+            {"start": seconds_to_ticks(5.0), "duration": seconds_to_ticks(3.0), "name": "mid"},
+        ]
+
+        track.shift_all_clips(-5.0)  # clamp_amount = 3s (clip was at 2s, shifted -5s)
+
+        m = track._data["medias"][0]
+        assert m["start"] == 0
+        effects = m["effects"]
+        # "early" effect: start=0, dur=3s. After clamp 3s from start:
+        # entirely in the trimmed portion? No: clamp_amount = 3s (5-2=3).
+        # early: end=3s <= 3s -> removed
+        # mid: start=5s, dur=3s. After shift right by 3s: start=2s, dur=3s
+        early = [e for e in effects if e.get("name") == "early"]
+        assert len(early) == 0, "Effect entirely in clamped region should be removed"
+        mid = [e for e in effects if e.get("name") == "mid"]
+        assert len(mid) == 1
+        assert mid[0]["start"] == seconds_to_ticks(2.0)

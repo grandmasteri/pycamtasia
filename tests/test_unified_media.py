@@ -322,3 +322,24 @@ def test_unified_media_not_silent_when_gain_nonzero():
         'audio': {'attributes': {'gain': 0.8}},
     })
     assert clip.is_silent is False
+
+
+# ------------------------------------------------------------------
+# Bug fix: UnifiedMedia.audio raises AttributeError instead of KeyError
+# ------------------------------------------------------------------
+
+class TestUnifiedMediaAudioMissing:
+    def test_audio_raises_attribute_error_when_missing(self):
+        data = {
+            '_type': 'UnifiedMedia', 'id': 1,
+            'start': 0, 'duration': 100,
+            'video': {'_type': 'VMFile', 'id': 2, 'src': 1, 'start': 0, 'duration': 100},
+        }
+        um = UnifiedMedia(data)
+        with pytest.raises(AttributeError, match='has no audio child'):
+            _ = um.audio
+
+    def test_audio_works_when_present(self, unified_data):
+        um = UnifiedMedia(unified_data)
+        audio = um.audio
+        assert audio.id == 8

@@ -224,3 +224,32 @@ class TestProjectGroupClipsAcrossTracks:
 
         with pytest.raises(KeyError, match='Target track not found'):
             project.group_clips_across_tracks([c0.id], 'NoSuchTrack')
+
+    def test_inter_group_transitions_preserved(self, project):
+        """Bug 15: transitions between two grouped clips are preserved inside the Group."""
+        tl = project.timeline
+        t0 = tl.add_track('V')
+        c0 = t0.add_video(1, start_seconds=0.0, duration_seconds=2.0)
+        c1 = t0.add_video(2, start_seconds=2.0, duration_seconds=2.0)
+        # Inject a transition between c0 and c1
+        t0._data.setdefault('transitions', []).append({
+            'leftMedia': c0.id, 'rightMedia': c1.id, 'duration': 100,
+        })
+
+        group = tl.group_clips_across_tracks([c0.id, c1.id], t0.index)
+
+        # Transition should be removed from original track
+        assert not t0._data.get('transitions', [])
+        # Transition should exist inside the Group's internal tracks
+        internal_transitions = []
+        for itrack in group._data.get('tracks', []):
+            internal_transitions.extend(itrack.get('transitions', []))
+        assert len(internal_transitions) == 1
+        # Transition endpoints should be remapped to new IDs
+        t_entry = internal_transitions[0]
+        internal_ids = set()
+        for itrack in group._data.get('tracks', []):
+            for m in itrack.get('medias', []):
+                internal_ids.add(m['id'])
+        assert t_entry['leftMedia'] in internal_ids
+        assert t_entry['rightMedia'] in internal_ids

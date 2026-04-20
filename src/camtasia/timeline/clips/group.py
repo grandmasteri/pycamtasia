@@ -196,6 +196,16 @@ class Group(BaseClip):
                     orig_scalar = _parse_scalar(cloned_data.get('scalar', 1))
                     composed = group_scalar * orig_scalar
                     cloned_data['scalar'] = int(composed) if composed == int(composed) else str(composed)
+                    # Scale effect start/duration
+                    for effect in cloned_data.get('effects', []):
+                        if 'start' in effect:
+                            orig_eff_start = Fraction(str(effect['start']))
+                            new_eff_start = orig_eff_start * group_scalar
+                            effect['start'] = int(new_eff_start) if new_eff_start == int(new_eff_start) else str(new_eff_start)
+                        if 'duration' in effect:
+                            orig_eff_dur = Fraction(str(effect['duration']))
+                            new_eff_dur = orig_eff_dur * group_scalar
+                            effect['duration'] = int(new_eff_dur) if new_eff_dur == int(new_eff_dur) else str(new_eff_dur)
                     if cloned_data.get('_type') == 'StitchedMedia':
                         for inner in cloned_data.get('medias', []):
                             inner['scalar'] = cloned_data['scalar']
@@ -532,6 +542,8 @@ class Group(BaseClip):
         cid = next_id
 
         for src_start, src_end, tl_dur in segments:
+            if src_end <= src_start:
+                raise ValueError(f'segment src_end ({src_end}) must be > src_start ({src_start})')
             src_dur = src_end - src_start
             scalar = (Fraction(tl_dur) / Fraction(src_dur)).limit_denominator(100000)
 
@@ -610,6 +622,7 @@ class Group(BaseClip):
         self._data['scalar'] = 1
 
         # Keep VMFile on other tracks but extend to cover full source
+        total_src = sum(seconds_to_ticks(src_end - src_start) for src_start, src_end, _tl_dur in segments)
         for track in self._data.get('tracks', []):
             if track is media_track:
                 continue
@@ -618,9 +631,9 @@ class Group(BaseClip):
             for m in track.get('medias', []):
                 if m.get('_type') in ('VMFile', 'ScreenVMFile', 'AMFile'):
                     m['duration'] = total_tl
-                    m['mediaDuration'] = total_tl
+                    m['mediaDuration'] = total_src
                     m['mediaStart'] = first_seg_src_start_ticks
-                    m['scalar'] = 1
+                    m['scalar'] = int(Fraction(total_tl) / Fraction(total_src)) if total_src != 0 else 1
 
     def sync_internal_durations(self) -> Self:
         """Trim all internal clips to match the Group's duration.
@@ -665,6 +678,11 @@ class Group(BaseClip):
                             seg_end = seg_start + seg_dur
                             if seg_end > new_dur:
                                 seg['duration'] = new_dur - seg_start
+                                # Recalculate mediaDuration for speed-changed segments
+                                seg_scalar = _parse_scalar(seg.get('scalar', 1))
+                                if seg_scalar != 0 and seg.get('_type') not in ('IMFile', 'ScreenIMFile'):
+                                    new_md = Fraction(seg['duration']) / seg_scalar
+                                    seg['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
                             segments_to_keep.append(seg)
                         m['medias'] = segments_to_keep
                     from camtasia.timeline.track import _propagate_start_to_unified as _psu

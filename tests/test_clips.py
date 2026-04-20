@@ -1806,3 +1806,145 @@ def test_set_speed_group_propagates_to_stitched_media() -> None:
     assert seg0['start'] == 0
     assert seg1['start'] == seg_dur // 2
     assert seg1['scalar'] == '1/2'
+
+
+# ------------------------------------------------------------------
+# Bug fix: set_speed Group propagates mediaDuration/mediaStart to UnifiedMedia sub-dicts
+# ------------------------------------------------------------------
+
+def test_set_speed_group_propagates_media_duration_to_unified_sub_dicts() -> None:
+    """set_speed on Group must propagate mediaDuration and mediaStart to UnifiedMedia video/audio."""
+    inner_dur = EDIT_RATE * 10
+    data = _base_clip_dict(
+        _type='Group',
+        duration=EDIT_RATE * 10,
+        mediaDuration=EDIT_RATE * 10,
+        tracks=[{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'UnifiedMedia', 'id': 30, 'src': 1,
+                'start': 0, 'duration': inner_dur,
+                'mediaStart': 1000, 'mediaDuration': inner_dur, 'scalar': 1,
+                'video': {'_type': 'VMFile', 'start': 0, 'duration': inner_dur,
+                          'scalar': 1, 'mediaStart': 1000, 'mediaDuration': inner_dur},
+                'audio': {'_type': 'AMFile', 'start': 0, 'duration': inner_dur,
+                          'scalar': 1, 'mediaStart': 1000, 'mediaDuration': inner_dur},
+            }],
+        }],
+    )
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    inner = data['tracks'][0]['medias'][0]
+    assert inner['video']['mediaDuration'] == inner['mediaDuration']
+    assert inner['video']['mediaStart'] == inner['mediaStart']
+    assert inner['audio']['mediaDuration'] == inner['mediaDuration']
+    assert inner['audio']['mediaStart'] == inner['mediaStart']
+
+
+# ------------------------------------------------------------------
+# Bug fix: set_speed Group sets clipSpeedAttribute on inner clips
+# ------------------------------------------------------------------
+
+def test_set_speed_group_sets_clip_speed_attribute_on_inner_clips() -> None:
+    """set_speed on Group must set clipSpeedAttribute metadata on inner clips."""
+    inner_dur = EDIT_RATE * 10
+    data = _base_clip_dict(
+        _type='Group',
+        duration=EDIT_RATE * 10,
+        mediaDuration=EDIT_RATE * 10,
+        tracks=[{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'VMFile', 'id': 20, 'src': 1,
+                'start': 0, 'duration': inner_dur,
+                'mediaStart': 0, 'mediaDuration': inner_dur, 'scalar': 1,
+                'metadata': {},
+            }],
+        }],
+    )
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    inner = data['tracks'][0]['medias'][0]
+    assert inner['metadata']['clipSpeedAttribute'] == {'type': 'bool', 'value': True}
+
+
+def test_set_speed_group_sets_clip_speed_attribute_on_unified_sub_dicts() -> None:
+    """set_speed on Group must set clipSpeedAttribute on UnifiedMedia video/audio sub-dicts."""
+    inner_dur = EDIT_RATE * 10
+    data = _base_clip_dict(
+        _type='Group',
+        duration=EDIT_RATE * 10,
+        mediaDuration=EDIT_RATE * 10,
+        tracks=[{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'UnifiedMedia', 'id': 30, 'src': 1,
+                'start': 0, 'duration': inner_dur,
+                'mediaStart': 0, 'mediaDuration': inner_dur, 'scalar': 1,
+                'metadata': {},
+                'video': {'_type': 'VMFile', 'start': 0, 'duration': inner_dur,
+                          'scalar': 1, 'mediaStart': 0, 'metadata': {}},
+                'audio': {'_type': 'AMFile', 'start': 0, 'duration': inner_dur,
+                          'scalar': 1, 'mediaStart': 0, 'metadata': {}},
+            }],
+        }],
+    )
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    inner = data['tracks'][0]['medias'][0]
+    assert inner['metadata']['clipSpeedAttribute'] == {'type': 'bool', 'value': True}
+    assert inner['video']['metadata']['clipSpeedAttribute'] == {'type': 'bool', 'value': True}
+    assert inner['audio']['metadata']['clipSpeedAttribute'] == {'type': 'bool', 'value': True}
+
+
+def test_set_speed_group_sets_clip_speed_attribute_on_stitched_segments() -> None:
+    """set_speed on Group must set clipSpeedAttribute on StitchedMedia segments."""
+    seg_dur = EDIT_RATE * 5
+    data = _base_clip_dict(
+        _type='Group',
+        duration=EDIT_RATE * 10,
+        mediaDuration=EDIT_RATE * 10,
+        tracks=[{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia', 'id': 40, 'src': 1,
+                'start': 0, 'duration': EDIT_RATE * 10,
+                'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                'metadata': {},
+                'medias': [
+                    {'_type': 'VMFile', 'id': 41, 'start': 0, 'duration': seg_dur,
+                     'mediaDuration': seg_dur, 'scalar': 1, 'metadata': {}},
+                ],
+            }],
+        }],
+    )
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    stitched = data['tracks'][0]['medias'][0]
+    assert stitched['metadata']['clipSpeedAttribute'] == {'type': 'bool', 'value': True}
+    assert stitched['medias'][0]['metadata']['clipSpeedAttribute'] == {'type': 'bool', 'value': True}
+
+
+# ------------------------------------------------------------------
+# Bug fix: scalar.setter no duplicate mediaDuration write
+# ------------------------------------------------------------------
+
+def test_scalar_setter_no_duplicate_media_duration() -> None:
+    """scalar.setter on UnifiedMedia should write mediaDuration exactly once to sub-dicts."""
+    data = {
+        '_type': 'UnifiedMedia', 'id': 1, 'src': 1,
+        'start': 0, 'duration': EDIT_RATE * 10,
+        'mediaStart': 5000, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+        'video': {'_type': 'VMFile', 'start': 0, 'duration': EDIT_RATE * 10,
+                  'scalar': 1, 'mediaStart': 5000, 'mediaDuration': EDIT_RATE * 10},
+        'audio': {'_type': 'AMFile', 'start': 0, 'duration': EDIT_RATE * 10,
+                  'scalar': 1, 'mediaStart': 5000, 'mediaDuration': EDIT_RATE * 10},
+    }
+    clip = BaseClip(data)
+    clip.scalar = Fraction(1, 2)
+    # mediaDuration should be duration / scalar = 10s * 2 = 20s in ticks
+    expected_md = Fraction(EDIT_RATE * 10) / Fraction(1, 2)
+    assert Fraction(str(data['video']['mediaDuration'])) == expected_md
+    assert Fraction(str(data['audio']['mediaDuration'])) == expected_md
+    assert data['video']['mediaStart'] == data['mediaStart']
+    assert data['audio']['mediaStart'] == data['mediaStart']

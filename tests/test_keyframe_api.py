@@ -103,3 +103,16 @@ def test_clear_keyframes_returns_self() -> None:
     clip = VMFile(_vmfile_dict())
     result = clip.clear_keyframes("scale0")
     assert result is clip
+
+
+# -- clear_keyframes(None) also clears animationTracks --
+
+def test_clear_keyframes_all_clears_animation_tracks() -> None:
+    data = _vmfile_dict(
+        parameters={"opacity": {"type": "double", "defaultValue": 1.0, "keyframes": [{"time": 0, "value": 0.5, "endTime": 100, "duration": 100}]}},
+        animationTracks={"visual": [{"endTime": 100, "duration": 100}]},
+    )
+    clip = VMFile(data)
+    clip.clear_keyframes(None)
+    assert "keyframes" not in clip.parameters["opacity"]
+    assert data["animationTracks"] == {}

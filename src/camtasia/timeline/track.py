@@ -1383,6 +1383,8 @@ class Track:
                             sub['duration'] = m['duration']
                             sub['mediaDuration'] = m['mediaDuration']
                             sub['scalar'] = m.get('scalar', 1)
+                if extend < 0:
+                    _adjust_effects_after_split(m, new_dur)
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
@@ -1846,6 +1848,10 @@ class Track:
                             sub['mediaDuration'] = m['mediaDuration']
                             sub['mediaStart'] = m['mediaStart']
                             sub['scalar'] = m.get('scalar', 1)
+                            if trim_start > 0:
+                                _adjust_effects_after_split_right(sub, trim_start)
+                            if trim_end > 0:
+                                _adjust_effects_after_split(sub, m['duration'])
                 # Adjust effect timing after trim
                 if trim_start > 0:
                     _adjust_effects_after_split_right(m, trim_start)
@@ -2116,9 +2122,11 @@ class Track:
             if m.get('id') == clip_id:
                 new_clip_data['id'] = self._next_clip_id()
                 from camtasia.timeline.timeline import _remap_clip_ids_with_map
-                id_counter = [new_clip_data['id']]
+                new_id = new_clip_data['id']
+                id_counter = [new_id + 1]
                 id_map: dict[int, int] = {}
                 _remap_clip_ids_with_map(new_clip_data, id_counter, id_map)
+                new_clip_data['id'] = new_id
                 new_clip_data['start'] = m['start']
                 _propagate_start_to_unified(new_clip_data)
                 medias[i] = new_clip_data
@@ -2389,6 +2397,7 @@ class Track:
                 if m.get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group') and scalar != 0:
                     new_md = Fraction(new_duration) / scalar
                     m['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
+                _adjust_effects_after_split_right(m, clamp_amount)
             else:
                 m['start'] = new_start
             _propagate_start_to_unified(m)

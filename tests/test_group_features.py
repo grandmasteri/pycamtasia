@@ -844,3 +844,45 @@ class TestHasAudioUnifiedMedia:
             }],
         }])
         assert group.has_audio is True
+
+
+# ------------------------------------------------------------------
+# Bug fix: sync_internal_durations recalculates mediaDuration on trimmed StitchedMedia segments
+# ------------------------------------------------------------------
+
+class TestSyncInternalDurationsStitchedMediaDuration:
+    """sync_internal_durations must recalculate mediaDuration on trimmed StitchedMedia segments."""
+
+    def test_trimmed_segment_gets_recalculated_media_duration(self) -> None:
+        seg_dur = seconds_to_ticks(6.0)
+        seg_md = seconds_to_ticks(12.0)  # scalar = 1/2 → mediaDuration = duration / (1/2) = 2*duration
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia',
+                'id': 10,
+                'start': 0,
+                'duration': seg_dur,
+                'mediaStart': 0,
+                'mediaDuration': seg_md,
+                'scalar': '1/2',
+                'parameters': {},
+                'effects': [],
+                'metadata': {},
+                'animationTracks': {},
+                'medias': [
+                    {'_type': 'ScreenVMFile', 'id': 11, 'start': 0,
+                     'duration': seg_dur, 'mediaDuration': seg_md,
+                     'scalar': '1/2', 'src': 2},
+                ],
+            }],
+        }])
+        # Trim group to 3s → segment trimmed from 6s to 3s
+        group._data['duration'] = seconds_to_ticks(3.0)
+        group.sync_internal_durations()
+
+        seg = group._data['tracks'][0]['medias'][0]['medias'][0]
+        assert seg['duration'] == seconds_to_ticks(3.0)
+        # mediaDuration should be recalculated: 3s / (1/2) = 6s
+        expected_md = Fraction(seconds_to_ticks(3.0)) / Fraction(1, 2)
+        assert Fraction(str(seg['mediaDuration'])) == expected_md

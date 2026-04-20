@@ -64,3 +64,60 @@ class TestTrimClip:
 
         with pytest.raises(KeyError, match="No clip with id=999"):
             track.trim_clip(999, trim_start_seconds=1.0)
+
+
+class TestTrimClipUnifiedMediaEffects:
+    """Bug 11: trim_clip should adjust effects on UnifiedMedia sub-clips."""
+
+    def _make_unified_clip(self, track: Track) -> int:
+        """Add a UnifiedMedia clip with effects on sub-clips."""
+        clip_data: dict[str, Any] = {
+            "id": 100,
+            "_type": "UnifiedMedia",
+            "start": 0,
+            "duration": seconds_to_ticks(10.0),
+            "mediaStart": 0,
+            "mediaDuration": seconds_to_ticks(10.0),
+            "scalar": 1,
+            "video": {
+                "id": 101,
+                "_type": "VMFile",
+                "start": 0,
+                "duration": seconds_to_ticks(10.0),
+                "mediaStart": 0,
+                "mediaDuration": seconds_to_ticks(10.0),
+                "scalar": 1,
+                "effects": [
+                    {"start": 0, "duration": seconds_to_ticks(3.0), "name": "early"},
+                    {"start": seconds_to_ticks(7.0), "duration": seconds_to_ticks(3.0), "name": "late"},
+                ],
+            },
+        }
+        track._data.setdefault("medias", []).append(clip_data)
+        return 100
+
+    def test_trim_start_adjusts_sub_clip_effects(self):
+        track = _make_track()
+        clip_id = self._make_unified_clip(track)
+
+        track.trim_clip(clip_id, trim_start_seconds=2.0)
+
+        video = track._data["medias"][0]["video"]
+        effects = video["effects"]
+        # "early" effect: was start=0, dur=3s. After trim 2s from start:
+        # trimmed by 2s -> start=0, dur=1s
+        assert effects[0]["start"] == 0
+        assert effects[0]["duration"] == seconds_to_ticks(1.0)
+
+    def test_trim_end_adjusts_sub_clip_effects(self):
+        track = _make_track()
+        clip_id = self._make_unified_clip(track)
+
+        track.trim_clip(clip_id, trim_end_seconds=2.0)
+
+        video = track._data["medias"][0]["video"]
+        effects = video["effects"]
+        # "late" effect: was start=7s, dur=3s. New clip dur=8s.
+        # Effect end=10s > 8s, so trimmed to dur=1s
+        late = next(e for e in effects if e.get("name") == "late")
+        assert late["duration"] == seconds_to_ticks(1.0)

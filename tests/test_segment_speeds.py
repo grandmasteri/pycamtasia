@@ -500,3 +500,108 @@ def test_companion_media_start_uses_first_segment_source_start():
     group.set_internal_segment_speeds([(10, 30, 20), (30, 60, 30)])
     companion = group_data['tracks'][1]['medias'][0]
     assert companion['mediaStart'] == seconds_to_ticks(10)
+
+
+def test_companion_track_media_duration_matches_source():
+    """Bug 9: companion VMFile mediaDuration should equal total source, not total timeline."""
+    g = {
+        'id': 1, '_type': 'Group',
+        'start': 0, 'duration': seconds_to_ticks(10.0),
+        'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+        'scalar': 1,
+        'metadata': {}, 'parameters': {}, 'effects': [],
+        'attributes': {'ident': ''}, 'animationTracks': {},
+        'tracks': [
+            {'medias': [{
+                'id': 10, '_type': 'ScreenVMFile', 'src': 1,
+                'trackNumber': 0,
+                'start': 0, 'duration': seconds_to_ticks(10.0),
+                'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+                'scalar': 1, 'metadata': {}, 'parameters': {},
+                'effects': [], 'attributes': {'ident': ''}, 'animationTracks': {},
+            }]},
+            {'medias': [{
+                'id': 20, '_type': 'AMFile', 'src': 1,
+                'start': 0, 'duration': seconds_to_ticks(10.0),
+                'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+                'scalar': 1, 'metadata': {}, 'parameters': {},
+                'effects': [], 'attributes': {}, 'animationTracks': {},
+            }]},
+        ],
+    }
+    group = Group(g)
+    # 2x speed: 10s source -> 5s timeline, 20s source -> 10s timeline
+    group.set_internal_segment_speeds([(0, 10, 5), (10, 30, 10)])
+    companion = g['tracks'][-1]['medias'][0]
+    total_src = seconds_to_ticks(10) + seconds_to_ticks(20)
+    total_tl = seconds_to_ticks(5) + seconds_to_ticks(10)
+    assert companion['mediaDuration'] == total_src
+    assert companion['duration'] == total_tl
+
+
+# ------------------------------------------------------------------
+# Bug fix: set_internal_segment_speeds validates src_start < src_end
+# ------------------------------------------------------------------
+
+def test_set_internal_segment_speeds_rejects_invalid_range():
+    """src_end must be > src_start."""
+    group_data = {
+        'id': 1, '_type': 'Group',
+        'start': 0,
+        'duration': seconds_to_ticks(10.0),
+        'mediaStart': 0,
+        'mediaDuration': seconds_to_ticks(10.0),
+        'scalar': 1,
+        'metadata': {}, 'parameters': {}, 'effects': [],
+        'attributes': {'ident': ''}, 'animationTracks': {},
+        'tracks': [{
+            'medias': [{
+                'id': 10, '_type': 'UnifiedMedia',
+                'video': {
+                    'src': 1,
+                    'attributes': {'ident': ''},
+                    'parameters': {},
+                    'effects': [],
+                },
+                'start': 0, 'duration': seconds_to_ticks(10.0),
+                'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+                'scalar': 1, 'metadata': {}, 'parameters': {},
+                'effects': [], 'attributes': {}, 'animationTracks': {},
+            }],
+        }],
+    }
+    group = Group(group_data)
+    with pytest.raises(ValueError, match=r'src_end.*must be > src_start'):
+        group.set_internal_segment_speeds([(5.0, 5.0, 5.0)])
+
+
+def test_set_internal_segment_speeds_rejects_reversed_range():
+    """src_end < src_start should also be rejected."""
+    group_data = {
+        'id': 1, '_type': 'Group',
+        'start': 0,
+        'duration': seconds_to_ticks(10.0),
+        'mediaStart': 0,
+        'mediaDuration': seconds_to_ticks(10.0),
+        'scalar': 1,
+        'metadata': {}, 'parameters': {}, 'effects': [],
+        'attributes': {'ident': ''}, 'animationTracks': {},
+        'tracks': [{
+            'medias': [{
+                'id': 10, '_type': 'UnifiedMedia',
+                'video': {
+                    'src': 1,
+                    'attributes': {'ident': ''},
+                    'parameters': {},
+                    'effects': [],
+                },
+                'start': 0, 'duration': seconds_to_ticks(10.0),
+                'mediaStart': 0, 'mediaDuration': seconds_to_ticks(10.0),
+                'scalar': 1, 'metadata': {}, 'parameters': {},
+                'effects': [], 'attributes': {}, 'animationTracks': {},
+            }],
+        }],
+    }
+    group = Group(group_data)
+    with pytest.raises(ValueError, match=r'src_end.*must be > src_start'):
+        group.set_internal_segment_speeds([(10.0, 5.0, 5.0)])

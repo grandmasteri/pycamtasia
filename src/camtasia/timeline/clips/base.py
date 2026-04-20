@@ -291,7 +291,6 @@ class BaseClip:
                     sub['scalar'] = self._data['scalar']
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['mediaStart'] = self._data.get('mediaStart', 0)
-                    sub['mediaDuration'] = self._data['mediaDuration']
 
     def set_speed(self, speed: float) -> Self:
         """Set playback speed multiplier.
@@ -347,6 +346,8 @@ class BaseClip:
                     orig_dur = Fraction(str(inner_clip_data.get('duration', 0)))
                     new_dur = orig_dur * scalar_fraction
                     inner_clip_data['duration'] = int(new_dur) if new_dur == int(new_dur) else str(new_dur)
+                    # Set clipSpeedAttribute metadata
+                    inner_clip_data.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
                     # Propagate to UnifiedMedia sub-dicts
                     if inner_clip_data.get('_type') == 'UnifiedMedia':
                         for sub_key in ('video', 'audio'):
@@ -355,6 +356,11 @@ class BaseClip:
                                 sub['scalar'] = inner_clip_data['scalar']
                                 sub['start'] = inner_clip_data['start']
                                 sub['duration'] = inner_clip_data['duration']
+                                if 'mediaDuration' in inner_clip_data:
+                                    sub['mediaDuration'] = inner_clip_data['mediaDuration']
+                                if 'mediaStart' in inner_clip_data:
+                                    sub['mediaStart'] = inner_clip_data['mediaStart']
+                                sub.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
                     # Re-layout StitchedMedia nested segments
                     elif inner_clip_data.get('_type') == 'StitchedMedia':
                         for inner_seg in inner_clip_data.get('medias', []):
@@ -364,6 +370,7 @@ class BaseClip:
                             seg_orig_dur = Fraction(str(inner_seg.get('duration', 0)))
                             seg_new_dur = seg_orig_dur * scalar_fraction
                             inner_seg['duration'] = int(seg_new_dur) if seg_new_dur == int(seg_new_dur) else str(seg_new_dur)
+                            inner_seg.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
                         # Re-layout starts sequentially
                         cursor = 0
                         for inner_seg in inner_clip_data.get('medias', []):
@@ -1455,6 +1462,7 @@ class BaseClip:
             for p in params.values():
                 if isinstance(p, dict):
                     p.pop('keyframes', None)
+            self._data['animationTracks'] = {}
         return self
 
     def reset_transforms(self) -> Self:

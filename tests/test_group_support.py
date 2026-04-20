@@ -695,3 +695,81 @@ class TestSyncInternalDurationsZeroDurationPropagation:
 class TestSetInternalSegmentSpeedsDocstring:
     def test_docstring_says_screen_vmfile(self):
         assert 'ScreenVMFile' in Group.set_internal_segment_speeds.__doc__
+
+
+# ==================================================================
+# Bug fix: ungroup scales effect start/duration by group_scalar
+# ==================================================================
+
+class TestUngroupScalesEffects:
+    def test_ungroup_scales_effect_start_and_duration(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': 2000, 'mediaDuration': 2000,
+            'scalar': '1/2',
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'VMFile', 'id': 10, 'src': 1,
+                    'start': 0, 'duration': 1000,
+                    'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+                    'effects': [
+                        {'effectName': 'Glow', 'start': 100, 'duration': 400},
+                    ],
+                }],
+            }],
+        }
+        group = Group(group_data)
+        clips = group.ungroup()
+        effect = clips[0]._data['effects'][0]
+        # start: 100 * 1/2 = 50, duration: 400 * 1/2 = 200
+        assert effect['start'] == 50
+        assert effect['duration'] == 200
+
+    def test_ungroup_no_effect_scaling_at_normal_speed(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': 1000, 'mediaDuration': 1000,
+            'scalar': 1,
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'VMFile', 'id': 10, 'src': 1,
+                    'start': 0, 'duration': 1000,
+                    'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+                    'effects': [
+                        {'effectName': 'Glow', 'start': 100, 'duration': 400},
+                    ],
+                }],
+            }],
+        }
+        group = Group(group_data)
+        clips = group.ungroup()
+        effect = clips[0]._data['effects'][0]
+        # No scaling at normal speed
+        assert effect['start'] == 100
+        assert effect['duration'] == 400
+
+    def test_ungroup_scales_effect_fractional(self):
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 0,
+            'duration': 3000, 'mediaDuration': 3000,
+            'scalar': '1/3',
+            'tracks': [{
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'VMFile', 'id': 10, 'src': 1,
+                    'start': 0, 'duration': 900,
+                    'mediaStart': 0, 'mediaDuration': 900, 'scalar': 1,
+                    'effects': [
+                        {'effectName': 'Glow', 'start': 90, 'duration': 90},
+                    ],
+                }],
+            }],
+        }
+        group = Group(group_data)
+        clips = group.ungroup()
+        effect = clips[0]._data['effects'][0]
+        # 90 * 1/3 = 30
+        assert effect['start'] == 30
+        assert effect['duration'] == 30
