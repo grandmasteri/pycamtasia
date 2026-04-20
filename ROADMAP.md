@@ -4,7 +4,37 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 9 domains 4-6) — NOT YET FIXED
+
+**Project/validation/history:**
+
+1. `validate()` uses `self.timeline.all_clips()` (top-level only) to build `referenced_ids`. Media referenced only by nested Group/StitchedMedia children falsely reported as orphaned. Should use `self.all_clips` (Project property, which recurses). (project.py ~L596)
+
+2. `_check_timing_consistency` produces false positives for UnifiedMedia video/audio children. They recurse in validation but their timing is governed by parent wrapper; independent check gives wrong warnings. (validation.py ~L260)
+
+3. `merge_projects` uses `lstrip('./')` instead of `removeprefix('./')` for stripping relative path prefix. `lstrip` strips characters not string prefix; `../shared/file` mangled to `shared/file`. (project.py ~L775)
+
+**Operations:**
+
+4. `speed.py set_audio_speed` re-introduces overlaps that `rescale_project`'s overlap fix resolved. Unconditional `target_clip["duration"] = ...` overwrite undoes the fix. (speed.py ~L265)
+
+5. `speed.py` overlap fix uses inconsistent scalar serialization (`int(scalar)` for integer values) while `scalar_to_string()` always returns `"n/d"` format for non-unity. Downstream type-checks break. (speed.py ~L172)
+
+6. `speed.py` overlap fix silently skips when `duration <= overlap`. Function's stated purpose is to fix 1-tick overlaps; silent failure undermines that. (speed.py ~L168)
+
+7. `speed.py _process_clip` UnifiedMedia speed-change child override doesn't propagate `scalar`/`mediaStart` after `duration`/`mediaDuration` override. Should call `_propagate_start_to_unified(clip)`. (speed.py ~L125)
+
+**Supporting subsystems:**
+
+8. `arrow()` wraps `stroke-width` in animated parameter dict while all other annotation functions use plain floats. Generic annotation processing code breaks on TypeError. (annotations/callouts.py ~L137)
+
+9. `Media.duration_seconds` returns `0.0` for image media instead of `None`. Bypasses None-check fallbacks in callers like `TimelineBuilder.add_audio()`, producing zero-duration clips. (media_bin/media_bin.py ~L89)
+
+10. `highlight()` missing `stroke-color-*`, `stroke-width`, `stroke-style` keys that `rectangle()` includes for the same `shape-rectangle` shape type. (annotations/callouts.py ~L152)
+
+11. `keystroke_callout()` missing `fill-color-*`, `stroke-*` background properties. Renders as plain text instead of characteristic key-cap styling. (annotations/callouts.py ~L168)
+
+12. `add_background_music` volume keyframe `time` fields inconsistent with Camtasia's schema (though earlier cycle withdrew this as "valid"). Second keyframe has `time=0` but should be `time=fade_in_ticks`. Re-examine. (project.py ~L1430)
 
 ## TechSmith Tutorial Analysis
 
