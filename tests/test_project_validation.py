@@ -230,3 +230,24 @@ def test_validate_does_not_report_orphaned_media_referenced_by_group_child(proje
     issues = project.validate()
     orphan_messages = [i.message for i in issues if 'Orphaned' in i.message and 'nested.mov' in i.message]
     assert orphan_messages == [], f'Media 50 falsely reported as orphaned: {orphan_messages}'
+
+
+class TestSrcReferencesNoneSourceId:
+    """_check_src_references must not include None in source_ids set."""
+
+    def test_none_id_in_source_bin_does_not_match_clips(self, project):
+        from camtasia.validation import _check_src_references
+        data = {
+            'sourceBin': [{'id': None, 'src': './media/bad.wav'}],
+            'timeline': {
+                'sceneTrack': {
+                    'scenes': [{'csml': {'tracks': [
+                        {'medias': [{'id': 1, 'src': None, 'start': 0, 'duration': 100}]}
+                    ]}}]
+                }
+            },
+        }
+        issues = _check_src_references(data)
+        # src=None on the clip should not match the None id in sourceBin
+        error_msgs = [i.message for i in issues]
+        assert not any('not found in sourceBin' in m for m in error_msgs)

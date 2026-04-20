@@ -1838,3 +1838,15 @@ class TestValidateMissingSourceFileNotSkipped:
         issues = project.validate()
         msgs = [i.message for i in issues]
         assert any('Missing source file' in m and 'nonexistent_audio.wav' in m for m in msgs)
+
+
+class TestLongestClipZeroDuration:
+    """longest_clip must return zero-duration clips instead of None."""
+
+    def test_zero_duration_clip_is_returned(self, project):
+        track = project.timeline.get_or_create_track('T')
+        track.add_clip('IMFile', 1, 0, 0)
+        result = project.longest_clip
+        assert result is not None
+        _, clip = result
+        assert clip.duration == 0

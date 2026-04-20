@@ -157,7 +157,7 @@ def _check_track_attributes_count(data: dict) -> list[ValidationIssue]:
 def _check_src_references(data: dict) -> list[ValidationIssue]:
     """Check that all clip src values reference existing sourceBin IDs."""
     issues: list[ValidationIssue] = []
-    source_ids = {s.get('id') for s in data.get('sourceBin', [])}
+    source_ids = {s.get('id') for s in data.get('sourceBin', []) if s.get('id') is not None}
     tracks = _get_tracks(data)
 
     def _check_medias(medias: list, path: str) -> None:

@@ -145,6 +145,24 @@ def plan_sync(
 
     resolved.sort(key=lambda x: x[0])
 
+    # Filter non-monotonic audio segments
+    filtered_resolved: list[tuple[int, float]] = []
+    prev_audio: float | None = None
+    for v_ticks, a_time in resolved:
+        if prev_audio is not None and a_time < prev_audio:
+            import warnings
+            warnings.warn(
+                f'Non-monotonic audio timestamps in sync plan at video={v_ticks}; skipping segment',
+                stacklevel=2,
+            )
+            continue
+        filtered_resolved.append((v_ticks, a_time))
+        prev_audio = a_time
+    resolved = filtered_resolved
+
+    if len(resolved) < 2:
+        return []
+
     segments: list[SyncSegment] = []
     for i in range(len(resolved) - 1):
         v_start, a_start = resolved[i]
@@ -183,16 +201,14 @@ def apply_sync(
     group_start_ticks = int(Fraction(str(group._data.get('start', 0))))
     media_start_ticks = int(Fraction(str(group._data.get('mediaStart', 0))))
     group_scalar = parse_scalar(group._data.get('scalar', 1))
+    if group_scalar == 0:
+        raise ValueError('Group has scalar=0 (degenerate); cannot compute source offsets')
     tuples = []
     for seg in segments:
         tl_offset = seg.video_start_ticks - group_start_ticks
         tl_offset_end = seg.video_end_ticks - group_start_ticks
-        if group_scalar != 0:
-            src_offset = round(Fraction(tl_offset) / group_scalar)
-            src_offset_end = round(Fraction(tl_offset_end) / group_scalar)
-        else:
-            src_offset = tl_offset
-            src_offset_end = tl_offset_end
+        src_offset = round(Fraction(tl_offset) / group_scalar)
+        src_offset_end = round(Fraction(tl_offset_end) / group_scalar)
         tuples.append((
             ticks_to_seconds(src_offset + media_start_ticks),
             ticks_to_seconds(src_offset_end + media_start_ticks),

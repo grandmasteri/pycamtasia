@@ -10,7 +10,7 @@ from camtasia.audiate.transcript import Word
 from camtasia.operations.diff import diff_projects
 from camtasia.operations.merge import _remap_src_in_clip
 from camtasia.operations.speed import _adjust_scalar, _scale_tick, rescale_project, set_audio_speed
-from camtasia.operations.sync import apply_sync, match_marker_to_transcript, plan_sync
+from camtasia.operations.sync import SyncSegment, apply_sync, match_marker_to_transcript, plan_sync
 from camtasia.operations.template import (
     _walk_clips,
     clone_project_structure,
@@ -1644,9 +1644,9 @@ class TestApplySyncExported:
 
 
 class TestApplySyncZeroScalarFallback:
-    """apply_sync must handle group_scalar == 0 without division error."""
+    """apply_sync must raise ValueError when group_scalar == 0."""
 
-    def test_zero_scalar_uses_raw_offsets(self):
+    def test_zero_scalar_raises_value_error(self):
         from unittest.mock import MagicMock
 
         from camtasia.operations.sync import SyncSegment
@@ -1665,7 +1665,93 @@ class TestApplySyncZeroScalarFallback:
             audio_end_seconds=1.0,
             scalar=Fraction(1),
         )
-        apply_sync(group, [seg])
-        call_args = group.set_internal_segment_speeds.call_args[0][0]
-        from camtasia.timing import ticks_to_seconds
-        assert call_args[0][1] == ticks_to_seconds(EDIT_RATE)
+        with pytest.raises(ValueError, match='scalar=0'):
+            apply_sync(group, [seg])
+
+
+class TestUnifiedMediaSpeedChangedEffectOrphan:
+    """Bug 5: speed-changed UnifiedMedia must not double-process children."""
+
+    def test_child_effects_scaled_once(self):
+        from camtasia.operations.speed import _process_clip
+        clip = {
+            '_type': 'UnifiedMedia',
+            'start': 0, 'duration': 1000, 'mediaDuration': 500,
+            'scalar': '1/2', 'mediaStart': 0,
+            'metadata': {'clipSpeedAttribute': {'value': True}},
+            'effects': [],
+            'video': {
+                '_type': 'VMFile',
+                'start': 0, 'duration': 1000, 'mediaDuration': 500,
+                'scalar': '1/2', 'mediaStart': 0,
+                'metadata': {'clipSpeedAttribute': {'value': True}},
+                'effects': [{'effectName': 'E', 'start': 100, 'duration': 200}],
+            },
+        }
+        _process_clip(clip, Fraction(2))
+        # Parent duration scaled: 1000*2=2000
+        assert clip['duration'] == 2000
+        # Child duration should match parent (not double-scaled)
+        assert clip['video']['duration'] == clip['duration']
+        # Child effect should be scaled once by factor 2
+        assert clip['video']['effects'][0]['start'] == 200
+        assert clip['video']['effects'][0]['duration'] == 400
+
+
+class TestPlanSyncNonMonotonicAudio:
+    """Bug 6: plan_sync must skip non-monotonic audio segments."""
+
+    def test_non_monotonic_audio_skipped_with_warning(self):
+        import warnings
+        # Markers at video positions 0, 1000, 2000
+        # Audio timestamps: 0.0, 5.0, 3.0 (non-monotonic at third)
+        words = [
+            Word(text='hello', start=0.0, end=0.5, word_id='w1'),
+            Word(text='world', start=5.0, end=5.5, word_id='w2'),
+            Word(text='back', start=3.0, end=3.5, word_id='w3'),
+        ]
+        markers = [('hello', 0), ('world', EDIT_RATE), ('back', EDIT_RATE * 2)]
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            segments = plan_sync(markers, words, edit_rate=EDIT_RATE)
+        # 'back' at audio=3.0 < prev_audio_end=5.5, so it should be skipped
+        # Only 1 segment should remain (hello->world)
+        assert len(segments) <= 1
+        warn_msgs = [str(x.message) for x in w]
+        assert any('Non-monotonic' in m for m in warn_msgs)
+
+
+class TestApplySyncGroupScalarZero:
+    """Bug 7: apply_sync must raise ValueError when group_scalar==0."""
+
+    def test_raises_on_zero_scalar(self):
+        from unittest.mock import MagicMock
+        group = MagicMock()
+        group._data = {
+            'start': 0, 'mediaStart': 0, 'scalar': 0,
+        }
+        seg = SyncSegment(
+            video_start_ticks=0, video_end_ticks=EDIT_RATE,
+            audio_start_seconds=0.0, audio_end_seconds=1.0,
+            scalar=Fraction(1),
+        )
+        with pytest.raises(ValueError, match='scalar=0'):
+            apply_sync(group, [seg])
+
+
+class TestPlanSyncFilteredToFewerThanTwoReturnsEmpty:
+    """When non-monotonic filtering leaves fewer than 2 markers, return empty list."""
+
+    def test_filter_leaves_one_marker_returns_empty(self):
+        import warnings
+        # Two markers: first has audio=5.0, second has audio=1.0 (before first)
+        # Second gets filtered; only 1 remains; return []
+        words = [
+            Word(text='alpha', start=5.0, end=5.5, word_id='w1'),
+            Word(text='beta', start=1.0, end=1.5, word_id='w2'),
+        ]
+        markers = [('alpha', 0), ('beta', EDIT_RATE)]
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            segments = plan_sync(markers, words, edit_rate=EDIT_RATE)
+        assert segments == []

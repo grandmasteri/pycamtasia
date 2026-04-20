@@ -150,7 +150,7 @@ class TestKeystrokeCalloutFontColor:
         assert 'color-red' in font
         assert 'color-green' in font
         assert 'color-blue' in font
-        assert 'color-opacity' not in font
+        assert 'color-opacity' in font
         assert font['color-red'] == 1.0
         assert font['color-green'] == 1.0
         assert font['color-blue'] == 1.0
@@ -282,22 +282,22 @@ class TestSquareDefaultStrokeColor:
         assert result['stroke-color-blue'] == 0.5
 
 
-class TestCalloutFontNoColorOpacity:
-    """Bug 13: text()/square() font dict should not include color-opacity."""
+class TestCalloutFontHasColorOpacity:
+    """Bug 12: text()/square()/keystroke font dict must include color-opacity."""
 
-    def test_text_font_no_color_opacity(self):
+    def test_text_font_has_color_opacity(self):
         from camtasia.annotations.callouts import text
         result = text('Hello', 'Arial', 'Bold')
-        assert 'color-opacity' not in result['font']
+        assert 'color-opacity' in result['font']
 
-    def test_square_font_no_color_opacity(self):
+    def test_square_font_has_color_opacity(self):
         from camtasia.annotations.callouts import square
         result = square('Hello', 'Arial', 'Bold')
-        assert 'color-opacity' not in result['font']
+        assert 'color-opacity' in result['font']
 
-    def test_keystroke_font_no_color_opacity(self):
+    def test_keystroke_font_has_color_opacity(self):
         result = keystroke_callout('Ctrl+C')
-        assert 'color-opacity' not in result['font']
+        assert 'color-opacity' in result['font']
 
 
 # ── Bug 8: arrow stroke-width is plain float, not animated dict ──────
@@ -381,3 +381,28 @@ def test_stroke_style_none_value():
     from camtasia.annotations.types import StrokeStyle
     assert StrokeStyle.NoStroke.value == 'none'
     assert StrokeStyle('none') == StrokeStyle.NoStroke
+
+
+class TestCalloutFontColorOpacity:
+    """Bug 12: text(), square(), and keystroke_callout() must include color-opacity in font dict."""
+
+    def test_text_has_color_opacity(self):
+        from camtasia.annotations.callouts import text
+        from camtasia.annotations.types import Color
+        result = text('hi', 'Arial', 'Bold', font_color=Color(1.0, 0.0, 0.0, 0.5))
+        assert result['font']['color-opacity'] == 0.5
+
+    def test_square_has_color_opacity(self):
+        from camtasia.annotations.types import Color
+        result = square('hi', 'Arial', 'Bold', font_color=Color(0.0, 1.0, 0.0, 0.8))
+        assert result['font']['color-opacity'] == 0.8
+
+    def test_keystroke_has_color_opacity(self):
+        result = keystroke_callout('Ctrl+C')
+        assert 'color-opacity' in result['font']
+        assert result['font']['color-opacity'] == 1.0
+
+    def test_text_default_opacity_is_one(self):
+        from camtasia.annotations.callouts import text
+        result = text('hi', 'Arial', 'Bold')
+        assert result['font']['color-opacity'] == 1.0

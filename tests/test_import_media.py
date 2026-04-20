@@ -136,3 +136,20 @@ class TestImportMediaExplicitZeroSampleRate:
             media = project.media_bin.import_media(audio_file, num_channels=0)
         st = media._data['sourceTracks'][0]
         assert st['numChannels'] != 6
+
+
+class TestImportMediaNoneDuration:
+    """Bug 10: import_media must handle None duration from pymediainfo without crashing."""
+
+    def test_none_duration_defaults_to_1000(self, project, dummy_mp4):
+        def _probe_none_duration(path):
+            return {
+                'width': 1920, 'height': 1080,
+                'duration_seconds': None, 'frame_rate': 30.0,
+                '_backend': 'fake',
+            }
+        with patch('camtasia.project._probe_media', _probe_none_duration):
+            media = project.import_media(dummy_mp4)
+        # Should not raise TypeError: float(None)
+        assert media is not None
+

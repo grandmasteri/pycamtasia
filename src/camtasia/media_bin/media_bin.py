@@ -325,7 +325,10 @@ class MediaBin:
                 else:
                     fps = float(track.get('frame_rate', track.get('sampling_rate', 30)) or 30)
                     _detected_fps = fps
-                    duration = round(float(track.get('duration', 1000)) / 1000.0 * fps)
+                    dur_val = track.get('duration')
+                    if dur_val is None:
+                        dur_val = 1000  # pragma: no cover  # defensive: pymediainfo rarely returns None for video duration
+                    duration = round(float(dur_val) / 1000.0 * fps)
 
         # Copy file into project media directory
         timestamp = datetime.datetime.now()

@@ -622,9 +622,9 @@ class Project:
     def longest_clip(self) -> tuple[Track, BaseClip] | None:
         """The longest clip across all tracks, or None if empty."""
         longest_pair: tuple[Track, BaseClip] | None = None
-        longest_duration: int = 0
+        longest_duration: int | None = None
         for track, clip in self.all_clips:
-            if clip.duration > longest_duration:
+            if longest_duration is None or clip.duration > longest_duration:
                 longest_duration = clip.duration
                 longest_pair = (track, clip)
         return longest_pair
@@ -1625,6 +1625,13 @@ class Project:
             placed_clips.append(clip)
 
         if replace_previous and len(placed_clips) > 1:
+            if fade_out_seconds > 0:
+                import warnings
+                warnings.warn(
+                    'replace_previous=True with fade_out_seconds>0 creates intentional clip overlaps '
+                    'that project.repair() will remove. Call the project without repair to preserve the crossfade.',
+                    stacklevel=2,
+                )
             for i in range(1, len(placed_clips)):
                 prev = placed_clips[i - 1]
                 next_start = placed_clips[i].start
@@ -2074,8 +2081,8 @@ class Project:
             duration_seconds=timeline_duration,
         )
         clip.volume = volume
-        if fade_in_seconds > 0 or fade_out_seconds > 0:
-            total_ticks = int(Fraction(str(clip._data.get('duration', 0))))
+        total_ticks = int(Fraction(str(clip._data.get('duration', 0))))
+        if (fade_in_seconds > 0 or fade_out_seconds > 0) and total_ticks > 0:
             fade_in_ticks = seconds_to_ticks(fade_in_seconds)
             fade_out_ticks = seconds_to_ticks(fade_out_seconds)
             # Clamp fades so they don't overlap

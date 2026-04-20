@@ -29,6 +29,9 @@ def export_markers_as_srt(
     """Export timeline markers as an SRT subtitle file."""
     path = Path(output_path)
     markers = list(project.timeline.markers)
+    if not markers:
+        import warnings
+        warnings.warn(f'No markers to export; writing empty SRT file to {path}', stacklevel=2)
     lines = []
     for i, marker in enumerate(markers, 1):
         start = marker.time_seconds

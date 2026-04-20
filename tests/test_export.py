@@ -496,3 +496,17 @@ class TestFormatTimecodeUsesFloorForFrameCount:
         # At exactly 1.0 seconds, frame count should be 0
         result = _format_timecode(1.0, fps=30)
         assert result == '00:00:01:00'
+
+
+class TestSrtEmptyMarkersWarning:
+    """Bug 11: export_markers_as_srt must warn when no markers exist."""
+
+    def test_empty_markers_emits_warning(self, project, tmp_path):
+        import warnings
+        out = tmp_path / 'empty.srt'
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            export_markers_as_srt(project, out)
+        msgs = [str(x.message) for x in w]
+        assert any('No markers to export' in m for m in msgs)
+        assert out.read_text() == ''

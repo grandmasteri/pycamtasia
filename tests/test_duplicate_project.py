@@ -107,3 +107,46 @@ class TestWalkClipsUnifiedMedia:
         ids = [c.get('id') for c in clips]
         assert 2 in ids
         assert len(ids) == 2
+
+
+class TestWalkClipsGroupInsideUnifiedMedia:
+    """Bug 8: _walk_clips must recurse into Group children of UnifiedMedia."""
+
+    def test_group_inside_unified_media_yielded(self):
+        tracks = [{'medias': [{
+            '_type': 'UnifiedMedia', 'id': 1,
+            'video': {
+                '_type': 'Group', 'id': 2,
+                'tracks': [{'medias': [{'_type': 'VMFile', 'id': 3, 'src': 10}]}],
+            },
+            'audio': {'_type': 'AMFile', 'id': 4, 'src': 11},
+        }]}]
+        clips = list(_walk_clips(tracks))
+        ids = [c.get('id') for c in clips]
+        assert 2 in ids  # Group child
+        assert 3 in ids  # VMFile inside Group
+        assert 4 in ids  # AMFile child
+
+    def test_stitched_inside_unified_media_yielded(self):
+        tracks = [{'medias': [{
+            '_type': 'UnifiedMedia', 'id': 1,
+            'video': {
+                '_type': 'StitchedMedia', 'id': 5,
+                'medias': [{'_type': 'VMFile', 'id': 6, 'src': 12}],
+            },
+        }]}]
+        clips = list(_walk_clips(tracks))
+        ids = [c.get('id') for c in clips]
+        assert 5 in ids
+        assert 6 in ids
+
+
+class TestDuplicateProjectClearMediaNonDirectory:
+    """Bug 9: duplicate_project clear_media must handle non-directory dst."""
+
+    def test_clear_media_with_tscproj_file(self, source_project, tmp_path):
+        dst = tmp_path / 'copy.cmproj'
+        proj = duplicate_project(source_project.file_path, dst, clear_media=True)
+        # Should not raise; media dir should be cleaned
+        assert dst.exists()
+        assert proj.clip_count == 0

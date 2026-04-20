@@ -181,3 +181,37 @@ def test_progressive_disclosure_replace_previous_with_fade_out_truncates_duratio
 
     expected_dur_1 = seconds_to_ticks(5.0) + seconds_to_ticks(1.0)
     assert clips[1].duration == expected_dur_1
+
+
+class TestProgressiveDisclosureReplacePreviousWarning:
+    """replace_previous=True with fade_out_seconds>0 should emit a warning."""
+
+    def test_warning_emitted(self, project, tmp_path):
+        import warnings
+        imgs = []
+        for i in range(3):
+            p = tmp_path / f'img{i}.png'
+            p.write_bytes(b'\x89PNG\r\n\x1a\n' + b'\x00' * 50)
+            imgs.append(p)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            project.add_progressive_disclosure(
+                imgs, replace_previous=True, fade_out_seconds=1.0,
+            )
+        msgs = [str(x.message) for x in w]
+        assert any('replace_previous=True' in m for m in msgs)
+
+    def test_no_warning_without_fade_out(self, project, tmp_path):
+        import warnings
+        imgs = []
+        for i in range(3):
+            p = tmp_path / f'img{i}.png'
+            p.write_bytes(b'\x89PNG\r\n\x1a\n' + b'\x00' * 50)
+            imgs.append(p)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            project.add_progressive_disclosure(
+                imgs, replace_previous=True, fade_out_seconds=0,
+            )
+        msgs = [str(x.message) for x in w]
+        assert not any('replace_previous=True' in m for m in msgs)

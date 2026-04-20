@@ -4,37 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 14 domains 4-6)
-
-**Project/validation:**
-
-1. [verified] `project.longest_clip` returns None when all clips have `duration == 0` even though clips exist. Uses strict `>` so no clip with duration 0 qualifies. (project.py ~L627)
-
-2. [verified] `add_background_music()` writes `parameters.volume` with empty `keyframes` list when `total_ticks == 0`. May confuse Camtasia. (project.py ~L2084)
-
-3. [verified] `add_progressive_disclosure(replace_previous=True)` creates intentional overlaps but `repair()` silently undoes them by trimming overlap. Incompatible features. (project.py ~L1620)
-
-4. [verified] `validation._check_src_references()` includes `None` in `source_ids` set when a sourceBin entry lacks `id` field. Could mask dangling-reference errors. (validation.py ~L159)
-
-**Operations:**
-
-5. [verified] `speed.py _process_clip` UnifiedMedia children's effects scaled then orphaned when timing overwritten. Effects scaled against pre-overwrite duration. (speed.py ~L120)
-
-6. [verified] `sync.py plan_sync` non-monotonic audio timestamps produce SyncSegments with inverted audio start/end, causing negative `timeline_duration` in apply_sync. (sync.py ~L145)
-
-7. [verified] `sync.py apply_sync` silently produces wrong source offsets when `group_scalar == 0`. Should raise. (sync.py ~L185)
-
-8. [verified] `template.py _walk_clips` doesn't recurse into Group nested inside StitchedMedia's UnifiedMedia video/audio children. Missing src references. (template.py ~L50)
-
-9. [verified] `template.py duplicate_project(clear_media=True)` skips media cleanup if `dst.is_dir()` False. Edge case for `.tscproj` files. (template.py ~L120)
-
-**Supporting:**
-
-10. [verified] `media_bin.import_media` crashes with `TypeError` when pymediainfo returns `None` for video duration. `float(None)` raises. (media_bin.py ~L335)
-
-11. [verified] `srt.py export_markers_as_srt` writes empty file silently when no markers. Listed as Feature Gap, not Design Decision \u2014 should warn. (srt.py ~L30)
-
-12. [verified] `annotations/callouts.py text()/square()` omit `color-opacity` in `font` dict. Alpha channel lost from font color. (callouts.py ~L55)
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

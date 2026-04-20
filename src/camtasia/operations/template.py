@@ -65,6 +65,11 @@ def _walk_clips(tracks: list[dict[str, Any]]) -> Iterator[dict[str, Any]]:
                     child = clip.get(key)
                     if child and isinstance(child, dict):
                         yield child
+                        # Recurse if child is a compound type
+                        if child.get("_type") == "Group":
+                            yield from _walk_clips(child.get("tracks", []))
+                        elif child.get("_type") == "StitchedMedia":
+                            yield from _walk_clips([child])
 
 
 def replace_media_source(
@@ -132,7 +137,7 @@ def duplicate_project(
             toc['keyframes'] = []
         proj.save()
 
-        media_dir = dst / 'media' if dst.is_dir() else None
+        media_dir = dst / 'media' if dst.is_dir() else dst.parent / 'media'
         if media_dir and media_dir.exists():
             shutil.rmtree(media_dir)
             media_dir.mkdir(parents=True, exist_ok=True)

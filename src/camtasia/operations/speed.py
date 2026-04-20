@@ -127,10 +127,8 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
         for child_key in ("video", "audio"):
             child = clip.get(child_key)
             if child:
-                _process_clip(child, factor)
-                # If parent was speed-changed, restore child's duration
-                # and mediaDuration to match parent so they stay consistent
                 if is_speed_changed:
+                    # Don't recurse; just copy parent's timing and scale effects relative to parent
                     if 'duration' in clip:
                         child['duration'] = clip['duration']
                     if 'mediaDuration' in clip:
@@ -139,6 +137,14 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                         child['scalar'] = clip['scalar']
                     if 'mediaStart' in clip:
                         child['mediaStart'] = clip['mediaStart']
+                    # Scale effects only
+                    for effect in child.get('effects', []):
+                        if 'start' in effect:
+                            effect['start'] = _scale_tick(effect['start'], factor)
+                        if 'duration' in effect:
+                            effect['duration'] = _scale_tick(effect['duration'], factor)
+                else:
+                    _process_clip(child, factor)
 
 
 def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
