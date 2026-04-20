@@ -308,6 +308,11 @@ When adversarial reviewers report bugs, follow this workflow:
 3. **Fix verified bugs** — after each fix is committed and CI is green, remove that entry from Pending Bugs.
 4. **Add items not going to be fixed to `## Known Design Decisions`** — with justification.
 5. **Never start a new round of reviews until `## Pending Bugs` is empty.** Work through all pending items (fix or document as known decision) first, then launch the next round. Otherwise: (a) pending bugs accumulate and get lost across cycles, and (b) reviewers waste cycles re-reporting the same unfixed bugs, diluting the signal from genuinely new findings.
+6. **Subagent anti-patterns to watch for and correct:**
+   - Creating grab-bag test files like `test_bug_*.py` or `test_*_bugfixes.py` — must move content to module-mirroring destinations immediately. Prompt explicitly says "NO GRAB-BAG FILES" but subagents still create them.
+   - Claiming fixes that weren't actually applied — verify each fix via `git diff src/ --stat` and spot-check with `grep` that the change landed.
+   - Appending imports mid-file causing E402 violations — append imports to the top-of-file import block.
+   - Redefining helper functions with same name as existing ones in destination file — rename the appended helper to avoid conflicts.
 
 This prevents bugs from being silently lost if the agent gets interrupted, context-compacted, or forgets to circle back. The ROADMAP is the source of truth.
 
