@@ -103,7 +103,8 @@ class Media:
                     if range_val[1] >= _INT64_MAX:
                         return None # pragma: no cover
                     return (range_val[1] - range_val[0]) / edit_rate  # type: ignore[no-any-return]
-            elif st.get('type') == 1:  # image
+        for st in self._data.get('sourceTracks', []):
+            if st.get('type') == 1:  # image
                 return 0.0
         return None
 
@@ -360,7 +361,7 @@ class MediaBin:
                 filename=filename,
                 bit_depth=_bit_depth,
                 edit_rate=_edit_rate,
-                sample_rate=0 if media_type == MediaType.Image else None,
+                sample_rate=_edit_rate if media_type == MediaType.Image else None,
             )
 
         self._data.append(json_data)

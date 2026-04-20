@@ -1,3 +1,5 @@
+import pytest
+
 from camtasia.annotations.callouts import arrow, highlight, keystroke_callout, square
 
 
@@ -194,3 +196,43 @@ class TestKeystrokeCalloutStandardKeys:
     def test_has_resize_behavior(self):
         result = keystroke_callout('Ctrl+C')
         assert result['resize-behavior'] == 'resizeText'
+
+
+# ── Bug 9: arrow() color vs stroke_color conflict ──────────────────
+
+
+class TestArrowColorStrokeColorConflict:
+    def test_explicit_stroke_color_preserved_when_color_absent(self):
+        from camtasia.annotations.types import Color
+        sc = Color(0.1, 0.2, 0.3, 0.9)
+        result = arrow(stroke_color=sc)
+        assert result['stroke-color-red'] == 0.1
+        assert result['stroke-color-green'] == 0.2
+        assert result['stroke-color-blue'] == 0.3
+        assert result['stroke-color-opacity'] == 0.9
+
+    def test_color_and_stroke_color_raises(self):
+        from camtasia.annotations.types import Color
+        with pytest.raises(ValueError, match='either color or stroke_color'):
+            arrow(color=(0.5, 0.5, 0.5), stroke_color=Color(1.0, 0.0, 0.0))
+
+    def test_color_tuple_used_when_no_stroke_color(self):
+        result = arrow(color=(0.1, 0.2, 0.3))
+        assert result['stroke-color-red'] == 0.1
+        assert result['stroke-color-green'] == 0.2
+        assert result['stroke-color-blue'] == 0.3
+        assert result['stroke-color-opacity'] == 1.0
+
+
+# ── Bug 10: arrow() color parameter alpha support ──────────────────
+
+
+class TestArrowColorAlpha:
+    def test_color_4_tuple_preserves_alpha(self):
+        result = arrow(color=(0.1, 0.2, 0.3, 0.4))
+        assert result['stroke-color-opacity'] == 0.4
+
+    def test_color_3_tuple_defaults_alpha_to_one(self):
+        result = arrow(color=(0.1, 0.2, 0.3))
+        assert result['stroke-color-opacity'] == 1.0
+

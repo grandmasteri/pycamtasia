@@ -352,3 +352,60 @@ class TestRedoEnforcesMaxHistoryDepth:
         # Redo should push back and truncate if needed
         history.redo(project_data)
         assert history.undo_count <= 2
+
+
+    def test_undo_trims_redo_stack_on_overflow(self) -> None:
+        """Bug 4: undo() must trim _redo_stack when it exceeds max_history_depth."""
+        history = ChangeHistory(max_history_depth=3)
+        project_data: dict[str, Any] = {"v": 0}
+
+        # Record 3 changes (fills undo stack to max)
+        for i in range(3):
+            before = copy.deepcopy(project_data)
+            project_data["v"] = i + 1
+            history.record(f"step {i}", before, project_data)
+
+        # Undo all 3 — pushes 3 entries onto redo stack
+        for _ in range(3):
+            history.undo(project_data)
+
+        assert history.redo_count == 3
+
+        # Redo one to push back to undo, then record new changes to fill undo
+        history.redo(project_data)
+        for i in range(3):
+            before = copy.deepcopy(project_data)
+            project_data["v"] = 10 + i
+            history.record(f"new {i}", before, project_data)
+
+        # Now undo all — each pushes to redo stack
+        for _ in range(3):
+            history.undo(project_data)
+
+        # Redo stack should never exceed max_history_depth
+        assert history.redo_count <= 3
+
+
+class TestUndoRedoStackOverflow:
+    def test_undo_trims_redo_stack_above_max(self) -> None:
+        """Exercises the truncation path: undo() when redo stack would exceed max."""
+        history = ChangeHistory(max_history_depth=5)
+        project_data: dict[str, Any] = {"v": 0}
+        # Record 5 changes
+        for i in range(5):
+            before = copy.deepcopy(project_data)
+            project_data["v"] = i + 1
+            history.record(f"step {i}", before, project_data)
+        # Undo all 5 — redo stack at max
+        for _ in range(5):
+            history.undo(project_data)
+        assert history.redo_count == 5
+        # Now shrink max, next undo (after recording) must trim redo stack
+        history._max_history_depth = 3
+        # Already at 5 on redo stack which is > 3. But undo() only trims AFTER append.
+        # Need to trigger a new undo operation that appends to redo: first push to undo via redo
+        history.redo(project_data)  # pops redo to undo; redo_count=4
+        history.redo(project_data)  # redo_count=3
+        # Now undo twice to push back onto redo (already at 3 = max)
+        history.undo(project_data)  # redo_count=4 > 3 = max, triggers truncation to 3
+        assert history.redo_count == 3

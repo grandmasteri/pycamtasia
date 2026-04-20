@@ -932,3 +932,37 @@ class TestStitchedMediaScalarPropagation:
             assert inner["scalar"] == stitched["scalar"], (
                 f"Inner clip scalar {inner['scalar']} != parent {stitched['scalar']}"
             )
+
+
+
+class TestUnifiedMediaStartScaling:
+    """Bug 5: _process_clip must scale mediaStart for UnifiedMedia clips."""
+
+    def test_unified_media_start_scaled(self):
+        from camtasia.operations.speed import _process_clip
+        clip = {
+            '_type': 'UnifiedMedia', 'id': 1, 'start': 100, 'duration': 200,
+            'mediaDuration': 200, 'mediaStart': 50, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'video': {
+                '_type': 'VMFile', 'id': 2, 'src': 5, 'start': 0,
+                'duration': 200, 'mediaDuration': 200, 'mediaStart': 0, 'scalar': 1,
+                'parameters': {}, 'effects': [],
+            },
+            'audio': {
+                '_type': 'AMFile', 'id': 3, 'src': 5, 'start': 0,
+                'duration': 200, 'mediaDuration': 200, 'mediaStart': 0, 'scalar': 1,
+            },
+        }
+        _process_clip(clip, Fraction(2))
+        assert clip['mediaStart'] == 100  # 50 * 2
+
+    def test_unified_media_start_absent_is_fine(self):
+        from camtasia.operations.speed import _process_clip
+        clip = {
+            '_type': 'UnifiedMedia', 'id': 1, 'start': 100, 'duration': 200,
+            'mediaDuration': 200, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {},
+        }
+        _process_clip(clip, Fraction(2))
+        assert 'mediaStart' not in clip

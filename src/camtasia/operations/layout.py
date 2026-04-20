@@ -45,6 +45,8 @@ def ripple_insert(track: Track, position_seconds: float, duration_seconds: float
 
     Creates a gap at the insertion point.
     """
+    if position_seconds < 0:
+        raise ValueError(f'position_seconds must be non-negative, got {position_seconds}')
     if duration_seconds < 0:
         raise ValueError(f'duration_seconds must be non-negative, got {duration_seconds}')
     pos_ticks = seconds_to_ticks(position_seconds)
@@ -101,11 +103,16 @@ def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:
     grid_ticks = seconds_to_ticks(grid_seconds)
     if grid_ticks <= 0:
         raise ValueError(f'Grid must be positive, got {grid_seconds}')
+    shifted = False
     for m in track._data.get('medias', []):
         start = _to_ticks(m.get('start', 0))
         quotient, remainder = divmod(start, grid_ticks)
         if 2 * remainder > grid_ticks or (2 * remainder == grid_ticks and quotient % 2 == 1):
             quotient += 1
-        m['start'] = max(0, quotient * grid_ticks)
-        _propagate_start_to_unified(m)
-    track._data['transitions'] = []
+        new_start = max(0, quotient * grid_ticks)
+        if new_start != start:
+            m['start'] = new_start
+            _propagate_start_to_unified(m)
+            shifted = True
+    if shifted:
+        track._data['transitions'] = []

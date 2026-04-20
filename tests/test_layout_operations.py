@@ -298,3 +298,36 @@ class TestRippleInsertNegativeDuration:
         track = _make_track([_clip(1, 0.0, 2.0)])
         with pytest.raises(ValueError, match='duration_seconds must be non-negative'):
             ripple_insert(track, position_seconds=0.0, duration_seconds=-1.0)
+
+
+    def test_negative_position_raises(self):
+        """Bug 7: ripple_insert must reject negative position_seconds."""
+        track = _make_track([_clip(1, 0.0, 2.0)])
+        with pytest.raises(ValueError, match='position_seconds must be non-negative'):
+            ripple_insert(track, position_seconds=-1.0, duration_seconds=1.0)
+
+
+class TestSnapToGridTransitions:
+    """Bug 8: snap_to_grid should only clear transitions if clips actually moved."""
+
+    def test_snap_preserves_transitions_when_already_aligned(self):
+        track = _make_track([
+            _clip(1, 0.0, 2.0),
+            _clip(2, 2.0, 3.0),
+        ])
+        track._data['transitions'] = [
+            {'leftMedia': 1, 'rightMedia': 2, 'duration': 100},
+        ]
+        snap_to_grid(track, grid_seconds=1.0)
+        assert len(track._data['transitions']) == 1
+
+    def test_snap_clears_transitions_when_clips_moved(self):
+        track = _make_track([
+            _clip(1, 0.0, 2.0),
+            _clip(2, 2.3, 3.0),  # not on grid
+        ])
+        track._data['transitions'] = [
+            {'leftMedia': 1, 'rightMedia': 2, 'duration': 100},
+        ]
+        snap_to_grid(track, grid_seconds=1.0)
+        assert track._data['transitions'] == []

@@ -109,6 +109,9 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
         # speed-changed clips have mediaDuration invariant (handled by _adjust_scalar above)
         if 'mediaDuration' in clip and not _has_speed_change(clip):
             clip['mediaDuration'] = _scale_tick(clip['mediaDuration'], factor)
+        # Scale mediaStart (like StitchedMedia and Group do)
+        if 'mediaStart' in clip:
+            clip['mediaStart'] = _scale_tick(clip.get('mediaStart', 0), factor)
         for child_key in ("video", "audio"):
             child = clip.get(child_key)
             if child:

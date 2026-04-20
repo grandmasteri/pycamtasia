@@ -430,3 +430,44 @@ class TestImportImageEditRateAndBitDepth:
         )
         track = media._data['sourceTracks'][0]
         assert track['bitDepth'] == 0
+
+
+# ── Bug 11: duration_seconds short-circuits on image track ─────────
+
+
+class TestDurationSecondsImageAudioMix:
+    def test_audio_after_image_track_not_skipped(self):
+        """Image track before audio must not short-circuit to 0.0."""
+        data = {
+            'id': 1, 'src': 'test.mp4', 'rect': [0, 0, 100, 100],
+            'sourceTracks': [
+                {'type': 1, 'range': [0, 1], 'editRate': 1},       # image
+                {'type': 2, 'range': [0, 44100], 'editRate': 44100},  # audio
+            ],
+        }
+        m = Media(data)
+        assert m.duration_seconds == 1.0
+
+    def test_image_only_returns_zero(self):
+        data = {
+            'id': 1, 'src': 'test.png', 'rect': [0, 0, 100, 100],
+            'sourceTracks': [{'type': 1, 'range': [0, 1], 'editRate': 1}],
+        }
+        m = Media(data)
+        assert m.duration_seconds == 0.0
+
+
+# ── Bug 12: _visual_track_to_json sampleRate for images ────────────
+
+
+class TestVisualTrackImageSampleRate:
+    def test_image_sample_rate_equals_edit_rate(self, project, tmp_path):
+        img = tmp_path / 'test.png'
+        img.write_bytes(b'\x89PNG\r\n\x1a\n')
+        media = project.media_bin.import_media(
+            img, media_type=MediaType.Image, width=100, height=100,
+        )
+        track = media._data['sourceTracks'][0]
+        assert track['sampleRate'] == track['editRate']
+        assert track['sampleRate'] == 600
+

@@ -921,6 +921,7 @@ class Project:
                 b_start = medias[i + 1].get('start', 0)
                 if a_end > b_start:
                     medias[i]['duration'] -= (a_end - b_start)
+                    fixes_applied['overlaps_fixed'] += 1
                     if medias[i]['duration'] <= 0:
                         fixes_applied.setdefault('zero_duration_removed', 0)
                         fixes_applied['zero_duration_removed'] += 1
@@ -934,7 +935,6 @@ class Project:
                         medias[i]['mediaDuration'] = int(md) if md == int(md) else str(md)
                     from camtasia.timeline.track import _propagate_start_to_unified
                     _propagate_start_to_unified(medias[i])
-                    fixes_applied['overlaps_fixed'] += 1
             track._data['medias'] = [m for m in medias if m.get('duration', 1) > 0]
         return fixes_applied
 

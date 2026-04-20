@@ -1684,3 +1684,33 @@ class TestRepairWritesSortedOrder:
 
         ids = [m['id'] for m in project.timeline.tracks[0]._data['medias']]
         assert ids == [1, 2, 3], f"Expected sorted order [1,2,3], got {ids}"
+
+
+class TestRepairOverlapCountsZeroDuration:
+    """Bug 2: repair() must count overlaps_fixed even when clip is reduced to zero duration."""
+
+    def test_overlap_fixed_counted_when_clip_becomes_zero_duration(self, tmp_path):
+        proj_path = tmp_path / 'test.cmproj'
+        new_project(proj_path)
+        proj = load_project(proj_path)
+        track = proj.timeline.add_track('V')
+        # Clip A at 0-10, Clip B at 5-100: overlap of 5 reduces A to 5
+        # Clip C at 0-100 overlaps B completely, reducing B to zero
+        track._data['medias'] = [
+            {'id': 70, '_type': 'VMFile', 'src': 0, 'start': 0, 'duration': 10,
+             'mediaStart': 0, 'mediaDuration': 10, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+             'animationTracks': {}},
+            {'id': 71, '_type': 'VMFile', 'src': 0, 'start': 5, 'duration': 5,
+             'mediaStart': 0, 'mediaDuration': 5, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+             'animationTracks': {}},
+            {'id': 72, '_type': 'VMFile', 'src': 0, 'start': 5, 'duration': 100,
+             'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+             'animationTracks': {}},
+        ]
+        result = proj.repair()
+        # Both overlaps should be counted, including the one that zeroed out clip B
+        assert result['overlaps_fixed'] >= 2
+        assert result.get('zero_duration_removed', 0) >= 1
