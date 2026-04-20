@@ -357,3 +357,27 @@ class TestMergeClipIdMapSharedAcrossTracks:
         # The cross-track reference should point to the new ID of clip B
         assert new_b_id in ap
         assert 60 not in ap
+
+
+class TestMergeIdCounterSharedAcrossTracks:
+    """Bug 5: id_counter must be shared across tracks to avoid duplicate IDs."""
+
+    def test_no_duplicate_ids_across_merged_tracks(self, project, tmp_path):
+        import shutil
+        src_proj = tmp_path / 'source.cmproj'
+        shutil.copytree(RESOURCES / 'new.cmproj', src_proj)
+        source = load_project(src_proj)
+
+        _add_source(source, 10, 'clip')
+        track_a = source.timeline.add_track('Track A')
+        track_b = source.timeline.add_track('Track B')
+        _add_clip(track_a._data, 10, clip_id=1, start=0)
+        _add_clip(track_b._data, 10, clip_id=2, start=0)
+
+        merge_tracks(source, project)
+
+        merged_a = [t for t in project.timeline.tracks if t.name == 'Track A'][-1]
+        merged_b = [t for t in project.timeline.tracks if t.name == 'Track B'][-1]
+        id_a = merged_a._data['medias'][0]['id']
+        id_b = merged_b._data['medias'][0]['id']
+        assert id_a != id_b, "IDs from different tracks must not collide"

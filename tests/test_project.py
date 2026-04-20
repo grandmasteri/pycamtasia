@@ -166,6 +166,17 @@ class TestProjectSave:
         closing_indent = match.group(2)
         assert key_indent == closing_indent
 
+    def test_save_empty_object_regex_does_not_match_inside_strings(self, tmp_path: Path):
+        """Bug 2: {} inside a string value should not be expanded."""
+        data = dict(MINIMAL_PROJECT_DATA)
+        data['description'] = 'Use {} for empty'
+        proj_dir = _create_cmproj(tmp_path, data)
+        project = Project(proj_dir)
+        project.save()
+        text = (proj_dir / 'project.tscproj').read_text()
+        # The string value should remain intact
+        assert 'Use {} for empty' in text
+
 
 class TestLoadProject:
     def test_load_project_returns_project(self, tmp_path: Path):

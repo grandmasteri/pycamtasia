@@ -56,3 +56,22 @@ def test_video_import_default_dimensions_when_probe_empty(project, dummy_mp4):
     entry = media._data
     assert entry["rect"][2] == 1920
     assert entry["rect"][3] == 1080
+
+
+def _probe_fake_24fps(path):
+    """Fake _probe_media returning 24fps video metadata."""
+    return {
+        "width": 1280,
+        "height": 720,
+        "duration_seconds": 10.0,
+        "frame_rate": 24.0,
+        "_backend": "fake",
+    }
+
+
+def test_video_import_passes_edit_rate_to_media_bin(project, dummy_mp4):
+    """Bug 1: edit_rate kwarg should be forwarded so MediaBin uses it instead of 30."""
+    with patch("camtasia.project._probe_media", _probe_fake_24fps):
+        media = project.import_media(dummy_mp4)
+    st = media._data["sourceTracks"][0]
+    assert st["editRate"] == 24

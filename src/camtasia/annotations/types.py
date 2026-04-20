@@ -46,3 +46,4 @@ class StrokeStyle(Enum):
     Dot = 'dot'
     DashDot = 'dashdot'
     DashDotDot = 'dashdotdot'
+    NoStroke = 'none'

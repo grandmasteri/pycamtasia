@@ -187,20 +187,23 @@ class ChangeHistory:
     def from_json(cls, json_string: str) -> ChangeHistory:
         """Deserialize history from JSON string."""
         raw_data: dict[str, Any] = json.loads(json_string)
-        restored_history: ChangeHistory = cls(max_history_depth=raw_data.get('max_history_depth', 100))
-        def _restore_stack(records: list[dict[str, Any]]) -> list[ChangeRecord]:
-            return [
-                ChangeRecord(
-                    description=r['description'],
-                    forward_patch=jsonpatch.JsonPatch(r['forward_patch']),
-                    inverse_patch=jsonpatch.JsonPatch(r['inverse_patch']),
-                )
-                for r in records
-            ]
-        restored_history._undo_stack = _restore_stack(raw_data.get('undo_stack', []))
-        restored_history._redo_stack = _restore_stack(raw_data.get('redo_stack', []))
-        restored_history._undo_stack = restored_history._undo_stack[-restored_history._max_history_depth:]
-        restored_history._redo_stack = restored_history._redo_stack[-restored_history._max_history_depth:]
+        try:
+            restored_history: ChangeHistory = cls(max_history_depth=raw_data.get('max_history_depth', 100))
+            def _restore_stack(records: list[dict[str, Any]]) -> list[ChangeRecord]:
+                return [
+                    ChangeRecord(
+                        description=r['description'],
+                        forward_patch=jsonpatch.JsonPatch(r['forward_patch']),
+                        inverse_patch=jsonpatch.JsonPatch(r['inverse_patch']),
+                    )
+                    for r in records
+                ]
+            restored_history._undo_stack = _restore_stack(raw_data.get('undo_stack', []))
+            restored_history._redo_stack = _restore_stack(raw_data.get('redo_stack', []))
+            restored_history._undo_stack = restored_history._undo_stack[-restored_history._max_history_depth:]
+            restored_history._redo_stack = restored_history._redo_stack[-restored_history._max_history_depth:]
+        except (KeyError, TypeError, ValueError) as e:
+            raise ValueError(f'Malformed history file: {e}') from e
         return restored_history
 
 

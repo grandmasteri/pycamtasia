@@ -261,6 +261,7 @@ class MediaBin:
         sample_rate: int | None = None,
         bit_depth: int | None = None,
         num_channels: int | None = None,
+        edit_rate: int | None = None,
     ) -> Media:
         """Import a media file into the project.
 
@@ -351,7 +352,7 @@ class MediaBin:
                 _edit_rate = 600
             else:
                 _bit_depth = 24
-                _edit_rate = round(_detected_fps) if _detected_fps else 30
+                _edit_rate = round(_detected_fps) if _detected_fps else (edit_rate or 30)
             json_data = _visual_track_to_json(
                 next_media_id, rel_path, timestamp,
                 media_type=media_type,
@@ -505,7 +506,7 @@ def _compute_audio_duration(track: dict[str, Any], sample_rate: int | None) -> i
     For all audio formats, pymediainfo reports duration in milliseconds.
     We convert to sample counts via ``duration_ms * sample_rate / 1000``.
     """
-    duration_ms = float(track.get("duration", 0))
+    duration_ms = float(track.get("duration", 0) or 0)
     if not sample_rate or sample_rate <= 0:
         return 0  # Can't compute sample count without sample rate
     return round(duration_ms * sample_rate / 1000)

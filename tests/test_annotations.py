@@ -374,3 +374,10 @@ class TestSquareCornerRadius:
         assert 'corner-radius' in result
         assert result['corner-radius'] == 0.0
         assert isinstance(result['corner-radius'], float)
+
+
+def test_stroke_style_none_value():
+    """Bug 9: StrokeStyle should support 'none' value."""
+    from camtasia.annotations.types import StrokeStyle
+    assert StrokeStyle.NoStroke.value == 'none'
+    assert StrokeStyle('none') == StrokeStyle.NoStroke

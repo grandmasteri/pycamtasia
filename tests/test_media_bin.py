@@ -542,3 +542,19 @@ class TestImageDurationReturnsNone:
         if duration is None:
             duration = 5.0  # fallback
         assert duration == 5.0
+
+
+class TestFloatNoneGuard:
+    """Bug 6: float(None) should not crash when track.get('duration') returns None."""
+
+    def test_compute_audio_duration_none_duration(self):
+        from camtasia.media_bin.media_bin import _compute_audio_duration
+        track = {"duration": None}
+        result = _compute_audio_duration(track, 44100)
+        assert result == 0
+
+    def test_compute_audio_duration_missing_duration(self):
+        from camtasia.media_bin.media_bin import _compute_audio_duration
+        track = {}
+        result = _compute_audio_duration(track, 44100)
+        assert result == 0

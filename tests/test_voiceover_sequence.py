@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import patch
+import warnings
 
 import pytest
 
@@ -62,3 +64,15 @@ def test_no_pauses_default(project):
 def test_string_paths(project):
     actual_result = project.add_voiceover_sequence([str(EMPTY_WAV)])
     assert 'empty.wav' in actual_result
+
+def test_voiceover_warns_when_probe_returns_no_duration(project):
+    """Bug 3: add_voiceover_sequence should warn when duration cannot be probed."""
+    def _probe_no_duration(path):
+        return {}
+
+    with patch("camtasia.project._probe_media", _probe_no_duration), warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        result = project.add_voiceover_sequence([EMPTY_WAV])
+        assert len(w) == 1
+        assert 'Could not probe duration' in str(w[0].message)
+        assert result['empty.wav']['duration'] == 1.0

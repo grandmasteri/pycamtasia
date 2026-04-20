@@ -297,3 +297,68 @@ class TestLowerThirdTemplateIdsRemapped:
         # None of the original template IDs (83-88) should remain
         template_ids = {83, 84, 85, 86, 87, 88}
         assert not template_ids.intersection(all_ids), f"Template IDs still present: {template_ids.intersection(all_ids)}"
+
+
+class TestLowerThirdAssetPropertiesNotDoubleRemapped:
+    """Bug 7: assetProperties should not be double-remapped."""
+
+    def test_asset_properties_ids_match_clip_ids(self):
+        track = _make_track()
+        clip = track.add_lower_third("Name", "Sub", 0, 10)
+        data = clip._data
+
+        # Collect all clip IDs
+        all_ids: set[int] = set()
+        def collect(d: dict) -> None:
+            if 'id' in d:
+                all_ids.add(d['id'])
+            for key in ('video', 'audio'):
+                if key in d and isinstance(d[key], dict):
+                    collect(d[key])
+            for t in d.get('tracks', []):
+                for m in t.get('medias', []):
+                    collect(m)
+        collect(data)
+
+        # All assetProperties object refs should be in all_ids
+        for ap in data.get('attributes', {}).get('assetProperties', []):
+            for obj in ap.get('objects', []):
+                if isinstance(obj, int):
+                    assert obj in all_ids, f"assetProperties ref {obj} not in clip IDs"
+
+
+class TestLowerThirdParametersKeyframesScaled:
+    """Bug 8: parameters keyframes on line clip should be scaled."""
+
+    def test_line_parameters_keyframes_scaled(self):
+        import copy as _copy
+
+        from camtasia.templates.lower_third import LOWER_THIRD_TEMPLATE
+
+        # Get original template parameters keyframe times
+        orig = _copy.deepcopy(LOWER_THIRD_TEMPLATE)
+        orig_times: list[int] = []
+        if len(orig.get('tracks', [])) >= 3:
+            for lm in orig['tracks'][2].get('medias', []):
+                for _pk, pv in lm.get('parameters', {}).items():
+                    if isinstance(pv, dict) and 'keyframes' in pv:
+                        for kf in pv['keyframes']:
+                            if 'time' in kf:
+                                orig_times.append(kf['time'])
+
+        track = _make_track()
+        clip = track.add_lower_third("Name", "Sub", 0, 20)
+        data = clip._data
+
+        scaled_times: list[int] = []
+        if len(data.get('tracks', [])) >= 3:
+            line_media = data['tracks'][2]['medias'][0]
+            for _pkey, pval in line_media.get('parameters', {}).items():
+                if isinstance(pval, dict) and 'keyframes' in pval:
+                    for kf in pval['keyframes']:
+                        if 'time' in kf:
+                            scaled_times.append(kf['time'])
+
+        # If there are parameters keyframes, they should differ from originals
+        if orig_times and scaled_times:
+            assert scaled_times != orig_times, "Parameters keyframes should be scaled"

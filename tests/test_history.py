@@ -241,6 +241,12 @@ class TestSerialization:
         assert project_data["value"] == 1
         assert desc == "set to 2"
 
+    def test_from_json_malformed_raises_value_error(self) -> None:
+        """Bug 4: from_json should raise ValueError with descriptive message on malformed data."""
+        malformed = '{"undo_stack": [{"description": "x"}]}'
+        with pytest.raises(ValueError, match="Malformed history file"):
+            ChangeHistory.from_json(malformed)
+
 
 class TestWithUndoDecorator:
     def test_with_undo_decorator_records_change(self, project) -> None:

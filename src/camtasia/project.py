@@ -1046,7 +1046,7 @@ class Project:
         )
 
         # Step 4: Expand empty objects to multi-line with proper indentation
-        text = re.sub(r'^([ \t]*)([^\n]*?)\{\}([ \t]*)$', r'\1\2{\n\1}', text, flags=re.MULTILINE)
+        text = re.sub(r'^([ \t]*)("[^"]*"[ \t]*:[ \t]*)\{\}([ \t]*,?)[ \t]*$', r'\1\2{\n\1}\3', text, flags=re.MULTILINE)
 
         # Step 5: Add trailing space after commas at end of lines
         text = re.sub(r',\n', ', \n', text)
@@ -1124,6 +1124,7 @@ class Project:
             else:
                 dur_secs = meta.get('duration_seconds')
                 edit_rate = meta.get('frame_rate', 30)
+                kwargs.setdefault('edit_rate', int(edit_rate))
                 kwargs.setdefault('sample_rate', int(edit_rate))
                 kwargs['duration'] = int(dur_secs * edit_rate) if dur_secs else int(edit_rate * 60)
                 kwargs.setdefault('width', meta.get('width', 1920))
@@ -1709,7 +1710,15 @@ class Project:
             path = Path(vo_file)
             media = self.import_media(path)
             meta = _probe_media(path)
-            dur = meta.get('duration_seconds', 1.0)
+            dur = meta.get('duration_seconds')
+            if dur is None:
+                import warnings
+                warnings.warn(
+                    f'Could not probe duration for {path}; falling back to 1.0 second. '
+                    'Install pymediainfo or ffprobe for accurate timing.',
+                    stacklevel=2,
+                )
+                dur = 1.0
             clip = track.add_audio(media.id, cursor, dur)
             result[path.name] = {'start': cursor, 'duration': dur, 'clip': clip}
             cursor += dur + pauses.get(path.name, 0.0)

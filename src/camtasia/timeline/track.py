@@ -829,12 +829,7 @@ class Track:
         id_map: dict[int, int] = {}
         _remap_clip_ids_with_map(tpl, id_counter, id_map)
 
-        # Update assetProperties object references using the id_map
-        for ap in tpl.get('attributes', {}).get('assetProperties', []):
-            ap['objects'] = [id_map.get(o, o) for o in ap['objects']]
         text_group = tpl['tracks'][0]['medias'][0]
-        for ap in text_group.get('attributes', {}).get('assetProperties', []):
-            ap['objects'] = [id_map.get(o, o) for o in ap['objects']]
 
         # --- Set timing ---
         start_ticks = seconds_to_ticks(start_seconds)
@@ -889,6 +884,16 @@ class Track:
                             kf['endTime'] = int(kf['endTime'] * line_scale)
                         if 'duration' in kf:
                             kf['duration'] = int(kf['duration'] * line_scale)
+                # Scale parameters keyframes
+                for _pkey, pval in line_media.get('parameters', {}).items():
+                    if isinstance(pval, dict) and 'keyframes' in pval:
+                        for kf in pval['keyframes']:
+                            if 'time' in kf:
+                                kf['time'] = int(kf['time'] * line_scale)
+                            if 'endTime' in kf:
+                                kf['endTime'] = int(kf['endTime'] * line_scale)
+                            if 'duration' in kf:
+                                kf['duration'] = int(kf['duration'] * line_scale)
 
         # --- Replace text ---
         # Title is clip id_map[86] on tracks[0].medias[0].tracks[1].medias[0]

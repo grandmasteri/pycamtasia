@@ -110,6 +110,7 @@ def merge_tracks(
     count = 0
     clip_id_map: dict[int, int] = {}
     new_clips_by_track: list = []
+    id_counter = [target.next_available_id]
     for track in source.timeline.tracks:
         if len(track) == 0:
             continue
@@ -119,7 +120,6 @@ def merge_tracks(
         for attr in ('audioMuted', 'videoHidden', 'solo', 'magnetic', 'matte'):
             if attr in track._attributes:
                 new_track._attributes[attr] = track._attributes[attr]
-        id_counter = [target.next_available_id]
 
         new_clips: list[dict] = []
         for clip_data in track._data.get('medias', []):
