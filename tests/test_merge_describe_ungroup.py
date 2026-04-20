@@ -378,3 +378,124 @@ class TestUngroupStitchedMediaInnerStartRound:
         medias = clips[0]._data.get('medias', [])
         # Second segment start should equal first segment duration (no gap)
         assert medias[1]['start'] == medias[0]['duration']
+
+
+# -- Bug: merge_internal_tracks must check nested IDs for collision --
+
+class TestMergeInternalTracksNestedIdCollision:
+    """merge_internal_tracks should detect collisions in nested IDs, not just top-level."""
+
+    def test_nested_id_collision_triggers_remap(self) -> None:
+        """If a nested ID in track[1] collides with any ID in track[0], remap."""
+        # Track 0: clip with id=1 containing nested id=10
+        clip_a = {
+            '_type': 'Group', 'id': 1, 'src': 1,
+            'start': 0, 'duration': 100, 'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {'ident': 'A'},
+            'tracks': [{'trackIndex': 0, 'medias': [
+                {'_type': 'VMFile', 'id': 10, 'src': 1, 'start': 0, 'duration': 100,
+                 'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+                 'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {}},
+            ], 'transitions': []}],
+        }
+        # Track 1: clip with id=2 (no top-level collision) but nested id=10 (collision!)
+        clip_b = {
+            '_type': 'Group', 'id': 2, 'src': 1,
+            'start': 100, 'duration': 100, 'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {'ident': 'B'},
+            'tracks': [{'trackIndex': 0, 'medias': [
+                {'_type': 'VMFile', 'id': 10, 'src': 1, 'start': 0, 'duration': 100,
+                 'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+                 'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {}},
+            ], 'transitions': []}],
+        }
+        group = _make_group([[clip_a], [clip_b]])
+        group.merge_internal_tracks()
+        # After merge, all IDs should be unique
+        from camtasia.timeline.clips.group import _collect_all_ids
+        all_ids: list[int] = []
+        for m in group._data['tracks'][0]['medias']:
+            all_ids.extend(_collect_all_ids(m))
+        assert len(all_ids) == len(set(all_ids)), f"Duplicate IDs found: {all_ids}"
+
+
+# -- Bug: ungroup must scale effects on nested StitchedMedia inner segments --
+
+class TestUngroupNestedStitchedEffectsAndUnified:
+    """Bugs 4-5: ungroup must scale effects on StitchedMedia inner segments
+    and propagate scalar/duration to UnifiedMedia sub-clips within nested Groups."""
+
+    def test_inner_segment_effects_scaled(self) -> None:
+        """Effects on StitchedMedia inner segments within a nested Group must be scaled."""
+        inner_seg = {
+            'id': 20, '_type': 'ScreenVMFile', 'src': 1,
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'metadata': {}, 'animationTracks': {},
+            'effects': [{'effectName': 'Glow', 'start': 10, 'duration': 50}],
+        }
+        stitched = {
+            'id': 10, '_type': 'StitchedMedia',
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'medias': [inner_seg],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        nested_group = {
+            'id': 5, '_type': 'Group',
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {'ident': 'inner'},
+            'tracks': [{'trackIndex': 0, 'medias': [stitched], 'transitions': []}],
+        }
+        group = _make_group_with_scalar([nested_group], scalar='2', start=0, duration=100)
+        clips = group.ungroup()
+        inner_group = clips[0]._data
+        inner_stitched = inner_group['tracks'][0]['medias'][0]
+        seg_eff = inner_stitched['medias'][0]['effects'][0]
+        assert seg_eff['start'] == 20  # 10 * 2
+        assert seg_eff['duration'] == 100  # 50 * 2
+
+    def test_unified_media_sub_clips_propagated(self) -> None:
+        """UnifiedMedia sub-clips within StitchedMedia in nested Groups must get scalar/duration."""
+        inner_seg = {
+            'id': 20, '_type': 'UnifiedMedia',
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'video': {
+                '_type': 'VMFile', 'id': 21, 'src': 1,
+                'start': 0, 'duration': 100, 'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+                'parameters': {}, 'effects': [{'effectName': 'Blur', 'start': 0, 'duration': 100}],
+                'metadata': {}, 'animationTracks': {},
+            },
+            'audio': None,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        stitched = {
+            'id': 10, '_type': 'StitchedMedia',
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'medias': [inner_seg],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        nested_group = {
+            'id': 5, '_type': 'Group',
+            'start': 0, 'duration': 100,
+            'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {'ident': 'inner'},
+            'tracks': [{'trackIndex': 0, 'medias': [stitched], 'transitions': []}],
+        }
+        group = _make_group_with_scalar([nested_group], scalar='2', start=0, duration=100)
+        clips = group.ungroup()
+        inner_group = clips[0]._data
+        inner_stitched = inner_group['tracks'][0]['medias'][0]
+        um_seg = inner_stitched['medias'][0]
+        assert um_seg['duration'] == 200  # 100 * 2
+        video = um_seg['video']
+        assert video['duration'] == 200
+        assert video['effects'][0]['start'] == 0  # 0 * 2
+        assert video['effects'][0]['duration'] == 200  # 100 * 2

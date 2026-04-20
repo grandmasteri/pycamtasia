@@ -4,35 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 12 domains 1-3)
-
-**Leaf clips:**
-
-1. [verified] `animate()` doesn't clamp fade durations to clip duration. fade_out > duration produces negative time. (base.py ~L1643)
-
-2. [verified] `is_audio` for StitchedMedia doesn't check UnifiedMedia children (asymmetric with is_video). (base.py ~L62)
-
-**Compound clips:**
-
-3. [verified] `merge_internal_tracks()` only checks top-level id for collisions, misses nested. A compound clip's unique top-level id with colliding nested id passes through. (group.py ~L528)
-
-4. [verified] `ungroup()` nested StitchedMedia inside nested Group doesn't scale effects. (group.py ~L302)
-
-5. [verified] `ungroup()` nested StitchedMedia inside nested Group doesn't propagate to UnifiedMedia sub-clips within segments. (group.py ~L302)
-
-6. [verified] `sync_internal_durations()` uses `int()` truncation instead of `round()` for StitchedMedia segment timing. (group.py ~L818)
-
-**Track/timeline:**
-
-7. [verified] `add_image_sequence()` cumulative float drift. Each image converts ticks→seconds→ticks, losing precision over long sequences. (track.py ~L590)
-
-8. [verified] `add_clip()` doesn't normalize `scalar` for IMFile/ScreenIMFile after forcing `mediaDuration=1`. Scalar becomes inconsistent. (track.py ~L260)
-
-9. [verified] `_adjust_effects_after_split[_right]()` unconditionally keeps effects with partial timing fields (start but no duration, or vice versa). Stale effects after split. (track.py ~L70)
-
-10. [verified] `build_section_timeline()` uses `list.remove()` with dict value equality. Can remove wrong clip when two have identical data. (timeline.py ~L590)
-
-11. [verified] `scale_all_durations()` doesn't recurse into Group internal clips' effects. Group sub-clip effects not scaled. (track.py scale_all_durations)
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

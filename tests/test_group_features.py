@@ -1310,3 +1310,33 @@ class TestBug7MergeInternalTracksDuplicateIds:
         merged = gc._data["tracks"][0]["medias"]
         ids = [m["id"] for m in merged]
         assert len(ids) == len(set(ids)), f"Duplicate IDs found: {ids}"
+
+
+# -- Bug: sync_internal_durations must use round() not int() for StitchedMedia --
+
+def test_sync_internal_durations_stitched_uses_round() -> None:
+    """StitchedMedia segment start/duration parsing must use round(), not int() truncation."""
+    # The stitched clip extends past the group duration, triggering trimming
+    seg1 = {
+        '_type': 'ScreenVMFile', 'id': 20, 'src': 1,
+        'start': '0', 'duration': '50',
+        'mediaStart': 0, 'mediaDuration': '50', 'scalar': 1,
+    }
+    seg2 = {
+        '_type': 'ScreenVMFile', 'id': 21, 'src': 1,
+        'start': '50', 'duration': '51',
+        'mediaStart': 50, 'mediaDuration': '51', 'scalar': 1,
+    }
+    stitched = {
+        '_type': 'StitchedMedia', 'id': 10,
+        'start': 0, 'duration': 101,  # extends past group_dur=80
+        'mediaStart': 0, 'mediaDuration': 101, 'scalar': 1,
+        'medias': [seg1, seg2],
+    }
+    group = _make_group_for_sync(80, [stitched])
+    group.sync_internal_durations()
+    medias = group._data['tracks'][0]['medias'][0]['medias']
+    # seg1 should be kept (start=0, dur=50, end=50 <= 80)
+    assert len(medias) == 2
+    # seg2 should be trimmed: start=50, new_dur = 80 - 50 = 30
+    assert medias[1]['duration'] == 30

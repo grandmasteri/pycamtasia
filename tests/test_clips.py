@@ -2251,3 +2251,42 @@ def test_set_speed_group_scalar_format_consistency() -> None:
     group.set_speed(1.0)
     assert group_data["scalar"] == 1
     assert inner_clip["scalar"] == 1
+
+
+class TestIsAudioStitchedMediaEdgeCases:
+    def test_empty_stitched_returns_false(self):
+        clip = BaseClip({
+            '_type': 'StitchedMedia', 'id': 1, 'start': 0,
+            'duration': 100, 'mediaDuration': 100, 'scalar': 1,
+            'medias': [],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        })
+        assert clip.is_audio is False
+
+    def test_non_audio_segment_returns_false(self):
+        clip = BaseClip({
+            '_type': 'StitchedMedia', 'id': 1, 'start': 0,
+            'duration': 100, 'mediaDuration': 100, 'scalar': 1,
+            'medias': [
+                {'_type': 'AMFile', 'id': 2},
+                {'_type': 'VMFile', 'id': 3},  # non-audio
+            ],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        })
+        assert clip.is_audio is False
+
+
+class TestAnimateFadeOutLongerThanFadeInLeaves:
+    def test_fade_out_larger_than_remaining_clamped(self, project):
+        """fade_out > dur - fade_in gets clamped."""
+        from camtasia.timing import seconds_to_ticks
+        track = project.timeline.tracks[0]
+        clip = track.add_clip('VMFile', 0, 0, seconds_to_ticks(2.0))
+        # fade_in takes 1.5s, fade_out requested 2.0s — should clamp to 0.5s
+        clip.animate(fade_in=1.5, fade_out=2.0)
+        # No crash, keyframes valid (no negative time)
+        params = clip._data.get('parameters', {})
+        opacity = params.get('opacity', {})
+        kfs = opacity.get('keyframes', [])
+        for kf in kfs:
+            assert kf.get('time', 0) >= 0

@@ -383,3 +383,59 @@ class TestScaleAllDurationsTransitionStart:
         t = data['transitions'][0]
         assert t['start'] == EDIT_RATE * 4
         assert t['duration'] == EDIT_RATE * 2
+
+
+# -- Bug: scale_all_durations must scale effects inside Group clips --
+
+def test_scale_all_durations_group_internal_effects() -> None:
+    """Effects on clips inside a Group must be scaled by scale_all_durations."""
+    inner_clip = {
+        '_type': 'VMFile', 'id': 10, 'src': 1,
+        'start': 0, 'duration': 100,
+        'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+        'effects': [{'effectName': 'Glow', 'start': 10, 'duration': 50}],
+    }
+    group = {
+        '_type': 'Group', 'id': 1,
+        'start': 0, 'duration': 100,
+        'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+        'effects': [],
+        'tracks': [{'trackIndex': 0, 'medias': [inner_clip]}],
+        'attributes': {'ident': 'G'},
+    }
+    data: dict[str, Any] = {'trackIndex': 0, 'medias': [group], 'transitions': []}
+    track = Track({'ident': 'T'}, data)
+    track.scale_all_durations(2.0)
+    inner_eff = data['medias'][0]['tracks'][0]['medias'][0]['effects'][0]
+    assert inner_eff['start'] == 20  # 10 * 2
+    assert inner_eff['duration'] == 100  # 50 * 2
+
+
+def test_scale_all_durations_group_unified_media_effects() -> None:
+    """Effects on UnifiedMedia sub-clips inside a Group must be scaled."""
+    inner_clip = {
+        '_type': 'UnifiedMedia', 'id': 10,
+        'start': 0, 'duration': 100,
+        'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+        'effects': [],
+        'video': {
+            '_type': 'VMFile', 'id': 11, 'src': 1,
+            'start': 0, 'duration': 100, 'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+            'effects': [{'effectName': 'Blur', 'start': 20, 'duration': 30}],
+        },
+        'audio': None,
+    }
+    group = {
+        '_type': 'Group', 'id': 1,
+        'start': 0, 'duration': 100,
+        'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+        'effects': [],
+        'tracks': [{'trackIndex': 0, 'medias': [inner_clip]}],
+        'attributes': {'ident': 'G'},
+    }
+    data: dict[str, Any] = {'trackIndex': 0, 'medias': [group], 'transitions': []}
+    track = Track({'ident': 'T'}, data)
+    track.scale_all_durations(2.0)
+    video_eff = data['medias'][0]['tracks'][0]['medias'][0]['video']['effects'][0]
+    assert video_eff['start'] == 40  # 20 * 2
+    assert video_eff['duration'] == 60  # 30 * 2

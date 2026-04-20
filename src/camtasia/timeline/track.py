@@ -63,18 +63,27 @@ def _adjust_effects_after_split(clip_data: dict[str, Any], new_duration: int) ->
 
     Remove effects that start at or past the new duration.
     Trim effects that extend past the new duration.
+    Effects without both start and duration are global and always kept.
     """
     effects = clip_data.get('effects', [])
     kept: list[dict[str, Any]] = []
     for eff in effects:
-        if 'start' not in eff or 'duration' not in eff:
+        has_start = 'start' in eff
+        has_dur = 'duration' in eff
+        if not has_start and not has_dur:
             kept.append(eff)
             continue
-        if eff['start'] >= new_duration:
+        e_start = eff.get('start', 0)
+        e_dur = eff.get('duration', 0)
+        if e_start >= new_duration:
             continue  # entirely past the left half
-        if eff['start'] + eff['duration'] > new_duration:
-            eff['duration'] = new_duration - eff['start']
-        kept.append(eff)
+        if e_start + e_dur > new_duration:
+            new_eff = dict(eff)
+            if has_dur:
+                new_eff['duration'] = new_duration - e_start
+            kept.append(new_eff)
+        else:
+            kept.append(eff)
     clip_data['effects'] = kept
 
 
@@ -84,24 +93,31 @@ def _adjust_effects_after_split_right(clip_data: dict[str, Any], split_offset: i
     Shift effect start times back by split_offset.
     Remove effects entirely in the left half.
     Trim effects that span the split boundary.
+    Effects without both start and duration are global and always kept.
     """
     effects = clip_data.get('effects', [])
     kept: list[dict[str, Any]] = []
     for eff in effects:
-        if 'start' not in eff or 'duration' not in eff:
+        has_start = 'start' in eff
+        has_dur = 'duration' in eff
+        if not has_start and not has_dur:
             kept.append(eff)
             continue
-        eff_end = eff['start'] + eff['duration']
-        if eff_end <= split_offset:
-            continue  # entirely in the left half
-        if eff['start'] < split_offset:
-            # spans the boundary — trim the beginning
-            trimmed = split_offset - eff['start']
-            eff['start'] = 0
-            eff['duration'] -= trimmed
-        else:
-            eff['start'] -= split_offset
-        kept.append(eff)
+        e_start = eff.get('start', 0)
+        e_dur = eff.get('duration', 0)
+        e_end = e_start + e_dur
+        if e_end <= split_offset:
+            continue  # entirely before split
+        new_eff = dict(eff)
+        new_start = max(0, e_start - split_offset)
+        new_dur = e_dur
+        if e_start < split_offset:
+            new_dur = e_dur - (split_offset - e_start)
+        if has_start:
+            new_eff['start'] = new_start
+        if has_dur:
+            new_eff['duration'] = max(0, new_dur)
+        kept.append(new_eff)
     clip_data['effects'] = kept
 
 
@@ -450,6 +466,7 @@ class Track:
         if clip_type in ('IMFile', 'ScreenIMFile'):
             record.setdefault('trimStartSum', 0)
             record['mediaDuration'] = 1
+            record['scalar'] = 1
 
         # Enforce valid ID — clone() sets id=-1 as a sentinel
         if record['id'] == -1:
@@ -1287,8 +1304,8 @@ class Track:
         duration_ticks = seconds_to_ticks(duration_per_image_seconds)
         transition_ticks = seconds_to_ticks(transition_seconds)
         for src_id in source_ids:
-            clip = self.add_image(src_id, ticks_to_seconds(offset_ticks), duration_per_image_seconds)
-            clips.append(clip)
+            clip = self.add_clip('IMFile', src_id, offset_ticks, duration_ticks)
+            clips.append(clip)  # type: ignore[arg-type]
             if transition_seconds > 0:
                 offset_ticks += duration_ticks - transition_ticks
             else:
@@ -2494,6 +2511,23 @@ class Track:
                     effect['start'] = int(effect['start'] * factor)
                 if 'duration' in effect:
                     effect['duration'] = int(effect['duration'] * factor)
+            if media_dict.get('_type') == 'Group':
+                for inner_track in media_dict.get('tracks', []):
+                    for inner_clip in inner_track.get('medias', []):
+                        for effect in inner_clip.get('effects', []):
+                            if 'start' in effect:
+                                effect['start'] = int(effect['start'] * factor)
+                            if 'duration' in effect:
+                                effect['duration'] = int(effect['duration'] * factor)
+                        if inner_clip.get('_type') == 'UnifiedMedia':
+                            for sub_key in ('video', 'audio'):
+                                sub = inner_clip.get(sub_key)
+                                if sub is not None:
+                                    for effect in sub.get('effects', []):
+                                        if 'start' in effect:
+                                            effect['start'] = int(effect['start'] * factor)
+                                        if 'duration' in effect:
+                                            effect['duration'] = int(effect['duration'] * factor)
         for t in self._data.get('transitions', []):
             t['duration'] = int(t.get('duration', 0) * factor)
             if 'start' in t:

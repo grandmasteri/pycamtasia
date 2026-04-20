@@ -256,3 +256,38 @@ class TestClearSegmentsResetsMinMediaStart:
         clip = StitchedMedia(data)
         clip.clear_segments()
         assert data['minMediaStart'] == 0
+
+
+# -- Bug: is_audio must handle UnifiedMedia children of StitchedMedia --
+
+def test_is_audio_stitched_with_audio_only_unified_media():
+    """StitchedMedia with audio-only UnifiedMedia children should be audio."""
+    clip = BaseClip({
+        '_type': 'StitchedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'medias': [{'_type': 'UnifiedMedia', 'audio': {'_type': 'AMFile'}}],
+    })
+    assert clip.is_audio is True
+
+
+def test_is_audio_stitched_with_video_unified_media():
+    """StitchedMedia with UnifiedMedia that has video should NOT be audio."""
+    clip = BaseClip({
+        '_type': 'StitchedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'medias': [{'_type': 'UnifiedMedia', 'video': {'_type': 'VMFile'}, 'audio': {'_type': 'AMFile'}}],
+    })
+    assert clip.is_audio is False
+
+
+def test_is_audio_stitched_mixed_amfile_and_unified():
+    """StitchedMedia with AMFile + audio-only UnifiedMedia should be audio."""
+    clip = BaseClip({
+        '_type': 'StitchedMedia',
+        'id': 1, 'start': 0, 'duration': 100,
+        'medias': [
+            {'_type': 'AMFile'},
+            {'_type': 'UnifiedMedia', 'audio': {'_type': 'AMFile'}},
+        ],
+    })
+    assert clip.is_audio is True

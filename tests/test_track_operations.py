@@ -832,3 +832,22 @@ class TestImageSequenceNoDrift:
             assert clip.start == expected, (
                 f"Clip {i}: expected start {expected}, got {clip.start} (drift detected)"
             )
+
+
+# -- Bug: add_image_sequence must use integer ticks to avoid cumulative drift --
+
+def test_add_image_sequence_no_cumulative_drift() -> None:
+    """add_image_sequence should not accumulate floating-point drift across many images."""
+    track = _track()
+    # Use a duration that doesn't convert cleanly to avoid drift
+    clips = track.add_image_sequence(
+        list(range(1, 21)),  # 20 images
+        start_seconds=0.0,
+        duration_per_image_seconds=3.0,
+    )
+    duration_ticks = seconds_to_ticks(3.0)
+    for i, clip in enumerate(clips):
+        expected = i * duration_ticks
+        assert clip.start == expected, (
+            f"Clip {i}: expected start {expected}, got {clip.start} (drift detected)"
+        )

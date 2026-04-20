@@ -2362,3 +2362,21 @@ class TestBug10ReplaceClipNoDoubleRemap:
         aud_id = result._data["audio"]["id"]
         assert len({top_id, vid_id, aud_id}) == 3
         assert top_id not in (100, 101, 102)
+
+
+# -- Bug: add_clip must force scalar=1 for IMFile/ScreenIMFile --
+
+def test_add_clip_imfile_scalar_always_one() -> None:
+    """IMFile clips created via add_clip should always have scalar=1."""
+    track = _make_track()
+    clip = track.add_clip('IMFile', 1, 0, 300)
+    assert clip._data['scalar'] == 1
+    assert clip._data['mediaDuration'] == 1
+
+
+def test_add_clip_screen_imfile_scalar_always_one() -> None:
+    """ScreenIMFile clips created via add_clip should always have scalar=1."""
+    track = _make_track()
+    clip = track.add_clip('ScreenIMFile', 1, 0, 300)
+    assert clip._data['scalar'] == 1
+    assert clip._data['mediaDuration'] == 1

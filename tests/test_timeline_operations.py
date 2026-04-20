@@ -1166,3 +1166,47 @@ class TestBug11BuildSectionTimelineIdRemap:
         assert target_medias[0]["id"] == c1.id
         assert target_medias[1]["id"] == old_c2_id
 
+
+
+# -- Bug: build_section_timeline must use identity-based removal --
+
+def test_build_section_timeline_identity_removal() -> None:
+    """build_section_timeline should use identity (is) not equality for removal.
+
+    Two clips with identical data dicts should not cause the wrong one to be removed.
+    """
+    clip_a = {
+        '_type': 'VMFile', 'id': 1, 'src': 1,
+        'start': 0, 'duration': 100,
+        'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+        'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+    }
+    clip_b = {
+        '_type': 'VMFile', 'id': 2, 'src': 1,
+        'start': 100, 'duration': 100,
+        'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+        'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+    }
+    # clip_c is on track 1, identical structure to clip_a except different id
+    clip_c = {
+        '_type': 'VMFile', 'id': 3, 'src': 1,
+        'start': 0, 'duration': 100,
+        'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+        'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+    }
+    tl = _make_timeline([
+        ('Track0', [clip_a, clip_b]),
+        ('Track1', [clip_c]),
+    ])
+    # Move clip_c (id=3) from track 1 to track 0
+    tl.build_section_timeline(
+        [(1, None), (2, None), (3, None)],
+        target_track_index=0,
+    )
+    tracks = list(tl.tracks)
+    t0 = tracks[0]
+    t1 = tracks[1]
+    # Track 0 should have all 3 clips
+    assert len(t0._data['medias']) == 3
+    # Track 1 should be empty
+    assert len(t1._data['medias']) == 0

@@ -268,3 +268,34 @@ class TestSplitClipEffectTiming:
         left_eff = left._data['effects'][0]
         assert left_eff['start'] == seconds_to_ticks(1.0)
         assert left_eff['duration'] == seconds_to_ticks(2.0)
+
+
+    # -- Bug: effects with only 'start' or only 'duration' must be handled --
+
+    def test_effect_with_only_start_kept_on_left(self):
+        """Effect with start but no duration (instantaneous) should be kept on left if before split."""
+        eff = {'effectName': 'Flash', 'start': seconds_to_ticks(2.0)}
+        track = _make_effect_track(_effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=[eff]))
+        left, _right = track.split_clip(1, 5.0)
+        assert len(left._data['effects']) == 1
+        assert left._data['effects'][0]['start'] == seconds_to_ticks(2.0)
+
+    def test_effect_with_only_start_shifted_on_right(self):
+        """Effect with start but no duration past split should appear on right, shifted."""
+        eff = {'effectName': 'Flash', 'start': seconds_to_ticks(7.0)}
+        track = _make_effect_track(_effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=[eff]))
+        _left, right = track.split_clip(1, 5.0)
+        assert len(right._data['effects']) == 1
+        assert right._data['effects'][0]['start'] == seconds_to_ticks(2.0)
+
+    def test_effect_with_only_duration_kept_on_both(self):
+        """Effect with duration but no start (starts at 0) should be trimmed on left, shifted on right."""
+        eff = {'effectName': 'Glow', 'duration': seconds_to_ticks(8.0)}
+        track = _make_effect_track(_effect_clip(clip_id=1, start_s=0.0, dur_s=10.0, effects=[eff]))
+        left, right = track.split_clip(1, 5.0)
+        # Left: start=0, dur=8 -> trimmed to dur=5 (split point)
+        assert len(left._data['effects']) == 1
+        assert left._data['effects'][0]['duration'] == seconds_to_ticks(5.0)
+        # Right: start=0, dur=8, split at 5 -> new_dur = 8-5 = 3
+        assert len(right._data['effects']) == 1
+        assert right._data['effects'][0]['duration'] == seconds_to_ticks(3.0)

@@ -202,3 +202,31 @@ def test_clear_animations_clears_all_parameter_keyframes() -> None:
         param = d["parameters"][param_name]
         assert "keyframes" not in param, f"{param_name} still has keyframes"
     assert d["animationTracks"] == {}
+
+
+# -- Bug: animate() must clamp fade durations to clip duration --
+
+def test_animate_clamps_fade_in_to_clip_duration() -> None:
+    """fade_in longer than clip duration should be clamped."""
+    d = _vmfile_dict(duration=int(EDIT_RATE * 2))  # 2-second clip
+    clip = VMFile(d)
+    clip.animate(fade_in=10.0)  # 10s fade on 2s clip
+    # Should not crash; fade_in ticks should be clamped to dur_ticks
+    kf = clip._data.get('animationTracks', {}).get('visual', [])
+    assert len(kf) > 0
+    # The fade-in endTime should not exceed clip duration
+    for k in kf:
+        assert k.get('endTime', 0) <= clip.duration
+
+
+def test_animate_clamps_fade_out_no_overlap() -> None:
+    """fade_out should be clamped so it doesn't overlap with fade_in."""
+    d = _vmfile_dict(duration=int(EDIT_RATE * 2))  # 2-second clip
+    clip = VMFile(d)
+    clip.animate(fade_in=1.5, fade_out=1.5)  # total 3s on 2s clip
+    kf = clip._data.get('animationTracks', {}).get('visual', [])
+    # Both keyframes should exist and not overlap
+    assert len(kf) >= 1
+    for k in kf:
+        assert k.get('time', 0) >= 0
+        assert k.get('endTime', 0) <= clip.duration

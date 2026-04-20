@@ -306,6 +306,24 @@ class Group(BaseClip):
                                         inner_seg['scalar'] = 1 if seg_composed == 1 else str(seg_composed)
                                         seg_dur = Fraction(str(inner_seg.get('duration', 0)))
                                         inner_seg['duration'] = round(seg_dur * group_scalar)
+                                        # Scale effects on inner segments (Bug 4)
+                                        for effect in inner_seg.get('effects', []):
+                                            if 'start' in effect:
+                                                effect['start'] = round(Fraction(str(effect['start'])) * group_scalar)
+                                            if 'duration' in effect:
+                                                effect['duration'] = round(Fraction(str(effect['duration'])) * group_scalar)
+                                        # Propagate to UnifiedMedia sub-clips (Bug 5)
+                                        if inner_seg.get('_type') == 'UnifiedMedia':
+                                            for sub_key in ('video', 'audio'):
+                                                sub = inner_seg.get(sub_key)
+                                                if sub is not None:
+                                                    sub['scalar'] = inner_seg['scalar']
+                                                    sub['duration'] = inner_seg['duration']
+                                                    for effect in sub.get('effects', []):
+                                                        if 'start' in effect:
+                                                            effect['start'] = round(Fraction(str(effect['start'])) * group_scalar)
+                                                        if 'duration' in effect:
+                                                            effect['duration'] = round(Fraction(str(effect['duration'])) * group_scalar)
                                     # Re-layout starts
                                     cursor = 0
                                     for inner_seg in nested_clip.get('medias', []):
@@ -526,16 +544,14 @@ class Group(BaseClip):
         id_counter = [max_id + 1]
         for source_track in tracks_snapshot[1:]:
             for media_dict in source_track._data.get('medias', []):
-                if media_dict.get('id') in existing_ids:
+                clip_ids = _collect_all_ids(media_dict)
+                if clip_ids & existing_ids:
                     id_map: dict[int, int] = {}
                     _remap_clip_ids_with_map(media_dict, id_counter, id_map)
                 else:
-                    # Non-colliding: still bump id_counter past this clip's nested IDs
-                    nested_ids = _collect_all_ids(media_dict)
-                    if nested_ids:
-                        max_nested = max(nested_ids)
-                        if max_nested >= id_counter[0]:
-                            id_counter[0] = max_nested + 1
+                    max_nested = max(clip_ids) if clip_ids else 0
+                    if max_nested >= id_counter[0]:
+                        id_counter[0] = max_nested + 1
                 existing_ids.update(_collect_all_ids(media_dict))
                 target_track._data.setdefault('medias', []).append(media_dict)
         # Remove all tracks except the first
@@ -808,11 +824,11 @@ class Group(BaseClip):
                             md = Fraction(m['duration']) / scalar
                             m['mediaDuration'] = int(md) if md == int(md) else str(md)
                     if m.get('_type') == 'StitchedMedia':
-                        new_dur = int(Fraction(str(m.get('duration', 0))))
+                        new_dur = round(Fraction(str(m.get('duration', 0))))
                         segments_to_keep: list[dict[str, Any]] = []
                         for seg in m.get('medias', []):
-                            seg_start = int(Fraction(str(seg.get('start', 0))))
-                            seg_dur = int(Fraction(str(seg.get('duration', 0))))
+                            seg_start = round(Fraction(str(seg.get('start', 0))))
+                            seg_dur = round(Fraction(str(seg.get('duration', 0))))
                             if seg_start >= new_dur:
                                 continue
                             seg_end = seg_start + seg_dur

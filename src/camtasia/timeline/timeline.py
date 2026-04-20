@@ -1152,7 +1152,9 @@ class Timeline:
             assert found_media is not None
             # Move clip to target track (after iteration is complete)
             if found_track.index != target_track_index:
-                found_track._data['medias'].remove(found_media)
+                found_track._data['medias'] = [
+                    m for m in found_track._data.get('medias', []) if m is not found_media
+                ]
                 # Clean up dangling transitions on source track
                 found_track._data['transitions'] = [
                     t for t in found_track._data.get('transitions', [])

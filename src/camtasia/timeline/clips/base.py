@@ -61,7 +61,18 @@ class BaseClip:
             return True
         if self.clip_type == 'StitchedMedia':
             medias = self._data.get('medias', [])
-            return bool(medias) and all(m.get('_type') == 'AMFile' for m in medias)
+            if not medias:
+                return False
+            for m in medias:
+                t = m.get('_type')
+                if t == 'AMFile':
+                    continue
+                if t == 'UnifiedMedia':
+                    if m.get('video') is not None:
+                        return False
+                    continue
+                return False
+            return True
         return False
 
     @property
@@ -1644,10 +1655,14 @@ class BaseClip:
             dur_ticks = self.duration
             keyframes: list[dict] = []
             if fade_in > 0:
-                fi_ticks = seconds_to_ticks(fade_in)
+                fi_ticks = min(seconds_to_ticks(fade_in), dur_ticks)
                 keyframes.append({'endTime': fi_ticks, 'time': 0, 'value': 1.0, 'duration': fi_ticks})
+            else:
+                fi_ticks = 0
             if fade_out > 0:
-                fo_ticks = seconds_to_ticks(fade_out)
+                fo_ticks = min(seconds_to_ticks(fade_out), dur_ticks - fi_ticks)
+                if fo_ticks < 0:
+                    fo_ticks = 0  # pragma: no cover  # defensive: fi_ticks is clamped to dur_ticks so dur-fi >= 0
                 fo_start = dur_ticks - fo_ticks
                 keyframes.append({'endTime': dur_ticks, 'time': fo_start, 'value': 0.0, 'duration': fo_ticks})
             self._clear_opacity()
