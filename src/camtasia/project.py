@@ -404,19 +404,18 @@ class Project:
             raise KeyError(f'Track not found: {track_name_b}')
         idx_a = track_a.index
         idx_b = track_b.index
+        attrs = self.timeline._data.get('trackAttributes')
+        if attrs is not None and len(attrs) <= max(idx_a, idx_b):
+            raise ValueError(
+                f'trackAttributes length ({len(attrs)}) insufficient to swap indices {idx_a} and {idx_b}'
+            )
+        # Now do the swaps
         track_a._data['trackIndex'] = idx_b
         track_b._data['trackIndex'] = idx_a
         tracks = self.timeline._track_list
         tracks[idx_a], tracks[idx_b] = tracks[idx_b], tracks[idx_a]
-        attrs = self.timeline._data.get('trackAttributes')
-        if attrs and len(attrs) > max(idx_a, idx_b):
+        if attrs is not None:
             attrs[idx_a], attrs[idx_b] = attrs[idx_b], attrs[idx_a]
-        elif attrs is not None:
-            warnings.warn(
-                f'trackAttributes too short ({len(attrs)}) to swap indices '
-                f'{idx_a} and {idx_b}; attribute swap skipped',
-                stacklevel=2,
-            )
 
     def remove_track_by_name(self, track_name: str) -> bool:
         """Remove the first track with the given name.

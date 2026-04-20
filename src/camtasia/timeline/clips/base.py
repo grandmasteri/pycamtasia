@@ -316,7 +316,10 @@ class BaseClip:
         if self._data.get('_type') == 'StitchedMedia':
             for inner in self._data.get('medias', []):
                 inner['scalar'] = self._data['scalar']
-                inner['mediaDuration'] = self._data['mediaDuration']
+                # Keep inner's own mediaDuration; recalculate duration from it
+                inner_md = Fraction(str(inner.get('mediaDuration', 0)))
+                new_dur = inner_md * scalar_fraction
+                inner['duration'] = int(new_dur) if new_dur == int(new_dur) else str(new_dur)
                 inner.setdefault('metadata', {})['clipSpeedAttribute'] = {
                     'type': 'bool', 'value': scalar_fraction != 1
                 }

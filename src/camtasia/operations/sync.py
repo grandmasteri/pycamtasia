@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from fractions import Fraction
 import re
+import string
 from typing import TYPE_CHECKING
 
 from camtasia.timing import EDIT_RATE
@@ -85,7 +86,7 @@ def match_marker_to_transcript(
     # Fallback: match first word of label
     first = label_lower[0]
     for w in words:
-        if first in w.text.lower():
+        if first == w.text.lower().strip(string.punctuation):
             return w.start
 
     return None

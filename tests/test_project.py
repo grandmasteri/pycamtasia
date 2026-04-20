@@ -8,7 +8,6 @@ import subprocess
 import sys
 from typing import ClassVar
 from unittest.mock import MagicMock, patch
-import warnings as w
 import zlib
 
 import pytest
@@ -958,7 +957,7 @@ class TestHasScreenRecordingDirect:
 
 class TestSwapTracksShortAttrs:
     def test_warns_when_attrs_too_short(self, tmp_path, monkeypatch):
-        """When trackAttributes is shorter than the track indices being swapped, a warning is emitted."""
+        """When trackAttributes is shorter than the track indices being swapped, a ValueError is raised."""
         data = json.loads(json.dumps(MINIMAL_PROJECT_DATA))
         data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'] = [
             {'trackIndex': 0, 'medias': []},
@@ -981,10 +980,8 @@ class TestSwapTracksShortAttrs:
             call_idx[0] += 1
             return results[i] if i < len(results) else orig_find(self_tl, name)
         monkeypatch.setattr(Timeline, 'find_track_by_name', patched_find)
-        with w.catch_warnings(record=True) as caught:
-            w.simplefilter('always')
+        with pytest.raises(ValueError, match='trackAttributes length'):
             proj.swap_tracks('A', 'B')
-        assert any('trackAttributes too short' in str(c.message) for c in caught)
 
 
 

@@ -156,11 +156,16 @@ class TestStitchedMediaPropagation:
 
     def test_set_speed_propagates(self):
         data = _stitched_media_data()
+        orig_mds = [c['mediaDuration'] for c in _children_stitched(data)]
         clip = StitchedMedia(data)
         clip.set_speed(2.0)
-        for child in _children_stitched(data):
+        for child, orig_md in zip(_children_stitched(data), orig_mds):
             assert child['scalar'] == data['scalar']
-            assert child['mediaDuration'] == data['mediaDuration']
+            # Children keep their own mediaDuration, duration is recalculated
+            assert child['mediaDuration'] == orig_md
+            scalar = Fraction(str(child['scalar']))
+            expected_dur = Fraction(str(orig_md)) * scalar
+            assert Fraction(str(child['duration'])) == expected_dur
             assert child['metadata']['clipSpeedAttribute'] == data['metadata']['clipSpeedAttribute']
 
     def test_set_time_range_does_not_propagate(self):
