@@ -449,6 +449,7 @@ class Track:
 
         if clip_type in ('IMFile', 'ScreenIMFile'):
             record.setdefault('trimStartSum', 0)
+            record['mediaDuration'] = 1
 
         # Enforce valid ID — clone() sets id=-1 as a sentinel
         if record['id'] == -1:
@@ -2330,12 +2331,28 @@ class Track:
         from camtasia.timing import seconds_to_ticks
         offset_ticks: int = seconds_to_ticks(offset_seconds)
         clamped = False
-        for media_dict in self._data.get('medias', []):
-            new_start = media_dict.get('start', 0) + offset_ticks
+        for m in self._data.get('medias', []):
+            new_start = m.get('start', 0) + offset_ticks
             if new_start < 0:
                 clamped = True
-            media_dict['start'] = max(0, new_start)
-            _propagate_start_to_unified(media_dict)
+                clamp_amount = -new_start
+                m['start'] = 0
+                old_duration = int(Fraction(str(m.get('duration', 0))))
+                new_duration = max(0, old_duration - clamp_amount)
+                m['duration'] = new_duration
+                scalar = _parse_scalar(m.get('scalar', 1))
+                old_media_start = Fraction(str(m.get('mediaStart', 0)))
+                if scalar != 0:
+                    new_media_start = old_media_start + Fraction(clamp_amount) / scalar
+                else:
+                    new_media_start = old_media_start
+                m['mediaStart'] = int(new_media_start) if new_media_start == int(new_media_start) else str(new_media_start)
+                if m.get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group') and scalar != 0:
+                    new_md = Fraction(new_duration) / scalar
+                    m['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
+            else:
+                m['start'] = new_start
+            _propagate_start_to_unified(m)
         if clamped:
             self._data['transitions'] = []
 

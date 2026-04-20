@@ -1810,3 +1810,16 @@ class TestAddClipScalarValidation:
         track = project.timeline.tracks[0]
         with pytest.raises(ValueError, match=r"scalar must be positive"):
             track.add_clip("VMFile", 0, 0, 705600000, scalar=-1)
+
+
+class TestShiftAllClipsClampScalarZero:
+    """Track.shift_all_clips handles scalar=0 without division error when clamping."""
+
+    def test_clamp_with_zero_scalar(self, project):
+        from camtasia.timing import seconds_to_ticks
+        track = project.timeline.tracks[0]
+        clip = track.add_clip('VMFile', 0, seconds_to_ticks(5.0), seconds_to_ticks(10.0))
+        clip._data['scalar'] = 0
+        clip._data['mediaStart'] = seconds_to_ticks(2.0)
+        track.shift_all_clips(-10.0)
+        assert clip._data['mediaStart'] == seconds_to_ticks(2.0)

@@ -26,14 +26,18 @@ def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
     medias = track._data.get('medias', [])
     if not medias:
         return
-    track._data['transitions'] = []
     medias.sort(key=lambda m: _to_ticks(m.get('start', 0)))
     gap_ticks = seconds_to_ticks(gap_seconds)
     cursor = 0
+    any_shifted = False
     for m in medias:
+        if m['start'] != cursor:
+            any_shifted = True
         m['start'] = cursor
         _propagate_start_to_unified(m)
         cursor += _to_ticks(m.get('duration', 0)) + gap_ticks
+    if any_shifted:
+        track._data['transitions'] = []
 
 
 def ripple_insert(track: Track, position_seconds: float, duration_seconds: float) -> None:

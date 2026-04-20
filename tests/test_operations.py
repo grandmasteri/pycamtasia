@@ -394,13 +394,18 @@ class TestMatchMarkerFallbackFirstWord:
     """Fallback first-word match."""
 
     def test_fallback_matches_first_word(self):
-        # Label has multiple words but none match as a phrase; first word matches a transcript word
+        # Multi-word label requires at least 2 consecutive words to match
         words = [
             Word(word_id='', text='hello', start=2.0, end=2.5),
             Word(word_id='', text='world', start=3.0, end=3.5),
         ]
+        # No consecutive match for 'hello nonexistent' → returns None
         result = match_marker_to_transcript('hello nonexistent phrase', words)
-        assert result == 2.0
+        assert result is None
+
+        # But if the first 2 words match consecutively, it works
+        result2 = match_marker_to_transcript('hello world missing', words)
+        assert result2 == 2.0
 
 
 class TestPlanSyncSkipsZeroDuration:

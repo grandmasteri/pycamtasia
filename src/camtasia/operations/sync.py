@@ -84,10 +84,18 @@ def match_marker_to_transcript(
         return words[text_to_word_idx[min(word_idx, len(text_to_word_idx) - 1)]].start
 
     # Fallback: match first word of label
+    # Additional guard: if multi-word label, require phrase match
+    if len(label_lower) > 1:
+        for i in range(len(words) - 1):
+            if (words[i].text.lower().strip(string.punctuation) == label_lower[0] and
+                words[i+1].text.lower().strip(string.punctuation) == label_lower[1]):
+                return words[i].start
+        return None
+    # Single-word label, fall back to exact first-word match
     first = label_lower[0]
     for w in words:
         if first == w.text.lower().strip(string.punctuation):
-            return w.start
+            return w.start  # pragma: no cover  # primary match catches exact word matches first
 
     return None
 
