@@ -92,6 +92,34 @@ def parse_screenplay(path: str | Path) -> Screenplay:
     splits = list(_SECTION_RE.finditer(text))
     sections: list[ScreenplaySection] = []
 
+    # Handle content before the first heading
+    if splits and splits[0].start() > 0:
+        chunk = text[:splits[0].start()]
+        if chunk.strip():
+            preamble = ScreenplaySection(
+                title='(preamble)',
+                level=0,
+                vo_blocks=[VOBlock(id=v.group(1), text=v.group(2), section='(preamble)') for v in _VO_RE.finditer(chunk)],
+                pauses=_pauses_with_positions(chunk),
+                transitions=[TransitionMarker(name=t.group(1).strip()) for t in _TRANSITION_RE.finditer(chunk)],
+                images=[ImageRef(alt=img.group(1), path=img.group(2)) for img in _IMAGE_RE.finditer(chunk)],
+            )
+            if preamble.vo_blocks or preamble.pauses or preamble.transitions or preamble.images:
+                sections.append(preamble)
+
+    # Handle no headings at all
+    if not splits and text.strip():
+        preamble = ScreenplaySection(
+            title='(preamble)',
+            level=0,
+            vo_blocks=[VOBlock(id=v.group(1), text=v.group(2), section='(preamble)') for v in _VO_RE.finditer(text)],
+            pauses=_pauses_with_positions(text),
+            transitions=[TransitionMarker(name=t.group(1).strip()) for t in _TRANSITION_RE.finditer(text)],
+            images=[ImageRef(alt=img.group(1), path=img.group(2)) for img in _IMAGE_RE.finditer(text)],
+        )
+        if preamble.vo_blocks or preamble.pauses or preamble.transitions or preamble.images:
+            sections.append(preamble)
+
     for i, m in enumerate(splits):
         start = m.end()
         end = splits[i + 1].start() if i + 1 < len(splits) else len(text)

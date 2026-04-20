@@ -65,3 +65,55 @@ def test_vo_blocks_property(screenplay):
 
 def test_total_pauses(screenplay):
     assert screenplay.total_pauses == 2.5
+
+
+# -- Preamble parsing: content before first heading --
+
+PREAMBLE_SCREENPLAY = """\
+[VO-0.1]:** "This is the preamble"
+
+PAUSE 2.0 seconds
+
+## First Section
+
+[VO-1.1]:** "Section one content"
+"""
+
+NO_HEADING_SCREENPLAY = """\
+[VO-0.1]:** "Only content, no headings"
+
+PAUSE 1.0 second
+"""
+
+EMPTY_PREAMBLE_SCREENPLAY = """\
+
+## First Section
+
+[VO-1.1]:** "Section one content"
+"""
+
+
+class TestScreenplayPreamble:
+    def test_preamble_before_first_heading(self, tmp_path):
+        f = tmp_path / "test.md"
+        f.write_text(PREAMBLE_SCREENPLAY)
+        sp = parse_screenplay(f)
+        assert sp.sections[0].title == '(preamble)'
+        assert sp.sections[0].level == 0
+        assert sp.sections[0].vo_blocks[0].id == '0.1'
+        assert sp.sections[0].pauses[0].duration_seconds == 2.0
+        assert sp.sections[1].title == 'First Section'
+
+    def test_no_headings_at_all(self, tmp_path):
+        f = tmp_path / "test.md"
+        f.write_text(NO_HEADING_SCREENPLAY)
+        sp = parse_screenplay(f)
+        assert len(sp.sections) == 1
+        assert sp.sections[0].title == '(preamble)'
+        assert sp.sections[0].vo_blocks[0].text == 'Only content, no headings'
+
+    def test_empty_preamble_not_added(self, tmp_path):
+        f = tmp_path / "test.md"
+        f.write_text(EMPTY_PREAMBLE_SCREENPLAY)
+        sp = parse_screenplay(f)
+        assert sp.sections[0].title == 'First Section'

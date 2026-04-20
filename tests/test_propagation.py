@@ -178,3 +178,45 @@ class TestStitchedMediaPropagation:
             assert child['duration'] == od
             assert child['mediaDuration'] == omd
             assert child['scalar'] == osc
+
+
+# -- set_time_range and set_duration_seconds mediaStart propagation --
+
+def _unified_media_with_media_start(media_start=0):
+    return {
+        '_type': 'UnifiedMedia', 'id': 1, 'start': 0,
+        'duration': EDIT_RATE, 'mediaDuration': EDIT_RATE,
+        'mediaStart': media_start, 'scalar': 1,
+        'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        'video': {
+            '_type': 'VMFile', 'id': 2, 'src': 1, 'start': 0,
+            'duration': EDIT_RATE, 'mediaDuration': EDIT_RATE,
+            'mediaStart': 0, 'scalar': 1, 'trackNumber': 0,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        },
+        'audio': {
+            '_type': 'AMFile', 'id': 3, 'src': 1, 'start': 0,
+            'duration': EDIT_RATE, 'mediaDuration': EDIT_RATE,
+            'mediaStart': 0, 'scalar': 1, 'trackNumber': 0, 'channelNumber': 0,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {}, 'attributes': {'gain': 1.0},
+        },
+    }
+
+
+class TestSetTimeRangeMediaStartPropagation:
+    def test_propagates_mediaStart_to_children(self):
+        data = _unified_media_with_media_start(media_start=EDIT_RATE * 5)
+        clip = UnifiedMedia(data)
+        clip.set_time_range(2.0, 3.0)
+        for key in ('video', 'audio'):
+            assert data[key]['mediaStart'] == EDIT_RATE * 5
+
+
+class TestSetDurationSecondsMediaStartPropagation:
+    def test_propagates_mediaStart_to_children(self):
+        data = _unified_media_with_media_start(media_start=EDIT_RATE * 3)
+        clip = UnifiedMedia(data)
+        clip.set_duration_seconds(4.0)
+        for key in ('video', 'audio'):
+            assert data[key]['mediaStart'] == EDIT_RATE * 3

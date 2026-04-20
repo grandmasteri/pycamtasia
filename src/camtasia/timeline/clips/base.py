@@ -597,6 +597,7 @@ class BaseClip:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['scalar'] = self._data.get('scalar', 1)
+                    sub['mediaStart'] = self._data.get('mediaStart', 0)
         return self
 
     def set_time_range(self, start_seconds: float, duration_seconds: float) -> Self:
@@ -621,6 +622,7 @@ class BaseClip:
                     sub['duration'] = self._data['duration']
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['scalar'] = self._data.get('scalar', 1)
+                    sub['mediaStart'] = self._data.get('mediaStart', 0)
         return self
 
     def __eq__(self, other: object) -> bool:
