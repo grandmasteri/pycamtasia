@@ -3,6 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
+from camtasia.timeline.timeline import Timeline
 from camtasia.timeline.track import Track
 from camtasia.timing import seconds_to_ticks
 
@@ -117,3 +120,63 @@ class TestInsertThenRemoveGapRoundtrip:
         clips = sorted(track.clips, key=lambda c: c.start)
         assert clips[0].start == seconds_to_ticks(0)
         assert clips[1].start == seconds_to_ticks(5)
+
+
+# Bug 13: Timeline.remove_gap must check for clips spanning the gap
+
+
+def _make_timeline(track_medias_list: list[list[dict]]) -> Timeline:
+    """Build a minimal Timeline with the given tracks."""
+    tracks = []
+    attrs = []
+    for i, medias in enumerate(track_medias_list):
+        tracks.append({'trackIndex': i, 'medias': medias, 'transitions': []})
+        attrs.append({'ident': f'Track {i}'})
+    return Timeline({
+        'id': 0,
+        'sceneTrack': {'scenes': [{'csml': {'tracks': tracks}}]},
+        'trackAttributes': attrs,
+        'parameters': {},
+    })
+
+
+class TestTimelineRemoveGapSpanningClip:
+    def test_rejects_clip_spanning_into_gap(self):
+        """A clip that starts before the gap but extends into it should be rejected."""
+        tl = _make_timeline([[
+            {'id': 1, '_type': 'Callout', 'start': 0, 'duration': seconds_to_ticks(10)},
+        ]])
+        with pytest.raises(ValueError, match='spans into gap region'):
+            tl.remove_gap(5.0, 3.0)
+
+    def test_rejects_clip_starting_inside_gap(self):
+        tl = _make_timeline([[
+            {'id': 1, '_type': 'Callout', 'start': seconds_to_ticks(6), 'duration': seconds_to_ticks(2)},
+        ]])
+        with pytest.raises(ValueError, match='starts inside gap'):
+            tl.remove_gap(5.0, 3.0)
+
+
+# Bug 14: Track.remove_gap_at preserves unrelated transitions
+
+class TestRemoveGapAtPreservesTransitions:
+    def test_preserves_transitions_between_unshifted_clips(self):
+        track = _make_track()
+        a = track.add_callout("A", 0, 3)
+        b = track.add_callout("B", 3, 3)
+        # gap from 6s to 10s
+        track.add_callout("C", 10, 3)
+
+        # Add transition between A and B (both before the gap)
+        track._data.setdefault('transitions', []).append({
+            'name': 'FadeThroughBlack',
+            'duration': seconds_to_ticks(0.5),
+            'leftMedia': a.id,
+            'rightMedia': b.id,
+        })
+
+        track.remove_gap_at(at_seconds=7.0)
+
+        # Transition between A and B should be preserved
+        assert len(track._data['transitions']) == 1
+        assert track._data['transitions'][0]['leftMedia'] == a.id

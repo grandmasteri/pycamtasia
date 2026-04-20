@@ -22,7 +22,8 @@ class PlaceholderMedia(BaseClip):
     @property
     def subtitle(self) -> str:
         """Subtitle text for the placeholder clip."""
-        return self._data.get('metadata', {}).get('placeHolderSubTitle', '')  # type: ignore[no-any-return]
+        val = self._data.get('metadata', {}).get('placeHolderSubTitle', '')
+        return val if val is not None else ''
 
     @subtitle.setter
     def subtitle(self, value: str) -> None:

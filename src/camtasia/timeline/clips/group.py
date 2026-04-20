@@ -206,6 +206,18 @@ class Group(BaseClip):
                             orig_eff_dur = Fraction(str(effect['duration']))
                             new_eff_dur = orig_eff_dur * group_scalar
                             effect['duration'] = round(new_eff_dur)
+                    # Also scale effects on UnifiedMedia sub-clips
+                    if cloned_data.get('_type') == 'UnifiedMedia':
+                        for sub_key in ('video', 'audio'):
+                            sub = cloned_data.get(sub_key)
+                            if sub is not None:
+                                for effect in sub.get('effects', []):
+                                    if 'start' in effect:
+                                        orig_start = Fraction(str(effect['start']))
+                                        effect['start'] = round(orig_start * group_scalar)
+                                    if 'duration' in effect:
+                                        orig_dur = Fraction(str(effect['duration']))
+                                        effect['duration'] = round(orig_dur * group_scalar)
                     if cloned_data.get('_type') == 'StitchedMedia' and group_scalar != 1:
                         for inner in cloned_data.get('medias', []):
                             inner_orig_scalar = _parse_scalar(inner.get('scalar', 1))
@@ -214,6 +226,14 @@ class Group(BaseClip):
                             inner_md = Fraction(str(inner.get('mediaDuration', 0)))
                             new_inner_dur = inner_md * composed_inner
                             inner['duration'] = round(new_inner_dur)
+                            # Propagate to UnifiedMedia segments
+                            if inner.get('_type') == 'UnifiedMedia':
+                                for sub_key in ('video', 'audio'):
+                                    sub = inner.get(sub_key)
+                                    if sub is not None:
+                                        sub['scalar'] = inner['scalar']
+                                        sub['duration'] = inner['duration']
+                                        sub['start'] = inner['start']
                         cursor = 0
                         for inner in cloned_data.get('medias', []):
                             inner['start'] = cursor
@@ -648,6 +668,19 @@ class Group(BaseClip):
                     m['mediaStart'] = first_seg_src_start_ticks
                     ratio = Fraction(total_tl) / Fraction(total_src_span) if total_src_span != 0 else Fraction(1)
                     m['scalar'] = int(ratio) if ratio == int(ratio) else str(ratio)
+                elif m.get('_type') == 'UnifiedMedia':
+                    m['duration'] = total_tl
+                    m['mediaDuration'] = total_src_span
+                    m['mediaStart'] = first_seg_src_start_ticks
+                    ratio = Fraction(total_tl) / Fraction(total_src_span) if total_src_span != 0 else Fraction(1)
+                    m['scalar'] = int(ratio) if ratio == int(ratio) else str(ratio)
+                    for sub_key in ('video', 'audio'):
+                        sub = m.get(sub_key)
+                        if sub is not None:
+                            sub['duration'] = m['duration']
+                            sub['mediaDuration'] = m['mediaDuration']
+                            sub['mediaStart'] = m['mediaStart']
+                            sub['scalar'] = m['scalar']
 
     def sync_internal_durations(self) -> Self:
         """Trim all internal clips to match the Group's duration.
@@ -699,6 +732,14 @@ class Group(BaseClip):
                                     seg['mediaDuration'] = int(new_md) if new_md == int(new_md) else str(new_md)
                             segments_to_keep.append(seg)
                         m['medias'] = segments_to_keep
+                        for seg in m.get('medias', []):
+                            if seg.get('_type') == 'UnifiedMedia':
+                                for sub_key in ('video', 'audio'):
+                                    sub = seg.get(sub_key)
+                                    if sub is not None:
+                                        sub['duration'] = seg['duration']
+                                        if 'mediaDuration' in seg:
+                                            sub['mediaDuration'] = seg['mediaDuration']
                     from camtasia.timeline.track import _propagate_start_to_unified as _psu
                     _psu(m)
         return self

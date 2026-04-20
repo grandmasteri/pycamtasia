@@ -773,3 +773,85 @@ class TestUngroupScalesEffects:
         # 90 * 1/3 = 30
         assert effect['start'] == 30
         assert effect['duration'] == 30
+
+
+# ------------------------------------------------------------------
+# Bug 6: ungroup — effects on UnifiedMedia sub-clips must be scaled
+# ------------------------------------------------------------------
+
+def test_ungroup_scales_unified_media_sub_clip_effects():
+    """Bug 6: ungroup must scale effects on UnifiedMedia video/audio sub-clips."""
+    group_data: dict = {
+        '_type': 'Group', 'id': 1, 'start': 0,
+        'duration': 900, 'mediaDuration': 900, 'scalar': '1/3',
+        'mediaStart': 0,
+        'tracks': [{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'UnifiedMedia', 'id': 10, 'src': 1,
+                'start': 0, 'duration': 900,
+                'mediaStart': 0, 'mediaDuration': 900, 'scalar': 1,
+                'effects': [],
+                'video': {
+                    '_type': 'VMFile', 'id': 11, 'src': 1,
+                    'start': 0, 'duration': 900,
+                    'mediaStart': 0, 'mediaDuration': 900, 'scalar': 1,
+                    'effects': [{'effectName': 'Glow', 'start': 90, 'duration': 90}],
+                },
+                'audio': {
+                    '_type': 'AMFile', 'id': 12, 'src': 1,
+                    'start': 0, 'duration': 900,
+                    'mediaStart': 0, 'mediaDuration': 900, 'scalar': 1,
+                    'effects': [{'effectName': 'FadeIn', 'start': 60, 'duration': 30}],
+                },
+            }],
+        }],
+    }
+    group = Group(group_data)
+    clips = group.ungroup()
+    video_eff = clips[0]._data['video']['effects'][0]
+    audio_eff = clips[0]._data['audio']['effects'][0]
+    # 90 * 1/3 = 30, 60 * 1/3 = 20, 30 * 1/3 = 10
+    assert video_eff['start'] == 30
+    assert video_eff['duration'] == 30
+    assert audio_eff['start'] == 20
+    assert audio_eff['duration'] == 10
+
+
+# ------------------------------------------------------------------
+# Bug 9: ungroup — propagate to UnifiedMedia segments inside StitchedMedia
+# ------------------------------------------------------------------
+
+def test_ungroup_propagates_to_unified_media_inside_stitched():
+    """Bug 9: ungroup must propagate scalar/duration/start to UnifiedMedia sub-dicts inside StitchedMedia."""
+    group_data: dict = {
+        '_type': 'Group', 'id': 1, 'start': 0,
+        'duration': 600, 'mediaDuration': 600, 'scalar': '1/2',
+        'mediaStart': 0,
+        'tracks': [{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia', 'id': 10,
+                'start': 0, 'duration': 600, 'mediaDuration': 600, 'scalar': 1,
+                'medias': [{
+                    '_type': 'UnifiedMedia', 'id': 11,
+                    'start': 0, 'duration': 600, 'mediaDuration': 600, 'scalar': 1,
+                    'video': {
+                        '_type': 'VMFile', 'id': 12, 'src': 1,
+                        'start': 0, 'duration': 600, 'scalar': 1,
+                    },
+                    'audio': {
+                        '_type': 'AMFile', 'id': 13, 'src': 1,
+                        'start': 0, 'duration': 600, 'scalar': 1,
+                    },
+                }],
+            }],
+        }],
+    }
+    group = Group(group_data)
+    clips = group.ungroup()
+    inner_seg = clips[0]._data['medias'][0]
+    assert inner_seg['video']['scalar'] == inner_seg['scalar']
+    assert inner_seg['video']['duration'] == inner_seg['duration']
+    assert inner_seg['audio']['scalar'] == inner_seg['scalar']
+    assert inner_seg['audio']['duration'] == inner_seg['duration']

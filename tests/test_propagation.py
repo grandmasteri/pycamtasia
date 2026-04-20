@@ -249,3 +249,38 @@ class TestUnifiedMediaDurationPropertySetterPropagatesMediaStart:
         for key in ('video', 'audio'):
             # Bug 2 fix: media_duration setter must NOT overwrite sub-clip mediaStart
             assert data[key]['mediaStart'] == 0
+
+
+# ------------------------------------------------------------------
+# Bug 3 & 4: duration/scalar setter — IMFile override on UnifiedMedia image sub-clips
+# ------------------------------------------------------------------
+
+def _unified_media_with_image_video():
+    """UnifiedMedia with an IMFile video sub-clip (image)."""
+    return {
+        '_type': 'UnifiedMedia', 'id': 1, 'start': 0,
+        'duration': EDIT_RATE * 5, 'mediaDuration': 1,
+        'mediaStart': 0, 'scalar': 1, 'parameters': {}, 'effects': [],
+        'metadata': {}, 'animationTracks': {},
+        'video': {'_type': 'IMFile', 'id': 2, 'src': 1, 'start': 0,
+                  'duration': EDIT_RATE * 5, 'mediaDuration': 1,
+                  'mediaStart': 0, 'scalar': 1, 'trackNumber': 0,
+                  'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {}},
+        'audio': None,
+    }
+
+
+class TestDurationSetterIMFileOverrideOnUnifiedMedia:
+    def test_duration_setter_keeps_image_sub_clip_media_duration_1(self):
+        """Bug 3: duration setter must keep mediaDuration=1 for IMFile sub-clips."""
+        data = _unified_media_with_image_video()
+        clip = UnifiedMedia(data)
+        clip.duration = EDIT_RATE * 10
+        assert data['video']['mediaDuration'] == 1
+
+    def test_scalar_setter_keeps_image_sub_clip_media_duration_1(self):
+        """Bug 4: scalar setter must keep mediaDuration=1 for IMFile sub-clips."""
+        data = _unified_media_with_image_video()
+        clip = UnifiedMedia(data)
+        clip.scalar = Fraction(1, 2)
+        assert data['video']['mediaDuration'] == 1

@@ -290,3 +290,45 @@ class TestShiftAllClipsUnifiedMediaEffects:
         audio_eff = data['medias'][0]['audio']['effects'][0]
         # Original audio effect start was 2s. After clamping 3s: start should be max(0, 2s-3s)=0
         assert audio_eff['start'] == 0
+
+
+# Bug 12: scale_all_durations must scale effects inside UnifiedMedia sub-clips
+
+class TestScaleAllDurationsUnifiedMediaEffects:
+    def test_scales_sub_clip_effects(self):
+        from camtasia.timing import EDIT_RATE
+        data = {
+            'trackIndex': 0,
+            'medias': [{
+                'id': 1, '_type': 'UnifiedMedia',
+                'start': 0, 'duration': EDIT_RATE * 10,
+                'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                'video': {
+                    'id': 2, '_type': 'VMFile', 'src': 1,
+                    'start': 0, 'duration': EDIT_RATE * 10,
+                    'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                    'effects': [{'effectName': 'Glow', 'start': EDIT_RATE * 2, 'duration': EDIT_RATE * 4}],
+                    'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                },
+                'audio': {
+                    'id': 3, '_type': 'AMFile', 'src': 1,
+                    'start': 0, 'duration': EDIT_RATE * 10,
+                    'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                    'effects': [{'effectName': 'Fade', 'start': EDIT_RATE * 1, 'duration': EDIT_RATE * 3}],
+                    'parameters': {}, 'metadata': {}, 'animationTracks': {},
+                },
+                'effects': [],
+                'parameters': {}, 'metadata': {}, 'animationTracks': {},
+            }],
+            'transitions': [],
+        }
+        track = Track({'ident': 'T'}, data)
+        track.scale_all_durations(2.0)
+
+        video_eff = data['medias'][0]['video']['effects'][0]
+        assert video_eff['start'] == EDIT_RATE * 4
+        assert video_eff['duration'] == EDIT_RATE * 8
+
+        audio_eff = data['medias'][0]['audio']['effects'][0]
+        assert audio_eff['start'] == EDIT_RATE * 2
+        assert audio_eff['duration'] == EDIT_RATE * 6

@@ -894,10 +894,14 @@ class Timeline:
         for track in self.tracks:
             for media_dict in track._data.get('medias', []):
                 cs: int = media_dict.get('start', 0)
+                ce: int = cs + media_dict.get('duration', 0)
                 if position_ticks <= cs < position_ticks + gap_ticks:
                     raise ValueError(
-                        f'Cannot remove gap: clip at position {ticks_to_seconds(cs)}s '
-                        f'overlaps with gap region'
+                        f'Cannot remove gap: clip at {ticks_to_seconds(cs)}s starts inside gap'
+                    )
+                if cs < position_ticks and ce > position_ticks:
+                    raise ValueError(
+                        f'Cannot remove gap: clip at {ticks_to_seconds(cs)}s spans into gap region'
                     )
         for track in self.tracks:
             for media_dict in track._data.get('medias', []):
@@ -1148,7 +1152,17 @@ class Timeline:
             # Move clip to target track (after iteration is complete)
             if found_track.index != target_track_index:
                 found_track._data['medias'].remove(found_media)
+                # Clean up dangling transitions on source track
+                found_track._data['transitions'] = [
+                    t for t in found_track._data.get('transitions', [])
+                    if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
+                ]
                 target_track._data.setdefault('medias', []).append(found_media)
+            # Remove stale transitions on target track referencing this clip
+            target_track._data['transitions'] = [
+                t for t in target_track._data.get('transitions', [])
+                if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
+            ]
             # Apply transition overlap BEFORE positioning current clip
             if transition_name and prev_id is not None:
                 cursor -= trans_ticks

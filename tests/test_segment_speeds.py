@@ -700,3 +700,19 @@ class TestNonContiguousSegmentMediaDuration:
         # mediaDuration should be 8s - 0s = 8s (full span), not 2+3=5s
         expected_span = seconds_to_ticks(8.0)
         assert companion['mediaDuration'] == expected_span
+
+
+# Bug 11: set_segment_speeds must recalculate mediaDuration
+
+def test_media_duration_recalculated_after_speed_change():
+    """mediaDuration should be duration / scalar for each segment."""
+    track = _make_track(_group_clip())
+    pieces = track.set_segment_speeds(1, [(50, 1.0), (50, 2.0)])
+    for piece, (_dur_s, _speed) in zip(pieces, [(50, 1.0), (50, 2.0)]):
+        dur_ticks = piece._data['duration']
+        scalar = Fraction(str(piece._data.get('scalar', 1)))
+        expected_md = Fraction(dur_ticks) / scalar
+        actual_md = Fraction(str(piece._data['mediaDuration']))
+        assert actual_md == expected_md, (
+            f"mediaDuration mismatch: expected {expected_md}, got {actual_md}"
+        )

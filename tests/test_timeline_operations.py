@@ -1067,3 +1067,63 @@ class TestRemoveGapClipAtGapStart:
 
         with pytest.raises(ValueError, match='Cannot remove gap'):
             project.timeline.remove_gap(3.0, 5.0)
+
+
+# Bug 16: build_section_timeline cleans dangling transitions on source track
+
+class TestBuildSectionTimelineDanglingTransitions:
+    def test_removes_transitions_on_source_track_after_move(self):
+        tl_data = _make_timeline_data([
+            {"trackIndex": 0, "medias": [], "transitions": []},
+            {"trackIndex": 1, "medias": [], "transitions": []},
+        ])
+        tl = Timeline(tl_data)
+        t1 = tl.tracks[1]
+        c1 = t1.add_video(1, start_seconds=0, duration_seconds=3)
+        c2 = t1.add_video(1, start_seconds=3, duration_seconds=3)
+        # Add transition between c1 and c2 on track 1
+        t1._data.setdefault('transitions', []).append({
+            'name': 'FadeThroughBlack',
+            'duration': seconds_to_ticks(0.5),
+            'leftMedia': c1.id,
+            'rightMedia': c2.id,
+        })
+        # Move c1 to track 0 via build_section_timeline
+        tl.build_section_timeline([(c1.id, None)], target_track_index=0)
+        # Source track should have no transitions referencing c1
+        for t in t1._data.get('transitions', []):
+            assert t.get('leftMedia') != c1.id
+            assert t.get('rightMedia') != c1.id
+
+
+# Bug 17: build_section_timeline removes stale transitions on target track
+
+class TestBuildSectionTimelineStaleTransitions:
+    def test_removes_stale_transitions_on_target_track(self):
+        tl_data = _make_timeline_data([
+            {"trackIndex": 0, "medias": [], "transitions": []},
+        ])
+        tl = Timeline(tl_data)
+        t0 = tl.tracks[0]
+        c1 = t0.add_video(1, start_seconds=0, duration_seconds=3)
+        c2 = t0.add_video(1, start_seconds=3, duration_seconds=3)
+        c3 = t0.add_video(1, start_seconds=6, duration_seconds=3)
+        # Add a stale transition between c1 and c2
+        t0._data.setdefault('transitions', []).append({
+            'name': 'FadeThroughBlack',
+            'duration': seconds_to_ticks(0.5),
+            'leftMedia': c1.id,
+            'rightMedia': c2.id,
+        })
+        # Reorder: c1, c3, c2 — the old c1↔c2 transition should be removed
+        # because c2 gets repositioned
+        tl.build_section_timeline(
+            [(c1.id, None), (c3.id, None), (c2.id, 'FadeThroughBlack')],
+            target_track_index=0,
+        )
+        # Only the new c3↔c2 transition should exist
+        transitions = t0._data.get('transitions', [])
+        for t in transitions:
+            # No transition should have c1 as rightMedia (old stale one)
+            if t.get('leftMedia') == c1.id and t.get('rightMedia') == c2.id:
+                pytest.fail("Stale transition c1↔c2 was not removed")

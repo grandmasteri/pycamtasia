@@ -1948,3 +1948,86 @@ def test_scalar_setter_no_duplicate_media_duration() -> None:
     assert Fraction(str(data['audio']['mediaDuration'])) == expected_md
     assert data['video']['mediaStart'] == data['mediaStart']
     assert data['audio']['mediaStart'] == data['mediaStart']
+
+
+# ------------------------------------------------------------------
+# Bug 1: set_speed Group branch — wrapper duration must be scaled
+# ------------------------------------------------------------------
+
+def test_set_speed_group_scales_wrapper_duration():
+    """Bug 1: set_speed on a Group must scale the wrapper's duration."""
+    data: dict = {
+        '_type': 'Group', 'id': 1, 'start': 0,
+        'duration': EDIT_RATE * 10, 'mediaDuration': EDIT_RATE * 10,
+        'scalar': 1, 'mediaStart': 0,
+        'tracks': [{
+            'medias': [{
+                '_type': 'VMFile', 'id': 2, 'start': 0,
+                'duration': EDIT_RATE * 10, 'mediaDuration': EDIT_RATE * 10,
+                'scalar': 1, 'mediaStart': 0,
+            }],
+        }],
+    }
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    # At 2x speed, wrapper duration should halve
+    assert data['duration'] == EDIT_RATE * 5
+
+
+# ------------------------------------------------------------------
+# Bug 5: set_speed StitchedMedia — wrapper duration must be updated
+# ------------------------------------------------------------------
+
+def test_set_speed_stitched_scales_wrapper_duration():
+    """Bug 5: set_speed on StitchedMedia must update wrapper duration."""
+    seg_dur = EDIT_RATE * 5
+    data: dict = {
+        '_type': 'StitchedMedia', 'id': 1, 'start': 0,
+        'duration': seg_dur * 2, 'mediaDuration': seg_dur * 2,
+        'scalar': 1, 'mediaStart': 0,
+        'medias': [
+            {'_type': 'VMFile', 'id': 2, 'start': 0,
+             'duration': seg_dur, 'mediaDuration': seg_dur, 'scalar': 1},
+            {'_type': 'VMFile', 'id': 3, 'start': seg_dur,
+             'duration': seg_dur, 'mediaDuration': seg_dur, 'scalar': 1},
+        ],
+    }
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    # Each segment halves, so wrapper = sum of halved segments
+    expected = seg_dur // 2 + seg_dur // 2
+    assert data['duration'] == expected
+
+
+# ------------------------------------------------------------------
+# Bug 7: is_video — UnifiedMedia segments inside StitchedMedia
+# ------------------------------------------------------------------
+
+def test_is_video_stitched_with_unified_media_segment():
+    """Bug 7: is_video should detect VMFile inside UnifiedMedia segments of StitchedMedia."""
+    data: dict = {
+        '_type': 'StitchedMedia', 'id': 1, 'start': 0,
+        'duration': 1000, 'mediaDuration': 1000, 'scalar': 1,
+        'medias': [{
+            '_type': 'UnifiedMedia', 'id': 2, 'start': 0,
+            'duration': 1000, 'mediaDuration': 1000, 'scalar': 1,
+            'video': {'_type': 'VMFile'},
+            'audio': {'_type': 'AMFile'},
+        }],
+    }
+    clip = BaseClip(data)
+    assert clip.is_video is True
+
+
+class TestIsVideoStitchedMediaFallback:
+    def test_stitched_with_only_audio_segments_returns_false(self):
+        clip = BaseClip({
+            '_type': 'StitchedMedia', 'id': 1, 'start': 0,
+            'duration': 100, 'mediaDuration': 100, 'scalar': 1,
+            'medias': [
+                {'_type': 'AMFile', 'id': 2},
+                {'_type': 'UnifiedMedia', 'id': 3, 'video': {'_type': 'IMFile'}},
+            ],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        })
+        assert clip.is_video is False

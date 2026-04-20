@@ -70,7 +70,14 @@ class BaseClip:
         if self.clip_type in (ClipType.VIDEO, ClipType.SCREEN_VIDEO, ClipType.UNIFIED_MEDIA):
             return True
         if self.clip_type == 'StitchedMedia':
-            return any(m.get('_type') in ('VMFile', 'ScreenVMFile') for m in self._data.get('medias', []))
+            for m in self._data.get('medias', []):
+                if m.get('_type') in ('VMFile', 'ScreenVMFile'):
+                    return True
+                if m.get('_type') == 'UnifiedMedia':
+                    video = m.get('video', {})
+                    if video.get('_type') in ('VMFile', 'ScreenVMFile'):
+                        return True
+            return False
         return False
 
     @property
@@ -142,6 +149,8 @@ class BaseClip:
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['scalar'] = self._data.get('scalar', 1)
                     sub['mediaStart'] = self._data.get('mediaStart', 0)
+                    if sub.get('_type') in ('IMFile', 'ScreenIMFile'):
+                        sub['mediaDuration'] = 1
 
     @property
     def end_seconds(self) -> float:
@@ -297,6 +306,8 @@ class BaseClip:
                     sub['scalar'] = self._data['scalar']
                     sub['mediaDuration'] = self._data['mediaDuration']
                     sub['mediaStart'] = self._data.get('mediaStart', 0)
+                    if sub.get('_type') in ('IMFile', 'ScreenIMFile'):
+                        sub['mediaDuration'] = 1
 
     def set_speed(self, speed: float) -> Self:
         """Set playback speed multiplier.
@@ -338,8 +349,23 @@ class BaseClip:
                 inner['start'] = cursor
                 dur_val = inner['duration']
                 cursor += int(Fraction(str(dur_val)))
+            # Compute new wrapper duration as sum of segment durations
+            new_wrapper_dur = sum(int(Fraction(str(inner['duration']))) for inner in self._data.get('medias', []))
+            self._data['duration'] = new_wrapper_dur
+            # Recalculate mediaDuration to maintain invariant
+            if scalar_fraction != 0:
+                md = Fraction(new_wrapper_dur) / scalar_fraction
+                self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
         if self._data.get('_type') == 'Group':
             from camtasia.timing import parse_scalar
+            # Scale wrapper duration first
+            orig_wrapper_dur = Fraction(str(self._data.get('duration', 0)))
+            grp_new_dur = orig_wrapper_dur * scalar_fraction
+            self._data['duration'] = int(grp_new_dur)  # type: ignore[typeddict-item]
+            # Recalculate mediaDuration to maintain invariant
+            if scalar_fraction != 0:
+                grp_md = Fraction(int(grp_new_dur)) / scalar_fraction
+                self._data['mediaDuration'] = int(grp_md) if grp_md == int(grp_md) else str(grp_md)
             for inner_track in self._data.get('tracks', []):
                 for inner_clip_data in inner_track.get('medias', []):
                     inner_scalar_old = parse_scalar(inner_clip_data.get('scalar', 1))

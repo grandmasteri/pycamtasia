@@ -886,3 +886,99 @@ class TestSyncInternalDurationsStitchedMediaDuration:
         # mediaDuration should be recalculated: 3s / (1/2) = 6s
         expected_md = Fraction(seconds_to_ticks(3.0)) / Fraction(1, 2)
         assert Fraction(str(seg['mediaDuration'])) == expected_md
+
+
+# Bug 10: sync_internal_durations propagates to UnifiedMedia inside StitchedMedia
+
+def test_sync_internal_durations_propagates_to_unified_inside_stitched():
+    """After trimming StitchedMedia segments, UnifiedMedia sub-dicts get updated."""
+    seg_dur = seconds_to_ticks(6.0)
+    group = _make_group([[{
+        '_type': 'StitchedMedia', 'id': 10, 'start': 0,
+        'duration': seg_dur, 'mediaDuration': seg_dur,
+        'scalar': 1, 'parameters': {}, 'effects': [],
+        'metadata': {}, 'animationTracks': {},
+        'medias': [{
+            '_type': 'UnifiedMedia', 'id': 11, 'start': 0,
+            'duration': seg_dur, 'mediaDuration': seg_dur,
+            'scalar': 1,
+            'video': {'id': 12, '_type': 'ScreenVMFile', 'src': 2,
+                      'start': 0, 'duration': seg_dur, 'mediaDuration': seg_dur, 'scalar': 1},
+            'audio': {'id': 13, '_type': 'AMFile', 'src': 2,
+                      'start': 0, 'duration': seg_dur, 'mediaDuration': seg_dur, 'scalar': 1},
+        }],
+    }]])
+    group._data['duration'] = seconds_to_ticks(3.0)
+    group.sync_internal_durations()
+
+    seg = group._data['tracks'][0]['medias'][0]['medias'][0]
+    assert seg['duration'] == seconds_to_ticks(3.0)
+    assert seg['video']['duration'] == seconds_to_ticks(3.0)
+    assert seg['audio']['duration'] == seconds_to_ticks(3.0)
+
+
+# ------------------------------------------------------------------
+# Bug 8: set_internal_segment_speeds — UnifiedMedia on companion tracks
+# ------------------------------------------------------------------
+
+def test_set_internal_segment_speeds_updates_unified_media_on_companion_track():
+    """Bug 8: set_internal_segment_speeds must update UnifiedMedia on non-primary tracks."""
+    seg_dur = seconds_to_ticks(5.0)
+    group_data: dict = {
+        '_type': 'Group', 'id': 1, 'start': 0,
+        'duration': seg_dur, 'mediaDuration': seg_dur,
+        'scalar': 1, 'mediaStart': 0,
+        'attributes': {'ident': 'test', 'widthAttr': 1920, 'heightAttr': 1080},
+        'tracks': [
+            {  # Primary track with UnifiedMedia
+                'trackIndex': 0,
+                'medias': [{
+                    '_type': 'UnifiedMedia', 'id': 10, 'src': 1,
+                    'start': 0, 'duration': seg_dur, 'mediaDuration': seg_dur,
+                    'scalar': 1, 'mediaStart': 0, 'trackNumber': 0,
+                    'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+                    'video': {'_type': 'ScreenVMFile', 'id': 11, 'src': 1,
+                              'start': 0, 'duration': seg_dur, 'mediaDuration': seg_dur,
+                              'scalar': 1, 'mediaStart': 0, 'trackNumber': 0,
+                              'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+                              'attributes': {'ident': 'test'}},
+                    'audio': {'_type': 'AMFile', 'id': 12, 'src': 1,
+                              'start': 0, 'duration': seg_dur, 'mediaDuration': seg_dur,
+                              'scalar': 1, 'mediaStart': 0, 'trackNumber': 0,
+                              'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+                              'attributes': {'gain': 1.0}},
+                }],
+            },
+            {  # Companion track with UnifiedMedia
+                'trackIndex': 1,
+                'medias': [{
+                    '_type': 'UnifiedMedia', 'id': 20, 'src': 1,
+                    'start': 0, 'duration': seg_dur, 'mediaDuration': seg_dur,
+                    'scalar': 1, 'mediaStart': 0,
+                    'video': {'_type': 'ScreenVMFile', 'id': 21, 'src': 1,
+                              'start': 0, 'duration': seg_dur, 'mediaDuration': seg_dur,
+                              'scalar': 1, 'mediaStart': 0},
+                    'audio': {'_type': 'AMFile', 'id': 22, 'src': 1,
+                              'start': 0, 'duration': seg_dur, 'mediaDuration': seg_dur,
+                              'scalar': 1, 'mediaStart': 0},
+                }],
+            },
+        ],
+    }
+    group = Group(group_data)
+    # 2 segments: first 2.5s at 1x, second 2.5s at 2x
+    group.set_internal_segment_speeds([
+        (0.0, 2.5, 2.5),
+        (2.5, 5.0, 1.25),
+    ])
+    companion_media = group._data['tracks'][1]['medias'][0]
+    assert companion_media['_type'] == 'UnifiedMedia'
+    # Companion should have been updated
+    assert companion_media['duration'] == group._data['duration']
+    # Sub-dicts should be propagated
+    assert companion_media['video']['duration'] == companion_media['duration']
+    assert companion_media['audio']['duration'] == companion_media['duration']
+    assert companion_media['video']['mediaDuration'] == companion_media['mediaDuration']
+    assert companion_media['audio']['mediaDuration'] == companion_media['mediaDuration']
+    assert companion_media['video']['scalar'] == companion_media['scalar']
+    assert companion_media['audio']['scalar'] == companion_media['scalar']

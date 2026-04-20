@@ -1278,14 +1278,16 @@ class Track:
         if duration_per_image_seconds <= 0:  # pragma: no cover — unreachable: guards above ensure transition_seconds >= 0 and transition_seconds < duration_per_image_seconds
             raise ValueError(f'duration_per_image_seconds must be positive, got {duration_per_image_seconds}')
         clips: list[IMFile] = []
-        offset = start_seconds
+        offset_ticks = seconds_to_ticks(start_seconds)
+        duration_ticks = seconds_to_ticks(duration_per_image_seconds)
+        transition_ticks = seconds_to_ticks(transition_seconds)
         for src_id in source_ids:
-            clip = self.add_image(src_id, offset, duration_per_image_seconds)
+            clip = self.add_image(src_id, ticks_to_seconds(offset_ticks), duration_per_image_seconds)
             clips.append(clip)
             if transition_seconds > 0:
-                offset += duration_per_image_seconds - transition_seconds
+                offset_ticks += duration_ticks - transition_ticks
             else:
-                offset += duration_per_image_seconds
+                offset_ticks += duration_ticks
 
         if transition_seconds > 0 and len(clips) > 1:
             for i in range(len(clips) - 1):
@@ -1777,6 +1779,10 @@ class Track:
             ).limit_denominator(100000)
             piece.scalar = seg_scalar
             piece.duration = seconds_to_ticks(dur_s)
+            # Recalculate mediaDuration from new duration and scalar
+            if seg_scalar != 0:
+                _md = Fraction(piece._data['duration']) / seg_scalar
+                piece._data['mediaDuration'] = int(_md) if _md == int(_md) else str(_md)
             piece._data['mediaStart'] = round(cumulative_ms)
             _propagate_start_to_unified(piece._data)  # type: ignore[arg-type]
             piece._data.setdefault('metadata', {})['clipSpeedAttribute'] = {
@@ -2359,11 +2365,16 @@ class Track:
         if gap_start is None or gap_end is None:
             return
         gap_ticks: int = gap_end - gap_start
+        shifted_clip_ids: set[int] = set()
         for media_dict in self._data.get('medias', []):
             if media_dict.get('start', 0) >= gap_end:
                 media_dict['start'] = media_dict.get('start', 0) - gap_ticks
                 _propagate_start_to_unified(media_dict)
-        self._data['transitions'] = []
+                shifted_clip_ids.add(media_dict.get('id'))
+        self._data['transitions'] = [
+            t for t in self._data.get('transitions', [])
+            if t.get('leftMedia') not in shifted_clip_ids and t.get('rightMedia') not in shifted_clip_ids
+        ]
 
     def shift_all_clips(self, offset_seconds: float) -> None:
         """Shift all clips on this track by the given offset.
@@ -2434,6 +2445,11 @@ class Track:
                         sub['duration'] = media_dict['duration']
                         sub['mediaDuration'] = media_dict.get('mediaDuration', media_dict['duration'])
                         sub['scalar'] = media_dict.get('scalar', 1)
+                        for effect in sub.get('effects', []):
+                            if 'start' in effect:
+                                effect['start'] = int(effect['start'] * factor)
+                            if 'duration' in effect:
+                                effect['duration'] = int(effect['duration'] * factor)
             for effect in media_dict.get('effects', []):
                 if 'start' in effect:
                     effect['start'] = int(effect['start'] * factor)

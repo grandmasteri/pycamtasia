@@ -806,3 +806,29 @@ class TestExtendClipTrimsEffects:
         assert len(early) == 1, "Effect within new duration should be kept"
         late = [e for e in effects if e.get("name") == "late"]
         assert len(late) == 0, "Effect past new duration should be removed"
+
+
+# Bug 15: add_image_sequence uses integer tick arithmetic to avoid drift
+
+class TestImageSequenceNoDrift:
+    def test_no_floating_point_drift_over_many_images(self):
+        from camtasia.timing import seconds_to_ticks
+        attrs: dict[str, Any] = {"ident": "Track 1"}
+        data: dict[str, Any] = {"trackIndex": 0, "medias": [], "transitions": []}
+        track = Track(attrs, data)
+
+        # Use values that cause float drift: 1/3 second transitions
+        clips = track.add_image_sequence(
+            list(range(1, 21)),  # 20 images
+            start_seconds=0.0,
+            duration_per_image_seconds=3.0,
+            transition_seconds=1.0,
+        )
+        # Each image after the first should start at (3-1)*i ticks from start
+        duration_ticks = seconds_to_ticks(3.0)
+        transition_ticks = seconds_to_ticks(1.0)
+        for i, clip in enumerate(clips):
+            expected = i * (duration_ticks - transition_ticks)
+            assert clip.start == expected, (
+                f"Clip {i}: expected start {expected}, got {clip.start} (drift detected)"
+            )

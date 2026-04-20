@@ -61,3 +61,10 @@ def test_is_placeholder():
     clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 1, 'start': 0, 'duration': 100})
     assert clip.is_placeholder is True
     assert clip.is_stitched is False
+
+
+def test_placeholder_subtitle_null_returns_empty_string():
+    """Bug 2: subtitle should return '' when placeHolderSubTitle is None."""
+    clip = clip_from_dict({'_type': 'PlaceholderMedia', 'id': 3, 'start': 0, 'duration': 100,
+                           'metadata': {'placeHolderSubTitle': None}})
+    assert clip.subtitle == ''
