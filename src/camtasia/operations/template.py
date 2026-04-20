@@ -54,6 +54,8 @@ def _walk_clips(tracks: list[dict[str, Any]]) -> Iterator[dict[str, Any]]:
                             child = m.get(key)
                             if child and isinstance(child, dict):
                                 yield child
+                    elif m.get("_type") == "Group":
+                        yield from _walk_clips(m.get("tracks", []))
             elif clip.get("_type") == "Group":
                 yield from _walk_clips(clip.get("tracks", []))
             elif clip.get("_type") == "UnifiedMedia":

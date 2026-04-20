@@ -306,15 +306,15 @@ class MediaBin:
                     "Either install pymediainfo or pass media_type explicitly."
                 )
             media_type = _get_media_type(track)
-            width = width or track.get("width")
-            height = height or track.get("height")
+            width = width if width is not None else track.get("width")
+            height = height if height is not None else track.get("height")
             sample_rate = sample_rate or track.get("sampling_rate")
             if sample_rate is not None and not isinstance(sample_rate, int):
                 try:
                     sample_rate = int(float(sample_rate))
                 except (ValueError, TypeError):
                     sample_rate = None
-            bit_depth = bit_depth or track.get("bit_depth", 0)
+            bit_depth = bit_depth if bit_depth is not None else track.get("bit_depth", 0)
             num_channels = num_channels or track.get("channel_s")
             if num_channels is not None:
                 num_channels = int(str(num_channels).split('/')[0].strip())
@@ -340,7 +340,7 @@ class MediaBin:
             json_data = _audio_track_to_json(
                 next_media_id, rel_path, timestamp,
                 sample_rate=sample_rate or 44100,
-                bit_depth=bit_depth or 16,
+                bit_depth=bit_depth if bit_depth is not None else 16,
                 num_channels=num_channels or 2,
                 duration=duration or 0,
                 filename=filename,
@@ -355,8 +355,8 @@ class MediaBin:
             json_data = _visual_track_to_json(
                 next_media_id, rel_path, timestamp,
                 media_type=media_type,
-                width=width or 0,
-                height=height or 0,
+                width=width if width is not None else 0,
+                height=height if height is not None else 0,
                 duration=duration if duration is not None else 1,
                 filename=filename,
                 bit_depth=_bit_depth,

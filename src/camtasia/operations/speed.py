@@ -165,7 +165,7 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
                     medias[i]['duration'] = int(_frac(medias[i]['duration'])) - overlap
                     # Recalculate mediaDuration
                     s = _frac(medias[i].get('scalar', 1))
-                    if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group', 'UnifiedMedia'):
+                    if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group'):
                         md = _frac(medias[i]['duration']) / s
                         medias[i]['mediaDuration'] = int(md) if md == int(md) else f'{md.numerator}/{md.denominator}'
                     # Adjust child effects for UnifiedMedia sub-clips

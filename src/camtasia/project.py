@@ -762,7 +762,13 @@ class Project:
                         cloned_trans['rightMedia'] = clip_id_map[cloned_trans['rightMedia']]
                     new_track._data.setdefault('transitions', []).append(cloned_trans)
 
-            cursor_ticks += seconds_to_ticks(source_project.duration_seconds)
+            max_end_ticks = 0
+            for track in source_project.timeline.tracks:
+                for clip in track.clips:
+                    clip_end = clip.start + clip.duration
+                    if clip_end > max_end_ticks:
+                        max_end_ticks = clip_end
+            cursor_ticks += max_end_ticks
 
         merged.save()
         return merged
@@ -859,6 +865,12 @@ class Project:
         for clip in self.timeline.all_clips():
             if clip.source_id is not None:
                 referenced_ids.add(clip.source_id)
+            # Also check UnifiedMedia children
+            if clip.clip_type == 'UnifiedMedia':
+                for child_key in ('video', 'audio'):
+                    child: dict[str, Any] | None = clip._data.get(child_key)  # type: ignore[assignment]
+                    if child and child.get('src') is not None:
+                        referenced_ids.add(child['src'])
 
         # Source reference validation
         issues.extend(validate_all(self._data))
@@ -2034,7 +2046,7 @@ class Project:
                     keyframes.append({'endTime': total_ticks, 'time': fade_in_ticks, 'value': volume, 'duration': total_ticks - fade_in_ticks})
             else:
                 keyframes.append({'endTime': 0, 'time': 0, 'value': volume, 'duration': 0})
-            if fade_out_ticks > 0 and total_ticks > fade_in_ticks + fade_out_ticks:
+            if fade_out_ticks > 0 and total_ticks >= fade_in_ticks + fade_out_ticks:
                 fade_out_start = total_ticks - fade_out_ticks
                 keyframes.append({'endTime': fade_out_start, 'time': fade_in_ticks, 'value': volume, 'duration': fade_out_start - fade_in_ticks})
                 keyframes.append({'endTime': total_ticks, 'time': fade_out_start, 'value': 0.0, 'duration': fade_out_ticks})

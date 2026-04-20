@@ -28,10 +28,8 @@ def _collect_ids(media: dict, ids: list, path: str) -> None:
     if media.get('id') is not None:
         ids.append((media['id'], path))
     for key in ('video', 'audio'):
-        if key in media:
-            sid = media[key].get('id')
-            if sid is not None:
-                ids.append((sid, f'{path}/{key}'))
+        if key in media and isinstance(media[key], dict):
+            _collect_ids(media[key], ids, f'{path}/{key}')
     for track in media.get('tracks', []):
         for inner in track.get('medias', []):
             _collect_ids(inner, ids, f'{path}/group{media.get("id")}')
@@ -224,6 +222,13 @@ def _check_group_required_fields(data: dict) -> list[ValidationIssue]:
                 for inner_track in media.get('tracks', []):
                     _check_medias(inner_track.get('medias', []),
                                   f'{path}/group{mid}')
+            elif media.get('_type') == 'StitchedMedia':
+                _check_medias(media.get('medias', []), path)
+            elif media.get('_type') == 'UnifiedMedia':
+                for key in ('video', 'audio'):
+                    sub = media.get(key)
+                    if sub:
+                        _check_medias([sub], path)
 
     tracks = _get_tracks(data)
     for ti, track in enumerate(tracks):

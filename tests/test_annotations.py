@@ -150,11 +150,10 @@ class TestKeystrokeCalloutFontColor:
         assert 'color-red' in font
         assert 'color-green' in font
         assert 'color-blue' in font
-        assert 'color-opacity' in font
+        assert 'color-opacity' not in font
         assert font['color-red'] == 1.0
         assert font['color-green'] == 1.0
         assert font['color-blue'] == 1.0
-        assert font['color-opacity'] == 1.0
 
     def test_font_has_tracking(self):
         result = keystroke_callout('Ctrl+C')
@@ -281,3 +280,21 @@ class TestSquareDefaultStrokeColor:
         assert isinstance(result['stroke-color-red'], float)
         assert result['stroke-color-green'] == 0.5
         assert result['stroke-color-blue'] == 0.5
+
+
+class TestCalloutFontNoColorOpacity:
+    """Bug 13: text()/square() font dict should not include color-opacity."""
+
+    def test_text_font_no_color_opacity(self):
+        from camtasia.annotations.callouts import text
+        result = text('Hello', 'Arial', 'Bold')
+        assert 'color-opacity' not in result['font']
+
+    def test_square_font_no_color_opacity(self):
+        from camtasia.annotations.callouts import square
+        result = square('Hello', 'Arial', 'Bold')
+        assert 'color-opacity' not in result['font']
+
+    def test_keystroke_font_no_color_opacity(self):
+        result = keystroke_callout('Ctrl+C')
+        assert 'color-opacity' not in result['font']

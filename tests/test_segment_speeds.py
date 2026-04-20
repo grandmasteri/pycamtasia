@@ -605,3 +605,40 @@ def test_set_internal_segment_speeds_rejects_reversed_range():
     group = Group(group_data)
     with pytest.raises(ValueError, match=r'src_end.*must be > src_start'):
         group.set_internal_segment_speeds([(10.0, 5.0, 5.0)])
+
+
+class TestRescaleOverlapFixUnifiedMedia:
+    """Bug 10: rescale_project overlap fix should update UnifiedMedia mediaDuration."""
+
+    def test_unified_media_media_duration_updated_on_overlap_fix(self):
+        um_dur = 1000
+        project = {
+            'editRate': 705600000,
+            'timeline': {
+                'sceneTrack': {'scenes': [{'csml': {'tracks': [
+                    {'medias': [
+                        {'_type': 'UnifiedMedia', 'id': 1, 'start': 0,
+                         'duration': um_dur, 'mediaDuration': um_dur,
+                         'mediaStart': 0, 'scalar': 1,
+                         'metadata': {}, 'parameters': {}, 'effects': [],
+                         'attributes': {}, 'animationTracks': {},
+                         'video': {'_type': 'VMFile', 'id': 2, 'start': 0,
+                                   'duration': um_dur, 'mediaDuration': um_dur,
+                                   'mediaStart': 0, 'scalar': 1,
+                                   'metadata': {}, 'parameters': {}, 'effects': [],
+                                   'attributes': {}, 'animationTracks': {}},
+                         },
+                        {'_type': 'VMFile', 'id': 3, 'start': um_dur - 1,
+                         'duration': um_dur, 'mediaDuration': um_dur,
+                         'mediaStart': 0, 'scalar': 1,
+                         'metadata': {}, 'parameters': {}, 'effects': [],
+                         'attributes': {}, 'animationTracks': {}},
+                    ], 'transitions': []}
+                ]}}]},
+                'parameters': {},
+            },
+        }
+        rescale_project(project, Fraction(1))  # identity scale triggers overlap fix
+        um = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        # mediaDuration should have been recalculated (not excluded)
+        assert um['mediaDuration'] == um['duration']

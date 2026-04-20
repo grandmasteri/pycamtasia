@@ -89,7 +89,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
             frac = Fraction(float(fps)).limit_denominator(1000)
             sample_rate = f'{frac.numerator}/{frac.denominator}' if frac.denominator != 1 else int(float(fps))
 
-            dur_ms = track.duration or 0
+            dur_ms = float(track.duration or 0)
             edit_rate = round(float(fps))
             range_end = round(dur_ms / 1000 * edit_rate)
 
@@ -112,7 +112,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
             raw_ch = track.channel_s or '1'
             channels = int(str(raw_ch).split('/')[0].strip())
             sample_rate = track.sampling_rate or 44100
-            dur_ms = track.duration or 0
+            dur_ms = float(track.duration or 0)
             range_end = round(dur_ms / 1000 * int(float(sample_rate)))
 
             tag = 0

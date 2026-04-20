@@ -280,3 +280,54 @@ def test_remap_clip_ids_removed():
     """_remap_clip_ids was dead code and should no longer exist."""
     import camtasia.operations.merge as mod
     assert not hasattr(mod, '_remap_clip_ids')
+
+
+@pytest.mark.timeout(30)
+def test_merge_cursor_uses_integer_ticks(tmp_path):
+    """Bug 1: merge_projects cursor should use max integer tick end, not float round-trip."""
+    a = Project.new(tmp_path / 'a.cmproj', title='A')
+    b = Project.new(tmp_path / 'b.cmproj', title='B')
+
+    # Add a clip to project A with a known tick-precise end
+    track_a = a.timeline.add_track('V')
+    clip_start = 0
+    clip_duration = 705600000 * 3  # exactly 3 seconds in ticks
+    track_a._data['medias'] = [{
+        'id': 10, '_type': 'VMFile', 'src': 0,
+        'start': clip_start, 'duration': clip_duration,
+        'mediaStart': 0, 'mediaDuration': clip_duration,
+        'scalar': 1, 'metadata': {}, 'parameters': {},
+        'effects': [], 'attributes': {}, 'animationTracks': {},
+    }]
+    a.save()
+
+    # Add a clip to project B
+    track_b = b.timeline.add_track('V')
+    track_b._data['medias'] = [{
+        'id': 20, '_type': 'VMFile', 'src': 0,
+        'start': 0, 'duration': 705600000,
+        'mediaStart': 0, 'mediaDuration': 705600000,
+        'scalar': 1, 'metadata': {}, 'parameters': {},
+        'effects': [], 'attributes': {}, 'animationTracks': {},
+    }]
+    b.save()
+
+    merged = Project.merge_projects([a, b], tmp_path / 'merged.cmproj')
+    # B's clip should start exactly at A's clip end (integer ticks)
+    all_clips = list(merged.timeline.all_clips())
+    b_clip = [c for c in all_clips if c.start == clip_duration]
+    assert len(b_clip) == 1, f"Expected B's clip at tick {clip_duration}"
+
+
+class TestStripAssetPropertiesStitchedMedia:
+    def test_strip_recurses_into_stitched_media_children(self):
+        from camtasia.operations.merge import _strip_asset_properties
+        clip = {
+            '_type': 'StitchedMedia',
+            'medias': [{
+                'attributes': {'assetProperties': [{'objects': [5]}]},
+            }],
+        }
+        saved = _strip_asset_properties(clip)
+        assert len(saved) == 1
+        assert 'assetProperties' not in clip['medias'][0]['attributes']

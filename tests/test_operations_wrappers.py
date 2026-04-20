@@ -141,10 +141,11 @@ def test_apply_sync():
 
 
 def test_apply_sync_subtracts_media_start():
-    """Bug 8: apply_sync should subtract Group's mediaStart from video positions."""
-    media_start_s = 10.0
+    """Bug 11: apply_sync should subtract Group's start (not mediaStart) from video positions."""
+    group_start_s = 10.0
     group_data = _make_group_data(dur_s=50.0, source_s=50.0)
-    group_data['mediaStart'] = seconds_to_ticks(media_start_s)
+    group_data['start'] = seconds_to_ticks(group_start_s)
+    group_data['mediaStart'] = 0
     group = Group(group_data)
 
     segments = [
@@ -161,6 +162,35 @@ def test_apply_sync_subtracts_media_start():
 
     internal_medias = group._data['tracks'][1]['medias']
     first = internal_medias[0]
-    # After subtracting mediaStart (10s), source_start should be 0s, source_end 20s
+    # After subtracting group start (10s) and adding mediaStart (0s),
+    # source_start should be 0s, source_end 20s
     assert abs(ticks_to_seconds(first['mediaStart'])) < 0.01
+    assert abs(ticks_to_seconds(first['mediaDuration']) - 20.0) < 0.01
+
+
+def test_apply_sync_with_nonzero_start_and_media_start():
+    """Bug 11: apply_sync should correctly handle Group with both non-zero start and mediaStart."""
+    group_start_s = 5.0
+    media_start_s = 2.0
+    group_data = _make_group_data(dur_s=50.0, source_s=50.0)
+    group_data['start'] = seconds_to_ticks(group_start_s)
+    group_data['mediaStart'] = seconds_to_ticks(media_start_s)
+    group = Group(group_data)
+
+    segments = [
+        SyncSegment(
+            video_start_ticks=seconds_to_ticks(15.0),
+            video_end_ticks=seconds_to_ticks(35.0),
+            audio_start_seconds=0.0,
+            audio_end_seconds=18.0,
+            scalar=Fraction(20, 18),
+        ),
+    ]
+
+    apply_sync(group, segments)
+
+    internal_medias = group._data['tracks'][1]['medias']
+    first = internal_medias[0]
+    # source_start = (15 - 5 + 2) = 12s, source_end = (35 - 5 + 2) = 32s
+    assert abs(ticks_to_seconds(first['mediaStart']) - 12.0) < 0.01
     assert abs(ticks_to_seconds(first['mediaDuration']) - 20.0) < 0.01

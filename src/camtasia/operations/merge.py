@@ -50,6 +50,29 @@ def _remap_asset_properties(clip_data: dict, id_map: dict[int, int]) -> None:
         _remap_asset_properties(media, id_map)
 
 
+def _strip_asset_properties(clip_data: dict) -> list[tuple[dict, list]]:
+    """Recursively strip assetProperties from clip and children, returning saved values."""
+    saved: list[tuple[dict, list]] = []
+    attrs = clip_data.get('attributes', {})
+    if 'assetProperties' in attrs:
+        saved.append((attrs, attrs.pop('assetProperties')))
+    for key in ('video', 'audio'):
+        if key in clip_data and isinstance(clip_data[key], dict):
+            saved.extend(_strip_asset_properties(clip_data[key]))
+    for track in clip_data.get('tracks', []):
+        for media in track.get('medias', []):
+            saved.extend(_strip_asset_properties(media))
+    for media in clip_data.get('medias', []):
+        saved.extend(_strip_asset_properties(media))
+    return saved
+
+
+def _restore_asset_properties(clip_data: dict, saved: list[tuple[dict, list]]) -> None:
+    """Restore previously stripped assetProperties."""
+    for attrs_dict, ap_value in saved:
+        attrs_dict['assetProperties'] = ap_value
+
+
 def merge_tracks(
     source: Project,
     target: Project,
@@ -99,22 +122,26 @@ def merge_tracks(
         new_track = target.timeline.add_track(track.name)
         # Copy relevant attributes from source track
         for attr in ('audioMuted', 'videoHidden', 'solo', 'magnetic', 'matte'):
-            if attr in track._data:
-                new_track._data[attr] = track._data[attr]
+            if attr in track._attributes:
+                new_track._attributes[attr] = track._attributes[attr]
         id_counter = [target.next_available_id]
 
         clip_id_map: dict[int, int] = {}
         new_clips: list[dict] = []
         for clip_data in track._data.get('medias', []):
             new_clip = copy.deepcopy(clip_data)
+            # Strip assetProperties before ID remap to avoid partial-map remapping;
+            # they will be remapped in the second pass with the complete id_map.
+            saved_ap = _strip_asset_properties(new_clip)
             _remap_clip_ids_with_map(new_clip, id_counter, clip_id_map)
+            _restore_asset_properties(new_clip, saved_ap)
             # Remap src references
             _remap_src_in_clip(new_clip, src_id_map)
             new_clip['start'] = int(Fraction(str(new_clip.get('start', 0)))) + offset_ticks
             _propagate_start_to_unified(new_clip)
             new_clips.append(new_clip)
 
-        # Second pass: remap assetProperties with complete id_map
+        # Append clips to track (second pass remaps assetProperties with complete id_map)
         for new_clip in new_clips:
             _remap_asset_properties(new_clip, clip_id_map)
             new_track._data.setdefault('medias', []).append(new_clip)

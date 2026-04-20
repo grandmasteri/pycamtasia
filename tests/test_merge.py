@@ -233,9 +233,61 @@ class TestMergeCopiesTrackAttributes:
         _populate_source(source)
         # Set audioMuted on the source track
         source_track = next(t for t in source.timeline.tracks if len(t) > 0)
-        source_track._data['audioMuted'] = True
+        source_track._attributes['audioMuted'] = True
 
         merge_tracks(source, project)
 
         new_track = list(project.timeline.tracks)[-1]
-        assert new_track._data.get('audioMuted') is True
+        assert new_track._attributes.get('audioMuted') is True
+
+
+class TestMergeTrackAttributesFromAttributes:
+    """Bug 7: merge_tracks should read/write track attributes from _attributes, not _data."""
+
+    def test_video_hidden_copied(self, project):
+        source = load_project(RESOURCES / 'new.cmproj')
+        _populate_source(source)
+        source_track = next(t for t in source.timeline.tracks if len(t) > 0)
+        source_track._attributes['videoHidden'] = True
+
+        merge_tracks(source, project)
+
+        new_track = list(project.timeline.tracks)[-1]
+        assert new_track._attributes.get('videoHidden') is True
+        assert new_track.video_hidden is True
+
+
+class TestMergeNoDoubleRemapAssetProperties:
+    """Bug 8: merge_tracks should not double-remap assetProperties."""
+
+    def test_sibling_refs_remapped_once(self, project, tmp_path):
+        import shutil
+        src_proj = tmp_path / 'source.cmproj'
+        shutil.copytree(RESOURCES / 'new.cmproj', src_proj)
+        source = load_project(src_proj)
+        track = source.timeline.add_track('V')
+        track._data['medias'] = [
+            {'id': 10, '_type': 'VMFile', 'src': 0, 'start': 0, 'duration': 100,
+             'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [],
+             'attributes': {'ident': 'a', 'assetProperties': [
+                 {'objects': [10, 11]}
+             ]}, 'animationTracks': {}},
+            {'id': 11, '_type': 'VMFile', 'src': 0, 'start': 100, 'duration': 100,
+             'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [],
+             'attributes': {'ident': 'b'}, 'animationTracks': {}},
+        ]
+
+        merge_tracks(source, project)
+
+        merged_track = [t for t in project.timeline.tracks if t.name == 'V'][-1]
+        medias = merged_track._data['medias']
+        new_a = medias[0]['id']
+        new_b = medias[1]['id']
+        ap = medias[0]['attributes']['assetProperties'][0]['objects']
+        assert new_a in ap
+        assert new_b in ap
+        # Old IDs should not remain
+        assert 10 not in ap
+        assert 11 not in ap

@@ -95,3 +95,16 @@ def test_overlapping_fades_clamped(project):
     # All keyframe durations must be non-negative
     for kf in keyframes:
         assert kf.get('duration', 0) >= 0, f"Negative duration in keyframe: {kf}"
+
+
+def test_fade_out_applied_when_total_equals_fades(project):
+    """Bug 6: fade-out should be applied when total_ticks == fade_in_ticks + fade_out_ticks."""
+    # Use a short clip where total exactly equals fade_in + fade_out
+    clip = project.add_background_music(
+        EMPTY_WAV, fade_in_seconds=0.5, fade_out_seconds=0.5,
+    )
+    volume_param = clip._data.get('parameters', {}).get('volume', {})
+    keyframes = volume_param.get('keyframes', [])
+    # Should have fade-out keyframes (value going to 0.0 at end)
+    last_kf = keyframes[-1]
+    assert last_kf['value'] == 0.0, "Fade-out should produce a final keyframe with value 0.0"

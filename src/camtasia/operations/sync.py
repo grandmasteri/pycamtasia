@@ -180,12 +180,13 @@ def apply_sync(
     Subtracts the Group's mediaStart so positions are source-media offsets.
     """
     from camtasia.timing import ticks_to_seconds
+    group_start_ticks = int(Fraction(str(group._data.get('start', 0))))
     media_start_ticks = int(Fraction(str(group._data.get('mediaStart', 0))))
     tuples = []
     for seg in segments:
         tuples.append((
-            ticks_to_seconds(seg.video_start_ticks - media_start_ticks),
-            ticks_to_seconds(seg.video_end_ticks - media_start_ticks),
+            ticks_to_seconds(seg.video_start_ticks - group_start_ticks + media_start_ticks),
+            ticks_to_seconds(seg.video_end_ticks - group_start_ticks + media_start_ticks),
             seg.audio_end_seconds - seg.audio_start_seconds,
         ))
     group.set_internal_segment_speeds(tuples)

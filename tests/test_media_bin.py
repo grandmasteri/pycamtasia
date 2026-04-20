@@ -10,6 +10,8 @@ from camtasia.media_bin import Media, MediaBin, MediaType
 import camtasia.media_bin.media_bin as mb_mod
 from camtasia.media_bin.media_bin import _get_media_type, _parse_with_pymediainfo
 
+FIXTURES = Path(__file__).parent / 'fixtures'
+
 
 def _make_media_entry(
     media_id: int = 1,
@@ -471,3 +473,45 @@ class TestVisualTrackImageSampleRate:
         assert track['sampleRate'] == track['editRate']
         assert track['sampleRate'] == 600
 
+
+
+class TestImportMediaZeroWidthHeight:
+    """Bug 14: import_media should preserve explicit 0 for width/height/bit_depth."""
+
+    def test_explicit_zero_width_not_overridden(self, project):
+        """When width=0 is passed explicitly, it should not be replaced by pymediainfo value."""
+        from unittest.mock import patch
+        fake_track = {
+            'kind_of_stream': 'Video',
+            'width': 1920,
+            'height': 1080,
+            'frame_rate': 30,
+            'duration': 1000,
+        }
+        with patch.object(mb_mod, '_parse_with_pymediainfo', return_value=fake_track):
+            media = project.media_bin.import_media(
+                FIXTURES / 'empty.wav',
+                width=0,
+                height=0,
+            )
+            # width=0 and height=0 should be preserved, not overridden by 1920/1080
+            assert media.rect[2] == 0
+            assert media.rect[3] == 0
+
+    def test_explicit_zero_bit_depth_not_overridden(self, project):
+        """When bit_depth=0 is passed explicitly, it should not be replaced."""
+        from unittest.mock import patch
+        fake_track = {
+            'kind_of_stream': 'Audio',
+            'sampling_rate': 44100,
+            'bit_depth': 16,
+            'channel_s': 2,
+            'duration': 1000,
+        }
+        with patch.object(mb_mod, '_parse_with_pymediainfo', return_value=fake_track):
+            media = project.media_bin.import_media(
+                FIXTURES / 'empty.wav',
+                bit_depth=0,
+            )
+            st = media.source_tracks[0]
+            assert st['bitDepth'] == 0

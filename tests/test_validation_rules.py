@@ -217,3 +217,62 @@ def test_callout_excluded_from_timing_consistency():
     }])
     issues = _check_timing_consistency(data)
     assert issues == []
+
+
+def test_collect_ids_recurses_into_unified_media():
+    """Bug 4: _collect_ids should recurse into UnifiedMedia video/audio sub-dicts."""
+    from camtasia.validation import _collect_ids
+    media = {
+        'id': 1, '_type': 'UnifiedMedia',
+        'video': {'id': 2, '_type': 'VMFile'},
+        'audio': {'id': 3, '_type': 'AMFile'},
+    }
+    ids: list = []
+    _collect_ids(media, ids, 'test')
+    collected_ids = [i for i, _ in ids]
+    assert 1 in collected_ids
+    assert 2 in collected_ids
+    assert 3 in collected_ids
+
+
+def test_check_group_required_fields_recurses_into_stitched_media():
+    """Bug 5: _check_group_required_fields should recurse into StitchedMedia/UnifiedMedia."""
+    from camtasia.validation import _check_group_required_fields
+    data = {
+        'version': '10.0',
+        'timeline': {'sceneTrack': {'scenes': [{'csml': {'tracks': [
+            {'medias': [{
+                '_type': 'StitchedMedia', 'id': 1,
+                'medias': [{
+                    '_type': 'Group', 'id': 2,
+                    'parameters': {},  # missing required params
+                    'metadata': {},
+                    'tracks': [],
+                }],
+            }]},
+        ]}}]}},
+    }
+    issues = _check_group_required_fields(data)
+    # Should find the nested Group with missing parameters
+    assert any('group id=2' in i.message for i in issues)
+
+
+def test_check_group_required_fields_recurses_into_unified_media():
+    """Bug 5: _check_group_required_fields should recurse into UnifiedMedia children."""
+    from camtasia.validation import _check_group_required_fields
+    data = {
+        'version': '10.0',
+        'timeline': {'sceneTrack': {'scenes': [{'csml': {'tracks': [
+            {'medias': [{
+                '_type': 'UnifiedMedia', 'id': 1,
+                'video': {
+                    '_type': 'Group', 'id': 3,
+                    'parameters': {},
+                    'metadata': {},
+                    'tracks': [],
+                },
+            }]},
+        ]}}]}},
+    }
+    issues = _check_group_required_fields(data)
+    assert any('group id=3' in i.message for i in issues)

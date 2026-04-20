@@ -148,3 +148,42 @@ def test_validate_does_not_use_bin_ids_variable(project):
     tree = ast.parse(source)
     names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
     assert 'bin_ids' not in names
+
+
+def test_validate_unified_media_sub_clip_src_not_orphaned(project):
+    """Bug 3: validate() should not flag media referenced only by UnifiedMedia sub-clips as orphaned."""
+    # Add a media entry to the source bin
+    project._data.setdefault('sourceBin', []).append({
+        'id': 50, 'src': './media/test.mov', 'rect': [0, 0, 100, 100],
+        'lastMod': '20260101T000000',
+        'sourceTracks': [{'type': 0, 'range': [0, 100], 'editRate': 30,
+                          'trackRect': [0, 0, 100, 100], 'sampleRate': 30,
+                          'bitDepth': 24, 'numChannels': 0,
+                          'integratedLUFS': 100.0, 'peakLevel': -1.0,
+                          'tag': 0, 'metaData': '', 'parameters': {}}],
+    })
+    media_id = 50
+    track = project.timeline.add_track('V')
+    # Add a UnifiedMedia clip where only the video child references the media
+    track._data['medias'] = [{
+        'id': 100, '_type': 'UnifiedMedia',
+        'start': 0, 'duration': 1000, 'mediaStart': 0, 'mediaDuration': 1000,
+        'scalar': 1, 'metadata': {}, 'parameters': {}, 'effects': [],
+        'attributes': {}, 'animationTracks': {},
+        'video': {
+            'id': 101, '_type': 'VMFile', 'src': media_id,
+            'start': 0, 'duration': 1000, 'mediaStart': 0, 'mediaDuration': 1000,
+            'scalar': 1, 'metadata': {}, 'parameters': {}, 'effects': [],
+            'attributes': {}, 'animationTracks': {},
+        },
+        'audio': {
+            'id': 102, '_type': 'AMFile', 'src': media_id,
+            'start': 0, 'duration': 1000, 'mediaStart': 0, 'mediaDuration': 1000,
+            'scalar': 1, 'metadata': {}, 'parameters': {}, 'effects': [],
+            'attributes': {}, 'animationTracks': {},
+        },
+    }]
+
+    issues = project.validate()
+    orphan_issues = [i for i in issues if 'Orphaned media' in i.message]
+    assert len(orphan_issues) == 0, f"Unexpected orphan issues: {orphan_issues}"

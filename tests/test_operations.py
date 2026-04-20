@@ -1112,3 +1112,43 @@ class TestMatchMarkerMultiWordFallback:
         ]
         result = match_marker_to_transcript("quick red fox", words)
         assert result is None
+
+
+class TestWalkClipsGroupInsideStitchedMedia:
+    """Bug 9: _walk_clips should recurse into Group children of StitchedMedia."""
+
+    def test_group_inside_stitched_media_yields_inner_clips(self):
+        from camtasia.operations.template import _walk_clips
+        tracks = [{'medias': [{
+            '_type': 'StitchedMedia', 'id': 1, 'src': 10,
+            'medias': [
+                {'_type': 'Group', 'id': 2, 'tracks': [
+                    {'medias': [
+                        {'_type': 'VMFile', 'id': 3, 'src': 20},
+                    ]},
+                ]},
+            ],
+        }]}]
+        clips = list(_walk_clips(tracks))
+        clip_ids = [c.get('id') for c in clips]
+        assert 1 in clip_ids  # StitchedMedia itself
+        assert 2 in clip_ids  # Group child
+        assert 3 in clip_ids  # VMFile inside Group
+
+    def test_replace_media_source_in_group_inside_stitched(self):
+        project = _make_project([{'medias': [{
+            '_type': 'StitchedMedia', 'id': 1, 'src': 10,
+            'medias': [
+                {'_type': 'Group', 'id': 2, 'tracks': [
+                    {'medias': [
+                        {'_type': 'VMFile', 'id': 3, 'src': 10},
+                    ]},
+                ]},
+            ],
+        }]}])
+        count = replace_media_source(project, old_source_id=10, new_source_id=99)
+        assert count >= 1
+        inner = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        group = inner['medias'][0]
+        vmfile = group['tracks'][0]['medias'][0]
+        assert vmfile['src'] == 99

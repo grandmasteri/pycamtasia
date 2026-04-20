@@ -62,3 +62,47 @@ class TestTrecProbeRounding:
         sample_rate = 44100
         result = round(dur_ms / 1000 * int(float(sample_rate)))
         assert result == 44056  # round, not 44055 (int truncation)
+
+
+class TestTrecProbeStringDuration:
+    """Bug 12: trec_probe should handle track.duration as string."""
+
+    def test_video_string_duration(self):
+        import importlib
+        import os
+        import tempfile
+
+        import camtasia.media_bin.trec_probe as tp
+
+        mock_track = MagicMock()
+        mock_track.track_type = 'Video'
+        mock_track.width = 1920
+        mock_track.height = 1080
+        mock_track.codec_id = 'tsc2'
+        mock_track.frame_rate = '30.0'
+        mock_track.duration = '5000'  # string, not int
+
+        general_track = MagicMock()
+        general_track.track_type = 'General'
+        general_track.tagged_date = None
+        general_track.encoded_date = None
+
+        mock_mi = MagicMock()
+        mock_mi.tracks = [general_track, mock_track]
+
+        mock_pymediainfo = MagicMock()
+        mock_pymediainfo.MediaInfo.parse.return_value = mock_mi
+
+        with tempfile.NamedTemporaryFile(suffix='.trec', delete=False) as f:
+            f.write(b'\x00')
+            tmp = f.name
+        try:
+            with patch.dict('sys.modules', {'pymediainfo': mock_pymediainfo}):
+                importlib.reload(tp)
+                result = tp.probe_trec(tmp)
+                # Should not raise TypeError
+                assert len(result['sourceTracks']) == 1
+                assert result['sourceTracks'][0]['range'][1] == round(5000 / 1000 * 30)
+        finally:
+            os.unlink(tmp)
+            importlib.reload(tp)
