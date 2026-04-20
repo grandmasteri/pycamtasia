@@ -111,6 +111,30 @@ class TestRippleInsert:
         ]
         assert actual_starts == expected_starts
 
+    def test_ripple_insert_clears_transitions(self):
+        track = _make_track([
+            _clip(1, 0.0, 2.0),
+            _clip(2, 3.0, 1.0),
+            _clip(3, 5.0, 1.0),
+        ])
+        track._data['transitions'] = [
+            {'leftMedia': 2, 'rightMedia': 3, 'duration': 100},
+        ]
+        ripple_insert(track, position_seconds=3.0, duration_seconds=2.0)
+        assert track._data['transitions'] == []
+
+    def test_ripple_insert_no_shift_keeps_transitions(self):
+        track = _make_track([
+            _clip(1, 0.0, 2.0),
+            _clip(2, 3.0, 1.0),
+        ])
+        track._data['transitions'] = [
+            {'leftMedia': 1, 'rightMedia': 2, 'duration': 100},
+        ]
+        # Insert after all clips — nothing shifts
+        ripple_insert(track, position_seconds=10.0, duration_seconds=2.0)
+        assert len(track._data['transitions']) == 1
+
 
 class TestRippleDelete:
     def test_ripple_delete_closes_gap(self):

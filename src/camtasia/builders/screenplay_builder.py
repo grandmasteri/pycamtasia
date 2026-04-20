@@ -80,10 +80,9 @@ def build_from_screenplay(
 
             # Insert interleaved explicit pauses that follow this VO block
             if has_explicit_pauses:
-                if vo_placed:
-                    for dur in pauses_after.get(vi, []):
-                        builder.add_pause(dur)
-                        pauses_added += 1
+                for dur in pauses_after.get(vi, []):
+                    builder.add_pause(dur)
+                    pauses_added += 1
             elif default_pause > 0 and vi < len(vo_blocks) - 1 and vo_placed:
                 builder.add_pause(default_pause)
                 pauses_added += 1

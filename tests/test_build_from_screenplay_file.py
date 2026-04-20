@@ -120,3 +120,31 @@ class TestBuildFromScreenplayFile:
             result = project.build_from_screenplay_file(screenplay_md, tmp_path)
 
         assert result['sections'][0].title == 'Chapter 1'
+
+
+class TestPausesWithMissingAudio:
+    """Explicit pauses must be added even when VO audio files are missing."""
+
+    def test_pauses_added_when_vo_audio_missing(self, project, tmp_path):
+        """Pauses after a VO block are added even if that VO's audio is absent."""
+        import warnings
+
+        from camtasia.builders.screenplay_builder import build_from_screenplay
+        from camtasia.screenplay import (
+            PauseMarker,
+            Screenplay,
+            ScreenplaySection,
+            VOBlock,
+        )
+
+        sp = Screenplay(sections=[ScreenplaySection(
+            title='S1', level=2,
+            vo_blocks=[VOBlock(id='99.1', text='missing audio', section='S1')],
+            pauses=[PauseMarker(duration_seconds=2.0, description='', after_vo_index=0)],
+        )])
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
+            result = build_from_screenplay(project, sp, tmp_path)
+        assert result['clips_placed'] == 0
+        assert result['pauses_added'] == 1
+        assert result['total_duration'] > 0

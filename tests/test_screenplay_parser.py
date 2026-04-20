@@ -117,3 +117,37 @@ class TestScreenplayPreamble:
         f.write_text(EMPTY_PREAMBLE_SCREENPLAY)
         sp = parse_screenplay(f)
         assert sp.sections[0].title == 'First Section'
+
+
+# -- VO text with internal quotes --
+
+VO_INTERNAL_QUOTES = """\
+## Dialogue
+
+[VO-1.1]:** "She said \\"hello\\" and then left"
+
+[VO-1.2]:** "Use the \\"File\\" menu to select \\"Save As\\""
+"""
+
+VO_INTERNAL_QUOTES_UNESCAPED = """\
+## Dialogue
+
+[VO-2.1]:** "Click the "File" menu"
+"""
+
+
+class TestVOInternalQuotes:
+    def test_escaped_internal_quotes_captured(self, tmp_path):
+        f = tmp_path / "test.md"
+        f.write_text(VO_INTERNAL_QUOTES)
+        sp = parse_screenplay(f)
+        assert sp.vo_blocks[0].text == 'She said \\"hello\\" and then left'
+        assert sp.vo_blocks[1].text == 'Use the \\"File\\" menu to select \\"Save As\\"'
+
+    def test_unescaped_internal_quotes_captured(self, tmp_path):
+        f = tmp_path / "test.md"
+        f.write_text(VO_INTERNAL_QUOTES_UNESCAPED)
+        sp = parse_screenplay(f)
+        # Greedy match captures up to the last quote on the line
+        assert 'File' in sp.vo_blocks[0].text
+        assert 'menu' in sp.vo_blocks[0].text

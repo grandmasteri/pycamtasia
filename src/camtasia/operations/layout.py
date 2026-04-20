@@ -47,10 +47,14 @@ def ripple_insert(track: Track, position_seconds: float, duration_seconds: float
     """
     pos_ticks = seconds_to_ticks(position_seconds)
     shift_ticks = seconds_to_ticks(duration_seconds)
+    shifted = False
     for m in track._data.get('medias', []):
         if _to_ticks(m.get('start', 0)) >= pos_ticks:
             m['start'] = _to_ticks(m.get('start', 0)) + shift_ticks
             _propagate_start_to_unified(m)
+            shifted = True
+    if shifted:
+        track._data['transitions'] = []
 
 
 def ripple_delete(track: Track, clip_id: int) -> None:
