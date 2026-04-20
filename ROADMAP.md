@@ -4,7 +4,31 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 10 domains 4-6)
+
+**Project:**
+
+1. [verified] `add_background_music` missing initial anchor keyframe when `fade_in_seconds=0, fade_out_seconds>0`. Keyframe list starts at fade_out_start instead of endTime=0. (project.py ~L2069)
+
+**Operations:**
+
+2. [verified] `speed.py _process_clip` StitchedMedia branch doesn't recurse into Group or nested StitchedMedia children. Inner clips in those compound types are left unscaled. HIGH. (speed.py ~L82)
+
+3. [verified] `speed.py _process_clip` calls `_adjust_scalar` on StitchedMedia/Group wrappers whose mediaDuration is ALSO scaled in type-specific branch. Double-adjustment breaks `duration = mediaDuration × scalar` invariant. HIGH. (speed.py ~L68)
+
+4. [verified] `speed.py rescale_project` overlap fix doesn't propagate duration/mediaDuration changes to StitchedMedia/Group internal clips. Last inner sub-clip may extend past wrapper's new duration. (speed.py ~L167)
+
+5. [verified] `cleanup.py _collect_source_ids` double-visits video/audio children in Group tracks. Wasteful but not wrong (set dedup). (cleanup.py ~L17)
+
+6. [verified] `merge.py merge_tracks` `clip_id_map` is reset per-track. Cross-track `assetProperties.objects` references aren't remapped and point to old source IDs. (merge.py ~L118)
+
+**Supporting:**
+
+7. [verified] `export/report.py` markdown report header shows all tracks but body lists only non-empty. Count mismatch between header and listed tracks. (export/report.py ~L55)
+
+8. [verified] `templates/lower_third.py` hardcoded clip IDs 83-88 cause silent collisions when template inserted into projects with existing clips in that ID range. (templates/lower_third.py)
+
+9. [verified] `annotations/callouts.py square()` omits `corner-radius` key. Other shape-bearing callout constructors include it. (callouts.py)
 
 ## TechSmith Tutorial Analysis
 
