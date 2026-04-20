@@ -1201,3 +1201,30 @@ class TestUngroupNestedGroupMediaDurationPreserved:
             expected_md = Fraction(nested["duration"]) / nested_scalar
             actual_md = Fraction(str(nested["mediaDuration"]))
             assert actual_md == expected_md
+
+
+# ------------------------------------------------------------------
+# ungroup: start is always int, not string fraction (Bug 9)
+# ------------------------------------------------------------------
+
+class TestUngroupStartIsAlwaysInt:
+    def test_ungroup_produces_int_start_with_fractional_scalar(self) -> None:
+        inner_clip = {
+            '_type': 'VMFile', 'id': 10, 'src': 1,
+            'start': 100, 'duration': 200,
+            'mediaStart': 0, 'mediaDuration': 200, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        group_data = {
+            '_type': 'Group', 'id': 1, 'start': 50,
+            'duration': 300, 'mediaStart': 0, 'mediaDuration': 300,
+            'scalar': '1/3',
+            'tracks': [{'trackIndex': 0, 'medias': [inner_clip]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+            'attributes': {},
+        }
+        group = Group(group_data)
+        extracted = group.ungroup()
+        for clip in extracted:
+            assert isinstance(clip._data['start'], int), \
+                f"Expected int start, got {type(clip._data['start'])}: {clip._data['start']}"

@@ -380,7 +380,7 @@ class Group(BaseClip):
                             cloned_data['mediaDuration'] = int(nested_md) if nested_md == int(nested_md) else str(nested_md)
                 cloned_start = Fraction(str(cloned_data.get('start', 0)))
                 new_start = cloned_start + group_start
-                cloned_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
+                cloned_data['start'] = round(new_start)
                 from camtasia.timeline.track import _propagate_start_to_unified
                 _propagate_start_to_unified(cloned_data)
                 from camtasia.timeline.clips import clip_from_dict

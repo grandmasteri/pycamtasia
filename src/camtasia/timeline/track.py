@@ -2521,6 +2521,11 @@ class Track:
                                 inner_clip[field] = int(Fraction(str(inner_clip[field])) * factor)
                         if inner_clip.get('_type') in ('IMFile', 'ScreenIMFile'):
                             inner_clip['mediaDuration'] = 1
+                        else:
+                            inner_scalar = _parse_scalar(inner_clip.get('scalar', 1))
+                            if inner_scalar != 0:
+                                inner_md = Fraction(inner_clip['duration']) / inner_scalar
+                                inner_clip['mediaDuration'] = int(inner_md) if inner_md == int(inner_md) else str(inner_md)
                         if inner_clip.get('_type') == 'UnifiedMedia':
                             for sub_key in ('video', 'audio'):
                                 sub = inner_clip.get(sub_key)
@@ -2528,6 +2533,10 @@ class Track:
                                     sub['start'] = inner_clip['start']
                                     sub['duration'] = inner_clip['duration']
                                     sub['mediaStart'] = inner_clip.get('mediaStart', 0)
+                                    if 'mediaDuration' in inner_clip:
+                                        sub['mediaDuration'] = inner_clip['mediaDuration']
+                                    if 'scalar' in inner_clip:
+                                        sub['scalar'] = inner_clip['scalar']
                         for effect in inner_clip.get('effects', []):
                             if 'start' in effect:
                                 effect['start'] = int(effect['start'] * factor)

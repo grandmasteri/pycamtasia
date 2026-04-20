@@ -574,3 +574,89 @@ class TestScaleAllDurationsScalesGroupInternalClips:
         eff = group["tracks"][0]["medias"][0]["effects"][0]
         assert eff["start"] == 200
         assert eff["duration"] == 400
+
+
+# ------------------------------------------------------------------
+# scale_all_durations: inner Group clips get mediaDuration recalculated (Bug 10)
+# ------------------------------------------------------------------
+
+class TestScaleAllDurationsGroupInnerMediaDurationRecalc:
+    def test_inner_vmfile_gets_media_duration_recalculated(self) -> None:
+        inner_clip: dict[str, Any] = {
+            '_type': 'VMFile', 'id': 10, 'src': 1,
+            'start': 0, 'duration': 1000,
+            'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        group: dict[str, Any] = {
+            '_type': 'Group', 'id': 1,
+            'start': 0, 'duration': 1000,
+            'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+            'tracks': [{'trackIndex': 0, 'medias': [inner_clip]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        attrs: dict[str, Any] = {'ident': 'T'}
+        data: dict[str, Any] = {'trackIndex': 0, 'medias': [group], 'transitions': []}
+        track = Track(attrs, data)
+        track.scale_all_durations(2.0)
+        ic = group['tracks'][0]['medias'][0]
+        from fractions import Fraction
+        expected_md = Fraction(ic['duration']) / Fraction(str(ic.get('scalar', 1)))
+        assert Fraction(str(ic['mediaDuration'])) == expected_md
+
+    def test_inner_imfile_keeps_media_duration_one(self) -> None:
+        inner_clip: dict[str, Any] = {
+            '_type': 'IMFile', 'id': 10, 'src': 1,
+            'start': 0, 'duration': 1000,
+            'mediaStart': 0, 'mediaDuration': 1, 'scalar': 1,
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        group: dict[str, Any] = {
+            '_type': 'Group', 'id': 1,
+            'start': 0, 'duration': 1000,
+            'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+            'tracks': [{'trackIndex': 0, 'medias': [inner_clip]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        attrs: dict[str, Any] = {'ident': 'T'}
+        data: dict[str, Any] = {'trackIndex': 0, 'medias': [group], 'transitions': []}
+        track = Track(attrs, data)
+        track.scale_all_durations(2.0)
+        ic = group['tracks'][0]['medias'][0]
+        assert ic['mediaDuration'] == 1
+
+
+# ------------------------------------------------------------------
+# scale_all_durations: inner Group UnifiedMedia sub-clip propagation (Bug 11)
+# ------------------------------------------------------------------
+
+class TestScaleAllDurationsGroupUnifiedMediaSubClipPropagation:
+    def test_unified_media_sub_clips_get_media_duration_and_scalar(self) -> None:
+        inner_um: dict[str, Any] = {
+            '_type': 'UnifiedMedia', 'id': 10,
+            'start': 0, 'duration': 1000,
+            'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+            'video': {'_type': 'VMFile', 'id': 11, 'start': 0,
+                      'duration': 1000, 'mediaDuration': 1000, 'scalar': 1},
+            'audio': {'_type': 'AMFile', 'id': 12, 'start': 0,
+                      'duration': 1000, 'mediaDuration': 1000, 'scalar': 1},
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        group: dict[str, Any] = {
+            '_type': 'Group', 'id': 1,
+            'start': 0, 'duration': 1000,
+            'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+            'tracks': [{'trackIndex': 0, 'medias': [inner_um]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        attrs: dict[str, Any] = {'ident': 'T'}
+        data: dict[str, Any] = {'trackIndex': 0, 'medias': [group], 'transitions': []}
+        track = Track(attrs, data)
+        track.scale_all_durations(2.0)
+        ic = group['tracks'][0]['medias'][0]
+        video = ic['video']
+        audio = ic['audio']
+        assert video['mediaDuration'] == ic['mediaDuration']
+        assert video['scalar'] == ic['scalar']
+        assert audio['mediaDuration'] == ic['mediaDuration']
+        assert audio['scalar'] == ic['scalar']

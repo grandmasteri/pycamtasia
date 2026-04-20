@@ -291,3 +291,17 @@ def test_is_audio_stitched_mixed_amfile_and_unified():
         ],
     })
     assert clip.is_audio is True
+
+
+# ------------------------------------------------------------------
+# clear_segments clears wrapper effects (Bug 8)
+# ------------------------------------------------------------------
+
+class TestClearSegmentsClearsEffects:
+    def test_clear_segments_removes_effects(self) -> None:
+        data = _stitched_dict(effects=[{'effectName': 'DropShadow', 'bypassed': False}])
+        clip = StitchedMedia(data)
+        clip.clear_segments()
+        assert data['effects'] == []
+        assert data['medias'] == []
+        assert data['duration'] == 0

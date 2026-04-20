@@ -2462,3 +2462,201 @@ class TestSetSpeedGroupNestedStitchedUsesRound:
         medias = inner_stitched["medias"]
         for i in range(len(medias) - 1):
             assert medias[i]["start"] + round(Fraction(str(medias[i]["duration"]))) == medias[i + 1]["start"]
+
+
+# ------------------------------------------------------------------
+# is_video: UnifiedMedia checks video presence (Bug 1)
+# ------------------------------------------------------------------
+
+class TestIsVideoUnifiedMediaChecksVideoPresence:
+    def test_unified_media_with_video_is_video(self) -> None:
+        clip = BaseClip({'id': 1, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100,
+                         'video': {'_type': 'VMFile', 'id': 2}, 'audio': {'_type': 'AMFile', 'id': 3}})
+        assert clip.is_video is True
+
+    def test_unified_media_without_video_is_not_video(self) -> None:
+        clip = BaseClip({'id': 1, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100,
+                         'audio': {'_type': 'AMFile', 'id': 3}})
+        assert clip.is_video is False
+
+    def test_unified_media_with_none_video_is_not_video(self) -> None:
+        clip = BaseClip({'id': 1, '_type': 'UnifiedMedia', 'start': 0, 'duration': 100,
+                         'video': None, 'audio': {'_type': 'AMFile', 'id': 3}})
+        assert clip.is_video is False
+
+
+# ------------------------------------------------------------------
+# is_video: StitchedMedia with UnifiedMedia None video (Bug 2)
+# ------------------------------------------------------------------
+
+class TestIsVideoStitchedMediaUnifiedMediaNoneVideo:
+    def test_stitched_with_unified_none_video_is_not_video(self) -> None:
+        clip = BaseClip({'id': 1, '_type': 'StitchedMedia', 'start': 0, 'duration': 100,
+                         'medias': [{'_type': 'UnifiedMedia', 'video': None}]})
+        assert clip.is_video is False
+
+    def test_stitched_with_unified_valid_video_is_video(self) -> None:
+        clip = BaseClip({'id': 1, '_type': 'StitchedMedia', 'start': 0, 'duration': 100,
+                         'medias': [{'_type': 'UnifiedMedia', 'video': {'_type': 'VMFile'}}]})
+        assert clip.is_video is True
+
+
+# ------------------------------------------------------------------
+# fade_in/fade_out: repeated calls don't accumulate visual tracks (Bug 3)
+# ------------------------------------------------------------------
+
+class TestFadeInOutDoNotAccumulateVisualTracks:
+    def test_repeated_fade_in_does_not_accumulate(self) -> None:
+        data: dict[str, Any] = _coverage_clip(duration=EDIT_RATE * 10)
+        clip = BaseClip(data)
+        clip.fade_in(1.0)
+        clip.fade_in(2.0)
+        visual = data.get('animationTracks', {}).get('visual', [])
+        assert len(visual) == 1
+
+    def test_repeated_fade_out_does_not_accumulate(self) -> None:
+        data: dict[str, Any] = _coverage_clip(duration=EDIT_RATE * 10)
+        clip = BaseClip(data)
+        clip.fade_out(1.0)
+        clip.fade_out(2.0)
+        visual = data.get('animationTracks', {}).get('visual', [])
+        assert len(visual) == 1
+
+
+# ------------------------------------------------------------------
+# set_speed: Group inner UnifiedMedia mediaDuration recalc (Bug 4)
+# ------------------------------------------------------------------
+
+class TestSetSpeedGroupInnerUnifiedMediaDurationRecalc:
+    def test_group_inner_unified_media_gets_media_duration(self) -> None:
+        inner_um = {
+            '_type': 'UnifiedMedia', 'id': 10, 'start': 0,
+            'duration': EDIT_RATE * 10, 'mediaStart': 0,
+            'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+            'video': {'_type': 'VMFile', 'id': 11, 'start': 0,
+                      'duration': EDIT_RATE * 10, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1},
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        data: dict[str, Any] = {
+            'id': 1, '_type': 'Group', 'start': 0,
+            'duration': EDIT_RATE * 10, 'mediaStart': 0,
+            'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+            'tracks': [{'trackIndex': 0, 'medias': [inner_um]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        clip = BaseClip(data)
+        clip.set_speed(2.0)
+        inner = data['tracks'][0]['medias'][0]
+        assert 'mediaDuration' in inner
+        assert Fraction(str(inner['mediaDuration'])) == Fraction(inner['duration']) / Fraction(str(inner['scalar']))
+
+
+# ------------------------------------------------------------------
+# set_speed: StitchedMedia propagates to UnifiedMedia sub-clips (Bug 5)
+# ------------------------------------------------------------------
+
+class TestSetSpeedStitchedMediaPropagatesUnifiedMedia:
+    def test_stitched_propagates_scalar_to_unified_sub_clips(self) -> None:
+        inner_um = {
+            '_type': 'UnifiedMedia', 'id': 20, 'start': 0,
+            'duration': EDIT_RATE * 5, 'mediaStart': 0,
+            'mediaDuration': EDIT_RATE * 5, 'scalar': 1,
+            'video': {'_type': 'VMFile', 'id': 21, 'start': 0,
+                      'duration': EDIT_RATE * 5, 'mediaDuration': EDIT_RATE * 5, 'scalar': 1},
+            'metadata': {},
+        }
+        data: dict[str, Any] = {
+            'id': 1, '_type': 'StitchedMedia', 'start': 0,
+            'duration': EDIT_RATE * 5, 'mediaStart': 0,
+            'mediaDuration': EDIT_RATE * 5, 'scalar': 1,
+            'medias': [inner_um],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        clip = BaseClip(data)
+        clip.set_speed(2.0)
+        seg = data['medias'][0]
+        video = seg['video']
+        assert video['scalar'] == seg['scalar']
+        assert video['duration'] == seg['duration']
+        assert video['start'] == seg['start']
+
+
+# ------------------------------------------------------------------
+# set_speed: Group-nested StitchedMedia propagates to UnifiedMedia (Bug 6)
+# ------------------------------------------------------------------
+
+class TestSetSpeedGroupNestedStitchedMediaPropagatesUnifiedMedia:
+    def test_group_stitched_inner_unified_propagated(self) -> None:
+        inner_um = {
+            '_type': 'UnifiedMedia', 'id': 30, 'start': 0,
+            'duration': EDIT_RATE * 5, 'mediaStart': 0,
+            'mediaDuration': EDIT_RATE * 5, 'scalar': 1,
+            'video': {'_type': 'VMFile', 'id': 31, 'start': 0,
+                      'duration': EDIT_RATE * 5, 'mediaDuration': EDIT_RATE * 5, 'scalar': 1},
+            'metadata': {},
+        }
+        stitched = {
+            '_type': 'StitchedMedia', 'id': 32, 'start': 0,
+            'duration': EDIT_RATE * 5, 'mediaStart': 0,
+            'mediaDuration': EDIT_RATE * 5, 'scalar': 1,
+            'medias': [inner_um],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        data: dict[str, Any] = {
+            'id': 1, '_type': 'Group', 'start': 0,
+            'duration': EDIT_RATE * 5, 'mediaStart': 0,
+            'mediaDuration': EDIT_RATE * 5, 'scalar': 1,
+            'tracks': [{'trackIndex': 0, 'medias': [stitched]}],
+            'parameters': {}, 'effects': [], 'metadata': {}, 'animationTracks': {},
+        }
+        clip = BaseClip(data)
+        clip.set_speed(2.0)
+        seg = data['tracks'][0]['medias'][0]['medias'][0]
+        video = seg['video']
+        assert video['scalar'] == seg['scalar']
+        assert video['duration'] == seg['duration']
+
+
+# ------------------------------------------------------------------
+# duration/scalar setter: StitchedMedia re-layouts inner segments (Bug 7)
+# ------------------------------------------------------------------
+
+class TestDurationSetterStitchedMediaRelayout:
+    def test_duration_setter_relayouts_stitched_segments(self) -> None:
+        data: dict[str, Any] = {
+            'id': 1, '_type': 'StitchedMedia', 'start': 0,
+            'duration': 1000, 'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+            'medias': [
+                {'_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 400,
+                 'mediaDuration': 400, 'scalar': 1},
+                {'_type': 'VMFile', 'id': 3, 'start': 400, 'duration': 600,
+                 'mediaDuration': 600, 'scalar': 1},
+            ],
+        }
+        clip = BaseClip(data)
+        clip.duration = 2000
+        seg0 = data['medias'][0]
+        seg1 = data['medias'][1]
+        assert seg0['duration'] + seg1['duration'] == 2000
+        assert seg0['start'] == 0
+        assert seg1['start'] == seg0['duration']
+
+
+class TestScalarSetterStitchedMediaRelayout:
+    def test_scalar_setter_relayouts_stitched_segments(self) -> None:
+        data: dict[str, Any] = {
+            'id': 1, '_type': 'StitchedMedia', 'start': 0,
+            'duration': 1000, 'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+            'medias': [
+                {'_type': 'VMFile', 'id': 2, 'start': 0, 'duration': 500,
+                 'mediaDuration': 500, 'scalar': 1},
+                {'_type': 'VMFile', 'id': 3, 'start': 500, 'duration': 500,
+                 'mediaDuration': 500, 'scalar': 1},
+            ],
+        }
+        clip = BaseClip(data)
+        clip.scalar = Fraction(1, 2)
+        seg0 = data['medias'][0]
+        seg1 = data['medias'][1]
+        assert seg0['start'] == 0
+        assert seg1['start'] == seg0['duration']

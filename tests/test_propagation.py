@@ -4,6 +4,7 @@ from __future__ import annotations
 from fractions import Fraction
 
 from camtasia.timeline.clips import StitchedMedia, UnifiedMedia
+from camtasia.timing import seconds_to_ticks
 
 EDIT_RATE = 705_600_000
 
@@ -127,24 +128,26 @@ class TestStitchedMediaPropagation:
         for child, orig in zip(_children_stitched(data), orig_starts):
             assert child['start'] == orig
 
-    def test_duration_does_not_propagate(self):
+    def test_duration_propagates_proportionally(self):
         data = _stitched_media_data()
-        orig = [(c['duration'], c['mediaDuration'], c['scalar']) for c in _children_stitched(data)]
+        old_durations = [c['duration'] for c in _children_stitched(data)]
+        old_total = data['duration']
         clip = StitchedMedia(data)
         clip.duration = EDIT_RATE * 3
-        for child, (od, omd, osc) in zip(_children_stitched(data), orig):
-            assert child['duration'] == od
-            assert child['mediaDuration'] == omd
-            assert child['scalar'] == osc
+        ratio = Fraction(EDIT_RATE * 3) / Fraction(old_total)
+        for child, od in zip(_children_stitched(data), old_durations):
+            assert child['duration'] == round(Fraction(od) * ratio)
 
-    def test_scalar_does_not_propagate(self):
+    def test_scalar_propagates_proportionally(self):
         data = _stitched_media_data()
-        orig = [(c['scalar'], c['mediaDuration']) for c in _children_stitched(data)]
+        old_durations = [c['duration'] for c in _children_stitched(data)]
+        old_scalar = Fraction(str(data.get('scalar', 1)))
         clip = StitchedMedia(data)
         clip.scalar = Fraction(1, 2)
-        for child, (osc, omd) in zip(_children_stitched(data), orig):
-            assert child['scalar'] == osc
-            assert child['mediaDuration'] == omd
+        new_scalar = Fraction(1, 2)
+        ratio = new_scalar / old_scalar
+        for child, od in zip(_children_stitched(data), old_durations):
+            assert child['duration'] == round(Fraction(od) * ratio)
 
     def test_media_duration_does_not_propagate(self):
         data = _stitched_media_data()
@@ -168,16 +171,16 @@ class TestStitchedMediaPropagation:
             assert Fraction(str(child['duration'])) == expected_dur
             assert child['metadata']['clipSpeedAttribute'] == data['metadata']['clipSpeedAttribute']
 
-    def test_set_time_range_does_not_propagate(self):
+    def test_set_time_range_propagates_duration_proportionally(self):
         data = _stitched_media_data()
-        orig = [(c['start'], c['duration'], c['mediaDuration'], c['scalar']) for c in _children_stitched(data)]
+        old_durations = [c['duration'] for c in _children_stitched(data)]
+        old_total = data['duration']
         clip = StitchedMedia(data)
+        new_dur = seconds_to_ticks(3.0)
         clip.set_time_range(2.0, 3.0)
-        for child, (os, od, omd, osc) in zip(_children_stitched(data), orig):
-            assert child['start'] == os
-            assert child['duration'] == od
-            assert child['mediaDuration'] == omd
-            assert child['scalar'] == osc
+        ratio = Fraction(new_dur) / Fraction(old_total)
+        for child, od in zip(_children_stitched(data), old_durations):
+            assert child['duration'] == round(Fraction(od) * ratio)
 
 
 # -- set_time_range and set_duration_seconds mediaStart propagation --

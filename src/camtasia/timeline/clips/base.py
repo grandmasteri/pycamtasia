@@ -80,14 +80,16 @@ class BaseClip:
     @property
     def is_video(self) -> bool:
         """Whether this clip is a video clip."""
-        if self.clip_type in (ClipType.VIDEO, ClipType.SCREEN_VIDEO, ClipType.UNIFIED_MEDIA):
+        if self.clip_type in (ClipType.VIDEO, ClipType.SCREEN_VIDEO):
             return True
+        if self.clip_type == ClipType.UNIFIED_MEDIA:
+            return self._data.get('video') is not None
         if self.clip_type == 'StitchedMedia':
             for m in self._data.get('medias', []):
                 if m.get('_type') in ('VMFile', 'ScreenVMFile'):
                     return True
                 if m.get('_type') == 'UnifiedMedia':
-                    video = m.get('video', {})
+                    video = m.get('video') or {}
                     if video.get('_type') in ('VMFile', 'ScreenVMFile'):
                         return True
             return False
@@ -146,6 +148,7 @@ class BaseClip:
     @duration.setter
     def duration(self, value: int) -> None:
         """Set the duration."""
+        old_duration = self._data.get('duration', 0)
         self._data['duration'] = value
         from camtasia.timing import parse_scalar
         scalar = parse_scalar(self._data.get('scalar', 1))
@@ -164,6 +167,19 @@ class BaseClip:
                     sub['mediaStart'] = self._data.get('mediaStart', 0)
                     if sub.get('_type') in ('IMFile', 'ScreenIMFile'):
                         sub['mediaDuration'] = 1
+        if self._data.get('_type') == 'StitchedMedia' and old_duration > 0:
+            ratio = Fraction(value) / Fraction(old_duration)
+            cursor = 0
+            for inner in self._data.get('medias', []):
+                inner_old_dur = Fraction(str(inner.get('duration', 0)))
+                new_inner_dur = round(inner_old_dur * ratio)
+                inner['duration'] = new_inner_dur
+                inner['start'] = cursor
+                cursor += new_inner_dur
+                inner_scalar = parse_scalar(inner.get('scalar', 1))
+                if inner_scalar != 0:
+                    inner_md = Fraction(new_inner_dur) / inner_scalar
+                    inner['mediaDuration'] = int(inner_md) if inner_md == int(inner_md) else str(inner_md)
 
     @property
     def end_seconds(self) -> float:
@@ -304,6 +320,8 @@ class BaseClip:
     @scalar.setter
     def scalar(self, value: Fraction | int | float | str) -> None:
         """Set the scalar."""
+        from camtasia.timing import parse_scalar
+        old_scalar = parse_scalar(self._data.get('scalar', 1))
         f = Fraction(value)
         self._data['scalar'] = 1 if f == 1 else str(f)
         # Recalculate mediaDuration to maintain invariant
@@ -321,6 +339,19 @@ class BaseClip:
                     sub['mediaStart'] = self._data.get('mediaStart', 0)
                     if sub.get('_type') in ('IMFile', 'ScreenIMFile'):
                         sub['mediaDuration'] = 1
+        if self._data.get('_type') == 'StitchedMedia' and old_scalar != 0:
+            ratio = f / old_scalar
+            cursor = 0
+            for inner in self._data.get('medias', []):
+                inner_old_dur = Fraction(str(inner.get('duration', 0)))
+                new_inner_dur = round(inner_old_dur * ratio)
+                inner['duration'] = new_inner_dur
+                inner['start'] = cursor
+                cursor += new_inner_dur
+                inner_scalar = parse_scalar(inner.get('scalar', 1))
+                if inner_scalar != 0:
+                    inner_md = Fraction(new_inner_dur) / inner_scalar
+                    inner['mediaDuration'] = int(inner_md) if inner_md == int(inner_md) else str(inner_md)
 
     def set_speed(self, speed: float) -> Self:
         """Set playback speed multiplier.
@@ -358,10 +389,26 @@ class BaseClip:
                 inner.setdefault('metadata', {})['clipSpeedAttribute'] = {
                     'type': 'bool', 'value': scalar_fraction != 1
                 }
+                if inner.get('_type') == 'UnifiedMedia':
+                    for sub_key in ('video', 'audio'):
+                        um_sub: dict[str, Any] = inner.get(sub_key)  # type: ignore[assignment]
+                        if um_sub is not None:
+                            um_sub['scalar'] = inner['scalar']
+                            um_sub['duration'] = inner['duration']
+                            um_sub['start'] = inner['start']
+                            if 'mediaDuration' in inner:
+                                um_sub['mediaDuration'] = inner['mediaDuration']
+                            if 'mediaStart' in inner:
+                                um_sub['mediaStart'] = inner['mediaStart']
             # Re-layout starts sequentially using stored int durations
             cursor = 0
             for inner in self._data.get('medias', []):
                 inner['start'] = cursor
+                if inner.get('_type') == 'UnifiedMedia':
+                    for sub_key in ('video', 'audio'):
+                        um_sub2: dict[str, Any] = inner.get(sub_key)  # type: ignore[assignment]
+                        if um_sub2 is not None:
+                            um_sub2['start'] = cursor
                 cursor += int(inner['duration'])
             # Compute new wrapper duration as sum of segment durations
             new_wrapper_dur = cursor
@@ -395,7 +442,7 @@ class BaseClip:
                     inner_clip_data['duration'] = round(new_inner_dur)
                     if inner_clip_data.get('_type') in ('IMFile', 'ScreenIMFile'):
                         inner_clip_data['mediaDuration'] = 1
-                    elif inner_clip_data.get('_type') not in ('UnifiedMedia', 'StitchedMedia', 'Group') and scalar_fraction != 0:
+                    elif inner_clip_data.get('_type') not in ('StitchedMedia', 'Group') and scalar_fraction != 0:
                             inner_md = Fraction(inner_clip_data['duration']) / scalar_fraction
                             inner_clip_data['mediaDuration'] = int(inner_md) if inner_md == int(inner_md) else str(inner_md)
                     # Set clipSpeedAttribute metadata
@@ -422,10 +469,26 @@ class BaseClip:
                             inner_seg['scalar'] = 1 if scalar_fraction == 1 else str(scalar_fraction)
                             inner_seg['duration'] = int(seg_new_dur) if seg_new_dur == int(seg_new_dur) else str(seg_new_dur)
                             inner_seg.setdefault('metadata', {})['clipSpeedAttribute'] = {'type': 'bool', 'value': scalar_fraction != 1}
+                            if inner_seg.get('_type') == 'UnifiedMedia':
+                                for sub_key in ('video', 'audio'):
+                                    sub = inner_seg.get(sub_key)
+                                    if sub is not None:
+                                        sub['scalar'] = inner_seg['scalar']
+                                        sub['duration'] = inner_seg['duration']
+                                        sub['start'] = inner_seg['start']
+                                        if 'mediaDuration' in inner_seg:
+                                            sub['mediaDuration'] = inner_seg['mediaDuration']
+                                        if 'mediaStart' in inner_seg:
+                                            sub['mediaStart'] = inner_seg['mediaStart']
                         # Re-layout starts sequentially
                         cursor = 0
                         for inner_seg in inner_clip_data.get('medias', []):
                             inner_seg['start'] = cursor
+                            if inner_seg.get('_type') == 'UnifiedMedia':
+                                for sub_key in ('video', 'audio'):
+                                    sub = inner_seg.get(sub_key)
+                                    if sub is not None:
+                                        sub['start'] = cursor
                             cursor += round(Fraction(str(inner_seg['duration'])))
         return self
 
@@ -874,6 +937,7 @@ class BaseClip:
                 fade_out_kf,
             ], default_value=0.0)
         else:  # pragma: no cover
+            self._clear_opacity()
             in_ticks = seconds_to_ticks(duration_seconds)
             end = int(Fraction(str(self._data.get('duration', self._data.get('mediaDuration', 0)))))
             in_ticks = min(in_ticks, end)
@@ -906,6 +970,7 @@ class BaseClip:
                 {'time': end - ticks, 'value': 0.0, 'endTime': end, 'duration': ticks},
             ], default_value=0.0)
         else:  # pragma: no cover
+            self._clear_opacity()
             self._add_opacity_track([
                 {'time': end - ticks, 'value': 0.0, 'endTime': end, 'duration': ticks},
             ], default_value=1.0)
