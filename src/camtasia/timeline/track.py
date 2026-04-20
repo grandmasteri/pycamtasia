@@ -1840,19 +1840,13 @@ class Track:
         new_id = self._next_clip_id()
         new_data['id'] = new_id
 
-        def _remap_ids(obj: Any, base_id: int) -> int:
-            cid = base_id
-            if isinstance(obj, dict):
-                if 'id' in obj and obj is not new_data:
-                    cid += 1
-                    obj['id'] = cid
-                for v in obj.values():
-                    cid = _remap_ids(v, cid)
-            elif isinstance(obj, list):
-                for item in obj:
-                    cid = _remap_ids(item, cid)
-            return cid
-        _remap_ids(new_data, new_id)
+        # Use the timeline-level remapper which only touches known clip-containing
+        # paths (video/audio/tracks[].medias[]/medias[]), not arbitrary 'id' keys
+        # in effects/metadata/parameters.
+        from camtasia.timeline.timeline import _remap_clip_ids_with_map
+        id_counter = [new_id]
+        id_map: dict[int, int] = {}
+        _remap_clip_ids_with_map(new_data, id_counter, id_map)
 
         new_data['start'] = source['start'] + source.get('duration', 0) + seconds_to_ticks(offset_seconds)
         _propagate_start_to_unified(new_data)
