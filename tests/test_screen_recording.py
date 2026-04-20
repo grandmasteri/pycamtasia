@@ -264,3 +264,15 @@ class TestScreenIMFileSetSourceRaises:
         clip = ScreenIMFile(data)
         with pytest.raises(TypeError, match='Cannot change source on cursor overlay clips'):
             clip.set_source(1)
+
+
+# ------------------------------------------------------------------
+# Bug 3: ScreenVMFile.set_source raises TypeError
+# ------------------------------------------------------------------
+
+class TestScreenVMFileSetSourceRaises:
+    def test_set_source_raises_type_error(self):
+        data = _base(_type="ScreenVMFile", parameters={}, effects=[])
+        clip = ScreenVMFile(data)
+        with pytest.raises(TypeError, match='Cannot change source on screen recording video clips'):
+            clip.set_source(1)

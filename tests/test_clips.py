@@ -1660,3 +1660,149 @@ def test_set_speed_group_propagates_to_inner_clips() -> None:
     assert inner['scalar'] == '1/2'
     # duration: inner_dur * 1/2
     assert inner['duration'] == inner_dur // 2
+
+
+# ------------------------------------------------------------------
+# Bug 1: is_image includes ScreenIMFile
+# ------------------------------------------------------------------
+
+def test_is_image_includes_screen_image() -> None:
+    """ScreenIMFile clips should be recognized as image clips."""
+    data = {'_type': 'ScreenIMFile', 'id': 1, 'start': 0, 'duration': 100}
+    clip = clip_from_dict(data)
+    assert clip.is_image is True
+
+
+def test_is_image_still_true_for_imfile() -> None:
+    """IMFile clips should still be recognized as image clips."""
+    data = {'_type': 'IMFile', 'id': 1, 'start': 0, 'duration': 100}
+    clip = clip_from_dict(data)
+    assert clip.is_image is True
+
+
+def test_is_image_false_for_video() -> None:
+    """VMFile clips should not be recognized as image clips."""
+    data = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': 100}
+    clip = clip_from_dict(data)
+    assert clip.is_image is False
+
+
+# ------------------------------------------------------------------
+# Bug 2: set_time_range delegates to property setters (UnifiedMedia)
+# ------------------------------------------------------------------
+
+def test_set_time_range_unified_media_propagates() -> None:
+    """set_time_range on UnifiedMedia must propagate to video/audio sub-dicts."""
+    data = {
+        '_type': 'UnifiedMedia', 'id': 1, 'src': 1,
+        'start': 0, 'duration': EDIT_RATE * 10,
+        'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+        'video': {'_type': 'VMFile', 'start': 0, 'duration': EDIT_RATE * 10,
+                  'mediaDuration': EDIT_RATE * 10, 'scalar': 1, 'mediaStart': 0},
+        'audio': {'_type': 'AMFile', 'start': 0, 'duration': EDIT_RATE * 10,
+                  'mediaDuration': EDIT_RATE * 10, 'scalar': 1, 'mediaStart': 0},
+    }
+    clip = BaseClip(data)
+    clip.set_time_range(2.0, 5.0)
+    expected_start = seconds_to_ticks(2.0)
+    expected_dur = seconds_to_ticks(5.0)
+    assert data['video']['start'] == expected_start
+    assert data['video']['duration'] == expected_dur
+    assert data['audio']['start'] == expected_start
+    assert data['audio']['duration'] == expected_dur
+
+
+# ------------------------------------------------------------------
+# Bug 4+5+6: set_speed Group scales start, propagates to UnifiedMedia/StitchedMedia
+# ------------------------------------------------------------------
+
+def test_set_speed_group_scales_inner_start() -> None:
+    """set_speed on Group must scale inner clip start positions."""
+    inner_dur = EDIT_RATE * 5
+    data = _base_clip_dict(
+        _type='Group',
+        duration=EDIT_RATE * 10,
+        mediaDuration=EDIT_RATE * 10,
+        tracks=[{
+            'trackIndex': 0,
+            'medias': [
+                {'_type': 'VMFile', 'id': 20, 'src': 1,
+                 'start': 0, 'duration': inner_dur,
+                 'mediaStart': 0, 'mediaDuration': inner_dur, 'scalar': 1},
+                {'_type': 'VMFile', 'id': 21, 'src': 1,
+                 'start': inner_dur, 'duration': inner_dur,
+                 'mediaStart': 0, 'mediaDuration': inner_dur, 'scalar': 1},
+            ],
+        }],
+    )
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    inner0 = data['tracks'][0]['medias'][0]
+    inner1 = data['tracks'][0]['medias'][1]
+    # start should be scaled by 1/2
+    assert inner0['start'] == 0
+    assert inner1['start'] == inner_dur // 2
+
+
+def test_set_speed_group_propagates_to_unified_media() -> None:
+    """set_speed on Group must propagate scalar/start/duration to UnifiedMedia sub-dicts."""
+    inner_dur = EDIT_RATE * 10
+    data = _base_clip_dict(
+        _type='Group',
+        duration=EDIT_RATE * 10,
+        mediaDuration=EDIT_RATE * 10,
+        tracks=[{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'UnifiedMedia', 'id': 30, 'src': 1,
+                'start': 0, 'duration': inner_dur,
+                'mediaStart': 0, 'mediaDuration': inner_dur, 'scalar': 1,
+                'video': {'_type': 'VMFile', 'start': 0, 'duration': inner_dur,
+                          'scalar': 1, 'mediaStart': 0},
+                'audio': {'_type': 'AMFile', 'start': 0, 'duration': inner_dur,
+                          'scalar': 1, 'mediaStart': 0},
+            }],
+        }],
+    )
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    inner = data['tracks'][0]['medias'][0]
+    assert inner['video']['scalar'] == inner['scalar']
+    assert inner['video']['start'] == inner['start']
+    assert inner['video']['duration'] == inner['duration']
+    assert inner['audio']['scalar'] == inner['scalar']
+    assert inner['audio']['duration'] == inner['duration']
+
+
+def test_set_speed_group_propagates_to_stitched_media() -> None:
+    """set_speed on Group must re-layout StitchedMedia nested segments."""
+    seg_dur = EDIT_RATE * 5
+    data = _base_clip_dict(
+        _type='Group',
+        duration=EDIT_RATE * 10,
+        mediaDuration=EDIT_RATE * 10,
+        tracks=[{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia', 'id': 40, 'src': 1,
+                'start': 0, 'duration': EDIT_RATE * 10,
+                'mediaStart': 0, 'mediaDuration': EDIT_RATE * 10, 'scalar': 1,
+                'medias': [
+                    {'_type': 'VMFile', 'id': 41, 'start': 0, 'duration': seg_dur,
+                     'mediaDuration': seg_dur, 'scalar': 1},
+                    {'_type': 'VMFile', 'id': 42, 'start': seg_dur, 'duration': seg_dur,
+                     'mediaDuration': seg_dur, 'scalar': 1},
+                ],
+            }],
+        }],
+    )
+    clip = BaseClip(data)
+    clip.set_speed(2.0)
+    stitched = data['tracks'][0]['medias'][0]
+    seg0 = stitched['medias'][0]
+    seg1 = stitched['medias'][1]
+    # Segments should have scaled duration and sequential starts
+    assert seg0['duration'] == seg_dur // 2
+    assert seg0['start'] == 0
+    assert seg1['start'] == seg_dur // 2
+    assert seg1['scalar'] == '1/2'

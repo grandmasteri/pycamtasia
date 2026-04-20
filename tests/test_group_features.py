@@ -581,3 +581,266 @@ class TestMergeInternalTracksSnapshot:
         result = g.merge_internal_tracks()
         assert len(result.clips) == 3
         assert len(g.tracks) == 1
+
+
+# ==== Bugs 7-10: StitchedMedia handling + Group properties ====
+
+def _make_group_bug7_10(tracks: list[dict]) -> Group:
+    return Group({
+        '_type': 'Group',
+        'id': 1,
+        'start': 0,
+        'duration': seconds_to_ticks(10.0),
+        'mediaStart': 0,
+        'mediaDuration': seconds_to_ticks(10.0),
+        'scalar': 1,
+        'attributes': {'ident': 'test', 'widthAttr': 1920.0, 'heightAttr': 1080.0},
+        'parameters': {},
+        'effects': [],
+        'metadata': {},
+        'animationTracks': {},
+        'tracks': tracks,
+    })
+
+
+class TestSyncInternalDurationsStitchedMedia:
+    """Bug 7: sync_internal_durations should trim StitchedMedia nested segments."""
+
+    def test_trims_segments_past_new_duration(self) -> None:
+        seg1_dur = seconds_to_ticks(4.0)
+        seg2_dur = seconds_to_ticks(4.0)
+        seg3_dur = seconds_to_ticks(4.0)
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia',
+                'id': 10,
+                'start': 0,
+                'duration': seg1_dur + seg2_dur + seg3_dur,
+                'mediaStart': 0,
+                'mediaDuration': seg1_dur + seg2_dur + seg3_dur,
+                'scalar': 1,
+                'parameters': {},
+                'effects': [],
+                'metadata': {},
+                'animationTracks': {},
+                'medias': [
+                    {'_type': 'ScreenVMFile', 'id': 11, 'start': 0, 'duration': seg1_dur, 'src': 2},
+                    {'_type': 'ScreenVMFile', 'id': 12, 'start': seg1_dur, 'duration': seg2_dur, 'src': 2},
+                    {'_type': 'ScreenVMFile', 'id': 13, 'start': seg1_dur + seg2_dur, 'duration': seg3_dur, 'src': 2},
+                ],
+            }],
+        }])
+        # Reduce group duration so third segment is past the end
+        group._data['duration'] = seconds_to_ticks(6.0)
+        group.sync_internal_durations()
+
+        stitched = group._data['tracks'][0]['medias'][0]
+        segments = stitched['medias']
+        # Third segment started at 8s, group is now 6s → dropped
+        assert len(segments) == 2
+        # Second segment: starts at 4s, dur 4s → end 8s > 6s → trimmed to 2s
+        assert segments[1]['duration'] == seconds_to_ticks(2.0)
+
+    def test_drops_segment_starting_at_new_end(self) -> None:
+        dur5 = seconds_to_ticks(5.0)
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia',
+                'id': 10,
+                'start': 0,
+                'duration': dur5 * 2,
+                'mediaStart': 0,
+                'mediaDuration': dur5 * 2,
+                'scalar': 1,
+                'parameters': {},
+                'effects': [],
+                'metadata': {},
+                'animationTracks': {},
+                'medias': [
+                    {'_type': 'ScreenVMFile', 'id': 11, 'start': 0, 'duration': dur5, 'src': 2},
+                    {'_type': 'ScreenVMFile', 'id': 12, 'start': dur5, 'duration': dur5, 'src': 2},
+                ],
+            }],
+        }])
+        group._data['duration'] = dur5
+        group.sync_internal_durations()
+
+        segments = group._data['tracks'][0]['medias'][0]['medias']
+        assert len(segments) == 1
+        assert segments[0]['id'] == 11
+
+
+class TestIsScreenRecordingStitchedMedia:
+    """Bug 8: is_screen_recording should check StitchedMedia children."""
+
+    def test_stitched_with_screen_vm_file(self) -> None:
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia',
+                'id': 10,
+                'start': 0,
+                'duration': seconds_to_ticks(5.0),
+                'medias': [
+                    {'_type': 'ScreenVMFile', 'id': 11, 'start': 0, 'duration': seconds_to_ticks(5.0), 'src': 2},
+                ],
+            }],
+        }])
+        assert group.is_screen_recording is True
+
+    def test_stitched_with_unified_screen_vm(self) -> None:
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia',
+                'id': 10,
+                'start': 0,
+                'duration': seconds_to_ticks(5.0),
+                'medias': [
+                    {
+                        '_type': 'UnifiedMedia',
+                        'id': 11,
+                        'video': {'_type': 'ScreenVMFile', 'id': 12, 'src': 2},
+                        'start': 0,
+                        'duration': seconds_to_ticks(5.0),
+                    },
+                ],
+            }],
+        }])
+        assert group.is_screen_recording is True
+
+    def test_stitched_with_plain_vm_file(self) -> None:
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'StitchedMedia',
+                'id': 10,
+                'start': 0,
+                'duration': seconds_to_ticks(5.0),
+                'medias': [
+                    {'_type': 'VMFile', 'id': 11, 'start': 0, 'duration': seconds_to_ticks(5.0), 'src': 2},
+                ],
+            }],
+        }])
+        assert group.is_screen_recording is False
+
+
+class TestInternalMediaSrcScreenOnly:
+    """Bug 9: internal_media_src should only return ScreenVMFile sources."""
+
+    def test_camera_unified_media_returns_none(self) -> None:
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'UnifiedMedia',
+                'id': 10,
+                'start': 0,
+                'duration': seconds_to_ticks(5.0),
+                'video': {'_type': 'VMFile', 'id': 11, 'src': 42},
+                'audio': {'_type': 'AMFile', 'id': 12, 'src': 42},
+            }],
+        }])
+        assert group.internal_media_src is None
+
+    def test_screen_unified_media_returns_src(self) -> None:
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'UnifiedMedia',
+                'id': 10,
+                'start': 0,
+                'duration': seconds_to_ticks(5.0),
+                'video': {'_type': 'ScreenVMFile', 'id': 11, 'src': 42},
+                'audio': {'_type': 'AMFile', 'id': 12, 'src': 42},
+            }],
+        }])
+        assert group.internal_media_src == 42
+
+    def test_bare_screen_vm_file_returns_src(self) -> None:
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'ScreenVMFile',
+                'id': 10,
+                'start': 0,
+                'duration': seconds_to_ticks(5.0),
+                'src': 99,
+            }],
+        }])
+        assert group.internal_media_src == 99
+
+
+class TestHasAudioUnifiedMedia:
+    """Bug 10: has_audio should use has_audio property for UnifiedMedia."""
+
+    def test_unified_media_with_audio_returns_true(self) -> None:
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'UnifiedMedia',
+                'id': 10,
+                'start': 0,
+                'duration': seconds_to_ticks(5.0),
+                'mediaStart': 0,
+                'mediaDuration': seconds_to_ticks(5.0),
+                'scalar': 1,
+                'video': {
+                    '_type': 'ScreenVMFile', 'id': 11, 'src': 2,
+                    'start': 0, 'duration': seconds_to_ticks(5.0),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+                    'scalar': 1,
+                },
+                'audio': {
+                    '_type': 'AMFile', 'id': 12, 'src': 2,
+                    'start': 0, 'duration': seconds_to_ticks(5.0),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+                    'scalar': 1,
+                },
+                'effects': [],
+            }],
+        }])
+        assert group.has_audio is True
+
+    def test_unified_media_without_audio_returns_false(self) -> None:
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'UnifiedMedia',
+                'id': 10,
+                'start': 0,
+                'duration': seconds_to_ticks(5.0),
+                'mediaStart': 0,
+                'mediaDuration': seconds_to_ticks(5.0),
+                'scalar': 1,
+                'video': {
+                    '_type': 'ScreenVMFile', 'id': 11, 'src': 2,
+                    'start': 0, 'duration': seconds_to_ticks(5.0),
+                    'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+                    'scalar': 1,
+                },
+                'effects': [],
+            }],
+        }])
+        assert group.has_audio is False
+
+    def test_amfile_still_detected(self) -> None:
+        group = _make_group_bug7_10([{
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'AMFile',
+                'id': 10,
+                'start': 0,
+                'duration': seconds_to_ticks(5.0),
+                'mediaStart': 0,
+                'mediaDuration': seconds_to_ticks(5.0),
+                'scalar': 1,
+                'src': 2,
+                'parameters': {},
+                'effects': [],
+                'metadata': {},
+                'animationTracks': {},
+            }],
+        }])
+        assert group.has_audio is True

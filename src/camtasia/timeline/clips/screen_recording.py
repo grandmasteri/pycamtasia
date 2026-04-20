@@ -16,6 +16,9 @@ class ScreenVMFile(BaseClip):
         data: The raw clip dict.
     """
 
+    def set_source(self, source_id: int) -> NoReturn:
+        raise TypeError('Cannot change source on screen recording video clips')
+
     # -- Cursor --
 
     def _set_cursor_param(self, key: str, value: float, interp: str = 'linr') -> None:

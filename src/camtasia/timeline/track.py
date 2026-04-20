@@ -1883,9 +1883,11 @@ class Track:
         # paths (video/audio/tracks[].medias[]/medias[]), not arbitrary 'id' keys
         # in effects/metadata/parameters.
         from camtasia.timeline.timeline import _remap_clip_ids_with_map
-        id_counter = [new_id]
+        id_counter = [new_id + 1]
         id_map: dict[int, int] = {}
+        assigned_id = new_data['id']
         _remap_clip_ids_with_map(new_data, id_counter, id_map)
+        new_data['id'] = assigned_id  # restore — don't double-remap the top level
 
         new_data['start'] = source['start'] + source.get('duration', 0) + seconds_to_ticks(offset_seconds)
         _propagate_start_to_unified(new_data)
@@ -2492,7 +2494,7 @@ class _PerMediaMarkers:
         start = self._data.get('start', 0)
         media_start = Fraction(str(self._data.get('mediaStart', 0)))
         media_dur_raw = self._data.get('mediaDuration', self._data.get('duration', 0))
-        media_dur = int(Fraction(str(media_dur_raw))) if media_dur_raw else 0
+        media_dur = Fraction(str(media_dur_raw)) if media_dur_raw else Fraction(0)
         scalar = _parse_scalar(self._data.get('scalar', 1))
         for kf in keyframes:
             media_offset = kf['time'] - media_start

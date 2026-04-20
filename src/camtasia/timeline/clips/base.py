@@ -81,7 +81,7 @@ class BaseClip:
     @property
     def is_image(self) -> bool:
         """Whether this clip is an image clip."""
-        return self.clip_type == ClipType.IMAGE
+        return self.clip_type in (ClipType.IMAGE, ClipType.SCREEN_IMAGE)
 
     @property
     def is_group(self) -> bool:
@@ -340,9 +340,35 @@ class BaseClip:
                     inner_scalar_old = parse_scalar(inner_clip_data.get('scalar', 1))
                     composed_scalar = inner_scalar_old * scalar_fraction
                     inner_clip_data['scalar'] = int(composed_scalar) if composed_scalar == int(composed_scalar) else str(composed_scalar)
+                    # Scale start (relative to group) so clips stay sequential
+                    orig_start = Fraction(str(inner_clip_data.get('start', 0)))
+                    new_start = orig_start * scalar_fraction
+                    inner_clip_data['start'] = int(new_start) if new_start == int(new_start) else str(new_start)
                     orig_dur = Fraction(str(inner_clip_data.get('duration', 0)))
                     new_dur = orig_dur * scalar_fraction
                     inner_clip_data['duration'] = int(new_dur) if new_dur == int(new_dur) else str(new_dur)
+                    # Propagate to UnifiedMedia sub-dicts
+                    if inner_clip_data.get('_type') == 'UnifiedMedia':
+                        for sub_key in ('video', 'audio'):
+                            sub = inner_clip_data.get(sub_key)
+                            if sub is not None:
+                                sub['scalar'] = inner_clip_data['scalar']
+                                sub['start'] = inner_clip_data['start']
+                                sub['duration'] = inner_clip_data['duration']
+                    # Re-layout StitchedMedia nested segments
+                    elif inner_clip_data.get('_type') == 'StitchedMedia':
+                        for inner_seg in inner_clip_data.get('medias', []):
+                            seg_scalar_old = parse_scalar(inner_seg.get('scalar', 1))
+                            seg_composed = seg_scalar_old * scalar_fraction
+                            inner_seg['scalar'] = int(seg_composed) if seg_composed == int(seg_composed) else str(seg_composed)
+                            seg_orig_dur = Fraction(str(inner_seg.get('duration', 0)))
+                            seg_new_dur = seg_orig_dur * scalar_fraction
+                            inner_seg['duration'] = int(seg_new_dur) if seg_new_dur == int(seg_new_dur) else str(seg_new_dur)
+                        # Re-layout starts sequentially
+                        cursor = 0
+                        for inner_seg in inner_clip_data.get('medias', []):
+                            inner_seg['start'] = cursor
+                            cursor += int(Fraction(str(inner_seg['duration'])))
         return self
 
     @property
@@ -588,13 +614,7 @@ class BaseClip:
         Returns:
             Self for method chaining.
         """
-        from camtasia.timing import seconds_to_ticks
-        self._data['start'] = seconds_to_ticks(start_seconds)
-        if self._data.get('_type') == 'UnifiedMedia':
-            for sub_key in ('video', 'audio'):
-                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
-                if sub is not None:
-                    sub['start'] = self._data['start']
+        self.start = seconds_to_ticks(start_seconds)
         return self
 
     def set_duration_seconds(self, duration_seconds: float) -> Self:
@@ -606,22 +626,7 @@ class BaseClip:
         Returns:
             Self for method chaining.
         """
-        from camtasia.timing import parse_scalar, seconds_to_ticks
-        self._data['duration'] = seconds_to_ticks(duration_seconds)
-        scalar = parse_scalar(self._data.get('scalar', 1))
-        if scalar != 0:
-            md = Fraction(self._data['duration']) / scalar
-            self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
-        if self._data.get('_type') in ('IMFile', 'ScreenIMFile'):
-            self._data['mediaDuration'] = 1
-        if self._data.get('_type') == 'UnifiedMedia':
-            for sub_key in ('video', 'audio'):
-                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
-                if sub is not None:
-                    sub['duration'] = self._data['duration']
-                    sub['mediaDuration'] = self._data['mediaDuration']
-                    sub['scalar'] = self._data.get('scalar', 1)
-                    sub['mediaStart'] = self._data.get('mediaStart', 0)
+        self.duration = seconds_to_ticks(duration_seconds)
         return self
 
     def set_time_range(self, start_seconds: float, duration_seconds: float) -> Self:
@@ -629,24 +634,8 @@ class BaseClip:
 
         Returns self for chaining.
         """
-        from camtasia.timing import parse_scalar
-        self._data['start'] = seconds_to_ticks(start_seconds)
-        self._data['duration'] = seconds_to_ticks(duration_seconds)
-        scalar = parse_scalar(self._data.get('scalar', 1))
-        if scalar != 0:
-            md = Fraction(self._data['duration']) / scalar
-            self._data['mediaDuration'] = int(md) if md == int(md) else str(md)
-        if self._data.get('_type') in ('IMFile', 'ScreenIMFile'):
-            self._data['mediaDuration'] = 1
-        if self._data.get('_type') == 'UnifiedMedia':
-            for sub_key in ('video', 'audio'):
-                sub: dict[str, Any] = self._data.get(sub_key)  # type: ignore[assignment]
-                if sub is not None:
-                    sub['start'] = self._data['start']
-                    sub['duration'] = self._data['duration']
-                    sub['mediaDuration'] = self._data['mediaDuration']
-                    sub['scalar'] = self._data.get('scalar', 1)
-                    sub['mediaStart'] = self._data.get('mediaStart', 0)
+        self.start = seconds_to_ticks(start_seconds)
+        self.duration = seconds_to_ticks(duration_seconds)
         return self
 
     def __eq__(self, other: object) -> bool:

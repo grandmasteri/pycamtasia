@@ -74,7 +74,7 @@ class TestIsScreenRecording:
 class TestInternalMediaSrc:
     def test_unified_media_returns_video_src(self):
         data = _group_dict(tracks=[
-            {'medias': [{'_type': 'UnifiedMedia', 'video': {'src': 42}}]},
+            {'medias': [{'_type': 'UnifiedMedia', 'video': {'_type': 'ScreenVMFile', 'src': 42}}]},
         ])
         actual_result = Group(data).internal_media_src
         expected_result = 42

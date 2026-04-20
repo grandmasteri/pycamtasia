@@ -132,3 +132,24 @@ class TestReorderTracks:
         timeline = Timeline(data)
         with pytest.raises(ValueError, match="order must contain exactly all"):
             timeline.reorder_tracks([0, 1, 99])
+
+    def test_reorder_with_fewer_attrs_than_tracks(self):
+        """Bug 13: attrs shorter than tracks should be padded before reorder."""
+        tracks = [
+            {"trackIndex": 0, "medias": []},
+            {"trackIndex": 1, "medias": []},
+            {"trackIndex": 2, "medias": []},
+        ]
+        # Only 2 attrs for 3 tracks
+        attrs = [
+            {"ident": "Track-0", "audioMuted": False},
+            {"ident": "Track-1", "audioMuted": False},
+        ]
+        data = _make_timeline_data(tracks=tracks, track_attributes=attrs)
+        timeline = Timeline(data)
+        # Should not raise IndexError
+        timeline.reorder_tracks([2, 0, 1])
+        actual_names = _track_names(timeline)
+        # Track-2 had no attrs → gets empty dict → name is ''
+        assert actual_names == ["", "Track-0", "Track-1"]
+        assert _track_indices(timeline) == [0, 1, 2]

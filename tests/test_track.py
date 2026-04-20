@@ -9,7 +9,7 @@ import pytest
 
 from camtasia.project import Project, load_project
 from camtasia.timeline.timeline import Timeline
-from camtasia.timeline.track import Track
+from camtasia.timeline.track import Track, _PerMediaMarkers
 from camtasia.timing import seconds_to_ticks
 
 
@@ -1902,3 +1902,147 @@ class TestSetSegmentSpeedsMediaStartFormula:
         # advance_0 = 50s_ticks / (5/6) = 60s_ticks
         ms1 = pieces[1]._data['mediaStart']
         assert ms1 == seconds_to_ticks(60.0)
+
+
+# ==== Bug 11: _PerMediaMarkers fractional mediaDuration ====
+
+class TestPerMediaMarkersFractionalDuration:
+    """Bug 11: _PerMediaMarkers truncated fractional mediaDuration with int()."""
+
+    def test_marker_at_fractional_boundary_not_dropped(self) -> None:
+        """A marker just below a fractional mediaDuration should be included."""
+        # mediaDuration is a fraction like 100/3 ≈ 33.33
+        # int(Fraction('100/3')) = 33, which would wrongly exclude a marker at time 33
+        media_data = {
+            'start': 0,
+            'mediaStart': 0,
+            'mediaDuration': '100/3',  # ≈ 33.33
+            'scalar': 1,
+            'parameters': {
+                'toc': {
+                    'keyframes': [
+                        {'time': 10, 'value': 'early'},
+                        {'time': 33, 'value': 'near_end'},  # 33 < 33.33, should be included
+                    ],
+                },
+            },
+        }
+        markers = list(_PerMediaMarkers(media_data))
+        names = [m.name for m in markers]
+        assert 'early' in names
+        assert 'near_end' in names  # would be dropped with int() truncation
+
+    def test_marker_past_fractional_boundary_excluded(self) -> None:
+        """A marker at or past the fractional mediaDuration should be excluded."""
+        media_data = {
+            'start': 0,
+            'mediaStart': 0,
+            'mediaDuration': '100/3',  # ≈ 33.33
+            'scalar': 1,
+            'parameters': {
+                'toc': {
+                    'keyframes': [
+                        {'time': 34, 'value': 'past_end'},  # 34 >= 33.33, excluded
+                    ],
+                },
+            },
+        }
+        markers = list(_PerMediaMarkers(media_data))
+        assert len(markers) == 0
+"""Tests for duplicate_clip nested ID remapping (Bug 12)."""
+
+
+
+def _make_track_with_group() -> Track:
+    """Track with a Group clip containing nested UnifiedMedia (video+audio)."""
+    dur = seconds_to_ticks(5.0)
+    return Track(
+        {'ident': 'T'},
+        {
+            'trackIndex': 0,
+            'medias': [{
+                '_type': 'Group',
+                'id': 1,
+                'start': 0,
+                'duration': dur,
+                'mediaStart': 0,
+                'mediaDuration': dur,
+                'scalar': 1,
+                'parameters': {},
+                'effects': [],
+                'metadata': {},
+                'animationTracks': {},
+                'attributes': {'ident': ''},
+                'tracks': [{
+                    'trackIndex': 0,
+                    'medias': [{
+                        '_type': 'UnifiedMedia',
+                        'id': 2,
+                        'start': 0,
+                        'duration': dur,
+                        'mediaStart': 0,
+                        'mediaDuration': dur,
+                        'scalar': 1,
+                        'effects': [],
+                        'video': {
+                            '_type': 'ScreenVMFile', 'id': 3, 'src': 10,
+                            'start': 0, 'duration': dur, 'mediaStart': 0,
+                            'mediaDuration': dur, 'scalar': 1,
+                        },
+                        'audio': {
+                            '_type': 'AMFile', 'id': 4, 'src': 10,
+                            'start': 0, 'duration': dur, 'mediaStart': 0,
+                            'mediaDuration': dur, 'scalar': 1,
+                        },
+                    }],
+                }],
+            }],
+            'transitions': [],
+        },
+    )
+
+
+class TestDuplicateClipNestedIds:
+    """Bug 12: duplicate_clip id_counter should start after new_id."""
+
+    def test_top_level_id_preserved(self) -> None:
+        track = _make_track_with_group()
+        dup = track.duplicate_clip(1)
+        # The duplicate's top-level id should be the next available id
+        assert dup.id != 1
+        # Original still has id 1
+        assert track._data['medias'][0]['id'] == 1
+
+    def test_no_duplicate_ids(self) -> None:
+        track = _make_track_with_group()
+        track.duplicate_clip(1)
+        # Collect all IDs from both clips
+        all_ids: list[int] = []
+
+        def _collect(data: dict) -> None:
+            if 'id' in data:
+                all_ids.append(data['id'])
+            for key in ('video', 'audio'):
+                if key in data and isinstance(data[key], dict):
+                    _collect(data[key])
+            for t in data.get('tracks', []):
+                for m in t.get('medias', []):
+                    _collect(m)
+
+        for m in track._data['medias']:
+            _collect(m)
+
+        assert len(all_ids) == len(set(all_ids)), f"Duplicate IDs found: {all_ids}"
+
+    def test_nested_ids_sequential_after_top(self) -> None:
+        track = _make_track_with_group()
+        track.duplicate_clip(1)
+        dup_data = track._data['medias'][1]
+        top_id = dup_data['id']
+        nested_um = dup_data['tracks'][0]['medias'][0]
+        video_id = nested_um['video']['id']
+        audio_id = nested_um['audio']['id']
+        # All nested IDs should be greater than the top-level ID
+        assert nested_um['id'] > top_id
+        assert video_id > top_id
+        assert audio_id > top_id

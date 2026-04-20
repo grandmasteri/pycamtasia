@@ -4,39 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 4 domains 1-3)
-
-**Leaf clip types:**
-
-1. [verified] `BaseClip.is_image` excludes `ScreenIMFile`. `is_video` includes both `VMFile` and `ScreenVMFile`, but `is_image` only checks `IMFile`. Asymmetric. (base.py ~L82)
-
-2. [verified] `set_start_seconds`/`set_duration_seconds`/`set_time_range` bypass property setters, duplicating UnifiedMedia propagation logic. Maintenance hazard. (base.py)
-
-3. [verified] `ScreenVMFile` doesn't override `set_source` like `ScreenIMFile` does. Inconsistent — screen recording video clips are just as tightly coupled to their recorder source. (screen_recording.py)
-
-**Compound clip types:**
-
-4. [verified] `set_speed()` on Group doesn't scale internal clip `start` times. Sequential clips on the same internal track overlap after `set_speed()`. HIGH severity. (base.py set_speed Group branch)
-
-5. [verified] `set_speed()` on Group doesn't propagate to UnifiedMedia children's sub-clips. Wrapper and children desynchronized. HIGH severity. (base.py set_speed Group branch)
-
-6. [verified] `set_speed()` on Group doesn't propagate to StitchedMedia children's nested segments. Nested segments' durations, scalars, and starts not re-laid-out. (base.py set_speed Group branch)
-
-7. [verified] `sync_internal_durations()` doesn't trim StitchedMedia nested segments. When trimming a Group's duration, StitchedMedia children's internal segments are not resized. (group.py)
-
-8. [verified] `Group.is_screen_recording` doesn't check StitchedMedia children. Returns False for Groups with StitchedMedia containing ScreenVMFile segments. (group.py)
-
-9. [verified] `Group.internal_media_src` returns wrong source for camera-based UnifiedMedia. Returns any UnifiedMedia's video src, not just screen recordings. (group.py)
-
-10. [verified] `Group.has_audio` returns False for Groups containing UnifiedMedia. Uses `is_audio` which returns False for UnifiedMedia; should use `has_audio` property. (group.py)
-
-**Track and timeline management:**
-
-11. [verified] `_PerMediaMarkers` truncates fractional `mediaDuration` with `int()`. Valid end-of-clip markers silently dropped for clips with fractional mediaDuration like `"12345/7"`. (track.py _PerMediaMarkers.__iter__)
-
-12. [verified] `duplicate_clip` initializes `id_counter` at `new_id` instead of `new_id + 1`. Top-level ID re-assigned to itself; `id_map` contains spurious self-mapping. Inconsistent with `move_clip_to_track`. (track.py)
-
-13. [verified] `_TrackAccessor.reorder_tracks` misaligns track attributes when `len(attrs) < len(tracks)`. Padding happens after `index_to_pos` built; reorder uses old positions. (timeline.py)
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

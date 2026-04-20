@@ -1275,11 +1275,11 @@ class _TrackAccessor:
                 f'order must contain exactly all current trackIndex values: '
                 f'{sorted(current_indices)}'
             )
+        while len(attrs) < len(tracks):
+            attrs.append({})
         index_to_pos = {t['trackIndex']: i for i, t in enumerate(tracks)}
         new_tracks = [tracks[index_to_pos[idx]] for idx in order]
         tracks[:] = new_tracks
-        while len(attrs) < len(tracks):
-            attrs.append({})
         if attrs:
             new_attrs = [attrs[index_to_pos[idx]] for idx in order]
             attrs[:] = new_attrs

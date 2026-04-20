@@ -242,8 +242,16 @@ class Group(BaseClip):
             for media in track.get('medias', []):
                 if media.get('_type') == 'ScreenVMFile':
                     return True
-                if media.get('_type') == 'UnifiedMedia' and media.get('video', {}).get('_type') == 'ScreenVMFile':
-                    return True
+                if media.get('_type') == 'UnifiedMedia':
+                    video = media.get('video', {})
+                    if video.get('_type') == 'ScreenVMFile':
+                        return True
+                if media.get('_type') == 'StitchedMedia':
+                    for seg in media.get('medias', []):
+                        if seg.get('_type') == 'ScreenVMFile':
+                            return True
+                        if seg.get('_type') == 'UnifiedMedia' and seg.get('video', {}).get('_type') == 'ScreenVMFile':
+                                return True
         return False
 
     @property
@@ -251,10 +259,14 @@ class Group(BaseClip):
         """Return the source ID of the internal screen recording media, or None."""
         for track in self._data.get('tracks', []):
             for media in track.get('medias', []):
-                if media.get('_type') == 'UnifiedMedia':
-                    return media.get('video', {}).get('src')  # type: ignore[no-any-return]
                 if media.get('_type') == 'ScreenVMFile':
-                    return media.get('src')  # type: ignore[no-any-return]
+                    src = media.get('src')
+                    return int(src) if src is not None else None
+                if media.get('_type') == 'UnifiedMedia':
+                    video = media.get('video', {})
+                    if video.get('_type') == 'ScreenVMFile':
+                        src = video.get('src')
+                        return int(src) if src is not None else None
         return None
 
     def find_internal_clip(self, clip_type: str) -> BaseClip | None:
@@ -281,7 +293,13 @@ class Group(BaseClip):
     @property
     def has_audio(self) -> bool:
         """Whether any internal clip is an audio clip."""
-        return any(clip.is_audio for clip in self.all_internal_clips)
+        for clip in self.all_internal_clips:
+            if clip.clip_type == 'UnifiedMedia':
+                if clip.has_audio:  # type: ignore[attr-defined]
+                    return True
+            elif clip.is_audio:
+                return True
+        return False
 
     @property
     def has_video(self) -> bool:
@@ -636,6 +654,19 @@ class Group(BaseClip):
                         if scalar != 0:
                             md = Fraction(m['duration']) / scalar
                             m['mediaDuration'] = int(md) if md == int(md) else str(md)
+                    if m.get('_type') == 'StitchedMedia':
+                        new_dur = int(Fraction(str(m.get('duration', 0))))
+                        segments_to_keep: list[dict[str, Any]] = []
+                        for seg in m.get('medias', []):
+                            seg_start = int(Fraction(str(seg.get('start', 0))))
+                            seg_dur = int(Fraction(str(seg.get('duration', 0))))
+                            if seg_start >= new_dur:
+                                continue
+                            seg_end = seg_start + seg_dur
+                            if seg_end > new_dur:
+                                seg['duration'] = new_dur - seg_start
+                            segments_to_keep.append(seg)
+                        m['medias'] = segments_to_keep
                     from camtasia.timeline.track import _propagate_start_to_unified as _psu
                     _psu(m)
         return self
