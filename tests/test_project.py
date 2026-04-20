@@ -8,6 +8,7 @@ import subprocess
 import sys
 from typing import ClassVar
 from unittest.mock import MagicMock, patch
+import warnings
 import zlib
 
 import pytest
@@ -1850,3 +1851,22 @@ class TestLongestClipZeroDuration:
         assert result is not None
         _, clip = result
         assert clip.duration == 0
+
+
+class TestSaveNaNReplacementWarning:
+    """Verify save() emits a warning when replacing NaN with 0.0."""
+
+    def test_nan_in_project_data_triggers_warning(self, project):
+        project._data['someField'] = float('nan')
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            project.save()
+        nan_warnings = [x for x in w if 'NaN' in str(x.message)]
+        assert len(nan_warnings) >= 1, 'Expected warning about NaN replacement'
+
+    def test_save_without_nan_no_warning(self, project):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            project.save()
+        nan_warnings = [x for x in w if 'NaN' in str(x.message)]
+        assert len(nan_warnings) == 0

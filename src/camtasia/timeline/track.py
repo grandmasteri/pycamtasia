@@ -871,6 +871,9 @@ class Track:
         id_map: dict[int, int] = {}
         _remap_clip_ids_with_map(tpl, id_counter, id_map)
 
+        from camtasia.operations.merge import _remap_asset_properties
+        _remap_asset_properties(tpl, id_map)
+
         text_group = tpl['tracks'][0]['medias'][0]
 
         # --- Set timing ---

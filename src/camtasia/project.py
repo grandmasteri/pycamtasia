@@ -1015,6 +1015,7 @@ class Project:
                 return '-1.79769313486232e+308'
             if token == 'Infinity':
                 return '1.79769313486232e+308'
+            warnings.warn('Replacing NaN with 0.0 in saved JSON', stacklevel=2)
             return '0.0'
         text = re.sub(r'("(?:[^"\\]|\\.)*")|-?Infinity\b|NaN\b', _replace_special, text)
 
@@ -1125,7 +1126,9 @@ class Project:
                 dur_secs = meta.get('duration_seconds')
                 edit_rate = meta.get('frame_rate', 30)
                 kwargs.setdefault('edit_rate', int(edit_rate))
-                kwargs.setdefault('sample_rate', int(edit_rate))
+                if 'sample_rate' not in kwargs:
+                    audio_sample_rate = meta.get('sample_rate', 48000)
+                    kwargs['sample_rate'] = int(audio_sample_rate) if audio_sample_rate else 48000
                 kwargs['duration'] = int(dur_secs * edit_rate) if dur_secs else int(edit_rate * 60)
                 kwargs.setdefault('width', meta.get('width', 1920))
                 kwargs.setdefault('height', meta.get('height', 1080))

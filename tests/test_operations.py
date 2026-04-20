@@ -9,7 +9,7 @@ import pytest
 from camtasia.audiate.transcript import Word
 from camtasia.operations.diff import diff_projects
 from camtasia.operations.merge import _remap_src_in_clip
-from camtasia.operations.speed import _adjust_scalar, _scale_tick, rescale_project, set_audio_speed
+from camtasia.operations.speed import _adjust_scalar, _process_clip, _scale_tick, rescale_project, set_audio_speed
 from camtasia.operations.sync import SyncSegment, apply_sync, match_marker_to_transcript, plan_sync
 from camtasia.operations.template import (
     _walk_clips,
@@ -1755,3 +1755,88 @@ class TestPlanSyncFilteredToFewerThanTwoReturnsEmpty:
             warnings.simplefilter('ignore')
             segments = plan_sync(markers, words, edit_rate=EDIT_RATE)
         assert segments == []
+
+
+class TestSpeedUnifiedMediaChildStartPropagation:
+    """Verify speed-changed UnifiedMedia children inherit parent's scaled start."""
+
+    def _make_unified_clip(self, start=1000):
+        return {
+            '_type': 'UnifiedMedia',
+            'start': start,
+            'duration': 5000,
+            'mediaDuration': 5000,
+            'scalar': '1/2',
+            'mediaStart': 0,
+            'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+            'effects': [],
+            'video': {
+                '_type': 'ScreenVMFile',
+                'start': start,
+                'duration': 5000,
+                'mediaDuration': 5000,
+                'scalar': '1/2',
+                'mediaStart': 0,
+                'effects': [],
+            },
+            'audio': {
+                '_type': 'AMFile',
+                'start': start,
+                'duration': 5000,
+                'mediaDuration': 5000,
+                'scalar': '1/2',
+                'mediaStart': 0,
+                'effects': [],
+            },
+        }
+
+    def test_children_start_updated_after_rescale(self):
+        clip = self._make_unified_clip(start=1000)
+        factor = Fraction(2)
+        _process_clip(clip, factor)
+        # Parent start should be scaled: 1000 * 2 = 2000
+        assert clip['start'] == 2000
+        # Children should inherit parent's new start
+        assert clip['video']['start'] == 2000
+        assert clip['audio']['start'] == 2000
+
+
+class TestWalkClipsStitchedUnifiedCompoundRecursion:
+    """Verify _walk_clips recurses into compound children of UnifiedMedia inside StitchedMedia."""
+
+    def test_group_inside_unified_inside_stitched_yielded(self):
+        inner_clip = {'id': 99, '_type': 'VMFile'}
+        group_child = {
+            'id': 50, '_type': 'Group',
+            'tracks': [{'medias': [inner_clip]}],
+        }
+        unified = {
+            'id': 30, '_type': 'UnifiedMedia',
+            'video': group_child,
+            'audio': {'id': 31, '_type': 'AMFile'},
+        }
+        stitched = {
+            'id': 20, '_type': 'StitchedMedia',
+            'medias': [unified],
+        }
+        tracks = [{'medias': [stitched]}]
+        ids = [c.get('id') for c in _walk_clips(tracks)]
+        assert 99 in ids, f'Inner VMFile inside Group→UnifiedMedia→StitchedMedia not yielded. Got: {ids}'
+
+    def test_stitched_inside_unified_inside_stitched_yielded(self):
+        leaf = {'id': 77, '_type': 'AMFile'}
+        inner_stitched = {
+            'id': 60, '_type': 'StitchedMedia',
+            'medias': [leaf],
+        }
+        unified = {
+            'id': 40, '_type': 'UnifiedMedia',
+            'video': inner_stitched,
+        }
+        outer_stitched = {
+            'id': 10, '_type': 'StitchedMedia',
+            'medias': [unified],
+        }
+        tracks = [{'medias': [outer_stitched]}]
+        ids = [c.get('id') for c in _walk_clips(tracks)]
+        assert 77 in ids, f'Leaf inside StitchedMedia→UnifiedMedia→StitchedMedia not yielded. Got: {ids}'

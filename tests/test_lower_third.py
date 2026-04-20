@@ -362,3 +362,61 @@ class TestLowerThirdParametersKeyframesScaled:
         # If there are parameters keyframes, they should differ from originals
         if orig_times and scaled_times:
             assert scaled_times != orig_times, "Parameters keyframes should be scaled"
+
+
+class TestLowerThirdAssetPropertiesIdRemap:
+    """Verify add_lower_third remaps assetProperties.objects IDs after clip ID remap."""
+
+    def test_asset_properties_ids_remapped(self, project):
+        track = project.timeline.tracks[0]
+        group = track.add_lower_third('Title', 'Subtitle', 0.0, 5.0)
+        # Collect all clip IDs in the group recursively
+        all_ids: set[int] = set()
+
+        def _collect(d):
+            if isinstance(d, dict):
+                if 'id' in d:
+                    all_ids.add(d['id'])
+                for v in d.values():
+                    _collect(v)
+            elif isinstance(d, list):
+                for item in d:
+                    _collect(item)
+
+        _collect(group._data)
+        # Check assetProperties.objects reference valid IDs
+        for ap in group._data.get('attributes', {}).get('assetProperties', []):
+            for obj_id in ap.get('objects', []):
+                assert obj_id in all_ids, (
+                    f'assetProperties object ID {obj_id} not in clip IDs {all_ids}'
+                )
+        # Also check nested text group
+        text_group = group._data['tracks'][0]['medias'][0]
+        for ap in text_group.get('attributes', {}).get('assetProperties', []):
+            for obj_id in ap.get('objects', []):
+                assert obj_id in all_ids, (
+                    f'Nested assetProperties object ID {obj_id} not in clip IDs {all_ids}'
+                )
+
+    def test_template_ids_not_present_after_remap(self, project):
+        """Original template IDs (83-88) should not appear after remap."""
+        track = project.timeline.tracks[0]
+        group = track.add_lower_third('Test', 'Sub', 0.0, 3.0)
+        template_ids = {83, 84, 85, 86, 87, 88}
+        all_ids: set[int] = set()
+
+        def _collect(d):
+            if isinstance(d, dict):
+                if 'id' in d:
+                    all_ids.add(d['id'])
+                for v in d.values():
+                    _collect(v)
+            elif isinstance(d, list):
+                for item in d:
+                    _collect(item)
+
+        _collect(group._data)
+        # Check assetProperties don't reference template IDs
+        for ap in group._data.get('attributes', {}).get('assetProperties', []):
+            for obj_id in ap.get('objects', []):
+                assert obj_id not in template_ids or obj_id in all_ids

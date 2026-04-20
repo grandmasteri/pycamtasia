@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import pytest
 
 from camtasia.annotations.callouts import arrow, highlight, keystroke_callout, square
+from camtasia.annotations.types import Color
 
 
 def test_arrow_default_values():
@@ -406,3 +409,32 @@ class TestCalloutFontColorOpacity:
         from camtasia.annotations.callouts import text
         result = text('hi', 'Arial', 'Bold')
         assert result['font']['color-opacity'] == 1.0
+
+
+class TestArrowFillProperties:
+    """Verify arrow() includes fill-color and fill-style keys."""
+
+    def test_arrow_has_fill_color_keys(self):
+        result = arrow()
+        assert 'fill-color-red' in result
+        assert 'fill-color-green' in result
+        assert 'fill-color-blue' in result
+        assert 'fill-color-opacity' in result
+        assert 'fill-style' in result
+        assert result['fill-style'] == 'solid'
+
+    def test_arrow_fill_defaults_to_stroke_color(self):
+        result = arrow(stroke_color=Color(0.5, 0.6, 0.7, 0.8))
+        assert result['fill-color-red'] == 0.5
+        assert result['fill-color-green'] == 0.6
+        assert result['fill-color-blue'] == 0.7
+        assert result['fill-color-opacity'] == 0.8
+
+    def test_arrow_explicit_fill_color(self):
+        result = arrow(
+            stroke_color=Color(1.0, 0.0, 0.0),
+            fill_color=Color(0.0, 1.0, 0.0),
+        )
+        assert result['stroke-color-red'] == 1.0
+        assert result['fill-color-red'] == 0.0
+        assert result['fill-color-green'] == 1.0

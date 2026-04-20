@@ -137,6 +137,7 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                         child['scalar'] = clip['scalar']
                     if 'mediaStart' in clip:
                         child['mediaStart'] = clip['mediaStart']
+                    child['start'] = clip['start']
                     # Scale effects only
                     for effect in child.get('effects', []):
                         if 'start' in effect:

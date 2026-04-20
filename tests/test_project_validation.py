@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from camtasia.media_bin import MediaType
 from camtasia.project import load_project
-from camtasia.validation import ValidationIssue
+from camtasia.validation import ValidationIssue, _check_timing_consistency
 
 RESOURCES = Path(__file__).parent.parent / 'src' / 'camtasia' / 'resources'
 
@@ -251,3 +251,46 @@ class TestSrcReferencesNoneSourceId:
         # src=None on the clip should not match the None id in sourceBin
         error_msgs = [i.message for i in issues]
         assert not any('not found in sourceBin' in m for m in error_msgs)
+
+
+class TestTimingConsistencyScalarZero:
+    """Verify _check_timing_consistency flags scalar=0 as an error."""
+
+    def _make_project_data(self, scalar, clip_type='VMFile'):
+        return {
+            'timeline': {
+                'sceneTrack': {
+                    'scenes': [{
+                        'csml': {
+                            'tracks': [{
+                                'medias': [{
+                                    'id': 1,
+                                    '_type': clip_type,
+                                    'scalar': scalar,
+                                    'duration': 1000,
+                                    'mediaDuration': 1000,
+                                }]
+                            }]
+                        }
+                    }]
+                }
+            }
+        }
+
+    def test_scalar_zero_flagged_as_error(self):
+        data = self._make_project_data(0)
+        issues = _check_timing_consistency(data)
+        errors = [i for i in issues if i.level == 'error' and 'scalar=0' in i.message]
+        assert len(errors) == 1
+
+    def test_scalar_nonzero_no_error(self):
+        data = self._make_project_data('1/2')
+        issues = _check_timing_consistency(data)
+        errors = [i for i in issues if i.level == 'error' and 'scalar=0' in i.message]
+        assert len(errors) == 0
+
+    def test_scalar_zero_string_flagged(self):
+        data = self._make_project_data('0')
+        issues = _check_timing_consistency(data)
+        errors = [i for i in issues if i.level == 'error' and 'scalar=0' in i.message]
+        assert len(errors) == 1

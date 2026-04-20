@@ -151,6 +151,7 @@ def arrow(
     head: tuple[float, float] = (100, 0),
     color: tuple[float, ...] | None = None,
     stroke_color: Color | None = None,
+    fill_color: Color | None = None,
     width: float = 3.0,
 ) -> dict:
     """Create an arrow annotation dict."""
@@ -161,6 +162,8 @@ def arrow(
             stroke_color = Color(color[0], color[1], color[2], color[3] if len(color) > 3 else 1.0)
         else:
             stroke_color = Color(1.0, 0.0, 0.0)
+    if fill_color is None:
+        fill_color = stroke_color
     return {
         'kind': 'remix',
         'shape': 'arrow',
@@ -174,6 +177,11 @@ def arrow(
         'stroke-color-blue': stroke_color.blue,
         'stroke-color-opacity': stroke_color.opacity,
         'stroke-width': float(width),
+        'fill-color-red': fill_color.red,
+        'fill-color-green': fill_color.green,
+        'fill-color-blue': fill_color.blue,
+        'fill-color-opacity': fill_color.opacity,
+        'fill-style': 'solid',
     }
 
 

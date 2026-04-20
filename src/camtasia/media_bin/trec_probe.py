@@ -86,8 +86,23 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
             tag = 1 if 'tsc' in codec else 0
 
             fps = track.frame_rate or 30.0
-            frac = Fraction(float(fps)).limit_denominator(1000)
-            sample_rate = f'{frac.numerator}/{frac.denominator}' if frac.denominator != 1 else int(float(fps))
+            fps_float = float(fps)
+            _NTSC_RATES = {
+                23.976: '24000/1001', 23.98: '24000/1001',
+                29.97: '30000/1001', 47.952: '48000/1001',
+                47.95: '48000/1001', 59.94: '60000/1001',
+            }
+            sample_rate: int | str
+            best_match = None
+            for ntsc_fps, ntsc_str in _NTSC_RATES.items():
+                if abs(fps_float - ntsc_fps) < 0.01:
+                    best_match = ntsc_str
+                    break
+            if best_match:
+                sample_rate = best_match
+            else:
+                frac = Fraction(fps_float).limit_denominator(1000)
+                sample_rate = f'{frac.numerator}/{frac.denominator}' if frac.denominator != 1 else int(fps_float)
 
             dur_ms = float(track.duration or 0)
             edit_rate = round(float(fps))
@@ -99,7 +114,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
                 'editRate': edit_rate,
                 'trackRect': [0, 0, w, h],
                 'sampleRate': sample_rate,
-                'bitDepth': 24,
+                'bitDepth': int(float(track.bit_depth or 24)),
                 'numChannels': 0,
                 'integratedLUFS': 100.0,
                 'peakLevel': -1.0,
@@ -127,7 +142,7 @@ def probe_trec(path: str | Path) -> dict[str, Any]:
                 'editRate': sample_rate_int,
                 'trackRect': [0, 0, 0, 0],
                 'sampleRate': sample_rate_int,
-                'bitDepth': 16,
+                'bitDepth': int(float(track.bit_depth or 16)),
                 'numChannels': channels,
                 'integratedLUFS': 100.0,
                 'peakLevel': -1.0,

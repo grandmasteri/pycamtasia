@@ -356,6 +356,13 @@ class MediaBin:
             else:
                 _bit_depth = 24
                 _edit_rate = round(_detected_fps) if _detected_fps else (edit_rate or 30)
+            _sample_rate_val: int | str | None = _edit_rate if media_type == MediaType.Image else sample_rate
+            if media_type == MediaType.Video and _sample_rate_val is None and _detected_fps is not None:
+                _ntsc = {23.976: '24000/1001', 23.98: '24000/1001', 29.97: '30000/1001', 59.94: '60000/1001'}
+                for _nfps, _nstr in _ntsc.items():
+                    if abs(float(_detected_fps) - _nfps) < 0.01:
+                        _sample_rate_val = _nstr
+                        break
             json_data = _visual_track_to_json(
                 next_media_id, rel_path, timestamp,
                 media_type=media_type,
@@ -365,7 +372,7 @@ class MediaBin:
                 filename=filename,
                 bit_depth=_bit_depth,
                 edit_rate=_edit_rate,
-                sample_rate=_edit_rate if media_type == MediaType.Image else None,
+                sample_rate=_sample_rate_val,
             )
 
         self._data.append(json_data)
@@ -538,7 +545,7 @@ def _visual_track_to_json(
     height: int,
     duration: int,
     edit_rate: int = 30,
-    sample_rate: int | None = None,
+    sample_rate: int | str | None = None,
     filename: str = "",
     bit_depth: int = 0,
 ) -> dict[str, Any]:

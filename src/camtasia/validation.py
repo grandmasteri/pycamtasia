@@ -286,7 +286,12 @@ def _check_timing_consistency(data: dict) -> list[ValidationIssue]:
                     scalar = Fraction(str(scalar_raw))
                 except (ValueError, ZeroDivisionError):
                     continue
-                if scalar != 0:
+                if scalar == 0:
+                    issues.append(ValidationIssue(
+                        'error',
+                        f'{path} clip id={media.get("id")} has scalar=0 (invalid)',
+                    ))
+                elif scalar != 0:
                     expected = float(Fraction(duration) / scalar)
                     media_dur_f = float(Fraction(str(media_dur)))
                     if abs(expected - media_dur_f) > max(1, abs(expected) * 0.01):

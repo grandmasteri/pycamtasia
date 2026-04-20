@@ -1,6 +1,7 @@
 """Tests for import_trec that work without pymediainfo."""
 from __future__ import annotations
 
+import sys
 from unittest.mock import MagicMock, patch
 
 
@@ -151,3 +152,115 @@ class TestTrecProbeHandlesDualRateSampleRate:
         finally:
             os.unlink(tmp)
             importlib.reload(tp)
+
+
+class TestTrecProbeNtscSampleRate:
+    """Verify trec_probe produces correct NTSC fractional sampleRate strings."""
+
+    def _make_mock_track(self, track_type, **kwargs):
+        track = MagicMock()
+        track.track_type = track_type
+        for k, v in kwargs.items():
+            setattr(track, k, v)
+        return track
+
+    def _probe_with_video_fps(self, fps, tmp_path):
+        trec = tmp_path / 'test.trec'
+        trec.write_bytes(b'\x00' * 64)
+        general = self._make_mock_track('General', tagged_date=None, encoded_date=None)
+        video = self._make_mock_track(
+            'Video', width=1920, height=1080, codec_id='tsc2',
+            frame_rate=str(fps), duration=10000, bit_depth=None,
+        )
+        mi_result = MagicMock()
+        mi_result.tracks = [general, video]
+        mock_pmi = MagicMock()
+        mock_pmi.MediaInfo.parse.return_value = mi_result
+        with patch.dict(sys.modules, {'pymediainfo': mock_pmi}):
+            # Re-import to pick up the mock
+            import importlib
+
+            import camtasia.media_bin.trec_probe as tp
+            importlib.reload(tp)
+            return tp.probe_trec(trec)
+
+    def test_29_97_produces_30000_1001(self, tmp_path):
+        result = self._probe_with_video_fps(29.97, tmp_path)
+        sr = result['sourceTracks'][0]['sampleRate']
+        assert sr == '30000/1001', f'Expected 30000/1001, got {sr}'
+
+    def test_23_976_produces_24000_1001(self, tmp_path):
+        result = self._probe_with_video_fps(23.976, tmp_path)
+        sr = result['sourceTracks'][0]['sampleRate']
+        assert sr == '24000/1001', f'Expected 24000/1001, got {sr}'
+
+    def test_59_94_produces_60000_1001(self, tmp_path):
+        result = self._probe_with_video_fps(59.94, tmp_path)
+        sr = result['sourceTracks'][0]['sampleRate']
+        assert sr == '60000/1001', f'Expected 60000/1001, got {sr}'
+
+    def test_30_fps_produces_integer(self, tmp_path):
+        result = self._probe_with_video_fps(30.0, tmp_path)
+        sr = result['sourceTracks'][0]['sampleRate']
+        assert sr == 30, f'Expected 30, got {sr}'
+
+
+class TestTrecProbeBitDepthFromTrack:
+    """Verify trec_probe reads bitDepth from pymediainfo track instead of hardcoding."""
+
+    def _make_mock_track(self, track_type, **kwargs):
+        track = MagicMock()
+        track.track_type = track_type
+        for k, v in kwargs.items():
+            setattr(track, k, v)
+        return track
+
+    def _probe_with_tracks(self, tracks_list, tmp_path):
+        trec = tmp_path / 'test.trec'
+        trec.write_bytes(b'\x00' * 64)
+        mi_result = MagicMock()
+        mi_result.tracks = tracks_list
+        mock_pmi = MagicMock()
+        mock_pmi.MediaInfo.parse.return_value = mi_result
+        with patch.dict(sys.modules, {'pymediainfo': mock_pmi}):
+            import importlib
+
+            import camtasia.media_bin.trec_probe as tp
+            importlib.reload(tp)
+            return tp.probe_trec(trec)
+
+    def test_video_bit_depth_read_from_track(self, tmp_path):
+        general = self._make_mock_track('General', tagged_date=None, encoded_date=None)
+        video = self._make_mock_track(
+            'Video', width=1920, height=1080, codec_id='tsc2',
+            frame_rate='30', duration=10000, bit_depth=10,
+        )
+        result = self._probe_with_tracks([general, video], tmp_path)
+        assert result['sourceTracks'][0]['bitDepth'] == 10
+
+    def test_audio_bit_depth_read_from_track(self, tmp_path):
+        general = self._make_mock_track('General', tagged_date=None, encoded_date=None)
+        audio = self._make_mock_track(
+            'Audio', channel_s='2', sampling_rate='48000',
+            duration=10000, bit_depth=24,
+        )
+        result = self._probe_with_tracks([general, audio], tmp_path)
+        assert result['sourceTracks'][0]['bitDepth'] == 24
+
+    def test_video_bit_depth_defaults_to_24_when_none(self, tmp_path):
+        general = self._make_mock_track('General', tagged_date=None, encoded_date=None)
+        video = self._make_mock_track(
+            'Video', width=1920, height=1080, codec_id='tsc2',
+            frame_rate='30', duration=10000, bit_depth=None,
+        )
+        result = self._probe_with_tracks([general, video], tmp_path)
+        assert result['sourceTracks'][0]['bitDepth'] == 24
+
+    def test_audio_bit_depth_defaults_to_16_when_none(self, tmp_path):
+        general = self._make_mock_track('General', tagged_date=None, encoded_date=None)
+        audio = self._make_mock_track(
+            'Audio', channel_s='2', sampling_rate='48000',
+            duration=10000, bit_depth=None,
+        )
+        result = self._probe_with_tracks([general, audio], tmp_path)
+        assert result['sourceTracks'][0]['bitDepth'] == 16

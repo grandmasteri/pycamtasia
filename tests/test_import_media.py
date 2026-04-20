@@ -153,3 +153,65 @@ class TestImportMediaNoneDuration:
         # Should not raise TypeError: float(None)
         assert media is not None
 
+
+class TestImportMediaVideoAudioSampleRate:
+    """Verify import_media sets audio sample_rate from probed audio track, not frame_rate."""
+
+    def test_video_sample_rate_defaults_to_48000_not_frame_rate(self, project, tmp_path):
+        video = tmp_path / 'clip.mp4'
+        video.write_bytes(b'\x00' * 64)
+        meta = {'frame_rate': 30, 'duration_seconds': 10.0, 'width': 1920, 'height': 1080}
+        with patch('camtasia.project._probe_media', return_value=meta):
+            media = project.import_media(video)
+        sr = media._data['sourceTracks'][0]['sampleRate']
+        assert sr == 48000, f'Expected 48000 (audio default), got {sr}'
+
+    def test_video_sample_rate_uses_probed_audio_sample_rate(self, project, tmp_path):
+        video = tmp_path / 'clip.mp4'
+        video.write_bytes(b'\x00' * 64)
+        meta = {'frame_rate': 24, 'duration_seconds': 5.0, 'width': 1280, 'height': 720, 'sample_rate': 44100}
+        with patch('camtasia.project._probe_media', return_value=meta):
+            media = project.import_media(video)
+        sr = media._data['sourceTracks'][0]['sampleRate']
+        assert sr == 44100
+
+    def test_video_sample_rate_explicit_kwarg_overrides(self, project, tmp_path):
+        video = tmp_path / 'clip.mp4'
+        video.write_bytes(b'\x00' * 64)
+        meta = {'frame_rate': 30, 'duration_seconds': 10.0, 'width': 1920, 'height': 1080}
+        with patch('camtasia.project._probe_media', return_value=meta):
+            media = project.import_media(video, sample_rate=96000)
+        sr = media._data['sourceTracks'][0]['sampleRate']
+        assert sr == 96000
+
+
+class TestMediaBinVideoNtscSampleRate:
+    """Verify import_media produces fractional sampleRate for NTSC video."""
+
+    def _import_video_with_fps(self, project, tmp_path, fps):
+        video = tmp_path / 'ntsc.mp4'
+        video.write_bytes(b'\x00' * 64)
+        track_data = {
+            'kind_of_stream': 'Video',
+            'width': 1920, 'height': 1080,
+            'frame_rate': str(fps),
+            'duration': 10000,
+            'bit_depth': 24,
+        }
+        with patch('camtasia.media_bin.media_bin._parse_with_pymediainfo', return_value=track_data):
+            return project.media_bin.import_media(video)
+
+    def test_29_97_fps_produces_fractional_sample_rate(self, project, tmp_path):
+        media = self._import_video_with_fps(project, tmp_path, 29.97)
+        sr = media._data['sourceTracks'][0]['sampleRate']
+        assert sr == '30000/1001', f'Expected 30000/1001, got {sr}'
+
+    def test_59_94_fps_produces_fractional_sample_rate(self, project, tmp_path):
+        media = self._import_video_with_fps(project, tmp_path, 59.94)
+        sr = media._data['sourceTracks'][0]['sampleRate']
+        assert sr == '60000/1001', f'Expected 60000/1001, got {sr}'
+
+    def test_30_fps_produces_integer_sample_rate(self, project, tmp_path):
+        media = self._import_video_with_fps(project, tmp_path, 30.0)
+        sr = media._data['sourceTracks'][0]['sampleRate']
+        assert sr == 30, f'Expected 30, got {sr}'
