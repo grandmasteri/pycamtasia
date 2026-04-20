@@ -94,3 +94,43 @@ class TestExportProjectReport:
         text = out.read_text()
         assert 'old content' not in text
         assert '# Project Report:' in text
+
+
+# ── Bug 11: JSON report rounds floats to 3 decimals ──
+
+
+class TestJsonReportRoundsFloats:
+    """JSON report should round float values to 3 decimal places."""
+
+    def test_clip_seconds_rounded(self, project, tmp_path):
+        import json
+
+        from camtasia.export.report import export_project_report
+        from camtasia.timing import seconds_to_ticks
+
+        track = project.timeline.get_or_create_track('Test')
+        track.add_clip('VMFile', 0, seconds_to_ticks(1.0), seconds_to_ticks(3.0))
+        out = tmp_path / 'report.json'
+        export_project_report(project, out, format='json')
+        data = json.loads(out.read_text())
+        for t in data['tracks']:
+            for clip in t['clips']:
+                s = str(clip['start_seconds'])
+                d = str(clip['duration_seconds'])
+                # At most 3 decimal places
+                if '.' in s:
+                    assert len(s.split('.')[1]) <= 3
+                if '.' in d:
+                    assert len(d.split('.')[1]) <= 3
+
+    def test_duration_seconds_rounded(self, project, tmp_path):
+        import json
+
+        from camtasia.export.report import export_project_report
+
+        out = tmp_path / 'report.json'
+        export_project_report(project, out, format='json')
+        data = json.loads(out.read_text())
+        dur = str(data['duration_seconds'])
+        if '.' in dur:
+            assert len(dur.split('.')[1]) <= 3

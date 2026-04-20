@@ -35,22 +35,22 @@ def test_highlight_default_values():
     assert result['kind'] == 'remix'
     assert result['shape'] == 'shape-rectangle'
     assert result['style'] == 'basic'
-    assert result['width']['defaultValue'] == 200
-    assert result['height']['defaultValue'] == 100
-    assert result['fill-color-red']['defaultValue'] == 1.0
-    assert result['fill-color-green']['defaultValue'] == 1.0
-    assert result['fill-color-blue']['defaultValue'] == 0.0
-    assert result['fill-color-opacity']['defaultValue'] == 0.3
+    assert result['width'] == 200
+    assert result['height'] == 100
+    assert result['fill-color-red'] == 1.0
+    assert result['fill-color-green'] == 1.0
+    assert result['fill-color-blue'] == 0.0
+    assert result['fill-color-opacity'] == 0.3
     assert result['fill-style'] == 'solid'
-    assert result['stroke-width']['defaultValue'] == 0.0
+    assert result['corner-radius'] == 0.0
 
 
 def test_highlight_custom_color():
     result = highlight(color=(0.5, 0.5, 0.8, 0.7))
-    assert result['fill-color-red']['defaultValue'] == 0.5
-    assert result['fill-color-green']['defaultValue'] == 0.5
-    assert result['fill-color-blue']['defaultValue'] == 0.8
-    assert result['fill-color-opacity']['defaultValue'] == 0.7
+    assert result['fill-color-red'] == 0.5
+    assert result['fill-color-green'] == 0.5
+    assert result['fill-color-blue'] == 0.8
+    assert result['fill-color-opacity'] == 0.7
 
 
 def test_keystroke_callout_text():
@@ -236,3 +236,36 @@ class TestArrowColorAlpha:
         result = arrow(color=(0.1, 0.2, 0.3))
         assert result['stroke-color-opacity'] == 1.0
 
+
+
+# ── Bug 10: highlight() uses flat values matching rectangle() ──
+
+
+class TestHighlightFlatValues:
+    """highlight() should use flat scalar values, not animated-parameter dicts."""
+
+    def test_width_is_flat(self):
+        result = highlight(width=300)
+        assert result['width'] == 300
+        assert not isinstance(result['width'], dict)
+
+    def test_height_is_flat(self):
+        result = highlight(height=150)
+        assert result['height'] == 150
+        assert not isinstance(result['height'], dict)
+
+    def test_fill_colors_are_flat(self):
+        result = highlight(color=(0.5, 0.6, 0.7, 0.8))
+        assert result['fill-color-red'] == 0.5
+        assert result['fill-color-green'] == 0.6
+        assert result['fill-color-blue'] == 0.7
+        assert result['fill-color-opacity'] == 0.8
+        assert not isinstance(result['fill-color-red'], dict)
+
+    def test_has_corner_radius(self):
+        result = highlight()
+        assert result['corner-radius'] == 0.0
+
+    def test_no_stroke_width_key(self):
+        result = highlight()
+        assert 'stroke-width' not in result

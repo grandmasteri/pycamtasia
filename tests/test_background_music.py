@@ -71,3 +71,15 @@ def test_custom_fade_values(project):
     volume = clip._data.get('parameters', {}).get('volume')
     assert isinstance(volume, dict)
     assert len(volume['keyframes']) >= 2
+
+
+def test_fade_in_only_has_sustain_keyframe(project):
+    """Bug 3: when fade_in > 0 and fade_out == 0, a sustain keyframe must hold volume."""
+    clip = project.add_background_music(EMPTY_WAV, fade_in_seconds=2.0, fade_out_seconds=0)
+    volume_param = clip._data.get('parameters', {}).get('volume', {})
+    keyframes = volume_param.get('keyframes', [])
+    # Should have 3 keyframes: start at 0, ramp to volume, sustain to end
+    assert len(keyframes) == 3
+    # Last keyframe should hold the target volume until end of clip
+    assert keyframes[-1]['value'] == 0.3
+    assert keyframes[-1]['endTime'] > keyframes[1]['endTime']

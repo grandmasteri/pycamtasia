@@ -137,3 +137,14 @@ def test_validate_schema_returns_list(project):
     """validate_schema returns a list of ValidationIssue."""
     result = project.validate_schema()
     assert result == []
+
+
+def test_validate_does_not_use_bin_ids_variable(project):
+    """Bug 4: validate() should not populate an unused bin_ids set."""
+    import ast
+    import inspect
+    import textwrap
+    source = textwrap.dedent(inspect.getsource(project.validate))
+    tree = ast.parse(source)
+    names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+    assert 'bin_ids' not in names

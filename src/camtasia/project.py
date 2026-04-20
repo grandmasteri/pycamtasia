@@ -723,7 +723,7 @@ class Project:
         from camtasia.timeline.timeline import _remap_clip_ids_with_map
 
         merged = cls.new(output_path, title=title)
-        cursor_seconds: float = 0.0
+        cursor_ticks: int = 0
 
         for source_project in projects:
             # Build sourceBin ID remap
@@ -745,7 +745,7 @@ class Project:
                 for clip in track.clips:
                     old_id = clip.id
                     cloned = copy.deepcopy(clip._data)
-                    cloned['start'] = cloned.get('start', 0) + seconds_to_ticks(cursor_seconds)
+                    cloned['start'] = cloned.get('start', 0) + cursor_ticks
                     from camtasia.timeline.track import _propagate_start_to_unified
                     _propagate_start_to_unified(cloned)  # type: ignore[arg-type]
                     cloned_dict: dict[Any, Any] = cloned  # type: ignore[assignment]
@@ -762,7 +762,7 @@ class Project:
                         cloned_trans['rightMedia'] = clip_id_map[cloned_trans['rightMedia']]
                     new_track._data.setdefault('transitions', []).append(cloned_trans)
 
-            cursor_seconds += source_project.duration_seconds
+            cursor_ticks += seconds_to_ticks(source_project.duration_seconds)
 
         merged.save()
         return merged
@@ -825,10 +825,8 @@ class Project:
             A list of :class:`ValidationIssue` instances (may be empty).
         """
         issues: list[ValidationIssue] = []
-        bin_ids: set[int] = set()
 
         for media in self.media_bin:
-            bin_ids.add(media.id)
             raw = media._data
 
             # Zero-range audio
@@ -915,27 +913,30 @@ class Project:
             ]
             fixes_applied['stale_transitions_removed'] += original_count - len(track._data.get('transitions', []))
             # Fix 1-tick overlaps (from rounding after speed/rescale operations)
-            medias = sorted(track._data.get('medias', []), key=lambda m: m.get('start', 0))
-            for i in range(len(medias) - 1):
-                a_end = medias[i].get('start', 0) + medias[i].get('duration', 0)
-                b_start = medias[i + 1].get('start', 0)
+            medias_sorted = sorted(track._data.get('medias', []), key=lambda m: m.get('start', 0))
+            to_remove: set[int] = set()
+            for i in range(len(medias_sorted) - 1):
+                a_end = medias_sorted[i].get('start', 0) + medias_sorted[i].get('duration', 0)
+                b_start = medias_sorted[i + 1].get('start', 0)
                 if a_end > b_start:
-                    medias[i]['duration'] -= (a_end - b_start)
+                    medias_sorted[i]['duration'] -= (a_end - b_start)
                     fixes_applied['overlaps_fixed'] += 1
-                    if medias[i]['duration'] <= 0:
+                    if medias_sorted[i]['duration'] <= 0:
                         fixes_applied.setdefault('zero_duration_removed', 0)
                         fixes_applied['zero_duration_removed'] += 1
+                        to_remove.add(id(medias_sorted[i]))
                         continue
                     # Recalculate mediaDuration to maintain invariant
                     from camtasia.timing import parse_scalar as _ps
-                    s = _ps(medias[i].get('scalar', 1))
-                    if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile'):
+                    s = _ps(medias_sorted[i].get('scalar', 1))
+                    if s != 0 and medias_sorted[i].get('_type') not in ('IMFile', 'ScreenIMFile'):
                         from fractions import Fraction as _F
-                        md = _F(medias[i]['duration']) / s
-                        medias[i]['mediaDuration'] = int(md) if md == int(md) else str(md)
+                        md = _F(medias_sorted[i]['duration']) / s
+                        medias_sorted[i]['mediaDuration'] = int(md) if md == int(md) else str(md)
                     from camtasia.timeline.track import _propagate_start_to_unified
-                    _propagate_start_to_unified(medias[i])
-            track._data['medias'] = [m for m in medias if m.get('duration', 1) > 0]
+                    _propagate_start_to_unified(medias_sorted[i])
+            if to_remove:
+                track._data['medias'] = [m for m in track._data['medias'] if id(m) not in to_remove]
         return fixes_applied
 
     def save(self) -> None:
@@ -2026,6 +2027,8 @@ class Project:
             if fade_in_ticks > 0:
                 keyframes.append({'endTime': 0, 'time': 0, 'value': 0.0, 'duration': 0})
                 keyframes.append({'endTime': fade_in_ticks, 'time': 0, 'value': volume, 'duration': fade_in_ticks})
+                if fade_out_ticks == 0:
+                    keyframes.append({'endTime': total_ticks, 'time': fade_in_ticks, 'value': volume, 'duration': total_ticks - fade_in_ticks})
             else:
                 keyframes.append({'endTime': 0, 'time': 0, 'value': volume, 'duration': 0})
             if fade_out_ticks > 0 and total_ticks > fade_out_ticks:

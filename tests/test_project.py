@@ -1646,11 +1646,11 @@ class TestNormalizeAudioNoDuplicateCount:
         assert count == 1
 
 
-class TestRepairWritesSortedOrder:
-    """Bug 1: repair() must write the sorted media list back to the track."""
+class TestRepairPreservesOriginalOrder:
+    """Bug 1: repair() must NOT reorder medias when no repairs are needed."""
 
-    def test_repair_preserves_sorted_order(self, tmp_path):
-        """After repair, medias should be in start-time order."""
+    def test_repair_preserves_original_order(self, tmp_path):
+        """After repair with no overlaps, medias should keep their original order."""
         data = {
             "title": "Unsorted",
             "sourceBin": [],
@@ -1683,7 +1683,7 @@ class TestRepairWritesSortedOrder:
         project.repair()
 
         ids = [m['id'] for m in project.timeline.tracks[0]._data['medias']]
-        assert ids == [1, 2, 3], f"Expected sorted order [1,2,3], got {ids}"
+        assert ids == [3, 1, 2], f"Expected original order [3,1,2], got {ids}"
 
 
 class TestRepairOverlapCountsZeroDuration:
@@ -1714,3 +1714,35 @@ class TestRepairOverlapCountsZeroDuration:
         # Both overlaps should be counted, including the one that zeroed out clip B
         assert result['overlaps_fixed'] >= 2
         assert result.get('zero_duration_removed', 0) >= 1
+
+
+class TestRepairPreservesOrderWithRemovals:
+    """Bug 1: repair() must preserve original media order even when removing zero-duration clips."""
+
+    def test_repair_removes_zero_duration_but_keeps_original_order(self, tmp_path):
+        proj_path = tmp_path / 'test.cmproj'
+        new_project(proj_path)
+        proj = load_project(proj_path)
+        track = proj.timeline.add_track('V')
+        # Original order: id=3 (start=200), id=1 (start=0, will become zero-duration), id=2 (start=0)
+        # Sorted by start: id=1(0), id=2(0), id=3(200)
+        # Overlap: id=1 end=5 > id=2 start=0 → id=1 duration becomes -5 → zero → removed
+        track._data['medias'] = [
+            {'id': 3, '_type': 'VMFile', 'src': 0, 'start': 200, 'duration': 100,
+             'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+             'animationTracks': {}},
+            {'id': 1, '_type': 'VMFile', 'src': 0, 'start': 0, 'duration': 5,
+             'mediaStart': 0, 'mediaDuration': 5, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+             'animationTracks': {}},
+            {'id': 2, '_type': 'VMFile', 'src': 0, 'start': 0, 'duration': 100,
+             'mediaStart': 0, 'mediaDuration': 100, 'scalar': 1,
+             'metadata': {}, 'parameters': {}, 'effects': [], 'attributes': {'ident': ''},
+             'animationTracks': {}},
+        ]
+        result = proj.repair()
+        assert result.get('zero_duration_removed', 0) >= 1
+        ids = [m['id'] for m in track._data['medias']]
+        # id=1 removed, but id=3 and id=2 should keep original order [3, 2]
+        assert ids == [3, 2]

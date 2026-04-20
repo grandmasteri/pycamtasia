@@ -4,37 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 4 domains 4-6)
-
-**Project-level:**
-
-1. [verified] `repair()` silently reorders `medias` array. Sorts by start time for overlap detection, writes sorted list back. Changes array order even when no repairs are needed. Breaks round-trip fidelity. (project.py ~L919)
-
-2. [verified] `merge_projects()` uses float accumulation for `cursor_seconds`. Each project offset by `seconds_to_ticks(cursor_seconds)` where cursor_seconds is float. Precision drift grows with number of merged projects. Should accumulate in ticks (int). (project.py ~L764)
-
-3. [verified] `add_background_music()` missing sustain keyframe when fade_in>0 and fade_out==0. Keyframes ramp to volume then end; no keyframe holds volume for rest of clip. Camtasia uses keyframe curve not defaultValue once keyframes exist. (project.py ~L2024)
-
-4. [verified] `validate()` dead code: `bin_ids` populated but never used. Left from refactor. (project.py ~L829)
-
-5. [withdrawn: theoretical; UnifiedMedia children are always leaf clips] `_collect_ids()` doesn't recurse into UnifiedMedia sub-clip nested structures. Only collects IDs, doesn't recurse. Inconsistent with `_check_src_references`. (validation.py ~L25)
-
-**Operations:**
-
-6. [withdrawn: second-pass _remap_asset_properties correctly remaps cross-clip refs; first-pass remaps within-clip refs; collision scenario requires contrived id_counter starting position] `merge.py _remap_clip_ids_with_map` + separate `_remap_asset_properties` creates double-remap of assetProperties.objects. First pass remaps both id and assetProperties; second pass re-remaps assetProperties with complete id_map, but the values from the first pass are now NEW IDs. If new IDs collide with other OLD IDs, second pass corrupts. HIGH severity. (merge.py ~L134)
-
-7. [verified] `speed.py _process_clip` UnifiedMedia parent-child `mediaDuration` mismatch for speed-changed clips. Parent mediaDuration not scaled (correct), but children's mediaDuration IS scaled via recursive _process_clip. Subsequent _propagate_start_to_unified will overwrite children with parent's stale value. (speed.py ~L100)
-
-8. [verified] `merge.py` dead code `_remap_clip_ids` function never called. Was replaced by import of _remap_clip_ids_with_map from timeline.py. Dead function. (merge.py ~L56)
-
-**Supporting subsystems:**
-
-9. [verified] `export/edl.py` UnifiedMedia audio EDL event uses wrong mediaDuration fallback. Uses `clip.duration` (timeline duration) instead of `clip.media_duration` (source duration). Wrong for speed-changed clips. (export/edl.py ~L90)
-
-10. [verified] `annotations/callouts.py highlight()` mixes animated-parameter dicts with flat values. Uses `{'type': 'double', 'defaultValue': ...}` for width/height/colors but flat string for fill-style. Inconsistent with `rectangle()` which uses flat values. May cause Camtasia repair/render issues. (callouts.py)
-
-11. `export/report.py _build_json_report()` doesn't round float values. Uses `clip.start_seconds` directly (produces `2.0000000000000004`). Compare with `timeline_json.py` which rounds to 3 decimals. (report.py)
-
-12. `media_bin/trec_probe.py probe_trec()` reuses `sample_rate` variable across video and audio track branches. If audio track precedes video in pymediainfo output, video track's sourceTrack dict uses audio's sampling rate (e.g., 44100) instead of video frame rate. (trec_probe.py ~L85)
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

@@ -34,8 +34,8 @@ def _build_json_report(project: Project) -> dict:
             clips.append({
                 'id': clip.id,
                 'type': clip.clip_type,
-                'start_seconds': clip.start_seconds,
-                'duration_seconds': clip.duration_seconds,
+                'start_seconds': round(clip.start_seconds, 3),
+                'duration_seconds': round(clip.duration_seconds, 3),
             })
         tracks.append({
             'index': track.index,
@@ -53,7 +53,7 @@ def _build_json_report(project: Project) -> dict:
     return {
         'project': str(project.file_path.name),
         'canvas': {'width': project.width, 'height': project.height},
-        'duration_seconds': project.total_duration_seconds(),
+        'duration_seconds': round(project.total_duration_seconds(), 3),
         'track_count': project.timeline.track_count,
         'tracks': tracks,
         'media_count': len(project.media_bin),

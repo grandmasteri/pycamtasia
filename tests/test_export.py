@@ -405,3 +405,40 @@ class TestEdlSourceResolution:
         actual_content = actual_result.read_text()
         assert '  V  ' in actual_content
         assert '  A  ' in actual_content
+
+
+# ── Bug 9: EDL audio mediaDuration fallback uses media_duration not duration ──
+
+
+class TestEdlAudioMediaDurationFallback:
+    """When audio sub-clip lacks mediaDuration, fallback should be
+    clip.media_duration (not clip.duration) for speed-changed clips."""
+
+    def test_audio_fallback_uses_media_duration(self, project, tmp_path):
+        track = project.timeline.tracks[0]
+        # Speed-changed clip: duration != media_duration
+        track._data['medias'].append({
+            '_type': 'UnifiedMedia', 'id': 800,
+            'start': 0, 'duration': seconds_to_ticks(5.0),
+            'mediaDuration': seconds_to_ticks(10.0),  # different from duration
+            'mediaStart': 0, 'scalar': '1/2',
+            'parameters': {}, 'effects': [],
+            'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+            'video': {
+                '_type': 'ScreenVMFile', 'id': 801, 'src': 0,
+                'start': 0, 'duration': seconds_to_ticks(5.0),
+                'mediaDuration': seconds_to_ticks(10.0),
+                'mediaStart': 0, 'scalar': '1/2',
+            },
+            'audio': {
+                '_type': 'AMFile', 'id': 802, 'src': 0,
+                'start': 0, 'duration': seconds_to_ticks(5.0),
+                # No mediaDuration key — fallback should use clip.media_duration (10s)
+                'mediaStart': 0, 'scalar': '1/2',
+            },
+        })
+        out = export_edl(project, tmp_path / 'fallback.edl')
+        lines = [l for l in out.read_text().splitlines() if l and l[0].isdigit()]
+        audio_line = next(l for l in lines if '  A  ' in l)
+        # Audio src_out should reflect 10s media_duration, not 5s duration
+        assert '00:00:10:00' in audio_line

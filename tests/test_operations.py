@@ -8,7 +8,7 @@ import pytest
 
 from camtasia.audiate.transcript import Word
 from camtasia.operations.diff import diff_projects
-from camtasia.operations.merge import _remap_clip_ids
+from camtasia.operations.merge import _remap_src_in_clip
 from camtasia.operations.speed import _adjust_scalar, rescale_project, set_audio_speed
 from camtasia.operations.sync import match_marker_to_transcript, plan_sync
 from camtasia.operations.template import (
@@ -501,7 +501,7 @@ class TestDiffClipsOnRemovedAddedTracks:
 
 
 class TestMergeRemapClipIds:
-    def test_remap_clip_ids_unified(self):
+    def test_remap_src_in_unified(self):
         data = {
             'id': 1, '_type': 'UnifiedMedia',
             'video': {'_type': 'ScreenVMFile', 'id': 2, 'src': 1},
@@ -509,12 +509,10 @@ class TestMergeRemapClipIds:
             'tracks': [{'medias': [{'id': 4, 'src': 1}]}],
             'medias': [{'id': 5, 'src': 1}],
         }
-        id_counter = [100]
-        id_map = {}
         src_map = {1: 50}
-        _remap_clip_ids(data, id_counter, id_map, src_map)
-        assert data['id'] != 1
+        _remap_src_in_clip(data, src_map)
         assert data['video']['src'] == 50
+        assert data['audio']['src'] == 50
 
 
 
@@ -966,3 +964,69 @@ class TestUnifiedMediaStartScaling:
         }
         _process_clip(clip, Fraction(2))
         assert 'mediaStart' not in clip
+
+
+# ── Bug 7: UnifiedMedia children mediaDuration must match parent for speed-changed clips ──
+
+
+class TestUnifiedMediaChildMediaDurationConsistency:
+    """For speed-changed UnifiedMedia, children's mediaDuration must match parent."""
+
+    def test_children_match_parent_media_duration_when_speed_changed(self):
+        from camtasia.operations.speed import _process_clip
+
+        clip = {
+            '_type': 'UnifiedMedia',
+            'start': 0,
+            'duration': 1000,
+            'mediaDuration': 2000,
+            'scalar': '1/2',
+            'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+            'effects': [],
+            'parameters': {},
+            'video': {
+                '_type': 'VMFile', 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1, 'metadata': {},
+                'effects': [], 'parameters': {},
+            },
+            'audio': {
+                '_type': 'AMFile', 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1,
+                'metadata': {}, 'effects': [],
+            },
+        }
+        _process_clip(clip, Fraction(2))
+        # Parent mediaDuration stays at 2000 (speed-changed, not scaled)
+        assert clip['mediaDuration'] == 2000
+        # Children must match parent
+        assert clip['video']['mediaDuration'] == clip['mediaDuration']
+        assert clip['audio']['mediaDuration'] == clip['mediaDuration']
+
+    def test_children_scaled_independently_when_not_speed_changed(self):
+        from camtasia.operations.speed import _process_clip
+
+        clip = {
+            '_type': 'UnifiedMedia',
+            'start': 0,
+            'duration': 1000,
+            'mediaDuration': 1000,
+            'scalar': 1,
+            'metadata': {},
+            'effects': [],
+            'parameters': {},
+            'video': {
+                '_type': 'VMFile', 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1, 'metadata': {},
+                'effects': [], 'parameters': {},
+            },
+            'audio': {
+                '_type': 'AMFile', 'start': 0, 'duration': 1000,
+                'mediaDuration': 1000, 'scalar': 1,
+                'metadata': {}, 'effects': [],
+            },
+        }
+        _process_clip(clip, Fraction(2))
+        # Non-speed-changed: parent and children all scaled
+        assert clip['mediaDuration'] == 2000
+        assert clip['video']['mediaDuration'] == 2000
+        assert clip['audio']['mediaDuration'] == 2000

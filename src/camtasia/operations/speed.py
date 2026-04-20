@@ -105,9 +105,10 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
                 _process_clip(inner, factor)
 
     elif ctype == "UnifiedMedia":
+        is_speed_changed = _has_speed_change(clip)
         # Only scale mediaDuration for non-speed-changed clips;
         # speed-changed clips have mediaDuration invariant (handled by _adjust_scalar above)
-        if 'mediaDuration' in clip and not _has_speed_change(clip):
+        if 'mediaDuration' in clip and not is_speed_changed:
             clip['mediaDuration'] = _scale_tick(clip['mediaDuration'], factor)
         # Scale mediaStart (like StitchedMedia and Group do)
         if 'mediaStart' in clip:
@@ -116,6 +117,10 @@ def _process_clip(clip: dict[str, Any], factor: Fraction) -> None:
             child = clip.get(child_key)
             if child:
                 _process_clip(child, factor)
+                # If parent was speed-changed, restore child's mediaDuration
+                # to match parent so they stay consistent
+                if is_speed_changed and 'mediaDuration' in clip:
+                    child['mediaDuration'] = clip['mediaDuration']
 
 
 def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:

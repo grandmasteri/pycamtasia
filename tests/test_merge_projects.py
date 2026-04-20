@@ -235,3 +235,48 @@ class TestMergeRemapInternalPaths:
         }
         _remap_asset_properties(clip, {5: 55})
         assert clip['medias'][0]['attributes']['assetProperties'][0]['objects'] == [55]
+
+
+@pytest.mark.timeout(30)
+def test_merge_accumulates_offset_in_ticks(tmp_path):
+    """Bug 2: merge_projects must accumulate cursor in ticks to avoid float drift."""
+    from camtasia.timing import seconds_to_ticks
+
+    a = Project.new(tmp_path / 'a.cmproj', title='A')
+    track_a = a.timeline.add_track('T')
+    track_a._data.setdefault('medias', []).append({
+        'id': 1, 'start': 0, 'duration': seconds_to_ticks(1.0 / 3),
+        '_type': 'IMFile', 'src': 0,
+    })
+    a.save()
+
+    b = Project.new(tmp_path / 'b.cmproj', title='B')
+    track_b = b.timeline.add_track('T')
+    track_b._data.setdefault('medias', []).append({
+        'id': 1, 'start': 0, 'duration': seconds_to_ticks(1.0 / 3),
+        '_type': 'IMFile', 'src': 0,
+    })
+    b.save()
+
+    c = Project.new(tmp_path / 'c.cmproj', title='C')
+    track_c = c.timeline.add_track('T')
+    track_c._data.setdefault('medias', []).append({
+        'id': 1, 'start': 0, 'duration': seconds_to_ticks(1.0),
+        '_type': 'IMFile', 'src': 0,
+    })
+    c.save()
+
+    merged = Project.merge_projects([a, b, c], tmp_path / 'merged.cmproj')
+    # All clip starts should be exact integers (no float rounding artifacts)
+    for track in merged.timeline.tracks:
+        for media in track._data.get('medias', []):
+            assert isinstance(media['start'], int), f"start should be int, got {type(media['start'])}"
+
+
+# ── Bug 8: _remap_clip_ids dead code removed ──
+
+
+def test_remap_clip_ids_removed():
+    """_remap_clip_ids was dead code and should no longer exist."""
+    import camtasia.operations.merge as mod
+    assert not hasattr(mod, '_remap_clip_ids')

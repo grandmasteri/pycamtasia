@@ -188,14 +188,14 @@ def highlight(
         'kind': 'remix',
         'shape': 'shape-rectangle',
         'style': 'basic',
-        'width': {'type': 'double', 'defaultValue': width, 'interp': 'linr'},
-        'height': {'type': 'double', 'defaultValue': height, 'interp': 'linr'},
-        'fill-color-red': {'type': 'double', 'defaultValue': r, 'interp': 'linr'},
-        'fill-color-green': {'type': 'double', 'defaultValue': g, 'interp': 'linr'},
-        'fill-color-blue': {'type': 'double', 'defaultValue': b, 'interp': 'linr'},
-        'fill-color-opacity': {'type': 'double', 'defaultValue': a, 'interp': 'linr'},
+        'width': width,
+        'height': height,
+        'fill-color-red': r,
+        'fill-color-green': g,
+        'fill-color-blue': b,
+        'fill-color-opacity': a,
         'fill-style': 'solid',
-        'stroke-width': {'type': 'double', 'defaultValue': 0.0, 'interp': 'linr'},
+        'corner-radius': 0.0,
     }
 
 

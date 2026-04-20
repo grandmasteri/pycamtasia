@@ -50,37 +50,6 @@ def _remap_asset_properties(clip_data: dict, id_map: dict[int, int]) -> None:
         _remap_asset_properties(media, id_map)
 
 
-def _remap_clip_ids(clip_data: dict, id_counter: list[int], id_map: dict[int, int], src_map: dict[int, int]) -> None:
-    """Recursively remap all id and src fields in a clip and its children."""
-    old_id = clip_data.get('id')
-    if old_id is not None:
-        new_id = id_counter[0]
-        id_counter[0] += 1
-        clip_data['id'] = new_id
-        id_map[old_id] = new_id
-    if 'src' in clip_data and clip_data['src'] in src_map:
-        clip_data['src'] = src_map[clip_data['src']]
-    for key in ('video', 'audio'):
-        if key in clip_data:
-            _remap_clip_ids(clip_data[key], id_counter, id_map, src_map)
-    for track in clip_data.get('tracks', []):
-        for media in track.get('medias', []):
-            _remap_clip_ids(media, id_counter, id_map, src_map)
-    for media in clip_data.get('medias', []):
-        _remap_clip_ids(media, id_counter, id_map, src_map)
-    for ap in clip_data.get('attributes', {}).get('assetProperties', []):
-        new_objects = []
-        for o in ap.get('objects', []):
-            if isinstance(o, dict):
-                new_o = dict(o)
-                if 'media' in new_o:
-                    new_o['media'] = id_map.get(new_o['media'], new_o['media'])
-                new_objects.append(new_o)
-            else:
-                new_objects.append(id_map.get(o, o))
-        ap['objects'] = new_objects
-
-
 def merge_tracks(
     source: Project,
     target: Project,

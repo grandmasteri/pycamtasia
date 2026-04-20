@@ -110,7 +110,7 @@ def export_edl(
                             audio_src = m.identity
                             break
                 audio_ms = ticks_to_seconds(round(Fraction(str(audio_data.get('mediaStart', 0)))))
-                audio_md = ticks_to_seconds(round(Fraction(str(audio_data.get('mediaDuration', clip.duration)))))
+                audio_md = ticks_to_seconds(round(Fraction(str(audio_data.get('mediaDuration', clip.media_duration)))))
                 audio_src_in = _format_timecode(audio_ms, fps)
                 audio_src_out = _format_timecode(audio_ms + audio_md, fps)
                 lines.append(
