@@ -4,25 +4,7 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-### From unbiased 6-domain review (cycle 7 domains 4-6)
-
-**Project:**
-
-1. [verified] `import_media()` for video doesn't pass frame_rate to MediaBin. Non-30fps videos get wrong duration (30fps hardcoded fallback). (project.py ~L1093)
-
-2. [verified] `import_media()` for video doesn't forward width/height from ffprobe. Zero-dimension source entries. (project.py ~L1092)
-
-3. [verified] `add_background_music()` produces duplicate keyframe at t=0 when fade_in=0, fade_out>0. Malformed keyframe list. (project.py ~L2047)
-
-**Operations:**
-
-4. [verified] `_scale_tick()` precision loss for large tick values. Uses `round(float(f))` where f is Fraction; float conversion loses precision for values > 2^53. (speed.py ~L25)
-
-5. [verified] `rescale_project()` overlap fix recalculates `mediaDuration = duration / scalar` for speed-changed clips. Wrong — mediaDuration should remain unchanged when trimming for overlap. (speed.py ~L130)
-
-6. [verified] `_walk_clips()` doesn't recurse into nested StitchedMedia. Inner StitchedMedia inside StitchedMedia skip recursion, missing src references. (template.py ~L60)
-
-**Supporting subsystems:** Zero new bugs found (reviewer explicitly confirmed after exhaustive review).
+(none currently)
 
 ## TechSmith Tutorial Analysis
 

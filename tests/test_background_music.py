@@ -108,3 +108,18 @@ def test_fade_out_applied_when_total_equals_fades(project):
     # Should have fade-out keyframes (value going to 0.0 at end)
     last_kf = keyframes[-1]
     assert last_kf['value'] == 0.0, "Fade-out should produce a final keyframe with value 0.0"
+
+
+def test_no_duplicate_keyframe_fade_out_only(project):
+    """Bug 3: fade_in=0, fade_out>0 should not produce duplicate keyframes at t=0."""
+    clip = project.add_background_music(
+        EMPTY_WAV, fade_in_seconds=0, fade_out_seconds=3.0,
+    )
+    volume_param = clip._data.get('parameters', {}).get('volume', {})
+    keyframes = volume_param.get('keyframes', [])
+    # Collect all keyframes at time=0 with endTime=0
+    zero_kfs = [kf for kf in keyframes if kf.get('endTime') == 0 and kf.get('time') == 0]
+    assert len(zero_kfs) <= 1, f"Duplicate keyframes at t=0: {zero_kfs}"
+    # Should have exactly 2 keyframes: sustain then fade-out
+    assert len(keyframes) == 2
+    assert keyframes[-1]['value'] == 0.0

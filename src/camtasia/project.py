@@ -1093,7 +1093,10 @@ class Project:
             else:
                 dur_secs = meta.get('duration_seconds')
                 edit_rate = meta.get('frame_rate', 30)
+                kwargs.setdefault('sample_rate', int(edit_rate))
                 kwargs['duration'] = int(dur_secs * edit_rate) if dur_secs else int(edit_rate * 60)
+                kwargs.setdefault('width', meta.get('width', 1920))
+                kwargs.setdefault('height', meta.get('height', 1080))
         return self.media_bin.import_media(path, media_type=media_type, **kwargs)
 
     def import_shader(self, shader_path: str | Path) -> Media:
@@ -2044,8 +2047,8 @@ class Project:
                 keyframes.append({'endTime': fade_in_ticks, 'time': 0, 'value': volume, 'duration': fade_in_ticks})
                 if fade_out_ticks == 0:
                     keyframes.append({'endTime': total_ticks, 'time': fade_in_ticks, 'value': volume, 'duration': total_ticks - fade_in_ticks})
-            else:
-                keyframes.append({'endTime': 0, 'time': 0, 'value': volume, 'duration': 0})
+            elif fade_out_ticks == 0:
+                keyframes.append({'endTime': 0, 'time': 0, 'value': volume, 'duration': 0})  # pragma: no cover  # unreachable: outer guard ensures at least one fade > 0
             if fade_out_ticks > 0 and total_ticks >= fade_in_ticks + fade_out_ticks:
                 fade_out_start = total_ticks - fade_out_ticks
                 keyframes.append({'endTime': fade_out_start, 'time': fade_in_ticks, 'value': volume, 'duration': fade_out_start - fade_in_ticks})

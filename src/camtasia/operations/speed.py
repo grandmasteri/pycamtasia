@@ -30,7 +30,7 @@ def _scale_tick(value: int | float | str, factor: Fraction) -> int | str:
         f = _frac(value) * factor
     if isinstance(value, str) and "/" in value:
         return f"{f.numerator}/{f.denominator}" if f.denominator != 1 else int(f)
-    return round(float(f))
+    return round(f)
 
 
 def _scale_clip_timing(clip: dict[str, Any], factor: Fraction) -> None:
@@ -164,10 +164,13 @@ def rescale_project(project_data: dict[str, Any], factor: Fraction) -> None:
                 if int(_frac(medias[i]['duration'])) > overlap:
                     medias[i]['duration'] = int(_frac(medias[i]['duration'])) - overlap
                     # Recalculate mediaDuration
-                    s = _frac(medias[i].get('scalar', 1))
-                    if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group'):
-                        md = _frac(medias[i]['duration']) / s
-                        medias[i]['mediaDuration'] = int(md) if md == int(md) else f'{md.numerator}/{md.denominator}'
+                    if _has_speed_change(medias[i]):
+                        pass
+                    else:
+                        s = _frac(medias[i].get('scalar', 1))
+                        if s != 0 and medias[i].get('_type') not in ('IMFile', 'ScreenIMFile', 'StitchedMedia', 'Group'):
+                            md = _frac(medias[i]['duration']) / s
+                            medias[i]['mediaDuration'] = int(md) if md == int(md) else f'{md.numerator}/{md.denominator}'
                     # Adjust child effects for UnifiedMedia sub-clips
                     if medias[i].get('_type') == 'UnifiedMedia':
                         from camtasia.timeline.track import _adjust_effects_after_split

@@ -9,9 +9,10 @@ import pytest
 from camtasia.audiate.transcript import Word
 from camtasia.operations.diff import diff_projects
 from camtasia.operations.merge import _remap_src_in_clip
-from camtasia.operations.speed import _adjust_scalar, rescale_project, set_audio_speed
+from camtasia.operations.speed import _adjust_scalar, _scale_tick, rescale_project, set_audio_speed
 from camtasia.operations.sync import match_marker_to_transcript, plan_sync
 from camtasia.operations.template import (
+    _walk_clips,
     clone_project_structure,
     replace_media_source,
 )
@@ -1152,3 +1153,129 @@ class TestWalkClipsGroupInsideStitchedMedia:
         group = inner['medias'][0]
         vmfile = group['tracks'][0]['medias'][0]
         assert vmfile['src'] == 99
+
+
+# --- Bug 4: _scale_tick precision for large tick values ---
+
+class TestScaleTickPrecision:
+    def test_large_tick_exact(self):
+        """Bug 4: round(Fraction) should return exact int for large values."""
+        result = _scale_tick(10**16, Fraction(1))
+        assert result == 10**16
+
+    def test_large_tick_scaled(self):
+        """Scaling a large tick by 1/1 should be identity."""
+        result = _scale_tick(10**16, Fraction(1, 1))
+        assert result == 10**16
+
+    def test_large_tick_no_float_loss(self):
+        """float(10**16) loses precision; Fraction-based round should not."""
+        # 10**16 + 1 cannot be represented exactly as float64
+        val = 10**16 + 1
+        result = _scale_tick(val, Fraction(1))
+        assert result == val
+
+
+# --- Bug 5: overlap fix should not corrupt mediaDuration for speed-changed clips ---
+
+class TestOverlapFixSpeedChanged:
+    def test_speed_changed_clip_preserves_media_duration(self):
+        """Bug 5: overlap fix must not recalculate mediaDuration for speed-changed clips."""
+        # Create two clips with a 1-tick overlap; first clip has speed change
+        project = _make_project([{
+            'medias': [
+                {
+                    '_type': 'VMFile', 'id': 1, 'src': 1,
+                    'start': 0, 'duration': 1001, 'mediaDuration': 2002,
+                    'scalar': '1/2',
+                    'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+                    'effects': [],
+                },
+                {
+                    '_type': 'VMFile', 'id': 2, 'src': 1,
+                    'start': 1000, 'duration': 1000, 'mediaDuration': 1000,
+                    'scalar': 1, 'effects': [],
+                },
+            ],
+        }])
+        # rescale by factor=1 so only the overlap fix runs
+        rescale_project(project, Fraction(1))
+        clip = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        # mediaDuration should be preserved (not recalculated from duration/scalar)
+        # Without the fix, it would be recalculated as 1000 / (1/2) = 2000
+        assert clip['mediaDuration'] == 2002
+
+    def test_unified_media_preserves_media_duration_when_speed_changed(self):
+        """Bug 5: speed-changed UnifiedMedia should preserve mediaDuration in overlap fix."""
+        original_md = 3000
+        project = _make_project([{
+            'medias': [
+                {
+                    '_type': 'UnifiedMedia', 'id': 1, 'src': 1,
+                    'start': 0, 'duration': 502, 'mediaDuration': original_md,
+                    'scalar': 1, 'effects': [],
+                    'metadata': {'clipSpeedAttribute': {'type': 'bool', 'value': True}},
+                    'video': {'_type': 'VMFile', 'id': 10, 'src': 1,
+                              'start': 0, 'duration': 502, 'mediaDuration': original_md,
+                              'scalar': 1, 'effects': []},
+                    'audio': {'_type': 'AMFile', 'id': 11, 'src': 1,
+                              'start': 0, 'duration': 502, 'mediaDuration': original_md,
+                              'scalar': 1, 'effects': []},
+                },
+                {
+                    '_type': 'VMFile', 'id': 2, 'src': 1,
+                    'start': 501, 'duration': 500, 'mediaDuration': 500,
+                    'scalar': 1, 'effects': [],
+                },
+            ],
+        }])
+        rescale_project(project, Fraction(1))
+        clip = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]
+        assert clip['mediaDuration'] == original_md
+
+
+# --- Bug 6: _walk_clips should recurse into nested StitchedMedia ---
+
+class TestWalkClipsNestedStitched:
+    def test_nested_stitched_media_yields_inner_clips(self):
+        """Bug 6: _walk_clips must recurse into StitchedMedia nested inside StitchedMedia."""
+        tracks = [{
+            'medias': [{
+                '_type': 'StitchedMedia', 'id': 1, 'src': 10,
+                'medias': [
+                    {
+                        '_type': 'StitchedMedia', 'id': 2, 'src': 20,
+                        'medias': [
+                            {'_type': 'VMFile', 'id': 3, 'src': 30},
+                        ],
+                    },
+                ],
+            }],
+        }]
+        clips = list(_walk_clips(tracks))
+        clip_ids = [c.get('id') for c in clips]
+        # Should yield outer StitchedMedia (1), inner StitchedMedia (2), and VMFile (3)
+        assert 1 in clip_ids
+        assert 2 in clip_ids
+        assert 3 in clip_ids
+
+    def test_replace_media_in_nested_stitched(self):
+        """Bug 6: replace_media_source should reach clips inside nested StitchedMedia."""
+        project = _make_project([{
+            'medias': [{
+                '_type': 'StitchedMedia', 'id': 1, 'src': 10,
+                'medias': [
+                    {
+                        '_type': 'StitchedMedia', 'id': 2, 'src': 10,
+                        'medias': [
+                            {'_type': 'VMFile', 'id': 3, 'src': 10},
+                        ],
+                    },
+                ],
+            }],
+        }])
+        count = replace_media_source(project, old_source_id=10, new_source_id=99)
+        inner_stitched = project['timeline']['sceneTrack']['scenes'][0]['csml']['tracks'][0]['medias'][0]['medias'][0]
+        vmfile = inner_stitched['medias'][0]
+        assert vmfile['src'] == 99
+        assert count >= 3  # outer, inner stitched, and vmfile
