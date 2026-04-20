@@ -8,29 +8,29 @@ _This section is the authoritative list of bugs reported by adversarial reviewer
 
 **Leaf clip types (base.py, audio.py, image.py, video.py, placeholder.py, screen_recording.py, callout.py):**
 
-1. `BaseClip.fade_in()` doesn't clamp fade duration to clip length. `fade_out()` and `fade()` both do `ticks = min(ticks, end)` to prevent a fade longer than the clip. `fade_in()` skips this clamp, producing keyframes with `endTime` that exceeds clip duration. Invalid keyframes. (base.py ~line 820)
+1. [verified] `BaseClip.fade_in()` doesn't clamp fade duration to clip length. `fade_out()` and `fade()` both do `ticks = min(ticks, end)` to prevent a fade longer than the clip. `fade_in()` skips this clamp, producing keyframes with `endTime` that exceeds clip duration. Invalid keyframes. (base.py ~line 820)
 
-2. `Callout.set_font()` with unrecognized string weight silently maps to 400 in textAttributes while storing the original string in `font['weight']`. `font` dict says `'SemiBold'` but textAttributes `fontWeight` = 400 (Regular). Inconsistency. The int path correctly raises ValueError for unknown weights; the string path should too. (callout.py ~line 298)
+2. [verified] `Callout.set_font()` with unrecognized string weight silently maps to 400 in textAttributes while storing the original string in `font['weight']`. `font` dict says `'SemiBold'` but textAttributes `fontWeight` = 400 (Regular). Inconsistency. The int path correctly raises ValueError for unknown weights; the string path should too. (callout.py ~line 298)
 
 **Compound clip types (group.py, stitched.py, unified.py):**
 
-3. `Group.ungroup()` ignores the Group's `scalar` when adjusting child clip timing. If the Group has non-1 scalar (sped up), extracted clips have wrong timeline positions and durations. Only adjusts start offset by adding group_start. (group.py ~line 182)
+3. [verified] `Group.ungroup()` ignores the Group's `scalar` when adjusting child clip timing. If the Group has non-1 scalar (sped up), extracted clips have wrong timeline positions and durations. Only adjusts start offset by adding group_start. (group.py ~line 182)
 
-4. `StitchedMedia.clear_segments()` leaves `scalar` and `mediaStart` stale. Resets medias/duration/mediaDuration but not scalar or mediaStart. Subsequent operations produce incorrect mediaDuration due to stale scalar. (stitched.py ~line 47)
+4. [verified] `StitchedMedia.clear_segments()` leaves `scalar` and `mediaStart` stale. Resets medias/duration/mediaDuration but not scalar or mediaStart. Subsequent operations produce incorrect mediaDuration due to stale scalar. (stitched.py ~line 47)
 
-5. `Group.sync_internal_durations()` leaves zero-duration clips with stale `mediaDuration`. When clip.start >= group_dur, sets duration=0 and continues, skipping mediaDuration update. Violates the duration = mediaDuration * scalar invariant. (group.py ~line 585)
+5. [verified] `Group.sync_internal_durations()` leaves zero-duration clips with stale `mediaDuration`. When clip.start >= group_dur, sets duration=0 and continues, skipping mediaDuration update. Violates the duration = mediaDuration * scalar invariant. (group.py ~line 585)
 
-6. `Group.set_internal_segment_speeds()` doesn't reset `mediaStart` for clips on other tracks (audio). If the Group was previously trimmed, audio clips keep their old mediaStart offset, causing A/V desync after the speed operation. (group.py ~line 567)
+6. [verified] `Group.set_internal_segment_speeds()` doesn't reset `mediaStart` for clips on other tracks (audio). If the Group was previously trimmed, audio clips keep their old mediaStart offset, causing A/V desync after the speed operation. (group.py ~line 567)
 
-7. `Group.merge_internal_tracks()` calls `self.tracks` multiple times, creating wasteful wrappers. Should snapshot `self._data['tracks']` once. Not a correctness bug but wasteful and fragile. (group.py ~line 347)
+7. [verified] `Group.merge_internal_tracks()` calls `self.tracks` multiple times, creating wasteful wrappers. Should snapshot `self._data['tracks']` once. Not a correctness bug but wasteful and fragile. (group.py ~line 347)
 
 **Track and timeline management (track.py, transitions.py, timeline.py):**
 
-8. `add_screen_recording()` creates duplicate clip IDs. Pre-assigns IDs to internal clips (bg_media, unified_media, video, audio) using `_next_clip_id()` + manual increment. Then calls `self.add_group(...)` which calls `_next_clip_id()` again — but internal clips aren't in any track yet so the scan returns the same starting ID. Group's ID collides with bg_media's. `validate_structure` will fail. (track.py ~line 1083)
+8. [verified] `add_screen_recording()` creates duplicate clip IDs. Pre-assigns IDs to internal clips (bg_media, unified_media, video, audio) using `_next_clip_id()` + manual increment. Then calls `self.add_group(...)` which calls `_next_clip_id()` again — but internal clips aren't in any track yet so the scan returns the same starting ID. Group's ID collides with bg_media's. `validate_structure` will fail. (track.py ~line 1083)
 
-9. `build_section_timeline()` positions the first transitioned clip without overlap. Cursor adjustment for transitions happens AFTER positioning the current clip, so the second clip (first with a transition) starts exactly at the end of the first with zero overlap. Camtasia transitions require clips to overlap by the transition duration. (timeline.py ~line 1067)
+9. [verified] `build_section_timeline()` positions the first transitioned clip without overlap. Cursor adjustment for transitions happens AFTER positioning the current clip, so the second clip (first with a transition) starts exactly at the end of the first with zero overlap. Camtasia transitions require clips to overlap by the transition duration. (timeline.py ~line 1067)
 
-10. `set_segment_speeds()` computes wrong mediaStart for non-unity original_scalar. Uses `timeline_ticks * (original_scalar / seg_scalar)` but correct formula is `timeline_ticks / seg_scalar`. Only manifests when the clip was already speed-changed before calling `set_segment_speeds`, then second segment onward gets wrong mediaStart by factor of original_scalar. (track.py ~line 1685)
+10. [verified] `set_segment_speeds()` computes wrong mediaStart for non-unity original_scalar. Uses `timeline_ticks * (original_scalar / seg_scalar)` but correct formula is `timeline_ticks / seg_scalar`. Only manifests when the clip was already speed-changed before calling `set_segment_speeds`, then second segment onward gets wrong mediaStart by factor of original_scalar. (track.py ~line 1685)
 
 ## TechSmith Tutorial Analysis
 
