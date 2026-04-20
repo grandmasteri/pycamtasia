@@ -4,7 +4,47 @@
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+### From unbiased 6-domain review (cycle 8 domains 1-3)
+
+**Leaf clips:**
+
+1. [verified] `set_speed()` on Group doesn't update wrapper `duration`. Inner clips get scaled but wrapper `duration` stays same \u2014 inconsistent with contents. (base.py)
+
+2. [verified] `PlaceholderMedia.subtitle` getter returns `None` instead of `''` when key exists with null value. `.get('key', '')` returns None for explicit null, not the default. (placeholder.py ~L24)
+
+3. [verified] `duration.setter` IMFile `mediaDuration=1` override doesn't apply to UnifiedMedia image sub-clips. Propagates wrapper's calculated mediaDuration. (base.py ~L128)
+
+4. [verified] `scalar.setter` same issue as #3 for UnifiedMedia image sub-clips. (base.py ~L280)
+
+5. [verified] `set_speed()` on StitchedMedia doesn't update wrapper `duration`. Inner segments are re-laid-out but wrapper duration inconsistent. (base.py ~L326)
+
+**Compound clips:**
+
+6. [verified] `Group.ungroup()` doesn't scale effects on UnifiedMedia video/audio sub-clips when group_scalar != 1. Scales wrapper's effects (always empty for UnifiedMedia) but not sub-clips'. (group.py ~L200)
+
+7. [verified] `is_video` returns False for StitchedMedia containing UnifiedMedia segments. Only checks for VMFile/ScreenVMFile types. (base.py ~L72)
+
+8. [verified] `set_internal_segment_speeds()` silently skips UnifiedMedia on non-primary internal tracks. Only updates VMFile/ScreenVMFile/AMFile. (group.py ~L643)
+
+9. [verified] `Group.ungroup()` doesn't propagate to UnifiedMedia segments inside StitchedMedia. StitchedMedia wrapper gets scaled but nested UnifiedMedia sub-dicts stale. (group.py ~L208)
+
+10. [verified] `sync_internal_durations()` doesn't propagate trimmed timing to UnifiedMedia segments inside StitchedMedia. Inner segments adjusted but their video/audio sub-dicts stale. (group.py ~L695)
+
+**Track/timeline:**
+
+11. [verified] `set_segment_speeds()` doesn't update `mediaDuration` after changing `scalar`. HIGH severity \u2014 every speed-changed segment has wrong mediaDuration, Camtasia reads wrong amount of source media. (track.py ~L1770)
+
+12. [verified] `scale_all_durations()` doesn't scale effects inside UnifiedMedia sub-clips. Only wrapper's effects scaled. (track.py ~L1950)
+
+13. [verified] `Timeline.remove_gap()` doesn't check for clips that span the gap region. Clip starting before gap but extending into it passes validation, creates overlaps after shift. (timeline.py ~L487)
+
+14. [verified] `Track.remove_gap_at()` unconditionally clears ALL transitions. Destroys transitions between unaffected clips. (track.py ~L1937)
+
+15. [verified] `Track.add_image_sequence()` floating-point drift in `offset` accumulation. Many images accumulate error causing 1-tick gaps/overlaps. (track.py ~L1580)
+
+16. [verified] `Timeline.build_section_timeline()` leaves dangling transitions on source track when clips are moved to target track. (timeline.py ~L553)
+
+17. [verified] `Timeline.build_section_timeline()` doesn't clean up stale transitions on target track when clips are repositioned. (timeline.py)
 
 ## TechSmith Tutorial Analysis
 
