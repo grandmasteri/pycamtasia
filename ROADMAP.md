@@ -16,120 +16,120 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 ### Getting Started (5)
 
-- [ ] [What's New in Camtasia Editor](https://www.techsmith.com/learn/tutorials/camtasia/whats-new-camtasia/)
-- [ ] [Build Your First Video](https://www.techsmith.com/learn/tutorials/camtasia/record-edit-share/)
-- [ ] [Basic Edits After Recording](https://www.techsmith.com/learn/tutorials/camtasia/basic-video-edits/)
-- [ ] [Introduction to Camtasia Recorder](https://www.techsmith.com/learn/tutorials/camtasia/camtasia-recorder/)
-- [ ] [Export & Share Your Video](https://www.techsmith.com/learn/tutorials/camtasia/export-share/)
+- [not-applicable] [What's New in Camtasia Editor](https://www.techsmith.com/learn/tutorials/camtasia/whats-new-camtasia/) — Camtasia desktop app release notes; not relevant to file manipulation
+- [already-implemented] [Build Your First Video](https://www.techsmith.com/learn/tutorials/camtasia/record-edit-share/) — TimelineBuilder, build_from_screenplay, import_media, track/clip APIs cover the building blocks
+- [already-implemented] [Basic Edits After Recording](https://www.techsmith.com/learn/tutorials/camtasia/basic-video-edits/) — trim/split/reorder via timeline/clips/base.py; ripple_insert/delete in operations/layout.py
+- [not-applicable] [Introduction to Camtasia Recorder](https://www.techsmith.com/learn/tutorials/camtasia/camtasia-recorder/) — Screen recording is OS-level capture, not .cmproj manipulation
+- [not-applicable] [Export & Share Your Video](https://www.techsmith.com/learn/tutorials/camtasia/export-share/) — Video encoding/rendering requires the Camtasia engine; pycamtasia exports metadata only (EDL/CSV/SRT/JSON/report)
 
 ### Common Ways to Make a Video (9)
 
-- [ ] [Edit Zoom Recordings](https://www.techsmith.com/learn/tutorials/camtasia/edit-zoom-recording/)
-- [ ] [Import & Manage Your Project Media (Media Bin)](https://www.techsmith.com/learn/tutorials/camtasia/import-manage-media/)
-- [ ] [Edit Microsoft Teams & Other Meeting Recordings](https://www.techsmith.com/learn/tutorials/camtasia/meeting-recordings/)
-- [ ] [Create Vertical Videos](https://www.techsmith.com/learn/tutorials/camtasia/create-vertical-videos/)
-- [ ] [Create a Video from a Script](https://www.techsmith.com/learn/tutorials/camtasia/create-video-from-script/)
-- [ ] [Collaborate on a Video Project](https://www.techsmith.com/learn/tutorials/camtasia/collaborate-video-project/)
-- [ ] [Record an iOS Demo or Tutorial](https://www.techsmith.com/learn/tutorials/camtasia/recording-your-ios-device/)
-- [ ] [Record a PowerPoint Presentation](https://www.techsmith.com/learn/tutorials/camtasia/record-a-powerpoint-presentation/)
-- [ ] [Import Presentation Slides](https://www.techsmith.com/learn/tutorials/camtasia/import-powerpoint-slides/)
+- [already-implemented] [Edit Zoom Recordings](https://www.techsmith.com/learn/tutorials/camtasia/edit-zoom-recording/) — Generic video import/edit covers all non-Zoom-specific cases; no Zoom-UI specific features apply to .cmproj manipulation
+- [already-implemented] [Import & Manage Your Project Media (Media Bin)](https://www.techsmith.com/learn/tutorials/camtasia/import-manage-media/) — media_bin/media_bin.py provides full MediaBin API with import_media, probing, metadata
+- [already-implemented] [Edit Microsoft Teams & Other Meeting Recordings](https://www.techsmith.com/learn/tutorials/camtasia/meeting-recordings/) — Generic video import/edit covers this; no Teams-UI-specific features apply
+- [already-implemented] [Create Vertical Videos](https://www.techsmith.com/learn/tutorials/camtasia/create-vertical-videos/) — project.width/height setters allow setting canvas to vertical (e.g., 1080x1920)
+- [already-implemented] [Create a Video from a Script](https://www.techsmith.com/learn/tutorials/camtasia/create-video-from-script/) — builders/screenplay_builder.py build_from_screenplay places VO audio clips with pauses
+- [not-applicable] [Collaborate on a Video Project](https://www.techsmith.com/learn/tutorials/camtasia/collaborate-video-project/) — Real-time cloud collaboration; operations/diff.py supports offline comparison
+- [not-applicable] [Record an iOS Demo or Tutorial](https://www.techsmith.com/learn/tutorials/camtasia/recording-your-ios-device/) — iOS screen recording is hardware capture, outside file-manipulation scope
+- [not-applicable] [Record a PowerPoint Presentation](https://www.techsmith.com/learn/tutorials/camtasia/record-a-powerpoint-presentation/) — Requires the Camtasia Recorder + PowerPoint integration, not a file concern
+- [feature-gap] [Import Presentation Slides](https://www.techsmith.com/learn/tutorials/camtasia/import-powerpoint-slides/) — No PPTX import; would extract slide images and place as media on timeline
 
 ### Enhance Your Video (12)
 
-- [ ] [Visual Effects Overview](https://www.techsmith.com/learn/tutorials/camtasia/visual-effects/)
-- [ ] [Add Arrows, Shapes, & Callouts](https://www.techsmith.com/learn/tutorials/camtasia/annotations/)
-- [ ] [Add a Dynamic Background](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-backgrounds/)
-- [ ] [4 Ways to Visualize Your Audio](https://www.techsmith.com/learn/tutorials/camtasia/audio-visualizers/)
-- [ ] [Create the Illusion of 3D Perspective (Corner Pinning)](https://www.techsmith.com/learn/tutorials/camtasia/corner-pinning/)
-- [ ] [Remove a Background from Your Video](https://www.techsmith.com/learn/tutorials/camtasia/video-background-removal/)
-- [ ] [Enhance Your Video Overview](https://www.techsmith.com/learn/tutorials/camtasia/enhance-video/)
-- [ ] [Add Video Filters](https://www.techsmith.com/learn/tutorials/camtasia/filters/)
-- [ ] [Provide Context with Device Frames](https://www.techsmith.com/learn/tutorials/camtasia/device-frames/)
-- [ ] [Remove A Color (Green Screen)](https://www.techsmith.com/learn/tutorials/camtasia/how-to-remove-a-color/)
+- [already-implemented] [Visual Effects Overview](https://www.techsmith.com/learn/tutorials/camtasia/visual-effects/) — Comprehensive effects/ module: DropShadow, Glow, Mask, BlurRegion, ColorAdjustment, LutEffect, etc.
+- [already-implemented] [Add Arrows, Shapes, & Callouts](https://www.techsmith.com/learn/tutorials/camtasia/annotations/) — annotations/callouts.py (text, square, arrow, highlight, keystroke_callout) and shapes.py (rectangle)
+- [partial] [Add a Dynamic Background](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-backgrounds/) — TimelineBuilder.add_background_image for static; no animated/dynamic background generator yet
+- [feature-gap] [4 Ways to Visualize Your Audio](https://www.techsmith.com/learn/tutorials/camtasia/audio-visualizers/) — No audio visualization (waveform/spectrum/reactive animations)
+- [feature-gap] [Create the Illusion of 3D Perspective (Corner Pinning)](https://www.techsmith.com/learn/tutorials/camtasia/corner-pinning/) — No CornerPin effect class
+- [already-implemented] [Remove a Background from Your Video](https://www.techsmith.com/learn/tutorials/camtasia/video-background-removal/) — MediaMatte effect in effects/visual.py is Camtasia’s matte/background-removal mechanism
+- [already-implemented] [Enhance Your Video Overview](https://www.techsmith.com/learn/tutorials/camtasia/enhance-video/) — ColorAdjustment, LutEffect, DropShadow, Glow, Emphasize, Spotlight, MotionBlur, RoundCorners
+- [already-implemented] [Add Video Filters](https://www.techsmith.com/learn/tutorials/camtasia/filters/) — effects/visual.py provides color grading (LutEffect), blend modes, Spotlight, Emphasize, MotionBlur
+- [feature-gap] [Provide Context with Device Frames](https://www.techsmith.com/learn/tutorials/camtasia/device-frames/) — No device frame overlay (phone/laptop/tablet bezels)
+- [feature-gap] [Remove A Color (Green Screen)](https://www.techsmith.com/learn/tutorials/camtasia/how-to-remove-a-color/) — No dedicated chroma key / color-key effect; MediaMatte is a different matte concept
 
 ### Edit on the Timeline (13)
 
-- [ ] [Basic Edits After Recording](https://www.techsmith.com/learn/tutorials/camtasia/basic-video-edits/)
-- [ ] [3 Keys to the Camtasia Editor Timeline](https://www.techsmith.com/learn/tutorials/camtasia/timeline-key-concepts/)
-- [ ] [Explore the Timeline](https://www.techsmith.com/learn/tutorials/camtasia/video-editing/)
-- [ ] [Add Markers & Video Table of Contents](https://www.techsmith.com/learn/tutorials/camtasia/markers-and-table-of-contents/)
-- [ ] [Freeze Video Clips with Extend Frame](https://www.techsmith.com/learn/tutorials/camtasia/extend-frame/)
-- [ ] [Speed Up & Slow Down Video Clips](https://www.techsmith.com/learn/tutorials/camtasia/clip-speed/)
-- [ ] [Join Clips Together](https://www.techsmith.com/learn/tutorials/camtasia/stitch-media/)
-- [ ] [Move Multiple Clips at Once](https://www.techsmith.com/learn/tutorials/camtasia/ripple-move/)
-- [ ] [Ripple Move & Extend Frame](https://www.techsmith.com/learn/tutorials/camtasia/ripple-move-and-extend-frame/)
-- [ ] [Close Timeline Gaps with Magnetic Tracks](https://www.techsmith.com/learn/tutorials/camtasia/magnetic-tracks/)
+- [already-implemented] [Basic Edits After Recording](https://www.techsmith.com/learn/tutorials/camtasia/basic-video-edits/) — trim/split/reorder via timeline/clips/base.py; ripple_insert/delete in operations/layout.py
+- [not-applicable] [3 Keys to the Camtasia Editor Timeline](https://www.techsmith.com/learn/tutorials/camtasia/timeline-key-concepts/) — UI-orientation tutorial for the desktop app
+- [not-applicable] [Explore the Timeline](https://www.techsmith.com/learn/tutorials/camtasia/video-editing/) — UI-orientation tutorial; pycamtasia already models the timeline fully
+- [already-implemented] [Add Markers & Video Table of Contents](https://www.techsmith.com/learn/tutorials/camtasia/markers-and-table-of-contents/) — timeline/markers.py MarkerList with add/remove/clear/replace; exported as SRT
+- [already-implemented] [Freeze Video Clips with Extend Frame](https://www.techsmith.com/learn/tutorials/camtasia/extend-frame/) — track.py add_freeze_frame method on Track
+- [already-implemented] [Speed Up & Slow Down Video Clips](https://www.techsmith.com/learn/tutorials/camtasia/clip-speed/) — clips/base.py set_speed, scalar, operations/speed.py rescale_project, set_segment_speeds
+- [partial] [Join Clips Together](https://www.techsmith.com/learn/tutorials/camtasia/stitch-media/) — StitchedMedia clip type exists; no explicit single-track “join two adjacent clips” operation yet
+- [already-implemented] [Move Multiple Clips at Once](https://www.techsmith.com/learn/tutorials/camtasia/ripple-move/) — operations/batch.py move_all, apply_to_clips; track.py move_clip
+- [already-implemented] [Ripple Move & Extend Frame](https://www.techsmith.com/learn/tutorials/camtasia/ripple-move-and-extend-frame/) — operations/layout.py ripple_insert/delete; add_freeze_frame
+- [already-implemented] [Close Timeline Gaps with Magnetic Tracks](https://www.techsmith.com/learn/tutorials/camtasia/magnetic-tracks/) — track.magnetic property; operations/layout.py pack_track
 
 ### AI Video (6)
 
-- [ ] [Speed Up Editing with Camtasia Audiate](https://www.techsmith.com/learn/tutorials/camtasia/camtasia-audio-sync/)
-- [ ] [Introduction to AI Video Generation](https://www.techsmith.com/learn/tutorials/camtasia/introduction-ai-video/)
-- [ ] [Generate AI Avatars](https://www.techsmith.com/learn/tutorials/camtasia/ai-avatar/)
-- [ ] [Generate AI Voices from Text or a Script](https://www.techsmith.com/learn/tutorials/camtasia/text-to-speech/)
-- [ ] [Generate a Script with AI](https://www.techsmith.com/learn/tutorials/camtasia/ai-script/)
-- [ ] [Translate Your Script, Audio, and Captions](https://www.techsmith.com/learn/tutorials/camtasia/translate/)
+- [partial] [Speed Up Editing with Camtasia Audiate](https://www.techsmith.com/learn/tutorials/camtasia/camtasia-audio-sync/) — Read-only Audiate transcript support; no write-back or Audiate-driven edit operations
+- [not-applicable] [Introduction to AI Video Generation](https://www.techsmith.com/learn/tutorials/camtasia/introduction-ai-video/) — Cloud AI service; requires Camtasia backend
+- [not-applicable] [Generate AI Avatars](https://www.techsmith.com/learn/tutorials/camtasia/ai-avatar/) — Cloud AI service; requires Camtasia backend
+- [not-applicable] [Generate AI Voices from Text or a Script](https://www.techsmith.com/learn/tutorials/camtasia/text-to-speech/) — Cloud AI TTS service; library could insert resulting audio but generation itself is out of scope
+- [not-applicable] [Generate a Script with AI](https://www.techsmith.com/learn/tutorials/camtasia/ai-script/) — Cloud AI service; out of scope
+- [partial] [Translate Your Script, Audio, and Captions](https://www.techsmith.com/learn/tutorials/camtasia/translate/) — Captions/SRT export exists; no translation pipeline. Could add extract/reimport helpers
 
 ### Edit Audio (8)
 
-- [ ] [Recommended Audio Edits](https://www.techsmith.com/learn/tutorials/camtasia/recommended-audio-edits/)
-- [ ] [Tips for Getting the Best Audio](https://www.techsmith.com/learn/tutorials/camtasia/best-audio-tips/)
-- [ ] [Set the Tone with Background Music](https://www.techsmith.com/learn/tutorials/camtasia/background-music/)
-- [ ] [Edit Audio](https://www.techsmith.com/learn/tutorials/camtasia/editing-audio/)
-- [ ] [Add Audio Effects](https://www.techsmith.com/learn/tutorials/camtasia/add-audio-effects/)
-- [ ] [Record Voice Narration](https://www.techsmith.com/learn/tutorials/camtasia/record-voice-narration/)
+- [partial] [Recommended Audio Edits](https://www.techsmith.com/learn/tutorials/camtasia/recommended-audio-edits/) — Volume/gain/fade/mute implemented; no dedicated normalization/compression/EQ helpers
+- [not-applicable] [Tips for Getting the Best Audio](https://www.techsmith.com/learn/tutorials/camtasia/best-audio-tips/) — Hardware/recording-technique advice; not a file-manipulation concern
+- [already-implemented] [Set the Tone with Background Music](https://www.techsmith.com/learn/tutorials/camtasia/background-music/) — project.add_background_music with volume and fade keyframes
+- [already-implemented] [Edit Audio](https://www.techsmith.com/learn/tutorials/camtasia/editing-audio/) — volume, gain, fade in/out, mute, strip_audio, normalize_audio
+- [partial] [Add Audio Effects](https://www.techsmith.com/learn/tutorials/camtasia/add-audio-effects/) — VST_NOISE_REMOVAL enum and categoryAudioEffects exist; no typed audio-effect wrapper classes yet
+- [not-applicable] [Record Voice Narration](https://www.techsmith.com/learn/tutorials/camtasia/record-voice-narration/) — Recording audio is hardware capture; pycamtasia has add_voiceover_sequence for placing pre-recorded files
 
 ### Cursor Edits & Effects (5)
 
-- [ ] [Add Cursor Effects](https://www.techsmith.com/learn/tutorials/camtasia/cursor-effects/)
-- [ ] [Introduction to Cursor Editing](https://www.techsmith.com/learn/tutorials/camtasia/cursor-editing-basics/)
-- [ ] [Replace the Cursor](https://www.techsmith.com/learn/tutorials/camtasia/change-cursor/)
-- [ ] [Customize the Cursor Path](https://www.techsmith.com/learn/tutorials/camtasia/customize-your-cursor-path/)
-- [ ] [Quickly Smooth Cursor Movements](https://www.techsmith.com/learn/tutorials/camtasia/cursor-smoothing/)
+- [already-implemented] [Add Cursor Effects](https://www.techsmith.com/learn/tutorials/camtasia/cursor-effects/) — effects/cursor.py: CursorMotionBlur, CursorShadow, CursorPhysics, LeftClickScaling
+- [already-implemented] [Introduction to Cursor Editing](https://www.techsmith.com/learn/tutorials/camtasia/cursor-editing-basics/) — ScreenVMFile exposes cursor_scale, cursor_opacity, cursor_motion_blur_intensity, cursor_shadow, cursor_physics, left_click_scaling
+- [partial] [Replace the Cursor](https://www.techsmith.com/learn/tutorials/camtasia/change-cursor/) — ScreenIMFile.cursor_image_path is read-only; no setter to replace the cursor image
+- [partial] [Customize the Cursor Path](https://www.techsmith.com/learn/tutorials/camtasia/customize-your-cursor-path/) — cursor_location_keyframes is read-only; no API to modify per-frame cursor positions
+- [partial] [Quickly Smooth Cursor Movements](https://www.techsmith.com/learn/tutorials/camtasia/cursor-smoothing/) — smooth_cursor_across_edit_duration is read-only; no setter to enable/configure smoothing
 
 ### Video Animations (7)
 
-- [ ] [Zoom In to Focus Attention](https://www.techsmith.com/learn/tutorials/camtasia/animations/)
-- [ ] [Add a Transition](https://www.techsmith.com/learn/tutorials/camtasia/video-transitions/)
-- [ ] [Animations In-Depth](https://www.techsmith.com/learn/tutorials/camtasia/animations-in-depth/)
-- [ ] [Add Movement to Any Object (Motion Paths)](https://www.techsmith.com/learn/tutorials/camtasia/motion-path/)
-- [ ] [Blur or Mask a Video](https://www.techsmith.com/learn/tutorials/camtasia/blur-mask-video/)
-- [ ] [Animate Text & Images with Behaviors](https://www.techsmith.com/learn/tutorials/camtasia/animation-behaviors/)
-- [ ] [Create Stunning Animations with Media Mattes](https://www.techsmith.com/learn/tutorials/camtasia/animations-with-media-mattes/)
+- [already-implemented] [Zoom In to Focus Attention](https://www.techsmith.com/learn/tutorials/camtasia/animations/) — project.add_zoom_to_region, timeline.add_zoom_pan / zoom_pan_keyframes, clip set_scale_keyframes/set_position_keyframes
+- [already-implemented] [Add a Transition](https://www.techsmith.com/learn/tutorials/camtasia/video-transitions/) — timeline/transitions.py TransitionList with add, add_fade, add_card_flip, add_glitch, add_linear_blur, add_stretch, add_paint_arcs
+- [already-implemented] [Animations In-Depth](https://www.techsmith.com/learn/tutorials/camtasia/animations-in-depth/) — animation_tracks, _add_visual_tracks_for_keyframes, _add_opacity_track, set_scale_keyframes, set_position_keyframes, fade_in/fade_out
+- [partial] [Add Movement to Any Object (Motion Paths)](https://www.techsmith.com/learn/tutorials/camtasia/motion-path/) — set_position_keyframes supports linear movement; no bezier/curved motion paths or easing presets
+- [already-implemented] [Blur or Mask a Video](https://www.techsmith.com/learn/tutorials/camtasia/blur-mask-video/) — Mask effect with shape/opacity/blend/invert/rotation/size/position/corner-radius; BlurRegion (unregistered); add_motion_blur
+- [already-implemented] [Animate Text & Images with Behaviors](https://www.techsmith.com/learn/tutorials/camtasia/animation-behaviors/) — effects/behaviors.py GenericBehaviorEffect with BehaviorPhase; callout add_behavior; templates/behavior_presets
+- [already-implemented] [Create Stunning Animations with Media Mattes](https://www.techsmith.com/learn/tutorials/camtasia/animations-with-media-mattes/) — effects/visual.py MediaMatte; BaseClip.add_media_matte builder
 
 ### Viewer Engagement & Accessibility (5)
 
-- [ ] [Add Closed Captions to a Video](https://www.techsmith.com/learn/tutorials/camtasia/add-closed-captions/)
-- [ ] [Add Dynamic Captions](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-captions/)
-- [ ] [Build Quizzes & Surveys](https://www.techsmith.com/learn/tutorials/camtasia/quizzing/)
-- [ ] [Add Hotspots (Interactive Videos)](https://www.techsmith.com/learn/tutorials/camtasia/add-interactive-hotspots-to-a-video/)
+- [partial] [Add Closed Captions to a Video](https://www.techsmith.com/learn/tutorials/camtasia/add-closed-captions/) — CaptionAttributes styling + SRT export; no API to add/edit individual caption entries on the timeline
+- [feature-gap] [Add Dynamic Captions](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-captions/) — Animated word-by-word caption overlays not supported
+- [not-applicable] [Build Quizzes & Surveys](https://www.techsmith.com/learn/tutorials/camtasia/quizzing/) — Interactive player-runtime features; not .cmproj manipulation
+- [not-applicable] [Add Hotspots (Interactive Videos)](https://www.techsmith.com/learn/tutorials/camtasia/add-interactive-hotspots-to-a-video/) — Player-runtime interactivity; not .cmproj manipulation
 
 ### Export & Share (5)
 
-- [ ] [Use Camtasia Videos in Your LMS](https://www.techsmith.com/learn/tutorials/camtasia/lms-options/)
-- [ ] [Export & Share Your Video](https://www.techsmith.com/learn/tutorials/camtasia/export-share/)
-- [ ] [Watermark Your Videos](https://www.techsmith.com/learn/tutorials/camtasia/video-watermark/)
-- [ ] [Batch Export Videos](https://www.techsmith.com/learn/tutorials/camtasia/batch-export/)
-- [ ] [Export an Audio File](https://www.techsmith.com/learn/tutorials/camtasia/export-audio/)
+- [not-applicable] [Use Camtasia Videos in Your LMS](https://www.techsmith.com/learn/tutorials/camtasia/lms-options/) — LMS integration (SCORM/xAPI packaging) is deployment concern
+- [not-applicable] [Export & Share Your Video](https://www.techsmith.com/learn/tutorials/camtasia/export-share/) — Video encoding/rendering requires the Camtasia engine; pycamtasia exports metadata only (EDL/CSV/SRT/JSON/report)
+- [already-implemented] [Watermark Your Videos](https://www.techsmith.com/learn/tutorials/camtasia/video-watermark/) — project.add_watermark
+- [not-applicable] [Batch Export Videos](https://www.techsmith.com/learn/tutorials/camtasia/batch-export/) — Batch video rendering/encoding; library cannot render video files
+- [partial] [Export an Audio File](https://www.techsmith.com/learn/tutorials/camtasia/export-audio/) — export_audio_clips lists source paths; no actual audio encoding (correctly out of scope for a file-manipulation library)
 
 ### Customizations & Branding (8)
 
-- [ ] [Reuse Media Across Projects (Library)](https://www.techsmith.com/learn/tutorials/camtasia/library/)
-- [ ] [Customize Camtasia Editor](https://www.techsmith.com/learn/tutorials/camtasia/customize-camtasia/)
-- [ ] [How to Use a Template](https://www.techsmith.com/learn/tutorials/camtasia/use-a-template/)
-- [ ] [Build a Video Template to Share](https://www.techsmith.com/learn/tutorials/camtasia/create-a-template/)
-- [ ] [Build Your Color Palette (Themes)](https://www.techsmith.com/learn/tutorials/camtasia/themes/)
-- [ ] [Package & Share Camtasia Editor Resources](https://www.techsmith.com/learn/tutorials/camtasia/package-share-camtasia-resources/)
-- [ ] [Customize Shortcuts](https://www.techsmith.com/learn/tutorials/camtasia/customize-camtasia-shortcuts/)
-- [ ] [Create Custom Assets](https://www.techsmith.com/learn/tutorials/camtasia/create-custom-assets/)
+- [partial] [Reuse Media Across Projects (Library)](https://www.techsmith.com/learn/tutorials/camtasia/library/) — replace_media_source exists; no .libzip Camtasia Library import/export
+- [not-applicable] [Customize Camtasia Editor](https://www.techsmith.com/learn/tutorials/camtasia/customize-camtasia/) — UI preferences stored outside .cmproj files
+- [already-implemented] [How to Use a Template](https://www.techsmith.com/learn/tutorials/camtasia/use-a-template/) — operations/template.py duplicate_project(clear_media=True); clone_project_structure; templates/
+- [partial] [Build a Video Template to Share](https://www.techsmith.com/learn/tutorials/camtasia/create-a-template/) — duplicate_project creates reusable template projects; no .camtemplate packaging format
+- [feature-gap] [Build Your Color Palette (Themes)](https://www.techsmith.com/learn/tutorials/camtasia/themes/) — themeMappings exist in .cmproj but no API to define/apply/swap named color palettes
+- [not-applicable] [Package & Share Camtasia Editor Resources](https://www.techsmith.com/learn/tutorials/camtasia/package-share-camtasia-resources/) — .campackage/.libzip bundling is an application packaging concern
+- [not-applicable] [Customize Shortcuts](https://www.techsmith.com/learn/tutorials/camtasia/customize-camtasia-shortcuts/) — Keyboard shortcuts are Camtasia app preferences; not in .cmproj
+- [partial] [Create Custom Assets](https://www.techsmith.com/learn/tutorials/camtasia/create-custom-assets/) — Can create callouts, lower thirds, title cards programmatically; no .campackage asset export
 
 ### Projects (6)
 
-- [ ] [How to Make an Intro for a Video](https://www.techsmith.com/learn/tutorials/camtasia/how-to-make-an-intro/)
-- [ ] [Create a Quick Tip Style Video](https://www.techsmith.com/learn/tutorials/camtasia/create-a-quick-tip-style-video-template/)
-- [ ] [How to Create a Software Tutorial](https://www.techsmith.com/learn/tutorials/camtasia/how-to-create-a-great-tutorial/)
-- [ ] [How to Make an Explainer Video](https://www.techsmith.com/learn/tutorials/camtasia/how-to-make-an-explainer-video/)
-- [ ] [How to Create a Product Walkthrough Video](https://www.techsmith.com/learn/tutorials/camtasia/how-to-create-a-product-walkthrough-video/)
-- [ ] [How to Make a Software Demo](https://www.techsmith.com/learn/tutorials/camtasia/how-to-make-a-software-demo/)
+- [already-implemented] [How to Make an Intro for a Video](https://www.techsmith.com/learn/tutorials/camtasia/how-to-make-an-intro/) — add_title_card, add_countdown, add_lower_third, TimelineBuilder.add_title, build_from_screenplay_file
+- [not-applicable] [Create a Quick Tip Style Video](https://www.techsmith.com/learn/tutorials/camtasia/create-a-quick-tip-style-video-template/) — Content-style workflow tutorial, not a discrete feature
+- [not-applicable] [How to Create a Software Tutorial](https://www.techsmith.com/learn/tutorials/camtasia/how-to-create-a-great-tutorial/) — Workflow tutorial; editing features already covered by existing modules
+- [not-applicable] [How to Make an Explainer Video](https://www.techsmith.com/learn/tutorials/camtasia/how-to-make-an-explainer-video/) — Content-genre workflow tutorial; not a discrete feature
+- [not-applicable] [How to Create a Product Walkthrough Video](https://www.techsmith.com/learn/tutorials/camtasia/how-to-create-a-product-walkthrough-video/) — Workflow tutorial, not a discrete feature
+- [not-applicable] [How to Make a Software Demo](https://www.techsmith.com/learn/tutorials/camtasia/how-to-make-a-software-demo/) — Workflow tutorial, not a discrete feature
 
 ## High-Level API Improvement Ideas (from demo production)
 
