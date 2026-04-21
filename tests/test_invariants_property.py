@@ -349,6 +349,17 @@ class UnifiedMediaStateMachine(RuleBasedStateMachine):
         group = track.group_clips(clip_ids)
         track.ungroup_clip(group.id)
 
+    @rule()
+    def do_save_reload_roundtrip(self) -> None:
+        """Save the project and reload it, then continue mutating. Catches serialization bugs."""
+        import json
+        # Serialize and parse back in-place (simulates save+reload)
+        serialized = json.dumps(self.proj._data)
+        reloaded = json.loads(serialized)
+        # Swap the underlying dict
+        self.proj._data.clear()
+        self.proj._data.update(reloaded)
+
     @invariant()
     def compound_invariants_hold(self) -> None:
         issues = _check_compound_invariants(self.proj._data)
@@ -405,3 +416,231 @@ class TestInvariantCheckerDetectsViolations:
         ]}}]}}}
         issues = _check_compound_invariants(data)
         assert issues == []
+
+
+
+def _make_project_with_group() -> object:
+    """Build a project with a Group containing a UnifiedMedia clip and a simple IMFile."""
+    from pathlib import Path
+    import tempfile
+
+    from camtasia import Project
+    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    proj = Project.new(str(tmp), width=1920, height=1080)
+    src_id = proj.media_bin.next_id()
+    proj._data.setdefault('sourceBin', []).append({
+        '_type': 'IMFile', 'id': src_id, 'src': './media/fake.png',
+        'sourceTracks': [{'range': [0, 1], 'type': 'Video', 'editRate': 30,
+            'trackRect': [0, 0, 1920, 1080], 'sampleRate': 30, 'bitDepth': 24,
+            'numChannels': 0, 'integratedLUFS': 100.0, 'peakLevel': -1.0,
+            'metaData': 'fake.png'}],
+        'lastMod': 'X', 'loudnessNormalization': False, 'rect': [0, 0, 1920, 1080],
+    })
+    track = proj.timeline.tracks[0]
+    # Inject a Group with one inner UnifiedMedia + one inner IMFile
+    track._data.setdefault('medias', []).append({
+        '_type': 'Group', 'id': 200, 'start': 0,
+        'duration': seconds_to_ticks(10.0), 'mediaStart': 0,
+        'mediaDuration': seconds_to_ticks(10.0), 'scalar': 1,
+        'parameters': {}, 'effects': [], 'metadata': {},
+        'animationTracks': {}, 'attributes': {'ident': '', 'widthAttr': 1920.0, 'heightAttr': 1080.0},
+        'tracks': [{
+            'trackIndex': 0,
+            'medias': [
+                {
+                    '_type': 'UnifiedMedia', 'id': 201, 'start': 0,
+                    'duration': seconds_to_ticks(5.0), 'mediaStart': 0,
+                    'mediaDuration': seconds_to_ticks(5.0), 'scalar': 1,
+                    'parameters': {}, 'effects': [], 'metadata': {},
+                    'animationTracks': {}, 'attributes': {},
+                    'video': {'_type': 'VMFile', 'id': 202, 'src': src_id, 'start': 0,
+                        'duration': seconds_to_ticks(5.0), 'mediaStart': 0,
+                        'mediaDuration': seconds_to_ticks(5.0), 'scalar': 1,
+                        'trackNumber': 0, 'parameters': {}, 'effects': [], 'metadata': {},
+                        'animationTracks': {}, 'attributes': {'ident': ''}},
+                    'audio': {'_type': 'AMFile', 'id': 203, 'src': src_id, 'start': 0,
+                        'duration': seconds_to_ticks(5.0), 'mediaStart': 0,
+                        'mediaDuration': seconds_to_ticks(5.0), 'scalar': 1,
+                        'channelNumber': '0', 'trackNumber': 0, 'parameters': {},
+                        'effects': [], 'metadata': {}, 'animationTracks': {},
+                        'attributes': {'ident': ''}},
+                },
+                {
+                    '_type': 'IMFile', 'id': 204, 'src': src_id,
+                    'start': seconds_to_ticks(5.0), 'duration': seconds_to_ticks(5.0),
+                    'mediaStart': 0, 'mediaDuration': 1, 'scalar': 1,
+                    'trackNumber': 0, 'parameters': {}, 'effects': [], 'metadata': {},
+                    'animationTracks': {}, 'attributes': {'ident': ''},
+                    'trimStartSum': 0,
+                },
+            ],
+            'transitions': [],
+        }],
+    })
+    assert _check_compound_invariants(proj._data) == []
+    return proj
+
+
+class GroupStateMachine(RuleBasedStateMachine):
+    """Stateful test: random mutations on a Group-containing project."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.proj = _make_project_with_group()
+
+    def _group(self) -> object | None:
+        for c in self.proj.timeline.tracks[0].clips:
+            if c.clip_type == 'Group':
+                return c
+        return None
+
+    @rule(speed=st.floats(min_value=0.25, max_value=4.0, allow_nan=False, allow_infinity=False))
+    def do_set_speed_group(self, speed: float) -> None:
+        g = self._group()
+        if g is not None:
+            g.set_speed(speed)
+
+    @rule(factor_num=st.integers(min_value=1, max_value=4), factor_denom=st.integers(min_value=1, max_value=4))
+    def do_rescale(self, factor_num: int, factor_denom: int) -> None:
+        from camtasia.operations.speed import rescale_project
+        rescale_project(self.proj._data, Fraction(factor_num, factor_denom))
+
+    @rule(shift_seconds=st.floats(min_value=-3.0, max_value=3.0, allow_nan=False, allow_infinity=False))
+    def do_shift(self, shift_seconds: float) -> None:
+        self.proj.timeline.shift_all(shift_seconds)
+
+    @rule(factor=st.floats(min_value=0.25, max_value=4.0, allow_nan=False, allow_infinity=False))
+    def do_scale_all_durations(self, factor: float) -> None:
+        self.proj.timeline.tracks[0].scale_all_durations(factor)
+
+    @rule()
+    def do_ungroup(self) -> None:
+        """Ungroup, placing inner clips back on the track."""
+        g = self._group()
+        if g is not None:
+            self.proj.timeline.tracks[0].ungroup_clip(g.id)
+
+    @invariant()
+    def compound_invariants_hold(self) -> None:
+        issues = _check_compound_invariants(self.proj._data)
+        assert issues == [], f'Invariants violated: {[i.message for i in issues]}'
+
+
+TestGroupStateful = GroupStateMachine.TestCase
+TestGroupStateful.settings = settings(
+    max_examples=50,
+    stateful_step_count=20,
+    deadline=None,
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+)
+
+
+
+def _make_project_with_stitched() -> object:
+    """Build a project with a StitchedMedia containing a UnifiedMedia segment + a VMFile segment."""
+    from pathlib import Path
+    import tempfile
+
+    from camtasia import Project
+    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    proj = Project.new(str(tmp), width=1920, height=1080)
+    src_id = proj.media_bin.next_id()
+    proj._data.setdefault('sourceBin', []).append({
+        '_type': 'VMFile', 'id': src_id, 'src': './media/fake.mp4',
+        'sourceTracks': [{'range': [0, 300], 'type': 'Video', 'editRate': 30,
+            'trackRect': [0, 0, 1920, 1080], 'sampleRate': 30, 'bitDepth': 24,
+            'numChannels': 0, 'integratedLUFS': 100.0, 'peakLevel': -1.0,
+            'metaData': 'fake.mp4'}],
+        'lastMod': 'X', 'loudnessNormalization': False, 'rect': [0, 0, 1920, 1080],
+    })
+    track = proj.timeline.tracks[0]
+    seg_dur = seconds_to_ticks(3.0)
+    track._data.setdefault('medias', []).append({
+        '_type': 'StitchedMedia', 'id': 300, 'start': 0,
+        'duration': seg_dur * 2, 'mediaStart': 0,
+        'mediaDuration': seg_dur * 2, 'scalar': 1, 'minMediaStart': 0,
+        'parameters': {}, 'effects': [], 'metadata': {},
+        'animationTracks': {}, 'attributes': {},
+        'medias': [
+            {
+                '_type': 'UnifiedMedia', 'id': 301, 'start': 0,
+                'duration': seg_dur, 'mediaStart': 0,
+                'mediaDuration': seg_dur, 'scalar': 1,
+                'parameters': {}, 'effects': [], 'metadata': {},
+                'animationTracks': {}, 'attributes': {},
+                'video': {'_type': 'VMFile', 'id': 302, 'src': src_id, 'start': 0,
+                    'duration': seg_dur, 'mediaStart': 0,
+                    'mediaDuration': seg_dur, 'scalar': 1,
+                    'trackNumber': 0, 'parameters': {}, 'effects': [], 'metadata': {},
+                    'animationTracks': {}, 'attributes': {'ident': ''}},
+                'audio': {'_type': 'AMFile', 'id': 303, 'src': src_id, 'start': 0,
+                    'duration': seg_dur, 'mediaStart': 0,
+                    'mediaDuration': seg_dur, 'scalar': 1,
+                    'channelNumber': '0', 'trackNumber': 0, 'parameters': {},
+                    'effects': [], 'metadata': {}, 'animationTracks': {},
+                    'attributes': {'ident': ''}},
+            },
+            {
+                '_type': 'VMFile', 'id': 304, 'src': src_id,
+                'start': seg_dur, 'duration': seg_dur,
+                'mediaStart': 0, 'mediaDuration': seg_dur, 'scalar': 1,
+                'trackNumber': 0, 'parameters': {}, 'effects': [], 'metadata': {},
+                'animationTracks': {}, 'attributes': {'ident': ''},
+            },
+        ],
+    })
+    assert _check_compound_invariants(proj._data) == []
+    return proj
+
+
+class StitchedMediaStateMachine(RuleBasedStateMachine):
+    """Stateful test: random mutations on a StitchedMedia-containing project."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.proj = _make_project_with_stitched()
+
+    def _stitched(self) -> object | None:
+        for c in self.proj.timeline.tracks[0].clips:
+            if c.clip_type == 'StitchedMedia':
+                return c
+        return None
+
+    @rule(speed=st.floats(min_value=0.25, max_value=4.0, allow_nan=False, allow_infinity=False))
+    def do_set_speed(self, speed: float) -> None:
+        s = self._stitched()
+        if s is not None:
+            s.set_speed(speed)
+
+    @rule(factor_num=st.integers(min_value=1, max_value=4), factor_denom=st.integers(min_value=1, max_value=4))
+    def do_rescale(self, factor_num: int, factor_denom: int) -> None:
+        from camtasia.operations.speed import rescale_project
+        rescale_project(self.proj._data, Fraction(factor_num, factor_denom))
+
+    @rule(shift_seconds=st.floats(min_value=-3.0, max_value=3.0, allow_nan=False, allow_infinity=False))
+    def do_shift(self, shift_seconds: float) -> None:
+        self.proj.timeline.shift_all(shift_seconds)
+
+    @rule(factor=st.floats(min_value=0.25, max_value=4.0, allow_nan=False, allow_infinity=False))
+    def do_scale_all_durations(self, factor: float) -> None:
+        self.proj.timeline.tracks[0].scale_all_durations(factor)
+
+    @rule(new_dur=st.floats(min_value=1.0, max_value=15.0, allow_nan=False, allow_infinity=False))
+    def do_set_duration(self, new_dur: float) -> None:
+        s = self._stitched()
+        if s is not None:
+            s.duration = seconds_to_ticks(new_dur)
+
+    @invariant()
+    def compound_invariants_hold(self) -> None:
+        issues = _check_compound_invariants(self.proj._data)
+        assert issues == [], f'Invariants violated: {[i.message for i in issues]}'
+
+
+TestStitchedMediaStateful = StitchedMediaStateMachine.TestCase
+TestStitchedMediaStateful.settings = settings(
+    max_examples=50,
+    stateful_step_count=20,
+    deadline=None,
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+)
