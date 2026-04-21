@@ -888,7 +888,10 @@ class Timeline:
     # ------------------------------------------------------------------
 
     def insert_gap(self, position_seconds: float, gap_duration_seconds: float) -> None:
-        """Insert a gap at a position across ALL tracks, shifting subsequent clips."""
+        """Insert a gap at a position across ALL tracks, shifting subsequent clips.
+
+        Also shifts timeline markers at or after ``position_seconds``.
+        """
         from camtasia.timing import seconds_to_ticks
         gap_ticks: int = seconds_to_ticks(gap_duration_seconds)
         position_ticks: int = seconds_to_ticks(position_seconds)
@@ -901,9 +904,19 @@ class Timeline:
             for t in track._data.get('transitions', []):
                 if 'start' in t and t['start'] >= position_ticks:
                     t['start'] += gap_ticks
+        # Shift timeline markers at or after the gap position
+        toc = self._data.get('parameters', {}).get('toc', {})
+        for kf in toc.get('keyframes', []):
+            if kf.get('time', 0) >= position_ticks:
+                kf['time'] += gap_ticks
+                if 'endTime' in kf:
+                    kf['endTime'] += gap_ticks
 
     def remove_gap(self, position_seconds: float, gap_duration_seconds: float) -> None:
-        """Remove a gap at a position across ALL tracks, pulling subsequent clips back."""
+        """Remove a gap at a position across ALL tracks, pulling subsequent clips back.
+
+        Also shifts timeline markers that fall after the gap.
+        """
         from camtasia.timing import seconds_to_ticks
         gap_ticks: int = seconds_to_ticks(gap_duration_seconds)
         position_ticks: int = seconds_to_ticks(position_seconds)
@@ -926,6 +939,13 @@ class Timeline:
                 if clip_start >= position_ticks + gap_ticks:
                     media_dict['start'] = max(0, clip_start - gap_ticks)
                     _propagate_start_to_unified(media_dict)
+        # Shift timeline markers after the gap region back
+        toc = self._data.get('parameters', {}).get('toc', {})
+        for kf in toc.get('keyframes', []):
+            if kf.get('time', 0) >= position_ticks + gap_ticks:
+                kf['time'] -= gap_ticks
+                if 'endTime' in kf:
+                    kf['endTime'] -= gap_ticks
 
     @property
     def _track_list(self) -> list[dict[str, Any]]:

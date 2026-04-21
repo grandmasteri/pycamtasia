@@ -1233,3 +1233,39 @@ class TestTrackAccessorGetitemMatchesTrackIndex:
         tl = Timeline(data)
         with pytest.raises(KeyError):
             tl.tracks[99]
+
+
+class TestInsertGapShiftsMarkers:
+    def test_marker_at_or_after_gap_shifted(self):
+        from pathlib import Path
+        import tempfile
+
+        from camtasia import Project
+        from camtasia.timing import seconds_to_ticks
+        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+        proj = Project.new(str(tmp))
+        # Add markers at 3s and 10s
+        proj.timeline.markers.add('m1', seconds_to_ticks(3.0))
+        proj.timeline.markers.add('m2', seconds_to_ticks(10.0))
+        # Insert 2s gap at 5s
+        proj.timeline.insert_gap(5.0, 2.0)
+        marker_times = sorted(m.time for m in proj.timeline.markers)
+        # m1 at 3s unchanged; m2 at 10s shifted to 12s
+        assert marker_times == [seconds_to_ticks(3.0), seconds_to_ticks(12.0)]
+
+
+class TestRemoveGapShiftsMarkers:
+    def test_marker_after_gap_shifted_back(self):
+        from pathlib import Path
+        import tempfile
+
+        from camtasia import Project
+        from camtasia.timing import seconds_to_ticks
+        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+        proj = Project.new(str(tmp))
+        proj.timeline.markers.add('m1', seconds_to_ticks(3.0))
+        proj.timeline.markers.add('m2', seconds_to_ticks(12.0))
+        proj.timeline.remove_gap(5.0, 2.0)
+        marker_times = sorted(m.time for m in proj.timeline.markers)
+        # m1 at 3s unchanged; m2 at 12s shifted back to 10s
+        assert marker_times == [seconds_to_ticks(3.0), seconds_to_ticks(10.0)]

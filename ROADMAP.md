@@ -151,7 +151,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [x] `Callout.text` setter should update `textAttributes` `rangeEnd` to match new text length
 - [x] `BaseClip.add_keyframe()` creates `animationTracks.visual` entries for visual parameters (translation/scale/rotation/crop/opacity)
 - [x] `set_position_keyframes` / `set_scale_keyframes` / `set_rotation_keyframes` / `set_crop_keyframes` create `animationTracks.visual` entries
-- [ ] `add_progressive_disclosure(replace_previous=True)` option for non-accumulating sequences
+- [x] `add_progressive_disclosure(replace_previous=True)` already implemented
 
 ### Track API
 - [x] `clip_after()` docstring clarified as at-or-after; `clip_strictly_after()` added as strictly-after variant
@@ -163,7 +163,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 ### Timeline API
 - [x] `clips_of_type()` is O(n²) and misattributes nested clips to `None` track
 - [x] `shift_all()` doesn't shift transition or effect `start` times
-- [ ] `insert_gap()` / `remove_gap()` don't adjust transitions or markers
+- [x] `Timeline.insert_gap()` / `remove_gap()` shift timeline markers (transitions use clip IDs and don't need adjustment)
 - [x] `flatten_to_track()` warns when source tracks have transitions that will be dropped
 - [x] `build_section_timeline()` helper exists in timeline.py
 
