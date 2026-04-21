@@ -187,7 +187,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 ### Builders
 - [x] `timeline_builder.add_title()` ignores `subtitle` parameter (dead code)
-- [ ] `tile_layout` scale doesn't account for image dimensions vs cell size
+- [x] `tile_layout.add_grid` auto-fits images to cell size by default (opt-out via fit_to_cell=False)
 - [x] `screenplay_builder._find_audio_file()` only searches `.wav` — should support `.mp3`, `.m4a`
 
 ### Schema

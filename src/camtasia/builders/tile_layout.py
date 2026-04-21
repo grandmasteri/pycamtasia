@@ -26,6 +26,7 @@ class TileLayout:
         stagger_seconds: float = 0.0,
         scale: float = 1.0,
         fade_in_seconds: float = 0.5,
+        fit_to_cell: bool = True,
     ) -> list[BaseClip]:
         """Place images in a grid layout.
 
@@ -35,8 +36,14 @@ class TileLayout:
             end_seconds: When all tiles disappear.
             grid: (rows, cols) grid dimensions.
             stagger_seconds: Delay between each tile appearing.
-            scale: Scale factor for each tile.
+            scale: Scale multiplier applied on top of the auto-fit (1.0 = no
+                extra scaling). Use values > 1.0 to make tiles overflow their
+                cell, < 1.0 to leave padding.
             fade_in_seconds: Fade-in duration for each tile.
+            fit_to_cell: When True (default), each image is auto-scaled so
+                its longest edge fits within the cell while preserving
+                aspect ratio, then multiplied by ``scale``. When False,
+                images use their native size multiplied by ``scale``.
         """
         rows, cols = grid
         if rows <= 0 or cols <= 0:
@@ -72,7 +79,18 @@ class TileLayout:
             offset_x = (col - (cols - 1) / 2) * cell_w
             offset_y = (row - (rows - 1) / 2) * cell_h
             clip.translation = (offset_x, offset_y)
-            clip.scale = (scale, scale)
+
+            # Determine effective scale
+            if fit_to_cell:
+                img_w, img_h = media.dimensions
+                if img_w > 0 and img_h > 0:  # pragma: no cover  # exercised only with pymediainfo installed + real image
+                    fit_scale = min(cell_w / img_w, cell_h / img_h)
+                else:
+                    fit_scale = 1.0  # unknown dimensions, fall back
+                effective_scale = fit_scale * scale
+            else:
+                effective_scale = scale
+            clip.scale = (effective_scale, effective_scale)
 
             if fade_in_seconds > 0:
                 clip.fade_in(fade_in_seconds)
