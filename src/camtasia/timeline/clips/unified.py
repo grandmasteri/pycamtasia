@@ -108,6 +108,38 @@ class UnifiedMedia(BaseClip):
     def duplicate_effects_to(self, target: BaseClip) -> NoReturn:
         raise TypeError('Cannot duplicate effects from UnifiedMedia wrapper; access .video or .audio effects directly')
 
+    @property
+    def has_effects(self) -> bool:
+        """True if either the video or audio sub-clip has effects."""
+        video = self._data.get('video') or {}
+        audio = self._data.get('audio') or {}
+        return bool(video.get('effects')) or bool(audio.get('effects'))
+
+    @property
+    def effect_count(self) -> int:
+        """Total effects across video and audio sub-clips."""
+        video = self._data.get('video') or {}
+        audio = self._data.get('audio') or {}
+        return len(video.get('effects', [])) + len(audio.get('effects', []))
+
+    @property
+    def effect_names(self) -> list[str]:
+        """Effect names from video and audio sub-clips."""
+        video = self._data.get('video') or {}
+        audio = self._data.get('audio') or {}
+        return (
+            [e.get('effectName', '?') for e in video.get('effects', [])]
+            + [e.get('effectName', '?') for e in audio.get('effects', [])]
+        )
+
+    def remove_all_effects(self) -> Self:
+        """Remove all effects from the video and audio sub-clips."""
+        for sub_key in ('video', 'audio'):
+            sub: dict[str, Any] | None = self._data.get(sub_key)  # type: ignore[assignment]
+            if sub is not None:
+                sub['effects'] = []
+        return self
+
     def mute_audio(self) -> Self:
         """Set audio gain to zero."""
         if self.has_audio:

@@ -316,6 +316,50 @@ class TestUnifiedMediaDuplicateEffectsTo:
             um.duplicate_effects_to(um)
 
 
+class TestUnifiedMediaEffectReadProperties:
+    """UnifiedMedia effect read properties aggregate video + audio sub-clip effects."""
+
+    def test_has_effects_false_when_subclips_empty(self):
+        um = UnifiedMedia(_um_data())
+        assert um.has_effects is False
+
+    def test_has_effects_true_from_video(self):
+        data = _um_data()
+        data['video']['effects'] = [{'effectName': 'DropShadow'}]
+        um = UnifiedMedia(data)
+        assert um.has_effects is True
+
+    def test_has_effects_true_from_audio(self):
+        data = _um_data()
+        data['audio']['effects'] = [{'effectName': 'AudioCompressor'}]
+        um = UnifiedMedia(data)
+        assert um.has_effects is True
+
+    def test_effect_count_sums_video_and_audio(self):
+        data = _um_data()
+        data['video']['effects'] = [{'effectName': 'DropShadow'}, {'effectName': 'Glow'}]
+        data['audio']['effects'] = [{'effectName': 'AudioCompressor'}]
+        um = UnifiedMedia(data)
+        assert um.effect_count == 3
+
+    def test_effect_names_lists_video_then_audio(self):
+        data = _um_data()
+        data['video']['effects'] = [{'effectName': 'DropShadow'}]
+        data['audio']['effects'] = [{'effectName': 'AudioCompressor'}]
+        um = UnifiedMedia(data)
+        assert um.effect_names == ['DropShadow', 'AudioCompressor']
+
+    def test_remove_all_effects_clears_both_subclips(self):
+        data = _um_data()
+        data['video']['effects'] = [{'effectName': 'DropShadow'}]
+        data['audio']['effects'] = [{'effectName': 'AudioCompressor'}]
+        um = UnifiedMedia(data)
+        result = um.remove_all_effects()
+        assert result is um
+        assert data['video']['effects'] == []
+        assert data['audio']['effects'] == []
+
+
 def test_unified_media_not_silent_when_gain_nonzero():
     clip = BaseClip({
         '_type': 'UnifiedMedia', 'id': 1, 'start': 0, 'duration': 100,

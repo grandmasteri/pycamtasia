@@ -146,8 +146,8 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 ### Clip API
 - [x] `BaseClip.unmute()` — reverses `mute()` on all clip types including Group/StitchedMedia/UnifiedMedia
-- [ ] `BaseClip.remove_all_effects()` should redirect to children for UnifiedMedia
-- [ ] `UnifiedMedia` effect read properties (`has_effects`, `effect_count`, `effect_names`) read from wrapper instead of children — should redirect or warn
+- [x] `UnifiedMedia.remove_all_effects()` clears effects on both video/audio sub-clips
+- [x] `UnifiedMedia.has_effects/effect_count/effect_names` aggregate from video+audio sub-clips
 - [x] `Callout.text` setter should update `textAttributes` `rangeEnd` to match new text length
 - [ ] `BaseClip.add_keyframe()` should create corresponding `animationTracks.visual` entries (currently only `fade_in`/`fade_out`/`fade` do this)
 - [ ] `set_position_keyframes` / `set_scale_keyframes` / `set_rotation_keyframes` should also create `animationTracks.visual` entries
