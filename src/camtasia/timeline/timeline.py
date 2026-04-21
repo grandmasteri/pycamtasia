@@ -380,6 +380,46 @@ class Timeline:
             _collect(track.clips)
         return result
 
+    def iter_clips_with_effective_start(
+        self,
+        *,
+        include_nested: bool = True,
+    ) -> Iterable[tuple[Track, BaseClip, int]]:
+        """Yield ``(track, clip, effective_start_ticks)`` for every clip.
+
+        When ``include_nested`` is True, descends into Groups and StitchedMedia
+        compound clips and yields their inner clips with positions adjusted
+        to timeline-absolute coordinates (accounting for Group start + scalar).
+
+        Useful for exporters (EDL, CSV) that need to present a flattened,
+        timeline-positioned view of all clips.
+        """
+        from camtasia.timeline.clips import clip_from_dict
+        from camtasia.timeline.clips.group import Group
+        from camtasia.timing import parse_scalar
+
+        def _walk(clip: BaseClip, track: Track, offset: int, scalar: Fraction) -> Iterable[tuple[Track, BaseClip, int]]:
+            # For simple clips, emit with (offset + clip.start * scalar) as effective start
+            clip_start = int(clip.start)
+            effective = offset + int(clip_start * scalar)
+            yield (track, clip, effective)
+            if not include_nested:
+                return
+            if clip.clip_type == 'Group' and isinstance(clip, Group):
+                grp_scalar = parse_scalar(clip._data.get('scalar', 1)) * scalar
+                for gt in clip.tracks:
+                    for inner in gt.clips:
+                        yield from _walk(inner, track, effective, grp_scalar)
+            elif clip.clip_type == 'StitchedMedia':
+                for inner_dict in clip._data.get('medias', []):
+                    inner = clip_from_dict(inner_dict)
+                    inner_start = int(inner.start)
+                    yield (track, inner, effective + int(inner_start * scalar))
+
+        for track in self.tracks:
+            for top_clip in track.clips:
+                yield from _walk(top_clip, track, 0, parse_scalar(1))
+
     @property
     def groups(self) -> list[Group]:
         """All Group clips across all tracks, including nested groups."""

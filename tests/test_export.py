@@ -510,3 +510,76 @@ class TestSrtEmptyMarkersWarning:
         msgs = [str(x.message) for x in w]
         assert any('No markers to export' in m for m in msgs)
         assert out.read_text() == ''
+
+
+class TestEdlRecursesIntoGroups:
+    """EDL exporter recurses into Group/StitchedMedia when include_nested=True (default)."""
+
+    def test_edl_includes_inner_group_clip(self, tmp_path, project):
+        from camtasia.export import export_edl
+        # Project fixture already has media and tracks; add a Group with an inner clip.
+        track = project.timeline.tracks[0]
+        # Add two simple clips
+        c1 = track.add_clip('VMFile', source_id=1, start=0, duration=705600000)
+        c2 = track.add_clip('VMFile', source_id=1, start=705600000, duration=705600000)
+        track.group_clips([c1.id, c2.id])
+        out = tmp_path / 'test.edl'
+        export_edl(project, out, include_nested=True)
+        edl_text = out.read_text()
+        # Group + 2 inner clips → at least 3 events
+        event_lines = [line for line in edl_text.split('\n') if line[:3].isdigit()]
+        assert len(event_lines) >= 3
+
+    def test_edl_without_nested_only_top_level(self, tmp_path, project):
+        from camtasia.export import export_edl
+        track = project.timeline.tracks[0]
+        c1 = track.add_clip('VMFile', source_id=1, start=0, duration=705600000)
+        c2 = track.add_clip('VMFile', source_id=1, start=705600000, duration=705600000)
+        track.group_clips([c1.id, c2.id])
+        out = tmp_path / 'test.edl'
+        export_edl(project, out, include_nested=False)
+        edl_text = out.read_text()
+        event_lines = [line for line in edl_text.split('\n') if line[:3].isdigit()]
+        assert len(event_lines) == 1  # Only the Group
+
+
+class TestCsvRecursesIntoGroups:
+    def test_csv_includes_inner_group_clips(self, tmp_path, project):
+        from camtasia.export.csv_export import export_csv
+        track = project.timeline.tracks[0]
+        c1 = track.add_clip('VMFile', source_id=1, start=0, duration=705600000)
+        c2 = track.add_clip('VMFile', source_id=1, start=705600000, duration=705600000)
+        track.group_clips([c1.id, c2.id])
+        out = tmp_path / 'test.csv'
+        export_csv(project, out, include_nested=True)
+        rows = out.read_text().strip().split('\n')
+        # Header + Group + 2 inner = 4 lines
+        assert len(rows) == 4
+
+
+class TestIterClipsWithEffectiveStartStitchedMedia:
+    """iter_clips_with_effective_start descends into StitchedMedia segments."""
+
+    def test_stitched_inner_clips_yielded(self, project):
+        track = project.timeline.tracks[0]
+        # Inject a StitchedMedia clip with 2 inner VMFile segments
+        track._data.setdefault('medias', []).append({
+            '_type': 'StitchedMedia', 'id': 500, 'start': 1000,
+            'duration': 2000, 'mediaStart': 0, 'mediaDuration': 2000,
+            'scalar': 1, 'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {}, 'attributes': {},
+            'medias': [
+                {'_type': 'VMFile', 'id': 501, 'src': 1, 'start': 0,
+                 'duration': 1000, 'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+                 'trackNumber': 0, 'parameters': {}, 'effects': [], 'metadata': {},
+                 'animationTracks': {}, 'attributes': {'ident': ''}},
+                {'_type': 'VMFile', 'id': 502, 'src': 1, 'start': 1000,
+                 'duration': 1000, 'mediaStart': 0, 'mediaDuration': 1000, 'scalar': 1,
+                 'trackNumber': 0, 'parameters': {}, 'effects': [], 'metadata': {},
+                 'animationTracks': {}, 'attributes': {'ident': ''}},
+            ],
+        })
+        entries = list(project.timeline.iter_clips_with_effective_start(include_nested=True))
+        inner_ids = [clip.id for _t, clip, _s in entries if clip.id in {501, 502}]
+        assert 501 in inner_ids
+        assert 502 in inner_ids

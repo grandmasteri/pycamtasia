@@ -179,8 +179,8 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [x] `DropShadow.enabled` / `CursorShadow.enabled` docstrings clarify that setting only updates defaultValue, not existing keyframes
 
 ### Export
-- [ ] EDL exporter doesn't recurse into Groups/StitchedMedia — nested clips invisible
-- [ ] CSV/report exporters same issue — only top-level clips exported
+- [x] EDL exporter recurses into Groups/StitchedMedia (opt-out via include_nested=False)
+- [x] CSV and report (JSON + markdown) exporters recurse into Groups/StitchedMedia with timeline-absolute positions
 - [x] EDL `UnifiedMedia` source is always `AX` — should use video sub-clip's source
 - [x] SRT exporter warns when no markers to export
 - [x] `timeline_json` now includes effects, transitions, and per-clip metadata (opt-out via kwargs; bumped version to 1.1)
