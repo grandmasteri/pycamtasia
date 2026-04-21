@@ -10,7 +10,20 @@ from camtasia.effects.cursor import (
     LeftClickScaling,
 )
 from camtasia.effects.source import SourceEffect
-from camtasia.effects.visual import BlurRegion, DropShadow, Glow, Mask, MotionBlur, RoundCorners
+from camtasia.effects.visual import (
+    BlendModeEffect,
+    BlurRegion,
+    ColorAdjustment,
+    DropShadow,
+    Emphasize,
+    Glow,
+    LutEffect,
+    Mask,
+    MediaMatte,
+    MotionBlur,
+    RoundCorners,
+    Spotlight,
+)
 
 
 class EffectSchema:
@@ -28,19 +41,25 @@ class EffectSchema:
 
 __all__ = [
     "BehaviorPhase",
+    "BlendModeEffect",
     "BlurRegion",
+    "ColorAdjustment",
     "CursorMotionBlur",
     "CursorPhysics",
     "CursorShadow",
     "DropShadow",
     "Effect",
     "EffectSchema",
+    "Emphasize",
     "GenericBehaviorEffect",
     "Glow",
     "LeftClickScaling",
+    "LutEffect",
     "Mask",
+    "MediaMatte",
     "MotionBlur",
     "RoundCorners",
     "SourceEffect",
+    "Spotlight",
     "effect_from_dict",
 ]

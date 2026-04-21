@@ -174,7 +174,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [x] Flag explicit `null` in transition `leftMedia`/`rightMedia` (format says omit, not null)
 
 ### Effects
-- [ ] Typed wrapper classes for `LutEffect`, `Emphasize`, `Spotlight`, `ColorAdjustment`, `BlendModeEffect`, `MediaMatte`
+- [x] Typed wrapper classes added for LutEffect, Emphasize, Spotlight, ColorAdjustment, BlendModeEffect, MediaMatte — all registered with effect_from_dict
 - [x] `BlurRegion` export is intentional — class docstring warns it is unregistered and unverified against real projects
 - [x] `DropShadow.enabled` / `CursorShadow.enabled` docstrings clarify that setting only updates defaultValue, not existing keyframes
 

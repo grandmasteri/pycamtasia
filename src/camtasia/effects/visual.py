@@ -380,3 +380,206 @@ class BlurRegion(Effect):
     def color_alpha(self, value: float) -> None:
         """Set the alpha channel of the blur region overlay color."""
         self.set_parameter("color-alpha", value)
+
+
+
+@register_effect("ColorAdjustment")
+class ColorAdjustment(Effect):
+    """Color adjustment effect (brightness/contrast/saturation)."""
+
+    @property
+    def brightness(self) -> float:
+        """Brightness multiplier (1.0 = unchanged)."""
+        return float(self.get_parameter("brightness"))
+
+    @brightness.setter
+    def brightness(self, value: float) -> None:
+        self.set_parameter("brightness", value)
+
+    @property
+    def contrast(self) -> float:
+        """Contrast multiplier (1.0 = unchanged)."""
+        return float(self.get_parameter("contrast"))
+
+    @contrast.setter
+    def contrast(self, value: float) -> None:
+        self.set_parameter("contrast", value)
+
+    @property
+    def saturation(self) -> float:
+        """Saturation shift."""
+        return float(self.get_parameter("saturation"))
+
+    @saturation.setter
+    def saturation(self, value: float) -> None:
+        self.set_parameter("saturation", value)
+
+
+@register_effect("LutEffect")
+class LutEffect(Effect):
+    """Color grading via a .cube LUT file."""
+
+    @property
+    def lut_source(self) -> str:
+        """LUT filename (e.g., 'Tasteful.cube')."""
+        return str(self.get_parameter("lutSource"))
+
+    @lut_source.setter
+    def lut_source(self, value: str) -> None:
+        self.set_parameter("lutSource", value)
+
+    @property
+    def intensity(self) -> float:
+        """LUT strength (0.0 = off, 1.0 = full)."""
+        return float(self.get_parameter("lut_intensity"))
+
+    @intensity.setter
+    def intensity(self, value: float) -> None:
+        self.set_parameter("lut_intensity", value)
+
+
+@register_effect("BlendModeEffect")
+class BlendModeEffect(Effect):
+    """Blending mode effect (e.g., multiply, screen, overlay)."""
+
+    @property
+    def mode(self) -> int:
+        """Blend mode code (integer)."""
+        return int(self.get_parameter("mode"))
+
+    @mode.setter
+    def mode(self, value: int) -> None:
+        self.set_parameter("mode", value)
+
+    @property
+    def intensity(self) -> float:
+        """Blend intensity (0.0 = off, 1.0 = full)."""
+        return float(self.get_parameter("intensity"))
+
+    @intensity.setter
+    def intensity(self, value: float) -> None:
+        self.set_parameter("intensity", value)
+
+    @property
+    def invert(self) -> int:
+        """Whether to invert the blend (1 = invert)."""
+        return int(self.get_parameter("invert"))
+
+    @invert.setter
+    def invert(self, value: int) -> None:
+        self.set_parameter("invert", value)
+
+
+@register_effect("Emphasize")
+class Emphasize(Effect):
+    """Emphasize effect — increase opacity/contrast around a focal point."""
+
+    @property
+    def amount(self) -> float:
+        """Emphasis strength (0.0 = off, 1.0 = full)."""
+        return float(self.get_parameter("emphasizeAmount"))
+
+    @amount.setter
+    def amount(self, value: float) -> None:
+        self.set_parameter("emphasizeAmount", value)
+
+    @property
+    def ramp_position(self) -> float:
+        """Ramp position within the effect range."""
+        return float(self.get_parameter("emphasizeRampPosition"))
+
+    @ramp_position.setter
+    def ramp_position(self, value: float) -> None:
+        self.set_parameter("emphasizeRampPosition", value)
+
+    @property
+    def ramp_in_ticks(self) -> int:
+        """Ramp-in duration in editRate ticks."""
+        return int(self.get_parameter("emphasizeRampInTime"))
+
+    @ramp_in_ticks.setter
+    def ramp_in_ticks(self, value: int) -> None:
+        self.set_parameter("emphasizeRampInTime", value)
+
+    @property
+    def ramp_out_ticks(self) -> int:
+        """Ramp-out duration in editRate ticks."""
+        return int(self.get_parameter("emphasizeRampOutTime"))
+
+    @ramp_out_ticks.setter
+    def ramp_out_ticks(self, value: int) -> None:
+        self.set_parameter("emphasizeRampOutTime", value)
+
+
+@register_effect("Spotlight")
+class Spotlight(Effect):
+    """Spotlight effect — highlight a region with a colored light."""
+
+    @property
+    def brightness(self) -> float:
+        """Spotlight brightness multiplier."""
+        return float(self.get_parameter("brightness"))
+
+    @brightness.setter
+    def brightness(self, value: float) -> None:
+        self.set_parameter("brightness", value)
+
+    @property
+    def concentration(self) -> float:
+        """Light concentration / falloff."""
+        return float(self.get_parameter("concentration"))
+
+    @concentration.setter
+    def concentration(self, value: float) -> None:
+        self.set_parameter("concentration", value)
+
+    @property
+    def opacity(self) -> float:
+        """Spotlight overlay opacity (0.0-1.0)."""
+        return float(self.get_parameter("opacity"))
+
+    @opacity.setter
+    def opacity(self, value: float) -> None:
+        self.set_parameter("opacity", value)
+
+    @property
+    def position(self) -> tuple[float, float]:
+        """Light position (x, y) in normalized coordinates."""
+        return (float(self.get_parameter("positionX")), float(self.get_parameter("positionY")))
+
+    @position.setter
+    def position(self, value: tuple[float, float]) -> None:
+        self.set_parameter("positionX", value[0])
+        self.set_parameter("positionY", value[1])
+
+
+@register_effect("MediaMatte")
+class MediaMatte(Effect):
+    """Media matte — use another clip's luminance or alpha as a mask."""
+
+    @property
+    def intensity(self) -> float:
+        """Matte effect intensity (0.0-1.0)."""
+        return float(self.get_parameter("intensity"))
+
+    @intensity.setter
+    def intensity(self, value: float) -> None:
+        self.set_parameter("intensity", value)
+
+    @property
+    def mode(self) -> int:
+        """Matte mode code (integer)."""
+        return int(self.get_parameter("matteMode"))
+
+    @mode.setter
+    def mode(self, value: int) -> None:
+        self.set_parameter("matteMode", value)
+
+    @property
+    def track_depth(self) -> int:
+        """Depth of the matte source track."""
+        return int(self.get_parameter("trackDepth"))
+
+    @track_depth.setter
+    def track_depth(self, value: int) -> None:
+        self.set_parameter("trackDepth", value)

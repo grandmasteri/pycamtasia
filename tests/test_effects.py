@@ -5,7 +5,15 @@ from pathlib import Path
 
 import pytest
 
-from camtasia.effects import EffectSchema
+from camtasia.effects import (
+    BlendModeEffect,
+    ColorAdjustment,
+    EffectSchema,
+    Emphasize,
+    LutEffect,
+    MediaMatte,
+    Spotlight,
+)
 from camtasia.effects.base import Effect, effect_from_dict
 from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
 from camtasia.effects.cursor import CursorMotionBlur, CursorPhysics, CursorShadow, LeftClickScaling
@@ -1328,3 +1336,161 @@ def test_set_shader_colors_four_colors():
     assert abs(r - 128 / 255) < 1e-9
     assert a == 1.0
 
+
+
+# ---------------------------------------------------------------------------
+# Typed effect wrappers: ColorAdjustment, LutEffect, BlendModeEffect,
+# Emphasize, Spotlight, MediaMatte
+# ---------------------------------------------------------------------------
+
+
+def _make_effect_dict(name: str, params: dict) -> dict:
+    return {
+        "effectName": name,
+        "bypassed": False,
+        "category": "visual",
+        "parameters": {k: _param(v) for k, v in params.items()},
+    }
+
+
+def test_color_adjustment_read_write():
+    data = _make_effect_dict("ColorAdjustment",
+                             {"brightness": 1.2, "contrast": 1.5, "saturation": 0.3})
+    eff = ColorAdjustment(data)
+    assert eff.brightness == 1.2
+    assert eff.contrast == 1.5
+    assert eff.saturation == 0.3
+    eff.brightness = 0.8
+    assert data["parameters"]["brightness"]["defaultValue"] == 0.8
+
+
+def test_lut_effect_read_write():
+    data = _make_effect_dict("LutEffect", {"lutSource": "Tasteful.cube", "lut_intensity": 0.7})
+    eff = LutEffect(data)
+    assert eff.lut_source == "Tasteful.cube"
+    assert eff.intensity == 0.7
+    eff.intensity = 1.0
+    assert data["parameters"]["lut_intensity"]["defaultValue"] == 1.0
+
+
+def test_blend_mode_effect_read_write():
+    data = _make_effect_dict("BlendModeEffect", {"mode": 16, "intensity": 1.0, "invert": 0})
+    eff = BlendModeEffect(data)
+    assert eff.mode == 16
+    assert eff.intensity == 1.0
+    assert eff.invert == 0
+    eff.mode = 5
+    assert data["parameters"]["mode"]["defaultValue"] == 5
+
+
+def test_emphasize_read_write():
+    data = _make_effect_dict("Emphasize", {
+        "emphasizeAmount": 0.8, "emphasizeRampPosition": 0,
+        "emphasizeRampInTime": 705600000, "emphasizeRampOutTime": 705600000,
+    })
+    eff = Emphasize(data)
+    assert eff.amount == 0.8
+    assert eff.ramp_in_ticks == 705600000
+    eff.amount = 0.5
+    assert data["parameters"]["emphasizeAmount"]["defaultValue"] == 0.5
+
+
+def test_spotlight_position_read_write():
+    data = _make_effect_dict("Spotlight", {
+        "brightness": 1.2, "concentration": 0.5, "opacity": 0.8,
+        "positionX": 0.25, "positionY": 0.5,
+    })
+    eff = Spotlight(data)
+    assert eff.brightness == 1.2
+    assert eff.opacity == 0.8
+    assert eff.position == (0.25, 0.5)
+    eff.position = (0.5, 0.75)
+    assert data["parameters"]["positionX"]["defaultValue"] == 0.5
+    assert data["parameters"]["positionY"]["defaultValue"] == 0.75
+
+
+def test_media_matte_read_write():
+    data = _make_effect_dict("MediaMatte", {"intensity": 1.0, "matteMode": 3, "trackDepth": 10002})
+    eff = MediaMatte(data)
+    assert eff.intensity == 1.0
+    assert eff.mode == 3
+    assert eff.track_depth == 10002
+    eff.mode = 2
+    assert data["parameters"]["matteMode"]["defaultValue"] == 2
+
+
+def test_effect_from_dict_dispatches_to_new_classes():
+    """effect_from_dict should return the typed subclass for each new effect name."""
+    from camtasia.effects import effect_from_dict
+    assert isinstance(effect_from_dict(_make_effect_dict("ColorAdjustment", {"brightness": 1.0})), ColorAdjustment)
+    assert isinstance(effect_from_dict(_make_effect_dict("LutEffect", {"lutSource": "x.cube"})), LutEffect)
+    assert isinstance(effect_from_dict(_make_effect_dict("BlendModeEffect", {"mode": 0})), BlendModeEffect)
+    assert isinstance(effect_from_dict(_make_effect_dict("Emphasize", {"emphasizeAmount": 1.0})), Emphasize)
+    assert isinstance(effect_from_dict(_make_effect_dict("Spotlight", {"brightness": 1.0})), Spotlight)
+    assert isinstance(effect_from_dict(_make_effect_dict("MediaMatte", {"intensity": 1.0})), MediaMatte)
+
+
+def test_color_adjustment_setters():
+    data = _make_effect_dict("ColorAdjustment", {"brightness": 1.0, "contrast": 1.0, "saturation": 0.0})
+    eff = ColorAdjustment(data)
+    eff.contrast = 2.0
+    eff.saturation = -0.5
+    assert data["parameters"]["contrast"]["defaultValue"] == 2.0
+    assert data["parameters"]["saturation"]["defaultValue"] == -0.5
+
+
+def test_lut_effect_source_setter():
+    data = _make_effect_dict("LutEffect", {"lutSource": "a.cube", "lut_intensity": 1.0})
+    eff = LutEffect(data)
+    eff.lut_source = "b.cube"
+    assert data["parameters"]["lutSource"]["defaultValue"] == "b.cube"
+
+
+def test_blend_mode_setters():
+    data = _make_effect_dict("BlendModeEffect", {"mode": 0, "intensity": 1.0, "invert": 0})
+    eff = BlendModeEffect(data)
+    eff.intensity = 0.5
+    eff.invert = 1
+    assert data["parameters"]["intensity"]["defaultValue"] == 0.5
+    assert data["parameters"]["invert"]["defaultValue"] == 1
+
+
+def test_emphasize_setters():
+    data = _make_effect_dict("Emphasize", {
+        "emphasizeAmount": 0.5, "emphasizeRampPosition": 0,
+        "emphasizeRampInTime": 0, "emphasizeRampOutTime": 0,
+    })
+    eff = Emphasize(data)
+    # Read getters first for coverage
+    assert eff.ramp_position == 0.0
+    assert eff.ramp_out_ticks == 0
+    eff.ramp_position = 0.25
+    eff.ramp_in_ticks = 1000
+    eff.ramp_out_ticks = 2000
+    assert data["parameters"]["emphasizeRampPosition"]["defaultValue"] == 0.25
+    assert data["parameters"]["emphasizeRampInTime"]["defaultValue"] == 1000
+    assert data["parameters"]["emphasizeRampOutTime"]["defaultValue"] == 2000
+
+
+def test_spotlight_setters():
+    data = _make_effect_dict("Spotlight", {
+        "brightness": 1.0, "concentration": 0.5, "opacity": 1.0,
+        "positionX": 0.5, "positionY": 0.5,
+    })
+    eff = Spotlight(data)
+    assert eff.concentration == 0.5
+    eff.brightness = 2.0
+    eff.concentration = 0.25
+    eff.opacity = 0.75
+    assert data["parameters"]["brightness"]["defaultValue"] == 2.0
+    assert data["parameters"]["concentration"]["defaultValue"] == 0.25
+    assert data["parameters"]["opacity"]["defaultValue"] == 0.75
+
+
+def test_media_matte_setters():
+    data = _make_effect_dict("MediaMatte", {"intensity": 1.0, "matteMode": 3, "trackDepth": 10002})
+    eff = MediaMatte(data)
+    eff.intensity = 0.5
+    eff.track_depth = 20000
+    assert data["parameters"]["intensity"]["defaultValue"] == 0.5
+    assert data["parameters"]["trackDepth"]["defaultValue"] == 20000
