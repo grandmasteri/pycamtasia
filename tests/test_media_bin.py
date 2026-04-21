@@ -578,8 +578,8 @@ class TestRapidImportNoCollision:
         b = tmp_path / 'b.png'
         b.write_bytes(b'\x89PNG\r\n\x1a\n')
 
-        m1 = project.media_bin.import_media(a, validate_format=False)
-        m2 = project.media_bin.import_media(b, validate_format=False)
+        m1 = project.media_bin.import_media(a, media_type=MediaType.Image, validate_format=False)
+        m2 = project.media_bin.import_media(b, media_type=MediaType.Image, validate_format=False)
 
         # Both media records must have distinct src paths
         assert m1._data['src'] != m2._data['src']
