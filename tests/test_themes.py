@@ -135,7 +135,8 @@ def test_apply_theme_recurses_into_group():
     assert inner_dict['def']['stroke-color-red'] == 0.5
     # Reference to group keeps the Group alive
     assert group.id
-    assert c1.id and c2.id  # wrapper objects still valid
+    assert c1.id
+    assert c2.id  # wrapper objects still valid
 
 
 def test_apply_theme_resolves_across_stitched_and_unified():
