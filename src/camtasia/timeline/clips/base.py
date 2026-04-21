@@ -1696,11 +1696,23 @@ class BaseClip:
         self._add_opacity_track(kfs, default_value=start_opacity)
         return self
 
-    def set_position_keyframes(self, keyframes: list[tuple[float, float, float]]) -> Self:
+    def set_position_keyframes(
+        self,
+        keyframes: list[tuple[float, float, float]],
+        *,
+        interp: str = 'linr',
+    ) -> Self:
         """Set position keyframes for animated movement.
 
         Args:
             keyframes: List of (time_seconds, x, y) tuples.
+            interp: Interpolation mode applied to all keyframes. Common
+                values observed in real Camtasia projects:
+                ``'linr'`` (linear, default), ``'eioe'`` (ease in/out),
+                ``'easi'`` (ease in), ``'easo'`` (ease out),
+                ``'bezi'`` (bezier curve). Pass a tuple of per-keyframe
+                strings via :meth:`set_position_keyframes_with_interp`
+                for heterogeneous easing.
         """
         from camtasia.timing import seconds_to_ticks
         params = self._data.setdefault('parameters', {})
@@ -1710,11 +1722,36 @@ class BaseClip:
             ticks = seconds_to_ticks(t)
             next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
             dur = next_ticks - ticks
-            x_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': x, 'duration': dur})
-            y_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': y, 'duration': dur})
+            x_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': x, 'duration': dur, 'interp': interp})
+            y_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': y, 'duration': dur, 'interp': interp})
         params['translation0'] = {'type': 'double', 'defaultValue': keyframes[-1][1], 'keyframes': x_kfs}
         params['translation1'] = {'type': 'double', 'defaultValue': keyframes[-1][2], 'keyframes': y_kfs}
         # x_kfs and y_kfs have identical timing; adding one set suffices
+        self._add_visual_tracks_for_keyframes(x_kfs)
+        return self
+
+    def set_position_keyframes_with_interp(
+        self,
+        keyframes: list[tuple[float, float, float, str]],
+    ) -> Self:
+        """Set position keyframes with a per-keyframe interpolation mode.
+
+        Args:
+            keyframes: List of (time_seconds, x, y, interp) tuples. See
+                :meth:`set_position_keyframes` for valid interp values.
+        """
+        from camtasia.timing import seconds_to_ticks
+        params = self._data.setdefault('parameters', {})
+        x_kfs: list[dict[str, Any]] = []
+        y_kfs: list[dict[str, Any]] = []
+        for i, (t, x, y, interp) in enumerate(keyframes):
+            ticks = seconds_to_ticks(t)
+            next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
+            dur = next_ticks - ticks
+            x_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': x, 'duration': dur, 'interp': interp})
+            y_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': y, 'duration': dur, 'interp': interp})
+        params['translation0'] = {'type': 'double', 'defaultValue': keyframes[-1][1], 'keyframes': x_kfs}
+        params['translation1'] = {'type': 'double', 'defaultValue': keyframes[-1][2], 'keyframes': y_kfs}
         self._add_visual_tracks_for_keyframes(x_kfs)
         return self
 

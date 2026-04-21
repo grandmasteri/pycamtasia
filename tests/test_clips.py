@@ -2859,3 +2859,29 @@ class TestScalarSetterStitchedMediaUnifiedMediaPropagation:
         assert inner['video']['duration'] == inner['duration']
         assert inner['audio']['start'] == inner['start']
         assert inner['audio']['duration'] == inner['duration']
+
+
+def test_set_position_keyframes_accepts_interp_mode():
+    """set_position_keyframes writes the specified interp mode onto all keyframes."""
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    clip.set_position_keyframes([(0.0, 0, 0), (2.0, 100, 100)], interp='eioe')
+    kfs = clip._data['parameters']['translation0']['keyframes']
+    assert all(kf['interp'] == 'eioe' for kf in kfs)
+
+
+def test_set_position_keyframes_with_interp_per_keyframe():
+    """Per-keyframe interp allows heterogeneous easing (e.g., ease in then linear)."""
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    clip.set_position_keyframes_with_interp([
+        (0.0, 0, 0, 'easi'),
+        (1.0, 50, 50, 'linr'),
+        (2.0, 100, 100, 'easo'),
+    ])
+    kfs = clip._data['parameters']['translation0']['keyframes']
+    assert [kf['interp'] for kf in kfs] == ['easi', 'linr', 'easo']
