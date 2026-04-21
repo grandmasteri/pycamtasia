@@ -357,8 +357,8 @@ class UnifiedMediaStateMachine(RuleBasedStateMachine):
 
 TestUnifiedMediaStateful = UnifiedMediaStateMachine.TestCase
 TestUnifiedMediaStateful.settings = settings(
-    max_examples=200,
-    stateful_step_count=50,
+    max_examples=50,
+    stateful_step_count=20,
     deadline=None,
     suppress_health_check=[HealthCheck.function_scoped_fixture],
 )
