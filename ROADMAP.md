@@ -183,7 +183,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [ ] CSV/report exporters same issue — only top-level clips exported
 - [x] EDL `UnifiedMedia` source is always `AX` — should use video sub-clip's source
 - [x] SRT exporter warns when no markers to export
-- [ ] `timeline_json` export doesn't include effects, transitions, or metadata
+- [x] `timeline_json` now includes effects, transitions, and per-clip metadata (opt-out via kwargs; bumped version to 1.1)
 
 ### Builders
 - [x] `timeline_builder.add_title()` ignores `subtitle` parameter (dead code)
