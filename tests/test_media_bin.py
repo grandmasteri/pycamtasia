@@ -558,3 +558,28 @@ class TestFloatNoneGuard:
         track = {}
         result = _compute_audio_duration(track, 44100)
         assert result == 0
+
+
+class TestRapidImportNoCollision:
+    """Rapid successive imports should not collide on identical timestamps."""
+
+    def test_two_imports_same_timestamp_get_distinct_dirs(self, project, tmp_path, monkeypatch):
+        import datetime
+        # Freeze timestamp so both imports get identical base directory names.
+        fixed = datetime.datetime(2024, 1, 1, 12, 0, 0, 0)
+        class _FixedDateTime(datetime.datetime):
+            @classmethod
+            def now(cls, tz=None):  # type: ignore[override]
+                return fixed
+        monkeypatch.setattr('camtasia.media_bin.media_bin.datetime.datetime', _FixedDateTime)
+
+        a = tmp_path / 'a.png'
+        a.write_bytes(b'\x89PNG\r\n\x1a\n')
+        b = tmp_path / 'b.png'
+        b.write_bytes(b'\x89PNG\r\n\x1a\n')
+
+        m1 = project.media_bin.import_media(a, validate_format=False)
+        m2 = project.media_bin.import_media(b, validate_format=False)
+
+        # Both media records must have distinct src paths
+        assert m1._data['src'] != m2._data['src']

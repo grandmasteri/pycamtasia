@@ -164,7 +164,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [x] `clips_of_type()` is O(n²) and misattributes nested clips to `None` track
 - [x] `shift_all()` doesn't shift transition or effect `start` times
 - [ ] `insert_gap()` / `remove_gap()` don't adjust transitions or markers
-- [ ] `flatten_to_track()` drops transitions silently — should document or warn
+- [x] `flatten_to_track()` warns when source tracks have transitions that will be dropped
 - [ ] `build_section_timeline()` helper — place all sections on one track with transitions
 
 ### Validation
@@ -176,7 +176,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 ### Effects
 - [ ] Typed wrapper classes for `LutEffect`, `Emphasize`, `Spotlight`, `ColorAdjustment`, `BlendModeEffect`, `MediaMatte`
 - [ ] `BlurRegion` is exported but not registered — either register or remove from `__all__`
-- [ ] `DropShadow.enabled` / `CursorShadow.enabled` should document that setting them doesn't affect keyframes
+- [x] `DropShadow.enabled` / `CursorShadow.enabled` docstrings clarify that setting only updates defaultValue, not existing keyframes
 
 ### Export
 - [ ] EDL exporter doesn't recurse into Groups/StitchedMedia — nested clips invisible
@@ -202,12 +202,12 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [x] `pulsating` center phase `offsetBetweenCharacters` should be `49392000` (not `0`)
 
 ### Infrastructure
-- [ ] `media_bin.import_media()` directory naming can collide on rapid successive imports
+- [x] `media_bin.import_media()` appends _1/_2/... suffix on directory collision
 - [x] `media_bin._visual_track_to_json()` uses `sampleRate=0` for video (should be frame rate)
 - [ ] `media_bin._visual_track_to_json()` / `_audio_track_to_json()` omit `tag` field
 - [ ] `scalar_to_string()` name implies string return but returns `int` for scalar=1
-- [ ] `parse_scalar()` `limit_denominator(10_000)` is arbitrary — document the tradeoff
-- [ ] `history.py` `clear()`+`update()` pattern invalidates nested object references — add warning in docstring
+- [x] `parse_scalar()` docstring documents the 10_000 denominator cap tradeoff
+- [x] `history.py` `undo()`/`redo()` docstrings warn about stale nested references (already present)
 
 ### Known Design Decisions (not bugs — documented to avoid re-reporting)
 - `UnifiedMedia` caches video/audio child clips without invalidation — works because dict references are shared; only breaks if someone replaces the entire sub-dict (not a real-world pattern)

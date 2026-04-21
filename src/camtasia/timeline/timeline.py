@@ -765,6 +765,10 @@ class Timeline:
         Creates a new track and copies all clips to it. Original tracks
         are not modified. Clips keep their original timing.
 
+        Note: Transitions from the source tracks are **not** copied. If
+        source tracks have transitions, a warning is emitted because
+        flattening loses those transitions.
+
         Args:
             target_track_name: Name for the target track.
 
@@ -774,6 +778,18 @@ class Timeline:
         import copy
         target = self.add_track(target_track_name)
         target_idx = target.index
+        # Warn if any source track has transitions that will be dropped.
+        for track in self.tracks:
+            if track.index == target_idx:
+                continue
+            if track._data.get('transitions'):
+                import warnings
+                warnings.warn(
+                    f'flatten_to_track drops transitions from track {track.index!r}; '
+                    f'they are not copied to the target track.',
+                    stacklevel=2,
+                )
+                break
         next_id = [self.next_clip_id()]
         for track in self.tracks:
             if track.index == target_idx:

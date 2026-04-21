@@ -34,6 +34,12 @@ class CursorShadow(Effect):
 
     @property
     def enabled(self) -> int:  # type: ignore[no-any-return]
+        """Whether the effect is on (1) or off (0) at the default keyframe.
+
+        Note: Setting this only updates the parameter's default value;
+        existing keyframes on the ``enabled`` parameter are not
+        modified. See ``DropShadow.enabled`` for the same caveat.
+        """
         return int(self.get_parameter('enabled'))  # type: ignore[no-any-return]
 
     @enabled.setter

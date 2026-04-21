@@ -68,6 +68,17 @@ def parse_scalar(value: int | float | str | Fraction) -> Fraction:
     Camtasia stores speed scalars as integers (1), floats, or string
     fractions ('51/101').
 
+    For float inputs, the result is constrained with
+    ``limit_denominator(10_000)`` to produce a compact rational
+    approximation. The 10_000 cap is a compromise: it is small enough
+    to keep the denominator manageable when serialized back to JSON
+    (e.g., ``51/101`` rather than an astronomical fraction), and large
+    enough to represent common speed values (e.g., 0.5, 1/3, 2/3) and
+    NTSC-style ratios exactly. For inputs that need higher precision
+    (e.g., audio sync with sub-millisecond accuracy), pass the value
+    as a pre-built ``Fraction`` or a string fraction to bypass the
+    denominator cap.
+
     Args:
         value: Scalar as int, float, string fraction, or Fraction.
 

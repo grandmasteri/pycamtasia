@@ -303,6 +303,24 @@ def test_flatten_to_track():
     assert len(list(orig_a.clips)) == 1
 
 
+def test_flatten_to_track_warns_when_dropping_transitions():
+    """flatten_to_track should warn if any source track has transitions."""
+    import warnings
+    tl = _make_timeline([
+        ('A', [{'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
+               {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 100}]),
+    ])
+    # Inject a transition on track 0
+    tl.tracks[0]._data['transitions'] = [
+        {'name': 'fade', 'leftMedia': 1, 'rightMedia': 2, 'duration': 10},
+    ]
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter('always')
+        tl.flatten_to_track('Merged')
+    msgs = [str(x.message) for x in w]
+    assert any('drops transitions' in m for m in msgs)
+
+
 
 
 # ---------------------------------------------------------------------------

@@ -330,9 +330,16 @@ class MediaBin:
                         dur_val = 1000  # pragma: no cover  # defensive: pymediainfo rarely returns None for video duration
                     duration = round(float(dur_val) / 1000.0 * fps)
 
-        # Copy file into project media directory
+        # Copy file into project media directory. Use the timestamp plus a
+        # numeric suffix on collision — rapid successive imports can produce
+        # identical timestamps at microsecond resolution.
         timestamp = datetime.datetime.now()
-        media_dir = self._root_path / "media" / str(timestamp.timestamp())
+        base = self._root_path / "media" / str(timestamp.timestamp())
+        media_dir = base
+        suffix = 1
+        while media_dir.exists():
+            media_dir = base.with_name(f'{base.name}_{suffix}')
+            suffix += 1
         media_dir.mkdir(parents=True)
         dest = shutil.copy(file_path, media_dir)
 

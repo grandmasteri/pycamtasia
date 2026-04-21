@@ -110,6 +110,15 @@ class DropShadow(Effect):
 
     @property
     def enabled(self) -> int:  # type: ignore[no-any-return]
+        """Whether the effect is on (1) or off (0) at the default keyframe.
+
+        Note: This reads/writes the ``defaultValue`` of the ``enabled``
+        parameter. If the parameter has keyframes (i.e., the effect is
+        animated on/off over time), setting this property only changes
+        the default value — it does NOT modify existing keyframes. To
+        animate enabled over time, use the keyframe APIs directly on
+        the parameter.
+        """
         return int(self.get_parameter('enabled')) # type: ignore[no-any-return]
 
     @enabled.setter
