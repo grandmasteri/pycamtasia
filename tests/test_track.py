@@ -2398,3 +2398,59 @@ def test_add_clip_screen_imfile_scalar_always_one() -> None:
     clip = track.add_clip('ScreenIMFile', 1, 0, 300)
     assert clip._data['scalar'] == 1
     assert clip._data['mediaDuration'] == 1
+
+
+# ---------------------------------------------------------------------------
+# Track.join_clips
+# ---------------------------------------------------------------------------
+
+class TestJoinClips:
+    def test_join_creates_stitched_media(self):
+        tl = _make_timeline([
+            ('A', [
+                {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
+                {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200},
+            ]),
+        ])
+        track = tl.tracks[0]
+        stitched = track.join_clips([1, 2])
+        assert stitched.clip_type == 'StitchedMedia'
+        assert stitched.duration == 300
+        assert stitched.start == 0
+        # The original clips are replaced by a single compound
+        remaining = list(track.clips)
+        assert len(remaining) == 1
+        assert remaining[0].clip_type == 'StitchedMedia'
+
+    def test_join_inner_segments_laid_out_back_to_back(self):
+        tl = _make_timeline([
+            ('A', [
+                {'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100},
+                {'id': 2, '_type': 'VMFile', 'start': 100, 'duration': 200},
+                {'id': 3, '_type': 'VMFile', 'start': 300, 'duration': 150},
+            ]),
+        ])
+        track = tl.tracks[0]
+        stitched = track.join_clips([1, 2, 3])
+        inner = stitched._data['medias']
+        assert len(inner) == 3
+        assert inner[0]['start'] == 0
+        assert inner[0]['duration'] == 100
+        assert inner[1]['start'] == 100
+        assert inner[1]['duration'] == 200
+        assert inner[2]['start'] == 300
+        assert inner[2]['duration'] == 150
+
+    def test_join_rejects_single_clip(self):
+        tl = _make_timeline([
+            ('A', [{'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}]),
+        ])
+        with pytest.raises(ValueError, match='at least 2'):
+            tl.tracks[0].join_clips([1])
+
+    def test_join_raises_on_missing_id(self):
+        tl = _make_timeline([
+            ('A', [{'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}]),
+        ])
+        with pytest.raises(KeyError, match='Clips not found'):
+            tl.tracks[0].join_clips([1, 99])

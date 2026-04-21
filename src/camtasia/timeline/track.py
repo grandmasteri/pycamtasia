@@ -1130,6 +1130,82 @@ class Track:
         group = cast('Group', clip_from_dict(group_record))
         return group
 
+    def join_clips(self, clip_ids: list[int]) -> BaseClip:
+        """Join the specified clips into a single StitchedMedia compound.
+
+        The clips must be adjacent on this track. They are removed from
+        the track and placed inside a new StitchedMedia whose inner
+        segments are laid out back-to-back, preserving their original
+        durations and source references.
+
+        Unlike :meth:`group_clips` (which creates a spatial container),
+        join_clips creates a temporal compound where the segments play
+        as a single continuous media source.
+
+        Args:
+            clip_ids: IDs of clips to join. Must all exist on this track.
+
+        Returns:
+            The newly created StitchedMedia clip.
+
+        Raises:
+            KeyError: No clips found with the given IDs.
+            ValueError: Fewer than 2 clips supplied.
+        """
+        from camtasia.timeline.timeline import _remap_clip_ids_with_map
+        if len(clip_ids) < 2:
+            raise ValueError('join_clips requires at least 2 clips')
+
+        medias: list[dict[str, Any]] = self._data.get('medias', [])
+        clip_id_set = set(clip_ids)
+        clips_to_join: list[dict[str, Any]] = [
+            m for m in medias if m.get('id') in clip_id_set
+        ]
+        if len(clips_to_join) != len(clip_id_set):
+            found_ids = {m.get('id') for m in clips_to_join}
+            missing = clip_id_set - found_ids
+            raise KeyError(f'Clips not found: {sorted(missing)}')
+
+        # Sort by timeline start so the stitched inner segments play in order
+        clips_to_join.sort(key=lambda c: int(c.get('start', 0)))
+        earliest_start = int(clips_to_join[0].get('start', 0))
+        total_duration = sum(int(c.get('duration', 0)) for c in clips_to_join)
+
+        id_counter = [self._next_clip_id()]
+        inner_medias: list[dict[str, Any]] = []
+        cursor = 0
+        for clip_data in clips_to_join:
+            cloned: dict[str, Any] = copy.deepcopy(clip_data)
+            cloned['start'] = cursor
+            _propagate_start_to_unified(cloned)
+            cursor += int(cloned.get('duration', 0))
+            _id_map: dict[int, int] = {}
+            _remap_clip_ids_with_map(cloned, id_counter, _id_map)
+            inner_medias.append(cloned)
+
+        # Remove originals
+        for clip_id in clip_ids:
+            self.remove_clip(clip_id)
+
+        stitched_record: dict[str, Any] = {
+            'id': id_counter[0],
+            '_type': 'StitchedMedia',
+            'start': earliest_start,
+            'duration': total_duration,
+            'mediaStart': 0,
+            'mediaDuration': total_duration,
+            'minMediaStart': 0,
+            'scalar': 1,
+            'medias': inner_medias,
+            'parameters': {},
+            'effects': [],
+            'metadata': {},
+            'animationTracks': {},
+            'attributes': {'ident': ''},
+        }
+        self._data.setdefault('medias', []).append(stitched_record)
+        return clip_from_dict(stitched_record)
+
     def add_screen_recording(
         self,
         source_id: int,
