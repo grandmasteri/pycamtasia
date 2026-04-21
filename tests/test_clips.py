@@ -551,6 +551,76 @@ def test_set_position_keyframes():
     assert kf_y['value'] == 400
 
 
+def test_set_position_keyframes_creates_animation_tracks_visual():
+    """set_position_keyframes must also populate animationTracks.visual to match real Camtasia projects."""
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    clip.set_position_keyframes([(0.0, 100, 200), (2.0, 300, 400)])
+    visual = clip._data['animationTracks']['visual']
+    # 2 keyframe times → 2 visual segments (deduplicated across x/y parallel params)
+    assert len(visual) == 2
+    assert visual[0]['time'] == 0 if 'time' in visual[0] else visual[0]['range'][0] == 0
+    # Each segment has endTime/duration/range/interp
+    for seg in visual:
+        assert 'endTime' in seg
+        assert 'duration' in seg
+        assert 'range' in seg
+
+
+def test_set_scale_keyframes_creates_animation_tracks_visual():
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    clip.set_scale_keyframes([(0.0, 1.0), (1.5, 2.0)])
+    visual = clip._data['animationTracks']['visual']
+    assert len(visual) == 2
+
+
+def test_set_rotation_keyframes_creates_animation_tracks_visual():
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    clip.set_rotation_keyframes([(0.0, 0.0), (1.0, 90.0)])
+    visual = clip._data['animationTracks']['visual']
+    assert len(visual) == 2
+
+
+def test_set_crop_keyframes_creates_animation_tracks_visual():
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    clip.set_crop_keyframes([(0.0, 0.0, 0.0, 0.0, 0.0), (1.0, 0.1, 0.1, 0.1, 0.1)])
+    visual = clip._data['animationTracks']['visual']
+    # 4 crop params but deduped to 2 unique times
+    assert len(visual) == 2
+
+
+def test_add_keyframe_visual_param_creates_animation_tracks_visual():
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    clip.add_keyframe('translation0', 1.0, 50.0, duration_seconds=0.5)
+    visual = clip._data['animationTracks']['visual']
+    assert len(visual) == 1
+
+
+def test_add_keyframe_non_visual_param_does_not_create_animation_tracks():
+    """Non-visual params (e.g., volume) should NOT create animationTracks.visual entries."""
+    t = seconds_to_ticks
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': t(10.0)}
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    clip.add_keyframe('volume', 1.0, 0.5)
+    visual = clip._data.get('animationTracks', {}).get('visual', [])
+    assert len(visual) == 0
+
+
 # ------------------------------------------------------------------
 # BaseClip.set_scale_keyframes
 # ------------------------------------------------------------------

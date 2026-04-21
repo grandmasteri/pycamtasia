@@ -892,6 +892,37 @@ class BaseClip:
         tracks = self._data.setdefault('animationTracks', {})
         return tracks.setdefault('visual', [])  # type: ignore[no-any-return]
 
+    def _add_visual_tracks_for_keyframes(self, keyframes: list[dict[str, Any]]) -> None:
+        """Append animationTracks.visual segments for a list of parameter keyframes.
+
+        Each keyframe should have ``time``, ``endTime``, ``duration``, and
+        optionally ``interp``. One visual segment per unique (time, endTime)
+        pair is created; duplicate times from parallel parameters (e.g.,
+        translation0 and translation1 with identical keyframe times) are
+        deduplicated so the visual track has one segment per animation step.
+
+        Matches the pattern observed in real TechSmith projects where a
+        clip with keyframed translation0+translation1 has 1 visual segment
+        per keyframe time (not 2).
+        """
+        visual = self._ensure_visual_tracks()
+        seen: set[tuple[int, int]] = {
+            (int(v.get('range', [0])[0] if v.get('range') else 0), int(v.get('endTime', 0)))
+            for v in visual
+        }
+        for kf in keyframes:
+            time = int(kf.get('time', 0))
+            end_time = int(kf.get('endTime', 0))
+            if (time, end_time) in seen:
+                continue
+            seen.add((time, end_time))
+            visual.append({
+                'endTime': end_time,
+                'duration': int(kf.get('duration', 0)),
+                'range': [time, int(kf.get('duration', 0))],
+                'interp': kf.get('interp', 'linr'),
+            })
+
     def _add_opacity_track(self, keyframes: list[dict[str, Any]], *, default_value: float = 0.0) -> None:
         """Add opacity animation via parameters.opacity and animationTracks.visual.
 
@@ -1560,6 +1591,14 @@ class BaseClip:
                 'defaultValue': default_val,
                 'keyframes': [kf_entry],
             }
+        # For visual parameters, create a matching animationTracks.visual segment
+        _VISUAL_PARAMS = {
+            'opacity', 'translation0', 'translation1',
+            'scale0', 'scale1', 'rotation2',
+            'geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3',
+        }
+        if parameter in _VISUAL_PARAMS:
+            self._add_visual_tracks_for_keyframes([kf_entry])
         return self
 
     def summary(self) -> str:
@@ -1657,6 +1696,8 @@ class BaseClip:
             y_kfs.append({'endTime': next_ticks, 'time': ticks, 'value': y, 'duration': dur})
         params['translation0'] = {'type': 'double', 'defaultValue': keyframes[-1][1], 'keyframes': x_kfs}
         params['translation1'] = {'type': 'double', 'defaultValue': keyframes[-1][2], 'keyframes': y_kfs}
+        # x_kfs and y_kfs have identical timing; adding one set suffices
+        self._add_visual_tracks_for_keyframes(x_kfs)
         return self
 
     def set_scale_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
@@ -1675,6 +1716,7 @@ class BaseClip:
             kfs.append({'endTime': next_ticks, 'time': ticks, 'value': s, 'duration': dur})
         params['scale0'] = {'type': 'double', 'defaultValue': keyframes[-1][1], 'keyframes': kfs}
         params['scale1'] = {'type': 'double', 'defaultValue': keyframes[-1][1], 'keyframes': copy.deepcopy(kfs)}
+        self._add_visual_tracks_for_keyframes(kfs)
         return self
 
     def set_rotation_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
@@ -1694,6 +1736,7 @@ class BaseClip:
             dur = next_ticks - ticks
             kfs.append({'endTime': next_ticks, 'time': ticks, 'value': math.radians(deg), 'duration': dur})
         params['rotation2'] = {'type': 'double', 'defaultValue': kfs[-1]['value'], 'keyframes': kfs}
+        self._add_visual_tracks_for_keyframes(kfs)
         return self
 
     def set_crop_keyframes(self, keyframes: list[tuple[float, float, float, float, float]]) -> Self:
@@ -1705,6 +1748,7 @@ class BaseClip:
         """
         from camtasia.timing import seconds_to_ticks
         params = self._data.setdefault('parameters', {})
+        last_kfs: list[dict[str, Any]] = []
         for i, name in enumerate(['geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3']):
             kfs = []
             for ki, kf in enumerate(keyframes):
@@ -1713,6 +1757,9 @@ class BaseClip:
                 dur = next_ticks - ticks
                 kfs.append({'endTime': next_ticks, 'time': ticks, 'value': kf[i + 1], 'duration': dur})
             params[name] = {'type': 'double', 'defaultValue': kfs[-1]['value'], 'keyframes': kfs}
+            last_kfs = kfs
+        # All four crop params have identical timing; dedup to one segment per time
+        self._add_visual_tracks_for_keyframes(last_kfs)
         return self
 
     def set_volume_fade(self, start_volume: float = 1.0, end_volume: float = 0.0, duration_seconds: float | None = None) -> Self:

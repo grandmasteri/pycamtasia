@@ -149,8 +149,8 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [x] `UnifiedMedia.remove_all_effects()` clears effects on both video/audio sub-clips
 - [x] `UnifiedMedia.has_effects/effect_count/effect_names` aggregate from video+audio sub-clips
 - [x] `Callout.text` setter should update `textAttributes` `rangeEnd` to match new text length
-- [ ] `BaseClip.add_keyframe()` should create corresponding `animationTracks.visual` entries (currently only `fade_in`/`fade_out`/`fade` do this)
-- [ ] `set_position_keyframes` / `set_scale_keyframes` / `set_rotation_keyframes` should also create `animationTracks.visual` entries
+- [x] `BaseClip.add_keyframe()` creates `animationTracks.visual` entries for visual parameters (translation/scale/rotation/crop/opacity)
+- [x] `set_position_keyframes` / `set_scale_keyframes` / `set_rotation_keyframes` / `set_crop_keyframes` create `animationTracks.visual` entries
 - [ ] `add_progressive_disclosure(replace_previous=True)` option for non-accumulating sequences
 
 ### Track API
@@ -182,7 +182,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [ ] EDL exporter doesn't recurse into Groups/StitchedMedia — nested clips invisible
 - [ ] CSV/report exporters same issue — only top-level clips exported
 - [x] EDL `UnifiedMedia` source is always `AX` — should use video sub-clip's source
-- [ ] SRT exporter writes empty file silently when no markers — should warn
+- [x] SRT exporter warns when no markers to export
 - [ ] `timeline_json` export doesn't include effects, transitions, or metadata
 
 ### Builders
