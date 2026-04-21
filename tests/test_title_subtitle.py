@@ -105,3 +105,25 @@ class TestAddSubtitleTrack:
         ]
         clips = project.add_subtitle_track(entries)
         assert ticks_to_seconds(clips[0].start) < ticks_to_seconds(clips[1].start)
+
+
+# ── add_caption ─────────────────────────────────────────────────────
+
+class TestAddCaption:
+    def test_add_caption_creates_single_callout(self, project):
+        clip = project.add_caption('Hello world', 1.0, 2.0)
+        assert clip.clip_type == 'Callout'
+        track = project.timeline.find_track_by_name('Subtitles')
+        assert track is not None
+        assert len(list(track.clips)) == 1
+
+    def test_add_caption_appends_to_existing_subtitle_track(self, project):
+        project.add_caption('One', 0.0, 1.0)
+        project.add_caption('Two', 1.0, 1.0)
+        track = project.timeline.find_track_by_name('Subtitles')
+        assert len(list(track.clips)) == 2
+
+    def test_add_caption_respects_custom_track_name(self, project):
+        project.add_caption('CC', 0.0, 1.0, track_name='CC')
+        assert project.timeline.find_track_by_name('CC') is not None
+        assert project.timeline.find_track_by_name('Subtitles') is None

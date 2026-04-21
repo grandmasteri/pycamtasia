@@ -2200,6 +2200,41 @@ class Project:
             placed_subtitles.append(callout)
         return placed_subtitles
 
+    def add_caption(
+        self,
+        text: str,
+        start_seconds: float,
+        duration_seconds: float,
+        *,
+        track_name: str = 'Subtitles',
+        font_size: float = 36.0,
+        font_color: tuple[float, float, float] = (1.0, 1.0, 1.0),
+    ) -> BaseClip:
+        """Add a single caption entry to the subtitle track.
+
+        Convenience wrapper around :meth:`add_subtitle_track` for adding
+        one entry at a time. The target track is created if it does not
+        exist.
+
+        Args:
+            text: Caption text.
+            start_seconds: Start time in seconds.
+            duration_seconds: Duration in seconds.
+            track_name: Name of the target track.
+            font_size: Font size in points.
+            font_color: RGB tuple in 0.0-1.0.
+
+        Returns:
+            The created callout clip.
+        """
+        track = self.timeline.get_or_create_track(track_name)
+        callout = track.add_callout(
+            text, start_seconds, duration_seconds,
+            font_size=font_size,
+        )
+        callout.set_colors(font_color=font_color)
+        return callout
+
     def add_callout_sequence(
         self,
         callout_entries: list[tuple[float, float, str]],
