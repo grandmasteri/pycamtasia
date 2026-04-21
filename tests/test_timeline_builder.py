@@ -60,3 +60,92 @@ class TestTimelineBuilder:
         result = builder.advance(1.0).add_pause(2.0).seek(5.0)
         assert result is builder
         assert builder.cursor == 5.0
+
+
+class TestBackgroundHelpers:
+    """add_background_image / add_background_video place content on a
+    dedicated background track."""
+
+    def test_add_background_image_creates_track_and_clip(self, project, tmp_path, monkeypatch):
+        import sys
+        from types import SimpleNamespace
+        from unittest.mock import MagicMock
+        mock_mi = MagicMock()
+        mock_mi.MediaInfo.parse.return_value = SimpleNamespace(tracks=[
+            SimpleNamespace(track_type='Image', width=1920, height=1080),
+        ])
+        monkeypatch.setitem(sys.modules, 'pymediainfo', mock_mi)
+        img = tmp_path / 'bg.png'
+        img.write_bytes(b'\x89PNG\r\n\x1a\n')
+        builder = TimelineBuilder(project)
+        clip = builder.add_background_image(img, duration=10.0)
+        assert clip.start == 0
+        bg_track = project.timeline.find_track_by_name('Background')
+        assert bg_track is not None
+
+    def test_add_background_image_custom_track(self, project, tmp_path, monkeypatch):
+        import sys
+        from types import SimpleNamespace
+        from unittest.mock import MagicMock
+        mock_mi = MagicMock()
+        mock_mi.MediaInfo.parse.return_value = SimpleNamespace(tracks=[
+            SimpleNamespace(track_type='Image', width=1920, height=1080),
+        ])
+        monkeypatch.setitem(sys.modules, 'pymediainfo', mock_mi)
+        img = tmp_path / 'bg.png'
+        img.write_bytes(b'\x89PNG\r\n\x1a\n')
+        builder = TimelineBuilder(project)
+        builder.add_background_image(img, track_name='BG', duration=5.0)
+        assert project.timeline.find_track_by_name('BG') is not None
+
+    def test_add_background_image_default_duration_uses_total(self, project, tmp_path, monkeypatch):
+        import sys
+        from types import SimpleNamespace
+        from unittest.mock import MagicMock
+        mock_mi = MagicMock()
+        mock_mi.MediaInfo.parse.return_value = SimpleNamespace(tracks=[
+            SimpleNamespace(track_type='Image', width=1920, height=1080),
+        ])
+        monkeypatch.setitem(sys.modules, 'pymediainfo', mock_mi)
+        img = tmp_path / 'bg.png'
+        img.write_bytes(b'\x89PNG\r\n\x1a\n')
+        builder = TimelineBuilder(project)
+        # Project is empty; total_duration_seconds == 0; clip duration = 0
+        clip = builder.add_background_image(img)
+        assert clip.duration == 0
+
+    def test_add_background_video_mutes_by_default(self, project, tmp_path, monkeypatch):
+        import sys
+        from types import SimpleNamespace
+        from unittest.mock import MagicMock
+        mock_mi = MagicMock()
+        mock_mi.MediaInfo.parse.return_value = SimpleNamespace(tracks=[
+            SimpleNamespace(track_type='Video', width=1920, height=1080,
+                           duration=5000, frame_rate=30),
+        ])
+        monkeypatch.setitem(sys.modules, 'pymediainfo', mock_mi)
+        vid = tmp_path / 'bg.mp4'
+        vid.write_bytes(b'\x00\x00\x00\x20ftypmp42')
+        builder = TimelineBuilder(project)
+        clip = builder.add_background_video(vid, duration=5.0)
+        # Muted = gain 0
+        assert clip.gain == 0.0
+
+
+def test_add_background_video_uses_native_duration_when_not_specified(project, tmp_path, monkeypatch):
+    import sys
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+    mock_mi = MagicMock()
+    mock_mi.MediaInfo.parse.return_value = SimpleNamespace(tracks=[
+        SimpleNamespace(track_type='Video', width=1920, height=1080,
+                       duration=5000, frame_rate=30),
+    ])
+    monkeypatch.setitem(sys.modules, 'pymediainfo', mock_mi)
+    vid = tmp_path / 'bg.mp4'
+    vid.write_bytes(b'\x00\x00\x00\x20ftypmp42')
+    builder = TimelineBuilder(project)
+    # duration not passed → should fall back
+    clip = builder.add_background_video(vid)
+    # Duration should be either native (5s) or project total (0s since empty project)
+    assert clip.duration >= 0

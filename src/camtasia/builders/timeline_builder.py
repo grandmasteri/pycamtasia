@@ -98,3 +98,67 @@ class TimelineBuilder:
         """
         track = self._project.timeline.get_or_create_track(track_name)
         return track.add_title(text, start_seconds=self._cursor, duration_seconds=duration)
+
+    def add_background_image(
+        self,
+        file_path: str | Path,
+        *,
+        track_name: str = 'Background',
+        duration: float | None = None,
+    ) -> BaseClip:
+        """Import and place an image on a dedicated background track.
+
+        The image starts at time 0 and fills the given duration. If
+        ``duration`` is None, the image is placed for the entire current
+        timeline (project.total_duration_seconds()).
+
+        Args:
+            file_path: Path to the background image.
+            track_name: Name for the dedicated background track.
+            duration: Duration in seconds. Defaults to the current
+                project total duration.
+
+        Returns:
+            The placed image clip.
+        """
+        media = self._project.import_media(Path(file_path))
+        track = self._project.timeline.get_or_create_track(track_name)
+        effective_duration = duration if duration is not None else self._project.total_duration_seconds()
+        return track.add_image(media.id, start_seconds=0.0, duration_seconds=effective_duration)
+
+    def add_background_video(
+        self,
+        file_path: str | Path,
+        *,
+        track_name: str = 'Background',
+        duration: float | None = None,
+        mute: bool = True,
+    ) -> BaseClip:
+        """Import and place a video on a dedicated background track for
+        an animated/dynamic background.
+
+        Args:
+            file_path: Path to the background video.
+            track_name: Name for the dedicated background track.
+            duration: Duration in seconds. Defaults to the video's
+                native duration if known, else the current project total.
+            mute: When True (default), the background video's audio is
+                muted so it doesn't compete with voiceover/music.
+
+        Returns:
+            The placed video clip.
+        """
+        media = self._project.import_media(Path(file_path))
+        track = self._project.timeline.get_or_create_track(track_name)
+        if duration is None:
+            # Use native video duration if available via the media entry,
+            # otherwise fall back to the project total duration.
+            native = getattr(media, 'duration_seconds', None)
+            duration = float(native) if native else self._project.total_duration_seconds()
+        clip = track.add_clip(
+            'VMFile', media.id, start=0, duration=int(duration * 705600000),
+        )
+        if mute:
+            # BaseClip.mute handles Group/StitchedMedia/UnifiedMedia dispatch too
+            clip.mute()
+        return clip
