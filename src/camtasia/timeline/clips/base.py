@@ -1417,6 +1417,24 @@ class BaseClip:
         })
         return self
 
+    def add_noise_removal(self, *, amount: float = 0.8, bypassed: bool = False) -> Self:
+        """Add a DFN3 VST noise-removal effect to this clip.
+
+        Args:
+            amount: Noise-removal strength (0.0 = none, 1.0 = max).
+            bypassed: When True, the effect is disabled at the default keyframe.
+        """
+        self.add_effect({
+            'effectName': 'VSTEffect-DFN3NoiseRemoval',
+            'bypassed': bypassed,
+            'category': 'categoryAudioEffects',
+            'parameters': {
+                'Amount': amount,
+                'Bypass': 1.0 if bypassed else 0.0,
+            },
+        })
+        return self
+
     def add_blend_mode(self, *, mode: int | BlendMode = BlendMode.NORMAL, intensity: float = 1.0) -> Self:
         """Add a blend mode compositing effect.
 

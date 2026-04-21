@@ -1,6 +1,7 @@
 """Camtasia effects — thin wrappers over effect dicts."""
 from __future__ import annotations
 
+from camtasia.effects.audio import NoiseRemoval
 from camtasia.effects.base import Effect, effect_from_dict
 from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
 from camtasia.effects.cursor import (
@@ -58,6 +59,7 @@ __all__ = [
     "Mask",
     "MediaMatte",
     "MotionBlur",
+    "NoiseRemoval",
     "RoundCorners",
     "SourceEffect",
     "Spotlight",

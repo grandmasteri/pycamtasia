@@ -75,7 +75,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [not-applicable] [Tips for Getting the Best Audio](https://www.techsmith.com/learn/tutorials/camtasia/best-audio-tips/) — Hardware/recording-technique advice; not a file-manipulation concern
 - [already-implemented] [Set the Tone with Background Music](https://www.techsmith.com/learn/tutorials/camtasia/background-music/) — project.add_background_music with volume and fade keyframes
 - [already-implemented] [Edit Audio](https://www.techsmith.com/learn/tutorials/camtasia/editing-audio/) — volume, gain, fade in/out, mute, strip_audio, normalize_audio
-- [partial] [Add Audio Effects](https://www.techsmith.com/learn/tutorials/camtasia/add-audio-effects/) — VST_NOISE_REMOVAL enum and categoryAudioEffects exist; no typed audio-effect wrapper classes yet
+- [x] [Add Audio Effects](https://www.techsmith.com/learn/tutorials/camtasia/add-audio-effects/) — VST_NOISE_REMOVAL enum and categoryAudioEffects exist; no typed audio-effect wrapper classes yet
 - [not-applicable] [Record Voice Narration](https://www.techsmith.com/learn/tutorials/camtasia/record-voice-narration/) — Recording audio is hardware capture; pycamtasia has add_voiceover_sequence for placing pre-recorded files
 
 ### Cursor Edits & Effects (5)

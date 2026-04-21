@@ -1494,3 +1494,28 @@ def test_media_matte_setters():
     eff.track_depth = 20000
     assert data["parameters"]["intensity"]["defaultValue"] == 0.5
     assert data["parameters"]["trackDepth"]["defaultValue"] == 20000
+
+
+def test_noise_removal_typed_wrapper():
+    from camtasia.effects import NoiseRemoval, effect_from_dict
+    data = _make_effect_dict('VSTEffect-DFN3NoiseRemoval', {'Amount': 0.8, 'Bypass': 0.0})
+    eff = effect_from_dict(data)
+    assert isinstance(eff, NoiseRemoval)
+    assert eff.amount == 0.8
+    assert eff.bypass == 0.0
+    eff.amount = 0.5
+    eff.bypass = 1.0
+    assert data['parameters']['Amount']['defaultValue'] == 0.5
+    assert data['parameters']['Bypass']['defaultValue'] == 1.0
+
+
+def test_add_noise_removal_method():
+    """BaseClip.add_noise_removal() creates a VSTEffect-DFN3NoiseRemoval effect."""
+    from camtasia.timeline.clips.base import BaseClip
+    clip = BaseClip({'_type': 'AMFile', 'id': 1, 'effects': [], 'parameters': {}, 'metadata': {}, 'animationTracks': {}})
+    clip.add_noise_removal(amount=0.9)
+    assert len(clip._data['effects']) == 1
+    eff = clip._data['effects'][0]
+    assert eff['effectName'] == 'VSTEffect-DFN3NoiseRemoval'
+    assert eff['category'] == 'categoryAudioEffects'
+    assert eff['parameters']['Amount'] == 0.9
