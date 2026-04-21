@@ -122,16 +122,20 @@ def test_apply_theme_recurses_into_group():
     c1 = track.add_callout('A', 0.0, 1.0)
     c2 = track.add_callout('B', 1.0, 1.0)
     group = track.group_clips([c1.id, c2.id])
-    # Attach themeMappings to one of the inner callouts
-    c1._data.setdefault('attributes', {})['assetProperties'] = [
-        {'type': 1, 'name': 'C', 'objects': [c1.id],
+    # Fetch the actual post-grouping inner clip dict (IDs get reassigned)
+    inner_dict = group._data['tracks'][0]['medias'][0]
+    inner_id = inner_dict['id']
+    # Attach themeMappings to the inner clip (found via recursion into Group)
+    inner_dict.setdefault('attributes', {})['assetProperties'] = [
+        {'type': 1, 'name': 'C', 'objects': [inner_id],
          'themeMappings': {'outline': 'accent-1'}},
     ]
     count = apply_theme(proj, Theme(accent_1=(0.5, 0.0, 0.0, 1.0)))
     assert count == 1
-    assert c1._data['def']['stroke-color-red'] == 0.5
+    assert inner_dict['def']['stroke-color-red'] == 0.5
     # Reference to group keeps the Group alive
     assert group.id
+    assert c1.id and c2.id  # wrapper objects still valid
 
 
 def test_apply_theme_resolves_across_stitched_and_unified():
