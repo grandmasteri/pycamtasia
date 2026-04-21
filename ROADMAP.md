@@ -145,7 +145,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 ## Feature Gaps (discovered during adversarial review & integration testing)
 
 ### Clip API
-- [ ] `BaseClip.unmute()` — no way to reverse `mute()` without raw dict access
+- [x] `BaseClip.unmute()` — reverses `mute()` on all clip types including Group/StitchedMedia/UnifiedMedia
 - [ ] `BaseClip.remove_all_effects()` should redirect to children for UnifiedMedia
 - [ ] `UnifiedMedia` effect read properties (`has_effects`, `effect_count`, `effect_names`) read from wrapper instead of children — should redirect or warn
 - [x] `Callout.text` setter should update `textAttributes` `rangeEnd` to match new text length

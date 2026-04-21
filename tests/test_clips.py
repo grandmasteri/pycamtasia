@@ -1301,6 +1301,40 @@ class TestBaseClipGainAndMute:
         assert actual_result is clip
         assert clip.gain == 0.0
 
+    def test_unmute_restores_gain(self):
+        data = _base()
+        clip = BaseClip(data)
+        clip.mute()
+        assert clip.gain == 0.0
+        actual_result = clip.unmute()
+        assert actual_result is clip
+        assert clip.gain == 1.0
+
+    def test_unmute_group(self):
+        data = {**_base(), '_type': 'Group', 'tracks': []}
+        clip = BaseClip(data)
+        clip.mute()
+        assert data['parameters']['volume'] == 0.0
+        clip.unmute()
+        assert data['parameters']['volume'] == 1.0
+
+    def test_unmute_unified_media(self):
+        data = {
+            **_base(), '_type': 'UnifiedMedia',
+            'audio': {'_type': 'AMFile', 'attributes': {}},
+        }
+        clip = BaseClip(data)
+        clip.mute()
+        assert data['audio']['attributes']['gain'] == 0.0
+        clip.unmute()
+        assert data['audio']['attributes']['gain'] == 1.0
+
+    def test_unmute_unified_media_no_audio_raises(self):
+        data = {**_base(), '_type': 'UnifiedMedia'}
+        clip = BaseClip(data)
+        with pytest.raises(ValueError, match='no audio'):
+            clip.unmute()
+
 
 class TestBaseClipMetadata:
     def test_metadata_default(self):

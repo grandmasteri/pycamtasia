@@ -266,6 +266,22 @@ class BaseClip:
             self.gain = 0.0
         return self
 
+    def unmute(self) -> Self:
+        """Restore this clip's audio by setting gain back to 1.0.
+
+        Inverse of :meth:`mute`. Returns ``self`` for chaining.
+        """
+        if self._data.get('_type') in ('Group', 'StitchedMedia'):
+            self._data.setdefault('parameters', {})['volume'] = 1.0
+        elif self._data.get('_type') == 'UnifiedMedia':
+            audio = self._data.get('audio')
+            if audio is None:
+                raise ValueError('UnifiedMedia has no audio sub-clip to unmute')
+            audio.setdefault('attributes', {})['gain'] = 1.0
+        else:
+            self.gain = 1.0
+        return self
+
     @property
     def media_start(self) -> int | float | str | Fraction:  # type: ignore[override]
         """Offset into source media in ticks.
