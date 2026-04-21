@@ -360,6 +360,26 @@ class UnifiedMediaStateMachine(RuleBasedStateMachine):
         self.proj._data.clear()
         self.proj._data.update(reloaded)
 
+    @rule(at_seconds=st.floats(min_value=0.0, max_value=10.0, allow_nan=False, allow_infinity=False),
+          gap_seconds=st.floats(min_value=0.1, max_value=3.0, allow_nan=False, allow_infinity=False))
+    def do_insert_gap(self, at_seconds: float, gap_seconds: float) -> None:
+        self.proj.timeline.tracks[0].insert_gap(at_seconds, gap_seconds)
+
+    @rule(at_seconds=st.floats(min_value=0.0, max_value=20.0, allow_nan=False, allow_infinity=False))
+    def do_remove_gap(self, at_seconds: float) -> None:
+        import contextlib
+        # KeyError/ValueError when no gap exists at that position is valid precondition
+        # failure, not a bug
+        with contextlib.suppress(KeyError, ValueError):
+            self.proj.timeline.tracks[0].remove_gap_at(at_seconds)
+
+    @rule()
+    def do_duplicate_clip(self) -> None:
+        clip = self._clip()
+        if clip is None:
+            return
+        self.proj.timeline.tracks[0].duplicate_clip(clip.id)
+
     @invariant()
     def compound_invariants_hold(self) -> None:
         issues = _check_compound_invariants(self.proj._data)
@@ -630,6 +650,25 @@ class StitchedMediaStateMachine(RuleBasedStateMachine):
         s = self._stitched()
         if s is not None:
             s.duration = seconds_to_ticks(new_dur)
+
+    @rule(
+        first_end=st.floats(min_value=0.5, max_value=2.5, allow_nan=False, allow_infinity=False),
+        first_scalar=st.floats(min_value=0.5, max_value=2.0, allow_nan=False, allow_infinity=False),
+        second_scalar=st.floats(min_value=0.5, max_value=2.0, allow_nan=False, allow_infinity=False),
+    )
+    def do_set_segment_speeds(self, first_end: float, first_scalar: float, second_scalar: float) -> None:
+        """Use track.set_segment_speeds on a non-compound clip to stress-test segment logic."""
+        # Need a simple clip (not StitchedMedia itself) — this is only meaningful
+        # when the track has a non-compound clip. Skip if not present.
+        for c in self.proj.timeline.tracks[0].clips:
+            if c.clip_type in ('VMFile', 'AMFile'):
+                import contextlib
+                with contextlib.suppress(ValueError, KeyError):
+                    self.proj.timeline.tracks[0].set_segment_speeds(
+                        c.id,
+                        [(first_end, first_scalar), (first_end + 1.0, second_scalar)],
+                    )
+                return
 
     @invariant()
     def compound_invariants_hold(self) -> None:
