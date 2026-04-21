@@ -191,13 +191,13 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [x] `screenplay_builder._find_audio_file()` only searches `.wav` — should support `.mp3`, `.m4a`
 
 ### Schema
-- [ ] Schema `effect.effectName` enum includes behavior names — weakens `oneOf` discriminator
+- [x] Schema `effect.effectName` enum no longer includes behavior names (moved to GenericBehaviorEffect only)
 - [x] Schema `effect` definition doesn't require `bypassed` (format reference says required)
 - [x] Non-schema transition names (`FadeThroughColor`, `SlideUp`, etc.) documented via docstring warnings
 
 ### Behavior Presets
 - [ ] Preset values don't fully match real TechSmith samples (ongoing refinement)
-- [ ] `reveal` preset has `start: 1411200000` (~2s) — may not be the right default
+- [x] `reveal` preset start value documented; clamped by get_behavior_preset() for short clips. Needs real-Camtasia verification to tune further.
 - [x] `BehaviorInnerName` enum missing `'fading'` phase name
 - [x] `pulsating` center phase `offsetBetweenCharacters` should be `49392000` (not `0`)
 

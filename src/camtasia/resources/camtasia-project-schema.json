@@ -211,14 +211,7 @@
             "RoundCorners",
             "SourceEffect",
             "Spotlight",
-            "VSTEffect-DFN3NoiseRemoval",
-            "fade",
-            "flyIn",
-            "popUp",
-            "pulsating",
-            "reveal",
-            "shifting",
-            "sliding"
+            "VSTEffect-DFN3NoiseRemoval"
           ]
         },
         "category": {
@@ -1993,7 +1986,12 @@
         "legacyAttenuateAudioMix": {
           "type": "boolean"
         },
-        "zoomNPan": {"type": "array", "items": {"type": "object"}}
+        "zoomNPan": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
       },
       "additionalProperties": false
     }

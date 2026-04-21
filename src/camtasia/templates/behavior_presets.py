@@ -40,6 +40,10 @@ _NONE_OUT = {
 PRESETS = {
     'reveal': {
         'effectName': 'reveal',
+        # NOTE: start=1411200000 (~2s) matches one real TechSmith sample but
+        # has not been broadly verified across Camtasia versions. The value
+        # is clamped by get_behavior_preset() to max(0, duration_ticks-1),
+        # so short clips automatically get a smaller start offset.
         'start': 1411200000,
         'in': {
             'attributes': {
