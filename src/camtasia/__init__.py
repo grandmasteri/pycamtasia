@@ -41,12 +41,13 @@ from camtasia.operations import (
     rescale_project,
     set_audio_speed,
 )
-
-# Project management
 from camtasia.project import Project, load_project, new_project, use_project
 
 # Screenplay parsing
 from camtasia.screenplay import parse_screenplay
+
+# Project management
+from camtasia.themes import Theme, apply_theme
 
 # Timeline
 from camtasia.timeline import (
@@ -146,6 +147,7 @@ __all__ = [
     "SourceEffect",
     "StitchedMedia",
     "SyncSegment",
+    "Theme",
     # Timeline
     "Timeline",
     # Builders
@@ -160,6 +162,7 @@ __all__ = [
     "ValidationIssue",
     "ValidationLevel",
     "Word",
+    "apply_theme",
     "build_from_screenplay",
     "clip_from_dict",
     "clone_project_structure",
