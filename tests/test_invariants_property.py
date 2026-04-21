@@ -257,6 +257,22 @@ class UnifiedMediaStateMachine(RuleBasedStateMachine):
     def __init__(self) -> None:
         super().__init__()
         self.proj = _make_project_with_unified_clip()
+        # Add a second simple clip so group_clips/ungroup can do real work
+        src_id = self.proj.media_bin.next_id()
+        self.proj._data.setdefault('sourceBin', []).append({
+            '_type': 'IMFile', 'id': src_id, 'src': './media/fake_2.png',
+            'sourceTracks': [{
+                'range': [0, 1], 'type': 'Video', 'editRate': 30,
+                'trackRect': [0, 0, 1920, 1080], 'sampleRate': 30, 'bitDepth': 24,
+                'numChannels': 0, 'integratedLUFS': 100.0, 'peakLevel': -1.0,
+                'metaData': 'fake_2.png',
+            }],
+            'lastMod': 'Mon Jan 01 00:00:00 2024', 'loudnessNormalization': False,
+            'rect': [0, 0, 1920, 1080],
+        })
+        self.proj.timeline.tracks[0].add_clip(
+            'IMFile', src_id, seconds_to_ticks(15.0), seconds_to_ticks(2.0),
+        )
 
     def _clip(self) -> object | None:
         clips = list(self.proj.timeline.tracks[0].clips)
@@ -287,6 +303,52 @@ class UnifiedMediaStateMachine(RuleBasedStateMachine):
     def do_scale_all_durations(self, factor: float) -> None:
         self.proj.timeline.tracks[0].scale_all_durations(factor)
 
+    @rule(split_seconds=st.floats(min_value=0.1, max_value=5.0, allow_nan=False, allow_infinity=False))
+    def do_split(self, split_seconds: float) -> None:
+        clip = self._clip()
+        if clip is None:
+            return
+        track = self.proj.timeline.tracks[0]
+        clip_start_s = clip.start / 705600000
+        clip_dur_s = clip.duration / 705600000
+        split_at = clip_start_s + min(split_seconds, max(0.0, clip_dur_s - 0.01))
+        if split_at <= clip_start_s or split_at >= clip_start_s + clip_dur_s:
+            return
+        track.split_clip(clip.id, split_at)
+
+    @rule(trim_start=st.floats(min_value=0.0, max_value=2.0, allow_nan=False, allow_infinity=False),
+          trim_end=st.floats(min_value=0.0, max_value=2.0, allow_nan=False, allow_infinity=False))
+    def do_trim(self, trim_start: float, trim_end: float) -> None:
+        clip = self._clip()
+        if clip is None:
+            return
+        dur_s = clip.duration / 705600000
+        if trim_start + trim_end >= dur_s - 0.01:
+            return
+        self.proj.timeline.tracks[0].trim_clip(
+            clip.id, trim_start_seconds=trim_start, trim_end_seconds=trim_end,
+        )
+
+    @rule(extend_seconds=st.floats(min_value=-3.0, max_value=5.0, allow_nan=False, allow_infinity=False))
+    def do_extend(self, extend_seconds: float) -> None:
+        clip = self._clip()
+        if clip is None:
+            return
+        dur_s = clip.duration / 705600000
+        if dur_s + extend_seconds < 0.1:
+            return
+        self.proj.timeline.tracks[0].extend_clip(clip.id, extend_seconds=extend_seconds)
+
+    @rule()
+    def do_group_ungroup(self) -> None:
+        """Group the current clips, then immediately ungroup to stress-test the round-trip."""
+        track = self.proj.timeline.tracks[0]
+        clip_ids = [c.id for c in track.clips]
+        if len(clip_ids) == 0:
+            return
+        group = track.group_clips(clip_ids)
+        track.ungroup_clip(group.id)
+
     @invariant()
     def compound_invariants_hold(self) -> None:
         issues = _check_compound_invariants(self.proj._data)
@@ -295,8 +357,8 @@ class UnifiedMediaStateMachine(RuleBasedStateMachine):
 
 TestUnifiedMediaStateful = UnifiedMediaStateMachine.TestCase
 TestUnifiedMediaStateful.settings = settings(
-    max_examples=100,
-    stateful_step_count=25,
+    max_examples=200,
+    stateful_step_count=50,
     deadline=None,
     suppress_health_check=[HealthCheck.function_scoped_fixture],
 )
