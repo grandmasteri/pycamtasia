@@ -154,7 +154,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [ ] `add_progressive_disclosure(replace_previous=True)` option for non-accumulating sequences
 
 ### Track API
-- [ ] `clip_after()` uses `>=` (at-or-after) — consider renaming or adding `clip_strictly_after()`
+- [x] `clip_after()` docstring clarified as at-or-after; `clip_strictly_after()` added as strictly-after variant
 - [x] `insert_gap()` and `shift_all_clips()` don't clear/adjust transitions that may become invalid
 - [x] `merge_adjacent_clips()` doesn't verify clips are actually adjacent before merging
 - [x] `set_segment_speeds()` uses float accumulation for `mediaStart` — should use Fraction
@@ -165,7 +165,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [x] `shift_all()` doesn't shift transition or effect `start` times
 - [ ] `insert_gap()` / `remove_gap()` don't adjust transitions or markers
 - [x] `flatten_to_track()` warns when source tracks have transitions that will be dropped
-- [ ] `build_section_timeline()` helper — place all sections on one track with transitions
+- [x] `build_section_timeline()` helper exists in timeline.py
 
 ### Validation
 - [x] Validate `timeline.id` exists and doesn't collide with clip IDs
@@ -175,7 +175,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 ### Effects
 - [ ] Typed wrapper classes for `LutEffect`, `Emphasize`, `Spotlight`, `ColorAdjustment`, `BlendModeEffect`, `MediaMatte`
-- [ ] `BlurRegion` is exported but not registered — either register or remove from `__all__`
+- [x] `BlurRegion` export is intentional — class docstring warns it is unregistered and unverified against real projects
 - [x] `DropShadow.enabled` / `CursorShadow.enabled` docstrings clarify that setting only updates defaultValue, not existing keyframes
 
 ### Export
@@ -193,7 +193,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 ### Schema
 - [ ] Schema `effect.effectName` enum includes behavior names — weakens `oneOf` discriminator
 - [x] Schema `effect` definition doesn't require `bypassed` (format reference says required)
-- [ ] Non-schema transition names: `FadeThroughColor`, `SlideUp`, `SlideDown`, `WipeLeft/Right/Up/Down` — document as unsupported or remove methods
+- [x] Non-schema transition names (`FadeThroughColor`, `SlideUp`, etc.) documented via docstring warnings
 
 ### Behavior Presets
 - [ ] Preset values don't fully match real TechSmith samples (ongoing refinement)
@@ -204,8 +204,8 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 ### Infrastructure
 - [x] `media_bin.import_media()` appends _1/_2/... suffix on directory collision
 - [x] `media_bin._visual_track_to_json()` uses `sampleRate=0` for video (should be frame rate)
-- [ ] `media_bin._visual_track_to_json()` / `_audio_track_to_json()` omit `tag` field
-- [ ] `scalar_to_string()` name implies string return but returns `int` for scalar=1
+- [x] `media_bin` visual/audio track JSONs already include `tag: 0` field
+- [x] `scalar_to_string()` return type annotation is `str | int` and docstring explains the int return
 - [x] `parse_scalar()` docstring documents the 10_000 denominator cap tradeoff
 - [x] `history.py` `undo()`/`redo()` docstrings warn about stale nested references (already present)
 

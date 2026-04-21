@@ -842,6 +842,26 @@ def test_clip_after_none():
     assert track.clip_after(5.0) is None
 
 
+def test_clip_after_includes_clip_at_exact_time():
+    """clip_after uses >= (at-or-after); a clip starting exactly at the query time is returned."""
+    track = _make_track([
+        {'id': 1, '_type': 'VMFile', 'start': seconds_to_ticks(5.0), 'duration': seconds_to_ticks(1)},
+    ])
+    clip = track.clip_after(5.0)
+    assert clip is not None
+    assert clip.id == 1
+
+
+def test_clip_strictly_after_excludes_clip_at_exact_time():
+    """clip_strictly_after uses > (strictly after); a clip at the query time is NOT returned."""
+    track = _make_track([
+        {'id': 1, '_type': 'VMFile', 'start': seconds_to_ticks(5.0), 'duration': seconds_to_ticks(1)},
+        {'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(10.0), 'duration': seconds_to_ticks(1)},
+    ])
+    assert track.clip_strictly_after(5.0).id == 2
+    assert track.clip_strictly_after(10.0) is None
+
+
 def test_overlaps_with_true():
     clip_a = BaseClip({'id': 1, '_type': 'VMFile', 'start': 0, 'duration': seconds_to_ticks(3)})
     clip_b = BaseClip({'id': 2, '_type': 'VMFile', 'start': seconds_to_ticks(2), 'duration': seconds_to_ticks(2)})

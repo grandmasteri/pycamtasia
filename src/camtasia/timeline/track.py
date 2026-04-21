@@ -2321,11 +2321,36 @@ class Track:
         return clip_from_dict(nearest_media)  # type: ignore[return-value]
 
     def clip_after(self, time_seconds: float) -> BaseClip | None:
-        """Return the first clip that starts after the given time, or None."""
+        """Return the first clip that starts *at or after* the given time, or None.
+
+        The comparison is inclusive (``>=``). A clip starting exactly at
+        ``time_seconds`` is considered "after". Use :meth:`clip_strictly_after`
+        for an exclusive (``>``) comparison.
+        """
         target_ticks: int = seconds_to_ticks(time_seconds)
         candidates: list[dict[str, Any]] = [
             media_dict for media_dict in self._data.get('medias', [])
             if media_dict.get('start', 0) >= target_ticks
+        ]
+        if not candidates:
+            return None
+        nearest_media: dict[str, Any] = min(
+            candidates,
+            key=lambda media_dict: media_dict.get('start', 0),
+        )
+        return clip_from_dict(nearest_media)  # type: ignore[return-value]
+
+    def clip_strictly_after(self, time_seconds: float) -> BaseClip | None:
+        """Return the first clip that starts *strictly after* the given time, or None.
+
+        The comparison is exclusive (``>``). A clip starting exactly at
+        ``time_seconds`` is NOT returned. See :meth:`clip_after` for the
+        inclusive variant.
+        """
+        target_ticks: int = seconds_to_ticks(time_seconds)
+        candidates: list[dict[str, Any]] = [
+            media_dict for media_dict in self._data.get('medias', [])
+            if media_dict.get('start', 0) > target_ticks
         ]
         if not candidates:
             return None
