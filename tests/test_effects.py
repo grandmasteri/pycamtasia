@@ -1519,3 +1519,50 @@ def test_add_noise_removal_method():
     assert eff['effectName'] == 'VSTEffect-DFN3NoiseRemoval'
     assert eff['category'] == 'categoryAudioEffects'
     assert eff['parameters']['Amount'] == 0.9
+
+
+def test_corner_pin_corners():
+    from camtasia.effects import CornerPin
+    data = _make_effect_dict('CornerPin', {
+        'topLeftX': 0.0, 'topLeftY': 0.0,
+        'topRightX': 1.0, 'topRightY': 0.1,
+        'bottomLeftX': 0.05, 'bottomLeftY': 0.9,
+        'bottomRightX': 0.95, 'bottomRightY': 1.0,
+    })
+    eff = CornerPin(data)
+    assert eff.top_left == (0.0, 0.0)
+    assert eff.top_right == (1.0, 0.1)
+    assert eff.bottom_left == (0.05, 0.9)
+    assert eff.bottom_right == (0.95, 1.0)
+    eff.top_left = (0.1, 0.2)
+    eff.top_right = (0.9, 0.2)
+    eff.bottom_left = (0.1, 0.8)
+    eff.bottom_right = (0.9, 0.8)
+    assert data['parameters']['topLeftX']['defaultValue'] == 0.1
+    assert data['parameters']['topRightY']['defaultValue'] == 0.2
+    assert data['parameters']['bottomLeftX']['defaultValue'] == 0.1
+    assert data['parameters']['bottomRightY']['defaultValue'] == 0.8
+
+
+def test_chroma_key_parameters():
+    from camtasia.effects import ChromaKey
+    data = _make_effect_dict('ChromaKey', {
+        'color-red': 0.0, 'color-green': 1.0, 'color-blue': 0.0, 'color-alpha': 1.0,
+        'tolerance': 0.3, 'softness': 0.1, 'defringe': 0.2, 'invert': 0,
+    })
+    eff = ChromaKey(data)
+    assert eff.color == (0.0, 1.0, 0.0, 1.0)
+    assert eff.tolerance == 0.3
+    assert eff.softness == 0.1
+    assert eff.defringe == 0.2
+    assert eff.invert == 0
+    eff.color = (0.2, 0.8, 0.2, 1.0)
+    eff.tolerance = 0.5
+    eff.softness = 0.2
+    eff.defringe = 0.3
+    eff.invert = 1
+    assert data['parameters']['color-red']['defaultValue'] == 0.2
+    assert data['parameters']['tolerance']['defaultValue'] == 0.5
+    assert data['parameters']['softness']['defaultValue'] == 0.2
+    assert data['parameters']['defringe']['defaultValue'] == 0.3
+    assert data['parameters']['invert']['defaultValue'] == 1

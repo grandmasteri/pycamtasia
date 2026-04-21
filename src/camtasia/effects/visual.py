@@ -583,3 +583,122 @@ class MediaMatte(Effect):
     @track_depth.setter
     def track_depth(self, value: int) -> None:
         self.set_parameter("trackDepth", value)
+
+
+
+@register_effect("CornerPin")
+class CornerPin(Effect):
+    """Corner pinning — 3D perspective transform defined by four corner points.
+
+    .. warning::
+        The ``effectName`` and parameter names for this effect have not been
+        directly verified against a real TechSmith fixture that uses corner
+        pinning. The names below follow TechSmith's public documentation and
+        Camtasia's naming conventions. If your Camtasia version rejects these
+        names, please file an issue with a fixture project.
+
+    Parameter pattern (four corner points, normalized 0.0-1.0):
+        ``topLeftX``, ``topLeftY``, ``topRightX``, ``topRightY``,
+        ``bottomLeftX``, ``bottomLeftY``, ``bottomRightX``, ``bottomRightY``.
+    """
+
+    @property
+    def top_left(self) -> tuple[float, float]:
+        return (float(self.get_parameter("topLeftX")), float(self.get_parameter("topLeftY")))
+
+    @top_left.setter
+    def top_left(self, value: tuple[float, float]) -> None:
+        self.set_parameter("topLeftX", value[0])
+        self.set_parameter("topLeftY", value[1])
+
+    @property
+    def top_right(self) -> tuple[float, float]:
+        return (float(self.get_parameter("topRightX")), float(self.get_parameter("topRightY")))
+
+    @top_right.setter
+    def top_right(self, value: tuple[float, float]) -> None:
+        self.set_parameter("topRightX", value[0])
+        self.set_parameter("topRightY", value[1])
+
+    @property
+    def bottom_left(self) -> tuple[float, float]:
+        return (float(self.get_parameter("bottomLeftX")), float(self.get_parameter("bottomLeftY")))
+
+    @bottom_left.setter
+    def bottom_left(self, value: tuple[float, float]) -> None:
+        self.set_parameter("bottomLeftX", value[0])
+        self.set_parameter("bottomLeftY", value[1])
+
+    @property
+    def bottom_right(self) -> tuple[float, float]:
+        return (float(self.get_parameter("bottomRightX")), float(self.get_parameter("bottomRightY")))
+
+    @bottom_right.setter
+    def bottom_right(self, value: tuple[float, float]) -> None:
+        self.set_parameter("bottomRightX", value[0])
+        self.set_parameter("bottomRightY", value[1])
+
+
+@register_effect("ChromaKey")
+class ChromaKey(Effect):
+    """Chroma key / green-screen removal.
+
+    .. warning::
+        The ``effectName`` and parameter names for this effect have not been
+        directly verified against a real TechSmith fixture that uses chroma
+        keying. The names below follow Camtasia's naming conventions. If
+        your Camtasia version rejects these names, please file an issue.
+
+    Parameters:
+        ``color-red``/``-green``/``-blue``/``-alpha`` (key color to remove),
+        ``tolerance`` (0.0-1.0), ``softness`` (0.0-1.0),
+        ``defringe`` (0.0-1.0), ``invert`` (0 or 1).
+    """
+
+    @property
+    def color(self) -> tuple[float, float, float, float]:
+        return (
+            float(self.get_parameter("color-red")),
+            float(self.get_parameter("color-green")),
+            float(self.get_parameter("color-blue")),
+            float(self.get_parameter("color-alpha")),
+        )
+
+    @color.setter
+    def color(self, value: tuple[float, float, float, float]) -> None:
+        self.set_parameter("color-red", value[0])
+        self.set_parameter("color-green", value[1])
+        self.set_parameter("color-blue", value[2])
+        self.set_parameter("color-alpha", value[3])
+
+    @property
+    def tolerance(self) -> float:
+        return float(self.get_parameter("tolerance"))
+
+    @tolerance.setter
+    def tolerance(self, value: float) -> None:
+        self.set_parameter("tolerance", value)
+
+    @property
+    def softness(self) -> float:
+        return float(self.get_parameter("softness"))
+
+    @softness.setter
+    def softness(self, value: float) -> None:
+        self.set_parameter("softness", value)
+
+    @property
+    def defringe(self) -> float:
+        return float(self.get_parameter("defringe"))
+
+    @defringe.setter
+    def defringe(self, value: float) -> None:
+        self.set_parameter("defringe", value)
+
+    @property
+    def invert(self) -> int:
+        return int(self.get_parameter("invert"))
+
+    @invert.setter
+    def invert(self, value: int) -> None:
+        self.set_parameter("invert", value)
