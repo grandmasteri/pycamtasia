@@ -283,3 +283,50 @@ def test_cursor_scale_default_is_one() -> None:
     data = _base_clip_dict(_type="ScreenVMFile")
     clip = ScreenVMFile(data)
     assert clip.cursor_scale == 1.0
+
+
+class TestCursorPropertySetters:
+    """Setters for previously read-only cursor properties."""
+
+    def _screen_vm_data(self):
+        return {
+            '_type': 'ScreenVMFile', 'id': 1, 'src': 10, 'start': 0,
+            'duration': 705600000, 'mediaStart': 0, 'mediaDuration': 705600000,
+            'scalar': 1, 'trackNumber': 0,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {}, 'attributes': {'ident': ''},
+        }
+
+    def _screen_im_data(self):
+        return {
+            '_type': 'ScreenIMFile', 'id': 2, 'src': 11, 'start': 0,
+            'duration': 705600000, 'mediaStart': 0, 'mediaDuration': 1,
+            'scalar': 1, 'trackNumber': 0,
+            'parameters': {}, 'effects': [], 'metadata': {},
+            'animationTracks': {}, 'attributes': {'ident': ''},
+        }
+
+    def test_smooth_cursor_setter(self):
+        from camtasia.timeline.clips.screen_recording import ScreenVMFile
+        clip = ScreenVMFile(self._screen_vm_data())
+        clip.smooth_cursor_across_edit_duration = 0.5
+        assert clip.smooth_cursor_across_edit_duration == 0.5
+
+    def test_cursor_image_path_setter(self):
+        from camtasia.timeline.clips.screen_recording import ScreenIMFile
+        clip = ScreenIMFile(self._screen_im_data())
+        clip.cursor_image_path = 'custom-cursor.png'
+        assert clip.cursor_image_path == 'custom-cursor.png'
+
+    def test_set_cursor_location_keyframes(self):
+        from camtasia.timeline.clips.screen_recording import ScreenIMFile
+        from camtasia.timing import seconds_to_ticks
+        clip = ScreenIMFile(self._screen_im_data())
+        result = clip.set_cursor_location_keyframes([(0.0, 100, 200), (1.0, 300, 400)])
+        assert result is clip
+        kfs = clip.cursor_location_keyframes
+        assert len(kfs) == 2
+        assert kfs[0]['value'] == [100, 200, 0]
+        assert kfs[1]['value'] == [300, 400, 0]
+        assert kfs[0]['time'] == 0
+        assert kfs[1]['time'] == seconds_to_ticks(1.0)

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any, NoReturn
 
+from typing_extensions import Self
+
 from .base import BaseClip
 
 
@@ -58,6 +60,10 @@ class ScreenVMFile(BaseClip):
     def smooth_cursor_across_edit_duration(self) -> float:
         """Smooth cursor across edit duration setting."""
         return self._get_param_value('smoothCursorAcrossEditDuration')
+
+    @smooth_cursor_across_edit_duration.setter
+    def smooth_cursor_across_edit_duration(self, value: float) -> None:
+        self._set_cursor_param('smoothCursorAcrossEditDuration', value)
 
     # -- Cursor effects helpers --
 
@@ -133,6 +139,11 @@ class ScreenIMFile(BaseClip):
         """Cursor image path identifier."""
         return self.parameters.get('cursorImagePath')
 
+    @cursor_image_path.setter
+    def cursor_image_path(self, value: str) -> None:
+        """Set the cursor image path (replaces the cursor with a custom image)."""
+        self._data.setdefault('parameters', {})['cursorImagePath'] = value
+
     def set_source(self, source_id: int) -> NoReturn:
         raise TypeError('Cannot change source on cursor overlay clips')
 
@@ -146,3 +157,36 @@ class ScreenIMFile(BaseClip):
         """
         loc = self.parameters.get('cursorLocation', {})
         return loc.get('keyframes', [])  # type: ignore[no-any-return]
+
+    def set_cursor_location_keyframes(
+        self,
+        keyframes: list[tuple[float, float, float]],
+    ) -> Self:
+        """Set custom cursor path keyframes.
+
+        Args:
+            keyframes: List of ``(time_seconds, x, y)`` tuples. The Z
+                coordinate is set to 0. Must be in ascending time order.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        from camtasia.timing import seconds_to_ticks
+        kfs: list[dict[str, Any]] = []
+        for i, (t, x, y) in enumerate(keyframes):
+            ticks = seconds_to_ticks(t)
+            next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
+            dur = next_ticks - ticks
+            kfs.append({
+                'endTime': next_ticks,
+                'time': ticks,
+                'value': [x, y, 0],
+                'duration': dur,
+            })
+        params = self._data.setdefault('parameters', {})
+        params['cursorLocation'] = {
+            'type': 'point3',
+            'defaultValue': [keyframes[-1][1], keyframes[-1][2], 0] if keyframes else [0, 0, 0],
+            'keyframes': kfs,
+        }
+        return self
