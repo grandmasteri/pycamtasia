@@ -15,6 +15,7 @@ def _make_data(tracks, track_attributes=None):
     return {
         'editRate': 705600000,
         'timeline': {
+            'id': 9999,
             'sceneTrack': {
                 'scenes': [{'csml': {'tracks': tracks}}],
             },
@@ -118,3 +119,82 @@ class TestValidateAll:
 
     def test_importable_from_package(self):
         assert callable(va)
+
+
+class TestCheckTimelineIdUnique:
+    def test_missing_timeline_id_warns(self):
+        from camtasia.validation import _check_timeline_id_unique
+        data = {'timeline': {}}
+        issues = _check_timeline_id_unique(data)
+        assert len(issues) == 1
+        assert 'missing' in issues[0].message
+
+    def test_timeline_id_collides_with_clip_id(self):
+        from camtasia.validation import _check_timeline_id_unique
+        data = _make_data([{'trackIndex': 0, 'medias': [{'id': 42}], 'transitions': []}])
+        data['timeline']['id'] = 42
+        issues = _check_timeline_id_unique(data)
+        assert len(issues) == 1
+        assert 'collides' in issues[0].message
+
+    def test_timeline_id_unique_ok(self):
+        from camtasia.validation import _check_timeline_id_unique
+        data = _make_data([{'trackIndex': 0, 'medias': [{'id': 1}], 'transitions': []}])
+        assert _check_timeline_id_unique(data) == []
+
+
+class TestCheckBehaviorEffectStructure:
+    def test_missing_phase_flagged(self):
+        from camtasia.validation import _check_behavior_effect_structure
+        data = _make_data([{'trackIndex': 0, 'medias': [
+            {'id': 1, 'effects': [{'_type': 'GenericBehaviorEffect', 'in': {}, 'center': {}}]},
+        ], 'transitions': []}])
+        issues = _check_behavior_effect_structure(data)
+        assert len(issues) == 1
+        assert "'out'" in issues[0].message
+
+    def test_complete_behavior_ok(self):
+        from camtasia.validation import _check_behavior_effect_structure
+        data = _make_data([{'trackIndex': 0, 'medias': [
+            {'id': 1, 'effects': [{'_type': 'GenericBehaviorEffect',
+                                   'in': {}, 'center': {}, 'out': {}}]},
+        ], 'transitions': []}])
+        assert _check_behavior_effect_structure(data) == []
+
+
+class TestCheckClipOverlapOnTrack:
+    def test_overlapping_clips_flagged(self):
+        from camtasia.validation import _check_clip_overlap_on_track
+        data = _make_data([{'trackIndex': 0, 'medias': [
+            {'id': 1, 'start': 0, 'duration': 100},
+            {'id': 2, 'start': 50, 'duration': 100},
+        ], 'transitions': []}])
+        issues = _check_clip_overlap_on_track(data)
+        assert len(issues) == 1
+        assert 'overlapping' in issues[0].message
+
+    def test_adjacent_clips_ok(self):
+        from camtasia.validation import _check_clip_overlap_on_track
+        data = _make_data([{'trackIndex': 0, 'medias': [
+            {'id': 1, 'start': 0, 'duration': 100},
+            {'id': 2, 'start': 100, 'duration': 100},
+        ], 'transitions': []}])
+        assert _check_clip_overlap_on_track(data) == []
+
+
+class TestCheckTransitionNullEndpoints:
+    def test_null_left_media_flagged(self):
+        from camtasia.validation import _check_transition_null_endpoints
+        data = _make_data([{'trackIndex': 0, 'medias': [], 'transitions': [
+            {'leftMedia': None, 'rightMedia': 5},
+        ]}])
+        issues = _check_transition_null_endpoints(data)
+        assert len(issues) == 1
+        assert 'leftMedia=null' in issues[0].message
+
+    def test_omitted_left_media_ok(self):
+        from camtasia.validation import _check_transition_null_endpoints
+        data = _make_data([{'trackIndex': 0, 'medias': [], 'transitions': [
+            {'rightMedia': 5},
+        ]}])
+        assert _check_transition_null_endpoints(data) == []

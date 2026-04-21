@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+from fractions import Fraction
 from importlib import resources as importlib_resources
 import json
 from typing import Any
@@ -342,6 +343,109 @@ def _check_source_bin_ids(data: dict[str, Any]) -> list[ValidationIssue]:
     return issues
 
 
+def _check_timeline_id_unique(data: dict[str, Any]) -> list[ValidationIssue]:
+    """Check that timeline.id exists and doesn't collide with any clip id."""
+    issues: list[ValidationIssue] = []
+    timeline_id = data.get('timeline', {}).get('id')
+    if timeline_id is None:
+        issues.append(ValidationIssue('warning', 'timeline.id is missing'))
+        return issues
+
+    # Collect all clip IDs across the project
+    def _walk_ids(media: dict) -> set[int]:
+        ids: set[int] = set()
+        mid = media.get('id')
+        if isinstance(mid, int):
+            ids.add(mid)
+        for track in media.get('tracks', []):
+            for m in track.get('medias', []):
+                ids.update(_walk_ids(m))
+        for m in media.get('medias', []):
+            ids.update(_walk_ids(m))
+        for key in ('video', 'audio'):
+            sub = media.get(key)
+            if isinstance(sub, dict):
+                ids.update(_walk_ids(sub))
+        return ids
+
+    clip_ids: set[int] = set()
+    for track in _get_tracks(data):
+        for media in track.get('medias', []):
+            clip_ids.update(_walk_ids(media))
+    if timeline_id in clip_ids:
+        issues.append(ValidationIssue(
+            'warning',
+            f'timeline.id={timeline_id} collides with a clip id',
+        ))
+    return issues
+
+
+def _check_behavior_effect_structure(data: dict[str, Any]) -> list[ValidationIssue]:
+    """Check that GenericBehaviorEffect has required in/center/out phases."""
+    issues: list[ValidationIssue] = []
+
+    def _walk(media: dict, path: str) -> None:
+        for effect in media.get('effects', []):
+            if effect.get('_type') == 'GenericBehaviorEffect':
+                for phase in ('in', 'center', 'out'):
+                    if phase not in effect:
+                        issues.append(ValidationIssue(
+                            'error',
+                            f'{path} GenericBehaviorEffect missing {phase!r} phase',
+                        ))
+        for track in media.get('tracks', []):
+            for m in track.get('medias', []):
+                _walk(m, f'{path}/group{media.get("id")}')
+        for m in media.get('medias', []):
+            _walk(m, f'{path}/stitched{media.get("id")}')
+        for key in ('video', 'audio'):
+            sub = media.get(key)
+            if isinstance(sub, dict):
+                _walk(sub, f'{path}/{key}{media.get("id")}')
+
+    for ti, track in enumerate(_get_tracks(data)):
+        for media in track.get('medias', []):
+            _walk(media, f'track[{ti}]')
+    return issues
+
+
+def _check_clip_overlap_on_track(data: dict[str, Any]) -> list[ValidationIssue]:
+    """Check that clips on the same track don't overlap (single-occupancy invariant)."""
+    issues: list[ValidationIssue] = []
+    for ti, track in enumerate(_get_tracks(data)):
+        medias = sorted(
+            track.get('medias', []),
+            key=lambda m: int(Fraction(str(m.get('start', 0)))),
+        )
+        for i in range(len(medias) - 1):
+            a = medias[i]
+            b = medias[i + 1]
+            a_end = int(Fraction(str(a.get('start', 0)))) + int(Fraction(str(a.get('duration', 0))))
+            b_start = int(Fraction(str(b.get('start', 0))))
+            if a_end > b_start:
+                issues.append(ValidationIssue(
+                    'warning',
+                    f'track[{ti}] clip id={a.get("id")} ends at {a_end} overlapping '
+                    f'clip id={b.get("id")} starting at {b_start}',
+                ))
+    return issues
+
+
+def _check_transition_null_endpoints(data: dict[str, Any]) -> list[ValidationIssue]:
+    """Flag explicit null in transition leftMedia/rightMedia (format says omit)."""
+    issues: list[ValidationIssue] = []
+    for ti, track in enumerate(_get_tracks(data)):
+        for i, t in enumerate(track.get('transitions', [])):
+            for field in ('leftMedia', 'rightMedia'):
+                if field in t and t[field] is None:
+                    issues.append(ValidationIssue(
+                        'warning',
+                        f'track[{ti}] transition[{i}] has explicit {field}=null '
+                        f'(Camtasia format expects the field to be omitted)',
+                    ))
+    return issues
+
+
 def _check_compound_invariants(data: dict[str, Any]) -> list[ValidationIssue]:
     """Check structural invariants on compound clips.
 
@@ -415,6 +519,10 @@ def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     issues.extend(_check_source_bin_ids(data))
     issues.extend(_check_timing_consistency(data))
     issues.extend(_check_compound_invariants(data))
+    issues.extend(_check_timeline_id_unique(data))
+    issues.extend(_check_behavior_effect_structure(data))
+    issues.extend(_check_clip_overlap_on_track(data))
+    issues.extend(_check_transition_null_endpoints(data))
     return issues
 
 

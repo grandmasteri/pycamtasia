@@ -168,10 +168,10 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [ ] `build_section_timeline()` helper — place all sections on one track with transitions
 
 ### Validation
-- [ ] Validate that `timeline.id` exists and is unique
-- [ ] Validate `GenericBehaviorEffect` structure (required `in`/`center`/`out` phases)
-- [ ] Validate overlapping clips on same track (Camtasia tracks are single-occupancy)
-- [ ] Flag explicit `null` in transition `leftMedia`/`rightMedia` (format says omit, not null)
+- [x] Validate `timeline.id` exists and doesn't collide with clip IDs
+- [x] Validate `GenericBehaviorEffect` has required `in`/`center`/`out` phases
+- [x] Validate overlapping clips on same track (Camtasia tracks are single-occupancy)
+- [x] Flag explicit `null` in transition `leftMedia`/`rightMedia` (format says omit, not null)
 
 ### Effects
 - [ ] Typed wrapper classes for `LutEffect`, `Emphasize`, `Spotlight`, `ColorAdjustment`, `BlendModeEffect`, `MediaMatte`
