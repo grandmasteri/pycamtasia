@@ -20,10 +20,10 @@ pycamtasia is a Python library for reading, writing, and manipulating TechSmith 
 
 Primary use case: assembling demo videos from voiceover audio, diagram images, screen recordings, and title cards via scripts.
 
-- 620+ commits, 2616+ tests, 96% line coverage (`fail_under = 96`), 0 mypy errors, 93+ TechSmith samples validated
+- 783+ commits, 3283+ tests, 76 source files, 19825+ lines, 96% line coverage (`fail_under = 96`), 0 mypy errors, 93+ TechSmith samples validated
 - Python 3.10+, required: `jsonpatch>=1.33`; optional: `pymediainfo`, `docopt-subcommands`
 - Package: `src/camtasia/`, installed as `camtasia`, CLI entry point: `pytsc`
-- Hardened through 106 rounds of adversarial code review
+- Hardened through 9 rounds of unbiased 6-domain adversarial review
 
 ## Architecture
 
@@ -195,7 +195,7 @@ No raw `_data` access in consumer/assembly scripts. If pycamtasia doesn't suppor
 
 ### 8. Adversarial review process
 
-This library was hardened through 106 rounds of adversarial review, uncovering numerous bugs across edge cases, format assumptions, and silent data corruption paths. Any new feature or format change should be subjected to the same scrutiny: assume the format is hostile, test boundary conditions, and verify round-trip fidelity against real Camtasia output.
+This library was hardened through 9 rounds of unbiased 6-domain adversarial review, uncovering numerous bugs across edge cases, format assumptions, and silent data corruption paths. Any new feature or format change should be subjected to the same scrutiny: assume the format is hostile, test boundary conditions, and verify round-trip fidelity against real Camtasia output.
 
 ### 9. Documentation Consistency
 
@@ -410,6 +410,27 @@ touch src/camtasia/resources/new.cmproj/media/.gitkeep
 - `Project.group_clips_across_tracks(clip_ids, target_track_name, ...)` — project-level wrapper for cross-track grouping
 - `TransitionList.add(...)` — now supports rightMedia-only transitions (no leftMedia required); validates at least one clip ID provided
 - `MediaBin.next_id()` — scans entire project (sourceBin IDs + clip IDs + timeline ID) to avoid collisions
+- `Theme` / `apply_theme()` — theme support for consistent project styling
+- `Track.join_clips()` — merge adjacent clips on a track
+- `add_device_frame()` — add device frame overlays to clips
+- `import_slide_images()` — batch-import slide images onto the timeline
+- `add_caption()` — add caption overlays to clips
+- `CornerPin`, `ChromaKey`, `NoiseRemoval` effects — new visual effect types
+- Caption extract/reimport — extract captions to SRT and reimport edited captions
+- `insert_gap()` / `remove_gap()` — shift markers when inserting/removing timeline gaps
+- `UnifiedMedia` effect redirects — effect operations on UnifiedMedia delegate to inner clip
+- `BaseClip.unmute()` — unmute a previously muted clip
+- `clip_strictly_after()` — find the next clip strictly after a given time
+- `TimelineBuilder.add_background_image()` / `add_background_video()` — add background media via builder
+
+### Removed methods
+
+- `strip_all_effects()` removed (use `remove_all_effects`)
+- `find_track()` removed (use `find_track_by_name`)
+- `remove_all_empty_tracks()` removed (use `remove_empty_tracks`)
+- `BaseClip.remove_effects()` removed (use `remove_all_effects`)
+- `IntEncodedTime` class deleted
+- `BlurRegion` unregistered from effect dispatch
 
 ### Changed methods/behavior
 
@@ -506,7 +527,7 @@ After `project.undo()` or `project.redo()`, any previously-obtained references t
 ```
 pycamtasia/
 ├── src/camtasia/           # Library source (the package)
-├── tests/                  # 100+ test files, 2616+ tests (parallel via pytest-xdist)
+├── tests/                  # 100+ test files, 3283+ tests (parallel via pytest-xdist)
 │   ├── conftest.py         # Fixtures: project (isolated tmp_path copy), simple_video, test_project_a_data
 │   └── fixtures/           # .tscproj files and .wav files for testing
 ├── scripts/
@@ -579,3 +600,33 @@ pycamtasia/
 - Save before snapshot, let user make changes, save after snapshot
 - Diff the JSON to understand exact format changes
 - Use findings to update format reference and JSON schema
+
+### Removed methods (deleted, not deprecated)
+
+- `strip_all_effects()` → use `remove_all_effects()`
+- `find_track()` → use `find_track_by_name()`
+- `remove_all_empty_tracks()` → use `remove_empty_tracks()`
+- `BaseClip.remove_effects()` → use `remove_all_effects()`
+- `IntEncodedTime` class deleted — `Media.range` returns `tuple[int, int]`
+- `BlurRegion` unregistered from effect dispatch (class kept for future use)
+- `_remove_opacity_tracks()` dead code removed
+
+### New methods (since v7.2.0)
+
+- `Theme` / `apply_theme()` — color palette API
+- `Track.join_clips()` — joins adjacent clips into StitchedMedia
+- `add_device_frame()` — overlays bezel image on a clip
+- `import_slide_images()` — places pre-rendered slide images on timeline
+- `Project.add_caption()` — single-entry caption convenience
+- `CornerPin`, `ChromaKey`, `NoiseRemoval` — typed effect wrappers
+- Caption extract/reimport for translation workflows
+- `insert_gap()` / `remove_gap()` now shift timeline markers
+- `UnifiedMedia` effect read/remove redirects to video/audio sub-clips
+- `BaseClip.unmute()` — reverses `mute()` on all clip types
+- `clip_strictly_after()` — finds next clip after a given time
+- `TimelineBuilder.add_background_image()` / `add_background_video()`
+- `set_position_keyframes()` supports interp mode (easing)
+- `tile_layout` auto-fits images to cell size
+- EDL / CSV / report exporters recurse into compound clips
+- 4 new validation checks (src references, transition completeness in groups)
+- Stateful property-based tests via Hypothesis

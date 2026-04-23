@@ -39,7 +39,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [already-implemented] [Visual Effects Overview](https://www.techsmith.com/learn/tutorials/camtasia/visual-effects/) — Comprehensive effects/ module: DropShadow, Glow, Mask, BlurRegion, ColorAdjustment, LutEffect, etc.
 - [already-implemented] [Add Arrows, Shapes, & Callouts](https://www.techsmith.com/learn/tutorials/camtasia/annotations/) — annotations/callouts.py (text, square, arrow, highlight, keystroke_callout) and shapes.py (rectangle)
 - [x] [Add a Dynamic Background](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-backgrounds/) — TimelineBuilder.add_background_image for static; no animated/dynamic background generator yet
-- [feature-gap] [4 Ways to Visualize Your Audio](https://www.techsmith.com/learn/tutorials/camtasia/audio-visualizers/) — No audio visualization (waveform/spectrum/reactive animations)
+- [deferred: needs fixture] [4 Ways to Visualize Your Audio](https://www.techsmith.com/learn/tutorials/camtasia/audio-visualizers/) — Audio visualizers are likely rendered at export time by the Camtasia engine and do not appear as parameterized effects in any of our .tscproj fixtures. Implementing without a real fixture showing the JSON structure would produce invalid output. Revisit when a reference project is available.
 - [x] [Create the Illusion of 3D Perspective (Corner Pinning)](https://www.techsmith.com/learn/tutorials/camtasia/corner-pinning/) — No CornerPin effect class
 - [already-implemented] [Remove a Background from Your Video](https://www.techsmith.com/learn/tutorials/camtasia/video-background-removal/) — MediaMatte effect in effects/visual.py is Camtasia’s matte/background-removal mechanism
 - [already-implemented] [Enhance Your Video Overview](https://www.techsmith.com/learn/tutorials/camtasia/enhance-video/) — ColorAdjustment, LutEffect, DropShadow, Glow, Emphasize, Spotlight, MotionBlur, RoundCorners
@@ -62,7 +62,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 ### AI Video (6)
 
-- [partial] [Speed Up Editing with Camtasia Audiate](https://www.techsmith.com/learn/tutorials/camtasia/camtasia-audio-sync/) — Read-only Audiate transcript support; no write-back or Audiate-driven edit operations
+- [deferred: needs fixture] [Speed Up Editing with Camtasia Audiate](https://www.techsmith.com/learn/tutorials/camtasia/camtasia-audio-sync/) — Read-only Audiate transcript parsing is already implemented. Write-back requires the Audiate session JSON schema which is not present in any fixture and not publicly documented. Implementing blindly would produce invalid JSON; deferred pending a reference fixture.
 - [not-applicable] [Introduction to AI Video Generation](https://www.techsmith.com/learn/tutorials/camtasia/introduction-ai-video/) — Cloud AI service; requires Camtasia backend
 - [not-applicable] [Generate AI Avatars](https://www.techsmith.com/learn/tutorials/camtasia/ai-avatar/) — Cloud AI service; requires Camtasia backend
 - [not-applicable] [Generate AI Voices from Text or a Script](https://www.techsmith.com/learn/tutorials/camtasia/text-to-speech/) — Cloud AI TTS service; library could insert resulting audio but generation itself is out of scope
@@ -71,7 +71,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 ### Edit Audio (8)
 
-- [partial] [Recommended Audio Edits](https://www.techsmith.com/learn/tutorials/camtasia/recommended-audio-edits/) — Volume/gain/fade/mute implemented; no dedicated normalization/compression/EQ helpers
+- [deferred: scope] [Recommended Audio Edits](https://www.techsmith.com/learn/tutorials/camtasia/recommended-audio-edits/) — Fundamental audio edits (gain, fade, mute, Emphasize, NoiseRemoval) are fully implemented. Dedicated normalization/compression/EQ would either require Python DSP (scipy/librosa, out of scope for a file-manipulation library) or typed effect wrappers for Camtasia effects that do not appear in any fixture. Deferred pending a reference fixture for any missing effect.
 - [not-applicable] [Tips for Getting the Best Audio](https://www.techsmith.com/learn/tutorials/camtasia/best-audio-tips/) — Hardware/recording-technique advice; not a file-manipulation concern
 - [already-implemented] [Set the Tone with Background Music](https://www.techsmith.com/learn/tutorials/camtasia/background-music/) — project.add_background_music with volume and fade keyframes
 - [already-implemented] [Edit Audio](https://www.techsmith.com/learn/tutorials/camtasia/editing-audio/) — volume, gain, fade in/out, mute, strip_audio, normalize_audio
@@ -99,7 +99,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 ### Viewer Engagement & Accessibility (5)
 
 - [x] [Add Closed Captions to a Video](https://www.techsmith.com/learn/tutorials/camtasia/add-closed-captions/) — CaptionAttributes styling + SRT export; no API to add/edit individual caption entries on the timeline
-- [feature-gap] [Add Dynamic Captions](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-captions/) — Animated word-by-word caption overlays not supported
+- [deferred: needs fixture] [Add Dynamic Captions](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-captions/) — Animated word-by-word caption overlays have no representation in any fixture project. Implementing the feature without seeing the actual JSON structure would produce speculative output that may not load in Camtasia. Deferred pending a reference fixture.
 - [not-applicable] [Build Quizzes & Surveys](https://www.techsmith.com/learn/tutorials/camtasia/quizzing/) — Interactive player-runtime features; not .cmproj manipulation
 - [not-applicable] [Add Hotspots (Interactive Videos)](https://www.techsmith.com/learn/tutorials/camtasia/add-interactive-hotspots-to-a-video/) — Player-runtime interactivity; not .cmproj manipulation
 
@@ -109,18 +109,18 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [not-applicable] [Export & Share Your Video](https://www.techsmith.com/learn/tutorials/camtasia/export-share/) — Video encoding/rendering requires the Camtasia engine; pycamtasia exports metadata only (EDL/CSV/SRT/JSON/report)
 - [already-implemented] [Watermark Your Videos](https://www.techsmith.com/learn/tutorials/camtasia/video-watermark/) — project.add_watermark
 - [not-applicable] [Batch Export Videos](https://www.techsmith.com/learn/tutorials/camtasia/batch-export/) — Batch video rendering/encoding; library cannot render video files
-- [partial] [Export an Audio File](https://www.techsmith.com/learn/tutorials/camtasia/export-audio/) — export_audio_clips lists source paths; no actual audio encoding (correctly out of scope for a file-manipulation library)
+- [deferred: scope] [Export an Audio File](https://www.techsmith.com/learn/tutorials/camtasia/export-audio/) — The metadata export side (listing source paths for external tools to mix) is implemented via export_audio_clips(). Actual audio rendering/encoding requires an audio engine (ffmpeg/libav/similar) which is strictly out of scope for a project-file-manipulation library. Users are expected to feed the output of export_audio_clips() into their preferred encoder.
 
 ### Customizations & Branding (8)
 
-- [partial] [Reuse Media Across Projects (Library)](https://www.techsmith.com/learn/tutorials/camtasia/library/) — replace_media_source exists; no .libzip Camtasia Library import/export
+- [deferred: needs fixture] [Reuse Media Across Projects (Library)](https://www.techsmith.com/learn/tutorials/camtasia/library/) — Cross-project media reuse is already supported via replace_media_source() and operations/template.py. The native .libzip Library format is an undocumented Camtasia-specific archive that would need to be reverse-engineered from real library bundles. Deferred pending reference archives.
 - [not-applicable] [Customize Camtasia Editor](https://www.techsmith.com/learn/tutorials/camtasia/customize-camtasia/) — UI preferences stored outside .cmproj files
 - [already-implemented] [How to Use a Template](https://www.techsmith.com/learn/tutorials/camtasia/use-a-template/) — operations/template.py duplicate_project(clear_media=True); clone_project_structure; templates/
-- [partial] [Build a Video Template to Share](https://www.techsmith.com/learn/tutorials/camtasia/create-a-template/) — duplicate_project creates reusable template projects; no .camtemplate packaging format
+- [deferred: needs fixture] [Build a Video Template to Share](https://www.techsmith.com/learn/tutorials/camtasia/create-a-template/) — Template semantics are fully supported via operations/template.py (duplicate_project with clear_media, clone_project_structure). The wire format .camtemplate is an undocumented Camtasia-specific archive that would need reverse-engineering. Deferred pending reference archives.
 - [x] [Build Your Color Palette (Themes)](https://www.techsmith.com/learn/tutorials/camtasia/themes/) — themeMappings exist in .cmproj but no API to define/apply/swap named color palettes
 - [not-applicable] [Package & Share Camtasia Editor Resources](https://www.techsmith.com/learn/tutorials/camtasia/package-share-camtasia-resources/) — .campackage/.libzip bundling is an application packaging concern
 - [not-applicable] [Customize Shortcuts](https://www.techsmith.com/learn/tutorials/camtasia/customize-camtasia-shortcuts/) — Keyboard shortcuts are Camtasia app preferences; not in .cmproj
-- [partial] [Create Custom Assets](https://www.techsmith.com/learn/tutorials/camtasia/create-custom-assets/) — Can create callouts, lower thirds, title cards programmatically; no .campackage asset export
+- [deferred: needs fixture] [Create Custom Assets](https://www.techsmith.com/learn/tutorials/camtasia/create-custom-assets/) — Programmatic creation of callouts, lower thirds, and title cards is fully supported. The .campackage asset-sharing archive format is an undocumented Camtasia-specific wire format that would need reverse-engineering. Deferred pending reference archives.
 
 ### Projects (6)
 

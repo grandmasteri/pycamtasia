@@ -4,6 +4,72 @@ All notable changes to pycamtasia are documented in this file.
 
 ## [Unreleased]
 
+### Added
+- TimelineBuilder.add_background_image / add_background_video
+- import_slide_images() places pre-rendered slide images on timeline
+- Project.add_caption single-entry convenience API
+- add_device_frame() helper overlays a bezel image on a clip
+- CornerPin and ChromaKey typed effect wrappers (experimental)
+- set_position_keyframes supports interp mode (easing)
+- Track.join_clips() joins adjacent clips into a StitchedMedia
+- Theme / apply_theme API for color palettes
+- caption extract/reimport for translation workflows
+- NoiseRemoval typed wrapper + BaseClip.add_noise_removal()
+- add setters for 3 ScreenIMFile/ScreenVMFile cursor properties
+- tighten schema effectName enum + document reveal preset start
+- tile_layout auto-fits images to cell size
+- EDL / CSV / report exporters recurse into compound clips
+- typed wrapper classes for 6 more effects
+- timeline_json includes effects, transitions, clip metadata
+- insert_gap / remove_gap shift timeline markers
+- all visual-param keyframe setters create animationTracks.visual entries
+- clip_strictly_after + triage 5 more roadmap items
+- 5 small feature-gap fixes
+- add 4 validation checks
+- UnifiedMedia effect read/remove redirects to sub-clips
+- BaseClip.unmute() reverses mute() on all clip types
+- invariant checker + property-based tests
+- add ruff linting with comprehensive rules, fix all 426 violations
+
+### Fixed
+- 10 verified bugs from unbiased review (cycle 15 domains 4-6)
+- 12 verified bugs from unbiased review (cycle 15 domains 1-3)
+- 12 verified bugs from unbiased review (cycle 14 domains 4-6)
+- 11 verified bugs from unbiased review (cycle 14 domains 1-3)
+- 9 verified bugs from unbiased review (cycle 13 domains 4-6)
+- 10 verified bugs from unbiased review (cycle 13 domains 1-3)
+- 9 verified bugs from unbiased review (cycle 12 domains 4-6)
+- 11 verified bugs from unbiased review (cycle 12 domains 1-3)
+- 9 verified bugs from unbiased review (cycle 11 domains 4-6)
+- 11 verified bugs from unbiased review (cycle 11 domains 1-3)
+- 9 verified bugs from unbiased review (cycle 10 domains 4-6)
+- 11 verified bugs from unbiased review (cycle 10 domains 1-3)
+- 9 verified bugs from unbiased review (cycle 9 domains 4-6)
+- 12 verified bugs from unbiased review (cycle 9 domains 1-3)
+- 9 verified bugs from unbiased review (cycle 8 domains 4-6)
+
+### Changed
+- split compound assert in theme group test (CI ruff PT018)
+- fix theme test to use post-grouping inner clip ID
+- triage all 81 TechSmith tutorial items
+- pass media_type explicitly in TestRapidImportNoCollision
+- add insert_gap, remove_gap, duplicate_clip, set_segment_speeds rules
+- add Group and StitchedMedia state machines + save/reload rule
+- reduce stateful test settings to fit CI timeout
+- extend stateful property test with 5 more mutation rules
+- log 11 verified bugs from cycle 15 domains 4-6 (1 withdrawn)
+- log 12 verified bugs from cycle 15 domains 1-3 (1 withdrawn)
+
+### Removed
+- `strip_all_effects()` (use `remove_all_effects()`)
+- `find_track()` (use `find_track_by_name()`)
+- `remove_all_empty_tracks()` (use `remove_empty_tracks()`)
+- `BaseClip.remove_effects()` (use `remove_all_effects()`)
+- `IntEncodedTime` class
+- `BlurRegion` effect registration
+
+## [Unreleased]
+
 ## [7.2.0] (2026-04-16)
 
 15 rounds of adversarial code review. 100+ bugs found and fixed. Test count: 2126 → 2676 (+550 tests). 100% coverage maintained.

@@ -1059,3 +1059,20 @@ Similarly, `mediaDuration` can be a rational string: `"60540480000/23"`.
 | `colorAttribute` in metadata | Absent | Absent | Present |
 | `ScreenIMFile` type | Absent | Absent | Present |
 | `maxDurationAttr` on Groups | Absent | Absent | Present |
+
+## Recent Format Discoveries (April 2026)
+
+### Group Default Parameters
+Groups created by Camtasia include `scale0`, `scale1`, `translation0`, `translation1` in their `parameters` dict with default values. The library now includes these when creating Groups programmatically.
+
+### ZoomNPan Effect
+The `zoomNPan` effect name was added to the schema. Used for Ken Burns-style zoom and pan animations on clips.
+
+### Reveal Preset Start
+GenericBehaviorEffect presets for "Reveal" animations use a non-zero `start` field to offset the animation start within the clip's timeline.
+
+### UnifiedMedia Split/Trim
+When splitting or trimming a UnifiedMedia clip, `mediaStart` must be propagated to both the `video` and `audio` sub-clips, not just the top-level wrapper.
+
+### Image sampleRate
+Images in sourceBin use `sampleRate: 0` (not a positive value like video/audio tracks).
