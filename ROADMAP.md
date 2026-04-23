@@ -32,7 +32,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [not-applicable] [Collaborate on a Video Project](https://www.techsmith.com/learn/tutorials/camtasia/collaborate-video-project/) — Real-time cloud collaboration; operations/diff.py supports offline comparison
 - [not-applicable] [Record an iOS Demo or Tutorial](https://www.techsmith.com/learn/tutorials/camtasia/recording-your-ios-device/) — iOS screen recording is hardware capture, outside file-manipulation scope
 - [not-applicable] [Record a PowerPoint Presentation](https://www.techsmith.com/learn/tutorials/camtasia/record-a-powerpoint-presentation/) — Requires the Camtasia Recorder + PowerPoint integration, not a file concern
-- [x] [Import Presentation Slides](https://www.techsmith.com/learn/tutorials/camtasia/import-powerpoint-slides/) — No PPTX import; would extract slide images and place as media on timeline
+- [already-implemented] [Import Presentation Slides](https://www.techsmith.com/learn/tutorials/camtasia/import-powerpoint-slides/) — No PPTX import; would extract slide images and place as media on timeline
 
 ### Enhance Your Video (12)
 
@@ -40,12 +40,12 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [already-implemented] [Add Arrows, Shapes, & Callouts](https://www.techsmith.com/learn/tutorials/camtasia/annotations/) — annotations/callouts.py (text, square, arrow, highlight, keystroke_callout) and shapes.py (rectangle)
 - [x] [Add a Dynamic Background](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-backgrounds/) — TimelineBuilder.add_background_image for static; no animated/dynamic background generator yet
 - [deferred: needs fixture] [4 Ways to Visualize Your Audio](https://www.techsmith.com/learn/tutorials/camtasia/audio-visualizers/) — Audio visualizers are likely rendered at export time by the Camtasia engine and do not appear as parameterized effects in any of our .tscproj fixtures. Implementing without a real fixture showing the JSON structure would produce invalid output. Revisit when a reference project is available.
-- [x] [Create the Illusion of 3D Perspective (Corner Pinning)](https://www.techsmith.com/learn/tutorials/camtasia/corner-pinning/) — No CornerPin effect class
+- [already-implemented] [Create the Illusion of 3D Perspective (Corner Pinning)](https://www.techsmith.com/learn/tutorials/camtasia/corner-pinning/) — No CornerPin effect class
 - [already-implemented] [Remove a Background from Your Video](https://www.techsmith.com/learn/tutorials/camtasia/video-background-removal/) — MediaMatte effect in effects/visual.py is Camtasia’s matte/background-removal mechanism
 - [already-implemented] [Enhance Your Video Overview](https://www.techsmith.com/learn/tutorials/camtasia/enhance-video/) — ColorAdjustment, LutEffect, DropShadow, Glow, Emphasize, Spotlight, MotionBlur, RoundCorners
 - [already-implemented] [Add Video Filters](https://www.techsmith.com/learn/tutorials/camtasia/filters/) — effects/visual.py provides color grading (LutEffect), blend modes, Spotlight, Emphasize, MotionBlur
-- [x] [Provide Context with Device Frames](https://www.techsmith.com/learn/tutorials/camtasia/device-frames/) — No device frame overlay (phone/laptop/tablet bezels)
-- [x] [Remove A Color (Green Screen)](https://www.techsmith.com/learn/tutorials/camtasia/how-to-remove-a-color/) — No dedicated chroma key / color-key effect; MediaMatte is a different matte concept
+- [already-implemented] [Provide Context with Device Frames](https://www.techsmith.com/learn/tutorials/camtasia/device-frames/) — No device frame overlay (phone/laptop/tablet bezels)
+- [already-implemented] [Remove A Color (Green Screen)](https://www.techsmith.com/learn/tutorials/camtasia/how-to-remove-a-color/) — No dedicated chroma key / color-key effect; MediaMatte is a different matte concept
 
 ### Edit on the Timeline (13)
 
@@ -55,7 +55,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [already-implemented] [Add Markers & Video Table of Contents](https://www.techsmith.com/learn/tutorials/camtasia/markers-and-table-of-contents/) — timeline/markers.py MarkerList with add/remove/clear/replace; exported as SRT
 - [already-implemented] [Freeze Video Clips with Extend Frame](https://www.techsmith.com/learn/tutorials/camtasia/extend-frame/) — track.py add_freeze_frame method on Track
 - [already-implemented] [Speed Up & Slow Down Video Clips](https://www.techsmith.com/learn/tutorials/camtasia/clip-speed/) — clips/base.py set_speed, scalar, operations/speed.py rescale_project, set_segment_speeds
-- [x] [Join Clips Together](https://www.techsmith.com/learn/tutorials/camtasia/stitch-media/) — StitchedMedia clip type exists; no explicit single-track “join two adjacent clips” operation yet
+- [already-implemented] [Join Clips Together](https://www.techsmith.com/learn/tutorials/camtasia/stitch-media/) — StitchedMedia clip type exists; no explicit single-track “join two adjacent clips” operation yet
 - [already-implemented] [Move Multiple Clips at Once](https://www.techsmith.com/learn/tutorials/camtasia/ripple-move/) — operations/batch.py move_all, apply_to_clips; track.py move_clip
 - [already-implemented] [Ripple Move & Extend Frame](https://www.techsmith.com/learn/tutorials/camtasia/ripple-move-and-extend-frame/) — operations/layout.py ripple_insert/delete; add_freeze_frame
 - [already-implemented] [Close Timeline Gaps with Magnetic Tracks](https://www.techsmith.com/learn/tutorials/camtasia/magnetic-tracks/) — track.magnetic property; operations/layout.py pack_track
@@ -67,7 +67,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [not-applicable] [Generate AI Avatars](https://www.techsmith.com/learn/tutorials/camtasia/ai-avatar/) — Cloud AI service; requires Camtasia backend
 - [not-applicable] [Generate AI Voices from Text or a Script](https://www.techsmith.com/learn/tutorials/camtasia/text-to-speech/) — Cloud AI TTS service; library could insert resulting audio but generation itself is out of scope
 - [not-applicable] [Generate a Script with AI](https://www.techsmith.com/learn/tutorials/camtasia/ai-script/) — Cloud AI service; out of scope
-- [x] [Translate Your Script, Audio, and Captions](https://www.techsmith.com/learn/tutorials/camtasia/translate/) — Captions/SRT export exists; no translation pipeline. Could add extract/reimport helpers
+- [already-implemented] [Translate Your Script, Audio, and Captions](https://www.techsmith.com/learn/tutorials/camtasia/translate/) — Captions/SRT export exists; no translation pipeline. Could add extract/reimport helpers
 
 ### Edit Audio (8)
 
@@ -82,9 +82,9 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 - [already-implemented] [Add Cursor Effects](https://www.techsmith.com/learn/tutorials/camtasia/cursor-effects/) — effects/cursor.py: CursorMotionBlur, CursorShadow, CursorPhysics, LeftClickScaling
 - [already-implemented] [Introduction to Cursor Editing](https://www.techsmith.com/learn/tutorials/camtasia/cursor-editing-basics/) — ScreenVMFile exposes cursor_scale, cursor_opacity, cursor_motion_blur_intensity, cursor_shadow, cursor_physics, left_click_scaling
-- [x] [Replace the Cursor](https://www.techsmith.com/learn/tutorials/camtasia/change-cursor/) — ScreenIMFile.cursor_image_path is read-only; no setter to replace the cursor image
+- [already-implemented] [Replace the Cursor](https://www.techsmith.com/learn/tutorials/camtasia/change-cursor/) — ScreenIMFile.cursor_image_path is read-only; no setter to replace the cursor image
 - [x] [Customize the Cursor Path](https://www.techsmith.com/learn/tutorials/camtasia/customize-your-cursor-path/) — cursor_location_keyframes is read-only; no API to modify per-frame cursor positions
-- [x] [Quickly Smooth Cursor Movements](https://www.techsmith.com/learn/tutorials/camtasia/cursor-smoothing/) — smooth_cursor_across_edit_duration is read-only; no setter to enable/configure smoothing
+- [already-implemented] [Quickly Smooth Cursor Movements](https://www.techsmith.com/learn/tutorials/camtasia/cursor-smoothing/) — smooth_cursor_across_edit_duration is read-only; no setter to enable/configure smoothing
 
 ### Video Animations (7)
 
@@ -98,7 +98,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 ### Viewer Engagement & Accessibility (5)
 
-- [x] [Add Closed Captions to a Video](https://www.techsmith.com/learn/tutorials/camtasia/add-closed-captions/) — CaptionAttributes styling + SRT export; no API to add/edit individual caption entries on the timeline
+- [already-implemented] [Add Closed Captions to a Video](https://www.techsmith.com/learn/tutorials/camtasia/add-closed-captions/) — CaptionAttributes styling + SRT export; no API to add/edit individual caption entries on the timeline
 - [deferred: needs fixture] [Add Dynamic Captions](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-captions/) — Animated word-by-word caption overlays have no representation in any fixture project. Implementing the feature without seeing the actual JSON structure would produce speculative output that may not load in Camtasia. Deferred pending a reference fixture.
 - [not-applicable] [Build Quizzes & Surveys](https://www.techsmith.com/learn/tutorials/camtasia/quizzing/) — Interactive player-runtime features; not .cmproj manipulation
 - [not-applicable] [Add Hotspots (Interactive Videos)](https://www.techsmith.com/learn/tutorials/camtasia/add-interactive-hotspots-to-a-video/) — Player-runtime interactivity; not .cmproj manipulation
@@ -117,7 +117,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [not-applicable] [Customize Camtasia Editor](https://www.techsmith.com/learn/tutorials/camtasia/customize-camtasia/) — UI preferences stored outside .cmproj files
 - [already-implemented] [How to Use a Template](https://www.techsmith.com/learn/tutorials/camtasia/use-a-template/) — operations/template.py duplicate_project(clear_media=True); clone_project_structure; templates/
 - [deferred: needs fixture] [Build a Video Template to Share](https://www.techsmith.com/learn/tutorials/camtasia/create-a-template/) — Template semantics are fully supported via operations/template.py (duplicate_project with clear_media, clone_project_structure). The wire format .camtemplate is an undocumented Camtasia-specific archive that would need reverse-engineering. Deferred pending reference archives.
-- [x] [Build Your Color Palette (Themes)](https://www.techsmith.com/learn/tutorials/camtasia/themes/) — themeMappings exist in .cmproj but no API to define/apply/swap named color palettes
+- [already-implemented] [Build Your Color Palette (Themes)](https://www.techsmith.com/learn/tutorials/camtasia/themes/) — themeMappings exist in .cmproj but no API to define/apply/swap named color palettes
 - [not-applicable] [Package & Share Camtasia Editor Resources](https://www.techsmith.com/learn/tutorials/camtasia/package-share-camtasia-resources/) — .campackage/.libzip bundling is an application packaging concern
 - [not-applicable] [Customize Shortcuts](https://www.techsmith.com/learn/tutorials/camtasia/customize-camtasia-shortcuts/) — Keyboard shortcuts are Camtasia app preferences; not in .cmproj
 - [deferred: needs fixture] [Create Custom Assets](https://www.techsmith.com/learn/tutorials/camtasia/create-custom-assets/) — Programmatic creation of callouts, lower thirds, and title cards is fully supported. The .campackage asset-sharing archive format is an undocumented Camtasia-specific wire format that would need reverse-engineering. Deferred pending reference archives.
@@ -135,34 +135,34 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 - [x] VideoProductionBuilder
 - [x] ScreenRecordingSync
-- [x] import_media() format validation and auto-conversion
-- [x] ProgressiveDisclosure helper
-- [x] Project.clean_inherited_state()
-- [x] MarkerList.clear() and MarkerList.replace()
+- [already-implemented] import_media() format validation and auto-conversion
+- [already-implemented] ProgressiveDisclosure helper
+- [already-implemented] Project.clean_inherited_state()
+- [already-implemented] MarkerList.clear() and MarkerList.replace()
 - [x] Project.remove_orphaned_media()
 - [x] Recap/tile layout helper
 
 ## Feature Gaps (discovered during adversarial review & integration testing)
 
 ### Clip API
-- [x] `BaseClip.unmute()` — reverses `mute()` on all clip types including Group/StitchedMedia/UnifiedMedia
-- [x] `UnifiedMedia.remove_all_effects()` clears effects on both video/audio sub-clips
-- [x] `UnifiedMedia.has_effects/effect_count/effect_names` aggregate from video+audio sub-clips
-- [x] `Callout.text` setter should update `textAttributes` `rangeEnd` to match new text length
-- [x] `BaseClip.add_keyframe()` creates `animationTracks.visual` entries for visual parameters (translation/scale/rotation/crop/opacity)
-- [x] `set_position_keyframes` / `set_scale_keyframes` / `set_rotation_keyframes` / `set_crop_keyframes` create `animationTracks.visual` entries
-- [x] `add_progressive_disclosure(replace_previous=True)` already implemented
+- [already-implemented] `BaseClip.unmute()` — reverses `mute()` on all clip types including Group/StitchedMedia/UnifiedMedia
+- [already-implemented] `UnifiedMedia.remove_all_effects()` clears effects on both video/audio sub-clips
+- [already-implemented] `UnifiedMedia.has_effects/effect_count/effect_names` aggregate from video+audio sub-clips
+- [already-implemented] `Callout.text` setter should update `textAttributes` `rangeEnd` to match new text length
+- [already-implemented] `BaseClip.add_keyframe()` creates `animationTracks.visual` entries for visual parameters (translation/scale/rotation/crop/opacity)
+- [already-implemented] `set_position_keyframes` / `set_scale_keyframes` / `set_rotation_keyframes` / `set_crop_keyframes` create `animationTracks.visual` entries
+- [already-implemented] `add_progressive_disclosure(replace_previous=True)` already implemented
 
 ### Track API
-- [x] `clip_after()` docstring clarified as at-or-after; `clip_strictly_after()` added as strictly-after variant
-- [x] `insert_gap()` and `shift_all_clips()` don't clear/adjust transitions that may become invalid
-- [x] `merge_adjacent_clips()` doesn't verify clips are actually adjacent before merging
-- [x] `set_segment_speeds()` uses float accumulation for `mediaStart` — should use Fraction
-- [x] `split_clip()` uses raw `Fraction(orig_scalar)` instead of `_parse_scalar()` — inconsistent precision
+- [already-implemented] `clip_after()` docstring clarified as at-or-after; `clip_strictly_after()` added as strictly-after variant
+- [already-implemented] `insert_gap()` and `shift_all_clips()` transitions handled that may become invalid
+- [already-implemented] `merge_adjacent_clips()` doesn't verify clips are actually adjacent before merging
+- [already-implemented] `set_segment_speeds()` uses float accumulation for `mediaStart` — should use Fraction
+- [already-implemented] `split_clip()` uses raw `Fraction(orig_scalar)` instead of `_parse_scalar()` — inconsistent precision
 
 ### Timeline API
-- [x] `clips_of_type()` is O(n²) and misattributes nested clips to `None` track
-- [x] `shift_all()` doesn't shift transition or effect `start` times
+- [already-implemented] `clips_of_type()` is O(n²) and misattributes nested clips to `None` track
+- [already-implemented] `shift_all()` doesn't shift transition or effect `start` times
 - [x] `Timeline.insert_gap()` / `remove_gap()` shift timeline markers (transitions use clip IDs and don't need adjustment)
 - [x] `flatten_to_track()` warns when source tracks have transitions that will be dropped
 - [x] `build_section_timeline()` helper exists in timeline.py

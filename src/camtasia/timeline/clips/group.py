@@ -19,7 +19,7 @@ else:  # pragma: no cover
 from typing import Any, NoReturn
 
 from camtasia.timing import parse_scalar as _parse_scalar
-from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+from camtasia.timing import seconds_to_ticks, ticks_to_seconds, EDIT_RATE
 
 from .base import BaseClip
 
@@ -732,7 +732,7 @@ class Group(BaseClip):
         # Following v2 Track 1 pattern: use bare ScreenVMFile clips with
         # scalar and clipSpeedAttribute for speed-changed segments.
         new_medias = []
-        cursor_ticks: int = 0
+        cursor_ticks = Fraction(0)
 
         # Auto-resolve source dimensions from sourceBin if not provided
         if (canvas_width is not None or canvas_height is not None) and source_width is None and source_height is None and source_bin is not None:
@@ -760,10 +760,10 @@ class Group(BaseClip):
             src_dur = src_end - src_start
             scalar = (Fraction(tl_dur) / Fraction(src_dur)).limit_denominator(100000)
 
-            start_ticks = cursor_ticks
-            dur_ticks = seconds_to_ticks(tl_dur)
-            ms_ticks = seconds_to_ticks(src_start)
-            media_dur_ticks = seconds_to_ticks(src_dur)
+            start_ticks = int(cursor_ticks)
+            dur_ticks = int(Fraction(tl_dur) * EDIT_RATE)
+            ms_ticks = int(Fraction(src_start) * EDIT_RATE)
+            media_dur_ticks = int(Fraction(src_dur) * EDIT_RATE)
 
             clip = {
                 'id': cid,
@@ -817,7 +817,7 @@ class Group(BaseClip):
                 source_h = source_height if source_height is not None else self._data.get('attributes', {}).get('heightAttr', canvas_height)
                 sv2 = canvas_height / source_h if source_h else 1.0
                 clip['parameters']['scale1'] = {'type': 'double', 'defaultValue': sv2, 'interp': 'eioe'}
-            cursor_ticks += dur_ticks
+            cursor_ticks += Fraction(tl_dur) * EDIT_RATE
             cid += 1
 
         # Replace the internal track's medias
@@ -828,7 +828,7 @@ class Group(BaseClip):
         media_track.pop('transitions', None)
 
         # Update Group duration and mediaDuration to match total timeline
-        total_tl = cursor_ticks
+        total_tl = int(cursor_ticks)
         self._data['duration'] = total_tl
         self._data['mediaDuration'] = total_tl
         self._data['mediaStart'] = 0
@@ -840,8 +840,8 @@ class Group(BaseClip):
                 continue
             first_seg_src_start = segments[0][0] if segments else 0
             last_seg_src_end = segments[-1][1] if segments else 0
-            first_seg_src_start_ticks = seconds_to_ticks(first_seg_src_start)
-            total_src_span = seconds_to_ticks(last_seg_src_end - first_seg_src_start)
+            first_seg_src_start_ticks = int(Fraction(first_seg_src_start) * EDIT_RATE)
+            total_src_span = int(Fraction(last_seg_src_end - first_seg_src_start) * EDIT_RATE)
             for m in track.get('medias', []):
                 if m.get('_type') in ('VMFile', 'ScreenVMFile', 'AMFile'):
                     m['start'] = 0
