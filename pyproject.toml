@@ -106,3 +106,15 @@ warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 
+
+[tool.tox]
+env_list = ["lint", "typecheck", "test"]
+
+[tool.tox.env.lint]
+commands = [["ruff", "check", "src/", "tests/"]]
+
+[tool.tox.env.typecheck]
+commands = [["mypy", "src/camtasia/"]]
+
+[tool.tox.env.test]
+commands = [["pytest", "tests/", "-n0", "--cov=camtasia", "--cov-report=term-missing", "-q"]]
