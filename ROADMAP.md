@@ -38,7 +38,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 - [already-implemented] [Visual Effects Overview](https://www.techsmith.com/learn/tutorials/camtasia/visual-effects/) — Comprehensive effects/ module: DropShadow, Glow, Mask, BlurRegion, ColorAdjustment, LutEffect, etc.
 - [already-implemented] [Add Arrows, Shapes, & Callouts](https://www.techsmith.com/learn/tutorials/camtasia/annotations/) — annotations/callouts.py (text, square, arrow, highlight, keystroke_callout) and shapes.py (rectangle)
-- [x] [Add a Dynamic Background](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-backgrounds/) — TimelineBuilder.add_background_image for static; no animated/dynamic background generator yet
+- [deferred: needs fixture] [Add a Dynamic Background](https://www.techsmith.com/learn/tutorials/camtasia/dynamic-backgrounds/) — TimelineBuilder.add_background_image for static; no animated/dynamic background generator yet
 - [deferred: needs fixture] [4 Ways to Visualize Your Audio](https://www.techsmith.com/learn/tutorials/camtasia/audio-visualizers/) — Audio visualizers are likely rendered at export time by the Camtasia engine and do not appear as parameterized effects in any of our .tscproj fixtures. Implementing without a real fixture showing the JSON structure would produce invalid output. Revisit when a reference project is available.
 - [already-implemented] [Create the Illusion of 3D Perspective (Corner Pinning)](https://www.techsmith.com/learn/tutorials/camtasia/corner-pinning/) — No CornerPin effect class
 - [already-implemented] [Remove a Background from Your Video](https://www.techsmith.com/learn/tutorials/camtasia/video-background-removal/) — MediaMatte effect in effects/visual.py is Camtasia’s matte/background-removal mechanism
@@ -75,7 +75,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [not-applicable] [Tips for Getting the Best Audio](https://www.techsmith.com/learn/tutorials/camtasia/best-audio-tips/) — Hardware/recording-technique advice; not a file-manipulation concern
 - [already-implemented] [Set the Tone with Background Music](https://www.techsmith.com/learn/tutorials/camtasia/background-music/) — project.add_background_music with volume and fade keyframes
 - [already-implemented] [Edit Audio](https://www.techsmith.com/learn/tutorials/camtasia/editing-audio/) — volume, gain, fade in/out, mute, strip_audio, normalize_audio
-- [x] [Add Audio Effects](https://www.techsmith.com/learn/tutorials/camtasia/add-audio-effects/) — VST_NOISE_REMOVAL enum and categoryAudioEffects exist; no typed audio-effect wrapper classes yet
+- [deferred: needs fixture] [Add Audio Effects](https://www.techsmith.com/learn/tutorials/camtasia/add-audio-effects/) — VST_NOISE_REMOVAL enum and categoryAudioEffects exist; no typed audio-effect wrapper classes yet
 - [not-applicable] [Record Voice Narration](https://www.techsmith.com/learn/tutorials/camtasia/record-voice-narration/) — Recording audio is hardware capture; pycamtasia has add_voiceover_sequence for placing pre-recorded files
 
 ### Cursor Edits & Effects (5)
@@ -83,7 +83,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [already-implemented] [Add Cursor Effects](https://www.techsmith.com/learn/tutorials/camtasia/cursor-effects/) — effects/cursor.py: CursorMotionBlur, CursorShadow, CursorPhysics, LeftClickScaling
 - [already-implemented] [Introduction to Cursor Editing](https://www.techsmith.com/learn/tutorials/camtasia/cursor-editing-basics/) — ScreenVMFile exposes cursor_scale, cursor_opacity, cursor_motion_blur_intensity, cursor_shadow, cursor_physics, left_click_scaling
 - [already-implemented] [Replace the Cursor](https://www.techsmith.com/learn/tutorials/camtasia/change-cursor/) — ScreenIMFile.cursor_image_path is read-only; no setter to replace the cursor image
-- [x] [Customize the Cursor Path](https://www.techsmith.com/learn/tutorials/camtasia/customize-your-cursor-path/) — cursor_location_keyframes is read-only; no API to modify per-frame cursor positions
+- [already-implemented] [Customize the Cursor Path](https://www.techsmith.com/learn/tutorials/camtasia/customize-your-cursor-path/) — cursor_location_keyframes is read-only; no API to modify per-frame cursor positions
 - [already-implemented] [Quickly Smooth Cursor Movements](https://www.techsmith.com/learn/tutorials/camtasia/cursor-smoothing/) — smooth_cursor_across_edit_duration is read-only; no setter to enable/configure smoothing
 
 ### Video Animations (7)
@@ -91,7 +91,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [already-implemented] [Zoom In to Focus Attention](https://www.techsmith.com/learn/tutorials/camtasia/animations/) — project.add_zoom_to_region, timeline.add_zoom_pan / zoom_pan_keyframes, clip set_scale_keyframes/set_position_keyframes
 - [already-implemented] [Add a Transition](https://www.techsmith.com/learn/tutorials/camtasia/video-transitions/) — timeline/transitions.py TransitionList with add, add_fade, add_card_flip, add_glitch, add_linear_blur, add_stretch, add_paint_arcs
 - [already-implemented] [Animations In-Depth](https://www.techsmith.com/learn/tutorials/camtasia/animations-in-depth/) — animation_tracks, _add_visual_tracks_for_keyframes, _add_opacity_track, set_scale_keyframes, set_position_keyframes, fade_in/fade_out
-- [x] [Add Movement to Any Object (Motion Paths)](https://www.techsmith.com/learn/tutorials/camtasia/motion-path/) — set_position_keyframes supports linear movement; no bezier/curved motion paths or easing presets
+- [deferred: needs fixture] [Add Movement to Any Object (Motion Paths)](https://www.techsmith.com/learn/tutorials/camtasia/motion-path/) — set_position_keyframes supports linear movement; no bezier/curved motion paths or easing presets
 - [already-implemented] [Blur or Mask a Video](https://www.techsmith.com/learn/tutorials/camtasia/blur-mask-video/) — Mask effect with shape/opacity/blend/invert/rotation/size/position/corner-radius; BlurRegion (unregistered); add_motion_blur
 - [already-implemented] [Animate Text & Images with Behaviors](https://www.techsmith.com/learn/tutorials/camtasia/animation-behaviors/) — effects/behaviors.py GenericBehaviorEffect with BehaviorPhase; callout add_behavior; templates/behavior_presets
 - [already-implemented] [Create Stunning Animations with Media Mattes](https://www.techsmith.com/learn/tutorials/camtasia/animations-with-media-mattes/) — effects/visual.py MediaMatte; BaseClip.add_media_matte builder
@@ -133,14 +133,14 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 ## High-Level API Improvement Ideas (from demo production)
 
-- [x] VideoProductionBuilder — `builders/video_production.py` fluent builder for assembling complete video productions
-- [x] ScreenRecordingSync
+- [already-implemented] VideoProductionBuilder — `builders/video_production.py` fluent builder for assembling complete video productions
+- [already-implemented] ScreenRecordingSync
 - [already-implemented] import_media() format validation and auto-conversion
 - [already-implemented] ProgressiveDisclosure helper
 - [already-implemented] Project.clean_inherited_state()
 - [already-implemented] MarkerList.clear() and MarkerList.replace()
-- [x] Project.remove_orphaned_media()
-- [x] Recap/tile layout helper
+- [already-implemented] Project.remove_orphaned_media()
+- [already-implemented] Recap/tile layout helper
 
 ## Feature Gaps (discovered during adversarial review & integration testing)
 
@@ -163,51 +163,51 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 ### Timeline API
 - [already-implemented] `clips_of_type()` is O(n²) and misattributes nested clips to `None` track
 - [already-implemented] `shift_all()` doesn't shift transition or effect `start` times
-- [x] `Timeline.insert_gap()` / `remove_gap()` shift timeline markers (transitions use clip IDs and don't need adjustment)
-- [x] `flatten_to_track()` warns when source tracks have transitions that will be dropped
-- [x] `build_section_timeline()` helper exists in timeline.py
+- [already-implemented] `Timeline.insert_gap()` / `remove_gap()` shift timeline markers (transitions use clip IDs and don't need adjustment)
+- [already-implemented] `flatten_to_track()` warns when source tracks have transitions that will be dropped
+- [already-implemented] `build_section_timeline()` helper exists in timeline.py
 
 ### Validation
-- [x] Validate `timeline.id` exists and doesn't collide with clip IDs
-- [x] Validate `GenericBehaviorEffect` has required `in`/`center`/`out` phases
-- [x] Validate overlapping clips on same track (Camtasia tracks are single-occupancy)
-- [x] Flag explicit `null` in transition `leftMedia`/`rightMedia` (format says omit, not null)
+- [already-implemented] Validate `timeline.id` exists and doesn't collide with clip IDs
+- [already-implemented] Validate `GenericBehaviorEffect` has required `in`/`center`/`out` phases
+- [already-implemented] Validate overlapping clips on same track (Camtasia tracks are single-occupancy)
+- [already-implemented] Flag explicit `null` in transition `leftMedia`/`rightMedia` (format says omit, not null)
 
 ### Effects
-- [x] Typed wrapper classes added for LutEffect, Emphasize, Spotlight, ColorAdjustment, BlendModeEffect, MediaMatte — all registered with effect_from_dict
-- [x] `BlurRegion` export is intentional — class docstring warns it is unregistered and unverified against real projects
-- [x] `DropShadow.enabled` / `CursorShadow.enabled` docstrings clarify that setting only updates defaultValue, not existing keyframes
+- [already-implemented] Typed wrapper classes added for LutEffect, Emphasize, Spotlight, ColorAdjustment, BlendModeEffect, MediaMatte — all registered with effect_from_dict
+- [already-implemented] `BlurRegion` export is intentional — class docstring warns it is unregistered and unverified against real projects
+- [already-implemented] `DropShadow.enabled` / `CursorShadow.enabled` docstrings clarify that setting only updates defaultValue, not existing keyframes
 
 ### Export
-- [x] EDL exporter recurses into Groups/StitchedMedia (opt-out via include_nested=False)
-- [x] CSV and report (JSON + markdown) exporters recurse into Groups/StitchedMedia with timeline-absolute positions
-- [x] EDL `UnifiedMedia` source is always `AX` — should use video sub-clip's source
-- [x] SRT exporter warns when no markers to export
-- [x] `timeline_json` now includes effects, transitions, and per-clip metadata (opt-out via kwargs; bumped version to 1.1)
+- [already-implemented] EDL exporter recurses into Groups/StitchedMedia (opt-out via include_nested=False)
+- [already-implemented] CSV and report (JSON + markdown) exporters recurse into Groups/StitchedMedia with timeline-absolute positions
+- [already-implemented] EDL `UnifiedMedia` source is always `AX` — should use video sub-clip's source
+- [already-implemented] SRT exporter warns when no markers to export
+- [already-implemented] `timeline_json` now includes effects, transitions, and per-clip metadata (opt-out via kwargs; bumped version to 1.1)
 
 ### Builders
-- [x] `timeline_builder.add_title()` ignores `subtitle` parameter (dead code)
-- [x] `tile_layout.add_grid` auto-fits images to cell size by default (opt-out via fit_to_cell=False)
-- [x] `screenplay_builder._find_audio_file()` only searches `.wav` — should support `.mp3`, `.m4a`
+- [already-implemented] `timeline_builder.add_title()` ignores `subtitle` parameter (dead code)
+- [already-implemented] `tile_layout.add_grid` auto-fits images to cell size by default (opt-out via fit_to_cell=False)
+- [already-implemented] `screenplay_builder._find_audio_file()` only searches `.wav` — should support `.mp3`, `.m4a`
 
 ### Schema
-- [x] Schema `effect.effectName` enum no longer includes behavior names (moved to GenericBehaviorEffect only)
-- [x] Schema `effect` definition doesn't require `bypassed` (format reference says required)
-- [x] Non-schema transition names (`FadeThroughColor`, `SlideUp`, etc.) documented via docstring warnings
+- [already-implemented] Schema `effect.effectName` enum no longer includes behavior names (moved to GenericBehaviorEffect only)
+- [already-implemented] Schema `effect` definition doesn't require `bypassed` (format reference says required)
+- [already-implemented] Non-schema transition names (`FadeThroughColor`, `SlideUp`, etc.) documented via docstring warnings
 
 ### Behavior Presets
 - [ ] Preset values don't fully match real TechSmith samples (ongoing refinement)
-- [x] `reveal` preset start value documented; clamped by get_behavior_preset() for short clips. Needs real-Camtasia verification to tune further.
-- [x] `BehaviorInnerName` enum missing `'fading'` phase name
-- [x] `pulsating` center phase `offsetBetweenCharacters` should be `49392000` (not `0`)
+- [already-implemented] `reveal` preset start value documented; clamped by get_behavior_preset() for short clips. Needs real-Camtasia verification to tune further.
+- [already-implemented] `BehaviorInnerName` enum missing `'fading'` phase name
+- [already-implemented] `pulsating` center phase `offsetBetweenCharacters` should be `49392000` (not `0`)
 
 ### Infrastructure
-- [x] `media_bin.import_media()` appends _1/_2/... suffix on directory collision
-- [x] `media_bin._visual_track_to_json()` uses `sampleRate=0` for video (should be frame rate)
-- [x] `media_bin` visual/audio track JSONs already include `tag: 0` field
-- [x] `scalar_to_string()` return type annotation is `str | int` and docstring explains the int return
-- [x] `parse_scalar()` docstring documents the 10_000 denominator cap tradeoff
-- [x] `history.py` `undo()`/`redo()` docstrings warn about stale nested references (already present)
+- [already-implemented] `media_bin.import_media()` appends _1/_2/... suffix on directory collision
+- [already-implemented] `media_bin._visual_track_to_json()` uses `sampleRate=0` for video (should be frame rate)
+- [already-implemented] `media_bin` visual/audio track JSONs already include `tag: 0` field
+- [already-implemented] `scalar_to_string()` return type annotation is `str | int` and docstring explains the int return
+- [already-implemented] `parse_scalar()` docstring documents the 10_000 denominator cap tradeoff
+- [already-implemented] `history.py` `undo()`/`redo()` docstrings warn about stale nested references (already present)
 
 ### Known Design Decisions (not bugs — documented to avoid re-reporting)
 - `UnifiedMedia` caches video/audio child clips without invalidation — works because dict references are shared; only breaks if someone replaces the entire sub-dict (not a real-world pattern)
