@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from camtasia.builders.video_production import VideoProductionBuilder
 
 FIXTURES = Path(__file__).parent / 'fixtures'

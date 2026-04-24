@@ -18,8 +18,8 @@ else:  # pragma: no cover
     from typing_extensions import Self
 from typing import Any, NoReturn
 
+from camtasia.timing import EDIT_RATE, ticks_to_seconds
 from camtasia.timing import parse_scalar as _parse_scalar
-from camtasia.timing import seconds_to_ticks, ticks_to_seconds, EDIT_RATE
 
 from .base import BaseClip
 

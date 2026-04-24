@@ -5,7 +5,7 @@ from __future__ import annotations
 from fractions import Fraction
 from typing import TYPE_CHECKING, Any
 
-from camtasia.timing import EDIT_RATE, ticks_to_seconds
+from camtasia.timing import ticks_to_seconds
 
 if TYPE_CHECKING:
     from camtasia.project import Project
