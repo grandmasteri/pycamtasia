@@ -133,7 +133,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 
 ## High-Level API Improvement Ideas (from demo production)
 
-- [x] VideoProductionBuilder
+- [x] VideoProductionBuilder — `builders/video_production.py` fluent builder for assembling complete video productions
 - [x] ScreenRecordingSync
 - [already-implemented] import_media() format validation and auto-conversion
 - [already-implemented] ProgressiveDisclosure helper
