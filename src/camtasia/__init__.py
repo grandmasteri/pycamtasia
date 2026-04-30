@@ -95,6 +95,7 @@ from camtasia.types import (
     EffectName,
     InterpolationType,
     MaskShape,
+    MatteMode,
     MediaType,
     TransitionType,
     ValidationLevel,
@@ -137,6 +138,7 @@ __all__ = [
     "Marker",
     "MarkerList",
     "MaskShape",
+    "MatteMode",
     "MediaType",
     "PlaceholderMedia",
     # Project

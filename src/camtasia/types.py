@@ -24,6 +24,7 @@ __all__ = [
     'InterpolationType',
     'LutPreset',
     'MaskShape',
+    'MatteMode',
     'MediaType',
     'Movement',
     'ReportFormat',
@@ -83,6 +84,7 @@ class EffectName(str, Enum):
     AUDIO_COMPRESSION = 'AudioCompression'
     PITCH = 'Pitch'
     CLIP_SPEED_AUDIO = 'ClipSpeedAudio'
+    BACKGROUND_REMOVAL = 'BackgroundRemoval'
 
 
 class TransitionType(str, Enum):
@@ -166,6 +168,14 @@ class MaskShape(IntEnum):
     # Add more as discovered
 
 
+class MatteMode(IntEnum):
+    """Matte mode values for MediaMatte effect."""
+    ALPHA = 1
+    ALPHA_INVERT = 2
+    LUMINOSITY = 3
+    LUMINOSITY_INVERT = 4
+
+
 class CalloutShape(str, Enum):
     """Callout annotation shapes (verified against 93 TechSmith samples)."""
     EMPTY = ''
@@ -184,6 +194,9 @@ class InterpolationType(str, Enum):
     EASE_IN_OUT = 'eioe'
     SPRING = 'sprg'
     BOUNCE = 'bnce'
+    EASE_IN = 'easi'
+    EASE_OUT = 'easo'
+    BEZIER = 'bezi'
 
 
 class CalloutKind(str, Enum):

@@ -11,6 +11,7 @@ from camtasia.types import (
     EffectName,
     InterpolationType,
     MaskShape,
+    MatteMode,
     TransitionType,
     _RGBADict,
 )
@@ -63,7 +64,7 @@ class TestEffectNameValues:
             assert EffectName[name].value == value
 
     def test_effect_name_count(self):
-        assert len(EffectName) == 20
+        assert len(EffectName) == 21
 
 
 class TestTransitionTypeValues:
@@ -166,6 +167,9 @@ class TestInterpolationTypeValues:
             'EASE_IN_OUT': 'eioe',
             'SPRING': 'sprg',
             'BOUNCE': 'bnce',
+            'EASE_IN': 'easi',
+            'EASE_OUT': 'easo',
+            'BEZIER': 'bezi',
         }
         for name, value in expected.items():
             assert InterpolationType[name].value == value
@@ -174,7 +178,7 @@ class TestInterpolationTypeValues:
         assert 'HOLD' not in InterpolationType.__members__
 
     def test_interpolation_type_count(self):
-        assert len(InterpolationType) == 4
+        assert len(InterpolationType) == 7
 
 
 class TestRGBADictRenamed:
@@ -214,6 +218,17 @@ class TestMaskShapeEnumValues:
         assert MaskShape.RECTANGLE == 0
         assert MaskShape.ELLIPSE == 1
         assert isinstance(MaskShape.RECTANGLE, int)
+
+
+class TestMatteModeEnumValues:
+    """Verify MatteMode int values."""
+
+    def test_matte_mode_values(self):
+        assert MatteMode.ALPHA == 1
+        assert MatteMode.ALPHA_INVERT == 2
+        assert MatteMode.LUMINOSITY == 3
+        assert MatteMode.LUMINOSITY_INVERT == 4
+        assert isinstance(MatteMode.ALPHA, int)
 
 
 class TestCalloutShapeEnumValues:
