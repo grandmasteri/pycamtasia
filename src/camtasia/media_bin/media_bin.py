@@ -141,6 +141,61 @@ class Media:
         src = Path(self._data["src"])
         self._data["src"] = str(src.with_name(new_name + src.suffix))
 
+    def create_proxy(self, proxy_path: Path) -> None:
+        """Set a proxy file path on this media entry.
+
+        Args:
+            proxy_path: Path to the proxy media file.
+        """
+        self._data.setdefault("metadata", {})["proxyPath"] = str(proxy_path)
+
+    def delete_proxy(self) -> None:
+        """Remove the proxy path from this media entry."""
+        meta = self._data.get("metadata")
+        if meta is not None:
+            meta.pop("proxyPath", None)
+
+    def reverse(self) -> None:
+        """Mark this media entry as reversed.
+
+        Sets ``metadata.reversed`` to ``True`` and adds a reversed variant
+        reference to the source tracks.
+        """
+        self._data.setdefault("metadata", {})["reversed"] = True
+        for st in self._data.get("sourceTracks", []):
+            st.setdefault("variants", [])
+            if not any(v.get("type") == "reversed" for v in st["variants"]):
+                st["variants"].append({"type": "reversed", "src": self._data["src"]})
+
+    @property
+    def zoom_metadata(self) -> dict[str, str]:
+        """Zoom meeting metadata (meeting_id, host, topic, date).
+
+        Returns:
+            A dict with the four Zoom fields, empty strings for unset keys.
+        """
+        meta = self._data.get("metadata", {}).get("zoom", {})
+        return {
+            "meeting_id": meta.get("meeting_id", ""),
+            "host": meta.get("host", ""),
+            "topic": meta.get("topic", ""),
+            "date": meta.get("date", ""),
+        }
+
+    @zoom_metadata.setter
+    def zoom_metadata(self, value: dict[str, str]) -> None:
+        """Set Zoom meeting metadata.
+
+        Args:
+            value: Dict with any of meeting_id, host, topic, date.
+        """
+        self._data.setdefault("metadata", {})["zoom"] = {
+            "meeting_id": value.get("meeting_id", ""),
+            "host": value.get("host", ""),
+            "topic": value.get("topic", ""),
+            "date": value.get("date", ""),
+        }
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Media):
             return NotImplemented
@@ -247,6 +302,22 @@ class MediaBin:
         for m in unused:
             del self[m.id]
         return names
+
+    def add_to_library(self, media: Media, library: Any) -> Any:
+        """Bridge a media entry into a library as an asset.
+
+        Imports the library module at call time to avoid circular dependencies.
+
+        Args:
+            media: The :class:`Media` entry to add.
+            library: A :class:`~camtasia.library.Library` instance.
+
+        Returns:
+            The :class:`~camtasia.library.LibraryAsset` created.
+        """
+        from camtasia.library.library import Library as _Library
+
+        return library.add_asset(media._data, media.identity)
 
     def sorted(self, *, key: str = 'name', reverse: bool = False) -> list[Media]:
         """Return media entries sorted by the given key.
