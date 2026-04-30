@@ -28,11 +28,24 @@ from camtasia.operations.layout import (
 from camtasia.operations.merge import merge_tracks
 from camtasia.operations.speed import rescale_project, set_audio_speed
 from camtasia.operations.sync import SyncSegment, apply_sync, match_marker_to_transcript, plan_sync
-from camtasia.operations.template import clone_project_structure, duplicate_project, replace_media_source
+from camtasia.operations.template import (
+    TemplateManager,
+    clone_project_structure,
+    duplicate_project,
+    export_camtemplate,
+    install_camtemplate,
+    list_installed_templates,
+    new_from_template,
+    new_project_from_template,
+    replace_media_source,
+    replace_placeholder,
+    save_as_template,
+)
 
 __all__ = [
     "ProjectDiff",
     "SyncSegment",
+    "TemplateManager",
     "apply_sync",
     "apply_to_all_tracks",
     "apply_to_clips",
@@ -41,15 +54,21 @@ __all__ = [
     "compact_project",
     "diff_projects",
     "duplicate_project",
+    "export_camtemplate",
     "fade_all",
+    "install_camtemplate",
+    "list_installed_templates",
     "match_marker_to_transcript",
     "merge_tracks",
     "move_all",
+    "new_from_template",
+    "new_project_from_template",
     "pack_track",
     "plan_sync",
     "remove_empty_tracks",
     "remove_orphaned_media",
     "replace_media_source",
+    "replace_placeholder",
     "rescale_project",
     "ripple_delete",
     "ripple_delete_range",
@@ -58,6 +77,7 @@ __all__ = [
     "ripple_move",
     "ripple_move_multi",
     "ripple_replace_in_group",
+    "save_as_template",
     "scale_all",
     "set_audio_speed",
     "set_opacity_all",
