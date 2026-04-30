@@ -1,15 +1,12 @@
 """Tests for DynamicCaptionStyle, active_word_at, and Callout text_properties/canvas_rect."""
 from __future__ import annotations
 
-import pytest
-
 from camtasia.timeline.captions import (
-    CaptionAttributes,
     DEFAULT_DYNAMIC_STYLES,
+    CaptionAttributes,
     DynamicCaptionStyle,
 )
 from camtasia.timeline.clips.callout import Callout
-
 
 # ---------------------------------------------------------------------------
 # DynamicCaptionStyle dataclass
@@ -203,7 +200,7 @@ class TestCalloutTextProperties:
 class TestCalloutCanvasRect:
     def test_getter(self):
         callout = _make_callout()
-        x, y, w, h = callout.canvas_rect
+        _x, _y, w, h = callout.canvas_rect
         assert w == 400.0
         assert h == 100.0
 

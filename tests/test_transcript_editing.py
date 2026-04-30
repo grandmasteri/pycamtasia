@@ -1,15 +1,10 @@
 """Tests for Transcript word editing, gaps, and to_dynamic_caption_clip."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pytest
 
 from camtasia.audiate.transcript import Transcript, TranscriptGap, Word
-from camtasia.timeline.captions import DEFAULT_DYNAMIC_STYLES, DynamicCaptionStyle
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from camtasia.timeline.captions import DynamicCaptionStyle
 
 
 def _make_words(*specs: tuple[str, float, float]) -> list[Word]:

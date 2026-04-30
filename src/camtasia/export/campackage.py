@@ -9,10 +9,10 @@
 from __future__ import annotations
 
 import json
-import warnings
-import zipfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+import warnings
+import zipfile
 
 if TYPE_CHECKING:
     from camtasia.project import Project

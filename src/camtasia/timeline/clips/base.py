@@ -2486,7 +2486,6 @@ class BaseClip:
         """
         if aspect_ratio <= 0:
             raise ValueError(f'aspect_ratio must be > 0, got {aspect_ratio}')
-        from camtasia.effects.visual import Crop as CropEffect
         if aspect_ratio > 1.0:
             # Wider than tall — crop top/bottom
             crop_v = (1.0 - 1.0 / aspect_ratio) / 2.0

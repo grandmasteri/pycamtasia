@@ -3203,7 +3203,7 @@ class Project:
         Returns:
             ``{'clips': [...], 'effects': [...]}`` describing the frame.
         """
-        from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+        from camtasia.timing import seconds_to_ticks
 
         target_ticks = seconds_to_ticks(time_seconds)
         visible_clips: list[dict[str, Any]] = []

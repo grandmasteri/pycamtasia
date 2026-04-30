@@ -16,7 +16,7 @@ if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover
     from typing_extensions import Self
-from typing import Any, NoReturn
+from typing import Any, NoReturn, cast
 
 from camtasia.timing import EDIT_RATE, ticks_to_seconds
 from camtasia.timing import parse_scalar as _parse_scalar
@@ -983,11 +983,11 @@ class Group(BaseClip):
         Raises:
             TypeError: If *library* is not a Library instance.
         """
-        from camtasia.library import Library, LibraryAsset
+        from camtasia.library import Library
 
         if not isinstance(library, Library):
             raise TypeError(f'Expected Library, got {type(library).__name__}')
-        return library.add_asset(self._data, name)
+        return library.add_asset(cast(dict[str, Any], self._data), name)
 
     def sync_internal_durations(self) -> Self:
         """Trim all internal clips to match the Group's duration.
