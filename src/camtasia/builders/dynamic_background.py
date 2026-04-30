@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from camtasia.timing import seconds_to_ticks
 
@@ -128,7 +128,7 @@ def add_dynamic_background(
             color0=c0,
             color1=c1,
         )
-        return clip
+        return cast('BaseClip', clip)
 
     if asset == DynamicBackgroundAsset.GRADIENT_RADIAL:
         c0 = colors[0] if colors and len(colors) > 0 else (0.16, 0.16, 0.16, 1.0)
@@ -138,7 +138,7 @@ def add_dynamic_background(
             color0=c0,
             color1=c1,
         )
-        return clip
+        return cast('BaseClip', clip)
 
     # Non-gradient assets: create a placeholder clip with SourceEffect
     track = project.timeline.get_or_create_track(track_name)

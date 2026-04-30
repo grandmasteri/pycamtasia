@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from camtasia.audiate.transcript import Transcript
 from camtasia.timing import EDIT_RATE
@@ -90,7 +90,8 @@ class AudiateProject:
 
         Returns an empty list if no scene data is present.
         """
-        return self._data.get("metadata", {}).get("smartScenes", [])
+        result: list[dict[Any, Any]] = self._data.get("metadata", {}).get("smartScenes", [])
+        return result
 
     def apply_suggested_edits(
         self,

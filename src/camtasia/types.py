@@ -294,6 +294,7 @@ class _ClipData(TypedDict, total=False):
     medias: list[dict[str, Any]]
     minMediaStart: int | float
     sourceEffect: dict[str, Any]
+    trackNumber: str
     # 'def' key exists at runtime but can't be declared (Python keyword);
     # accesses use type: ignore[typeddict-item].
 
@@ -350,6 +351,7 @@ class _CaptionData(TypedDict, total=False):
     alignment: int
     opacity: float
     backgroundEnabled: bool
+    defaultDurationSeconds: float
 
 
 
