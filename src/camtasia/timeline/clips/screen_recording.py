@@ -503,7 +503,8 @@ class ScreenIMFile(BaseClip):
         """Return the mutable keyframes list for cursorLocation."""
         params = self._data.get('parameters', {})
         loc = params.get('cursorLocation', {})
-        return loc.get('keyframes', [])
+        kfs: list[dict[str, Any]] = loc.get('keyframes', [])
+        return kfs
 
     @staticmethod
     def _recompute_cursor_durations(kfs: list[dict[str, Any]]) -> None:
