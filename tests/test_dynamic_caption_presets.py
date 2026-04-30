@@ -64,7 +64,7 @@ class TestApplyDynamicStyle:
         callout = _make_callout()
         style = DynamicCaptionStyle(name='t', fill_color=(128, 0, 255, 200))
         apply_dynamic_style(callout, style)
-        r, g, b, a = callout.fill_color
+        r, _g, b, a = callout.fill_color
         assert pytest.approx(r, abs=0.01) == 128 / 255
         assert pytest.approx(b, abs=0.01) == 1.0
         assert pytest.approx(a, abs=0.01) == 200 / 255
@@ -73,7 +73,7 @@ class TestApplyDynamicStyle:
         callout = _make_callout()
         style = DynamicCaptionStyle(name='t', stroke_color=(10, 20, 30, 40))
         apply_dynamic_style(callout, style)
-        r, g, b, a = callout.stroke_color
+        r, _g, _b, a = callout.stroke_color
         assert pytest.approx(r, abs=0.01) == 10 / 255
         assert pytest.approx(a, abs=0.01) == 40 / 255
 
@@ -81,7 +81,7 @@ class TestApplyDynamicStyle:
         callout = _make_callout()
         style = DynamicCaptionStyle(name='t', background_color=(50, 60, 70, 80))
         apply_dynamic_style(callout, style)
-        r, g, b, a = callout.background_color
+        r, _g, b, _a = callout.background_color
         assert pytest.approx(r, abs=0.01) == 50 / 255
         assert pytest.approx(b, abs=0.01) == 70 / 255
 

@@ -139,40 +139,40 @@ _Each item below represents a specific feature/operation mentioned in an officia
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/add-audio-effects/
 
-- [ ] **Audio Compression effect missing (Ratio/Threshold/Gain/Variation)** `src/camtasia/effects/audio.py` — `AudioCompression class`
-- [ ] **ClipSpeed audio effect missing (Speed/Duration)** `src/camtasia/effects/audio.py` — `ClipSpeed class`
-- [ ] **Pitch effect missing (Mac — Pitch/Ease In/Out)** `src/camtasia/effects/audio.py` — `Pitch class`
-- [ ] **audio-specific Fade In / Fade Out wrappers missing** `src/camtasia/timeline/clips/base.py` — `add_audio_fade_in / add_audio_fade_out`
-- [ ] **NoiseRemoval Sensitivity and Reduction (Mac) params missing** `src/camtasia/effects/audio.py` — `NoiseRemoval.sensitivity / reduction`
-- [ ] **EffectName enum missing AudioCompression/ClipSpeed/Pitch entries** `src/camtasia/types.py` — `EffectName members`
+- [x] **Audio Compression effect missing (Ratio/Threshold/Gain/Variation)** `src/camtasia/effects/audio.py` — `AudioCompression class`
+- [x] **ClipSpeed audio effect missing (Speed/Duration)** `src/camtasia/effects/audio.py` — `ClipSpeed class`
+- [x] **Pitch effect missing (Mac — Pitch/Ease In/Out)** `src/camtasia/effects/audio.py` — `Pitch class`
+- [x] **audio-specific Fade In / Fade Out wrappers missing** `src/camtasia/timeline/clips/base.py` — `add_audio_fade_in / add_audio_fade_out`
+- [x] **NoiseRemoval Sensitivity and Reduction (Mac) params missing** `src/camtasia/effects/audio.py` — `NoiseRemoval.sensitivity / reduction`
+- [x] **EffectName enum missing AudioCompression/ClipSpeed/Pitch entries** `src/camtasia/types.py` — `EffectName members`
 
 ### Add Closed Captions to a Video
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/add-closed-captions/
 
-- [ ] **Import captions from SRT/VTT/SAMI** `src/camtasia/export/captions.py` — `import_captions_srt`
-- [ ] **Export captions as SRT/VTT/SAMI (not just markers)** `src/camtasia/export/srt.py` — `export_captions_as_srt`
-- [ ] **Edit/remove caption by index** `src/camtasia/timeline/timeline.py` — `Timeline.edit_caption / remove_caption`
-- [ ] **Split overlong caption ('Split' button)** `src/camtasia/timeline/timeline.py` — `Timeline.split_caption`
-- [ ] **Merge adjacent captions** `src/camtasia/timeline/timeline.py` — `Timeline.merge_caption_with_next`
+- [x] **Import captions from SRT/VTT/SAMI** `src/camtasia/export/captions.py` — `import_captions_srt`
+- [x] **Export captions as SRT/VTT/SAMI (not just markers)** `src/camtasia/export/srt.py` — `export_captions_as_srt`
+- [x] **Edit/remove caption by index** `src/camtasia/timeline/timeline.py` — `Timeline.edit_caption / remove_caption`
+- [x] **Split overlong caption ('Split' button)** `src/camtasia/timeline/timeline.py` — `Timeline.split_caption`
+- [x] **Merge adjacent captions** `src/camtasia/timeline/timeline.py` — `Timeline.merge_caption_with_next`
 - [ ] **Caption vertical position / anchor** `src/camtasia/timeline/captions.py` — `CaptionAttributes.position / vertical_anchor`
 - [ ] **Speech-to-text auto-caption generation** `src/camtasia/operations/` — `generate_captions_from_audio`
 - [ ] **Sync script to audio playback (Windows workflow)** `src/camtasia/operations/` — `sync_script_to_captions`
 - [ ] **Burned-in (open) captions export toggle** `src/camtasia/export/` — `export_video(caption_style='burned_in')`
-- [ ] **ADA/accessibility compliance validator (line-length/duration/contrast)** `src/camtasia/validation.py` — `validate_caption_accessibility`
-- [ ] **Default caption duration setting (Camtasia default 4s)** `src/camtasia/timeline/captions.py` — `CaptionAttributes.default_duration_seconds`
+- [x] **ADA/accessibility compliance validator (line-length/duration/contrast)** `src/camtasia/validation.py` — `validate_caption_accessibility`
+- [x] **Default caption duration setting (Camtasia default 4s)** `src/camtasia/timeline/captions.py` — `CaptionAttributes.default_duration_seconds`
 
 ### Animate Text & Images with Behaviors
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/animation-behaviors/
 
-- [ ] **flyOut preset missing** `src/camtasia/templates/behavior_presets.py` — `PRESETS['flyOut']`
-- [ ] **emphasize preset missing** `src/camtasia/templates/behavior_presets.py` — `PRESETS['emphasize']`
-- [ ] **jiggle preset missing** `src/camtasia/templates/behavior_presets.py` — `PRESETS['jiggle']`
-- [ ] **No classmethod factories on GenericBehaviorEffect to instantiate presets by name** `src/camtasia/effects/behaviors.py` — `GenericBehaviorEffect.from_preset(name, duration)`
-- [ ] **BehaviorPhase lacks loop-phase fields as typed properties** `src/camtasia/effects/behaviors.py` — `seconds_per_loop/number_of_loops/delay_between_loops`
-- [ ] **No enum/constants for movement/characterOrder values** `src/camtasia/effects/behaviors.py` — `Movement/CharacterOrder IntEnum`
-- [ ] **During-phase style params not surfaced as typed properties** `src/camtasia/effects/behaviors.py` — `BehaviorPhase.opacity/jump/rotation/scale/shift`
+- [x] **flyOut preset missing** `src/camtasia/templates/behavior_presets.py` — `PRESETS['flyOut']`
+- [x] **emphasize preset missing** `src/camtasia/templates/behavior_presets.py` — `PRESETS['emphasize']`
+- [x] **jiggle preset missing** `src/camtasia/templates/behavior_presets.py` — `PRESETS['jiggle']`
+- [x] **No classmethod factories on GenericBehaviorEffect to instantiate presets by name** `src/camtasia/effects/behaviors.py` — `GenericBehaviorEffect.from_preset(name, duration)`
+- [x] **BehaviorPhase lacks loop-phase fields as typed properties** `src/camtasia/effects/behaviors.py` — `seconds_per_loop/number_of_loops/delay_between_loops`
+- [x] **No enum/constants for movement/characterOrder values** `src/camtasia/effects/behaviors.py` — `Movement/CharacterOrder IntEnum`
+- [x] **During-phase style params not surfaced as typed properties** `src/camtasia/effects/behaviors.py` — `BehaviorPhase.opacity/jump/rotation/scale/shift`
 
 ### Zoom In to Focus Attention
 
@@ -200,9 +200,9 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/animations-in-depth/
 Source: https://www.techsmith.com/learn/tutorials/camtasia/animations-with-media-mattes/
 
 - [ ] **MediaMatte.mode only 1/2 documented but Camtasia has 4 modes (Alpha, Alpha Invert, Luminosity, Luminosity Invert); fixtures use mode=3** `src/camtasia/effects/visual.py` — `MediaMatte.mode full enum coverage`
-- [ ] **MatteMode enum not defined in types.py** `src/camtasia/types.py` — `MatteMode IntEnum`
+- [x] **MatteMode enum not defined in types.py** `src/camtasia/types.py` — `MatteMode IntEnum`
 - [ ] **add_media_matte lacks ease_in/ease_out parameters** `src/camtasia/timeline/clips/base.py` — `add_media_matte(..., ease_in_seconds, ease_out_seconds)`
-- [ ] **Track-level matte attribute setter missing (right-click track -> Alpha/Luminosity/...)** `src/camtasia/timeline/track.py` — `Track.matte_mode property`
+- [x] **Track-level matte attribute setter missing (right-click track -> Alpha/Luminosity/...)** `src/camtasia/timeline/track.py` — `Track.matte_mode property`
 - [ ] **No documentation of compatible transparent media formats** `src/camtasia/timeline/clips/base.py` — `add_media_matte docstring`
 - [ ] **add_media_matte default preset_name mismatches default matte_mode** `src/camtasia/timeline/clips/base.py` — `derive preset_name from matte_mode`
 
@@ -210,35 +210,35 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/animations-with-media
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/annotations/
 
-- [ ] **Sketch Motion Callout (animated drawing callout: sketch circle, sketch arrow)** `annotations/callouts.py` — `sketch_motion_callout`
-- [ ] **Sketch Motion draw-time property** `annotations/callouts.py` — `sketch_motion_callout(..., draw_time=...)`
+- [x] **Sketch Motion Callout (animated drawing callout: sketch circle, sketch arrow)** `annotations/callouts.py` — `sketch_motion_callout`
+- [x] **Sketch Motion draw-time property** `annotations/callouts.py` — `sketch_motion_callout(..., draw_time=...)`
 - [ ] **Line annotation (tutorial lists 'Arrows & Lines' — only arrow() exists)** `annotations/callouts.py` — `line`
 - [ ] **Ellipse / circle shape annotation** `annotations/shapes.py` — `ellipse`
-- [ ] **Favorites / preset annotations** `annotations/__init__.py` — `save_as_favorite / load_favorite`
+- [x] **Favorites / preset annotations** `annotations/__init__.py` — `save_as_favorite / load_favorite`
 
 ### annotations
 
 Source: 
 
-- [ ] **Sketch Motion Callout (animated drawing callout: sketch circle, sketch arrow) — no factory, no 'sketch' style anywhere in library** `annotations/callouts.py` — `sketch_motion_callout`
-- [ ] **Sketch Motion draw-time property (how long the sketch animates on)** `annotations/callouts.py` — `sketch_motion_callout(..., draw_time=...)`
+- [x] **Sketch Motion Callout (animated drawing callout: sketch circle, sketch arrow) — no factory, no 'sketch' style anywhere in library** `annotations/callouts.py` — `sketch_motion_callout`
+- [x] **Sketch Motion draw-time property (how long the sketch animates on)** `annotations/callouts.py` — `sketch_motion_callout(..., draw_time=...)`
 - [ ] **Line annotation (tutorial lists 'Arrows & Lines' — only arrow() exists)** `annotations/callouts.py` — `line`
 - [ ] **Ellipse / circle shape annotation (schema has 'shape-ellipse' but no factory in shapes.py)** `annotations/shapes.py` — `ellipse`
 - [ ] **Additional shapes shown in Shapes subtab (polygon, rounded-rectangle, triangle, speech bubble) — only rectangle() exposed** `annotations/shapes.py` — `polygon / rounded_rectangle / triangle`
 - [ ] **Shadow (hasDropShadow) on callout/shape annotations — hardcoded to 0.0 in square/keystroke, not exposed as parameter** `annotations/callouts.py` — `square(..., drop_shadow=True)`
 - [ ] **Corner-radius on shape/square callouts — hardcoded to 0.0, not exposed** `annotations/shapes.py` — `rectangle(..., corner_radius=...)`
-- [ ] **Callout tail for speech-bubble style — tail-x/tail-y hardcoded, not parameterized** `annotations/callouts.py` — `square(..., tail=(x,y))`
+- [x] **Callout tail for speech-bubble style — tail-x/tail-y hardcoded, not parameterized** `annotations/callouts.py` — `square(..., tail=(x,y))`
 - [ ] **Italic / underline / strikethrough text properties — _text_attributes always writes 0 and callers cannot override** `annotations/callouts.py` — `text(..., italic=..., underline=..., strikethrough=...)`
 - [ ] **Lower-third / title preset callout helpers — templates/lower_third.py exists but no public annotation factory in camtasia.annotations** `annotations/__init__.py` — `lower_third / title`
 - [ ] **Gradient fill for callouts/shapes — FillStyle.Gradient exists but no gradient-stop parameters accepted** `annotations/callouts.py` — `square(..., gradient_stops=...)`
-- [ ] **Favorites / preset annotations (save/load custom annotation for reuse)** `annotations/__init__.py` — `save_as_favorite / load_favorite`
+- [x] **Favorites / preset annotations (save/load custom annotation for reuse)** `annotations/__init__.py` — `save_as_favorite / load_favorite`
 
 ### 4 Ways to Visualize Your Audio
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/audio-visualizers/
 
-- [ ] **Audio visualizer feature entirely absent from library (no 'visualizer'/'waveform' code)** `src/camtasia/effects/` — `AudioVisualizer effect class with type/style/color parameters`
-- [ ] **No helper to add visualizer to audio clip** `src/camtasia/timeline/clips/audio.py` — `add_audio_visualizer`
+- [x] **Audio visualizer feature entirely absent from library (no 'visualizer'/'waveform' code)** `src/camtasia/effects/` — `AudioVisualizer effect class with type/style/color parameters`
+- [x] **No helper to add visualizer to audio clip** `src/camtasia/timeline/clips/audio.py` — `add_audio_visualizer`
 
 ### Basic Edits After Recording
 
@@ -247,8 +247,8 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/basic-video-edits/
 - [ ] **Timeline selection API (in/out range)** `src/camtasia/timeline/track.py` — `set_selection / clear_selection`
 - [ ] **cut/copy/paste on selection** `src/camtasia/timeline/track.py` — `cut_selection / copy_selection / paste_at`
 - [ ] **undo/redo on timeline operations** `src/camtasia/timeline/track.py` — `undo / redo command history`
-- [ ] **trim_head/trim_tail on BaseClip** `src/camtasia/timeline/clips/base.py` — `trim_head / trim_tail`
-- [ ] **ripple_delete by timeline range (only supports clip_id currently)** `src/camtasia/operations/layout.py` — `ripple_delete_range(track, start, end)`
+- [x] **trim_head/trim_tail on BaseClip** `src/camtasia/timeline/clips/base.py` — `trim_head / trim_tail`
+- [x] **ripple_delete by timeline range (only supports clip_id currently)** `src/camtasia/operations/layout.py` — `ripple_delete_range(track, start, end)`
 
 ### Blur or Mask a Video
 
@@ -267,32 +267,32 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/blur-mask-video/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/camtasia-audio-sync/
 
-- [ ] **Auto-detect and remove filler words (Suggested Edits)** `src/camtasia/audiate/transcript.py` — `Transcript.detect_filler_words / remove_filler_words`
-- [ ] **Detect and shorten pauses** `src/camtasia/audiate/transcript.py` — `Transcript.detect_pauses / shorten_pauses`
-- [ ] **Apply Audiate edits back to Camtasia timeline (Edit Timeline vs Edit Media Only)** `src/camtasia/operations/sync.py` — `sync_audiate_edits_to_timeline(mode=...)`
-- [ ] **Resolve linked Camtasia media by caiCamtasiaSessionId (link/unlink)** `src/camtasia/audiate/project.py` — `AudiateProject.find_linked_media / unlink`
-- [ ] **Generate SRT from Audiate transcript** `src/camtasia/audiate/transcript.py` — `Transcript.to_srt`
-- [ ] **Smart Scenes segmentation metadata** `src/camtasia/audiate/project.py` — `AudiateProject.smart_scenes`
-- [ ] **Send Camtasia media to a new .audiate project** `src/camtasia/operations/sync.py` — `send_media_to_audiate`
-- [ ] **Text-based deletion propagating to timeline** `src/camtasia/operations/sync.py` — `delete_words_from_timeline`
+- [x] **Auto-detect and remove filler words (Suggested Edits)** `src/camtasia/audiate/transcript.py` — `Transcript.detect_filler_words / remove_filler_words`
+- [x] **Detect and shorten pauses** `src/camtasia/audiate/transcript.py` — `Transcript.detect_pauses / shorten_pauses`
+- [x] **Apply Audiate edits back to Camtasia timeline (Edit Timeline vs Edit Media Only)** `src/camtasia/operations/sync.py` — `sync_audiate_edits_to_timeline(mode=...)`
+- [x] **Resolve linked Camtasia media by caiCamtasiaSessionId (link/unlink)** `src/camtasia/audiate/project.py` — `AudiateProject.find_linked_media / unlink`
+- [x] **Generate SRT from Audiate transcript** `src/camtasia/audiate/transcript.py` — `Transcript.to_srt`
+- [x] **Smart Scenes segmentation metadata** `src/camtasia/audiate/project.py` — `AudiateProject.smart_scenes`
+- [x] **Send Camtasia media to a new .audiate project** `src/camtasia/operations/sync.py` — `send_media_to_audiate`
+- [x] **Text-based deletion propagating to timeline** `src/camtasia/operations/sync.py` — `delete_words_from_timeline`
 
 ### Replace the Cursor
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/change-cursor/
 
-- [ ] **Replace-scope selector (Current/Similar/All)** `src/camtasia/timeline/clips/screen_recording.py` — `replace_cursor(path, scope='current'|'similar'|'all')`
-- [ ] **Built-in cursor library / Cursor Type enumeration** `src/camtasia/timeline/clips/screen_recording.py` — `CursorType enum + set_cursor_type`
-- [ ] **Hide cursor (No Cursor option)** `src/camtasia/timeline/clips/screen_recording.py` — `hide_cursor()`
-- [ ] **Import custom cursor from image file** `src/camtasia/timeline/clips/screen_recording.py` — `import_custom_cursor(image_path)`
-- [ ] **Unpack Rev Media prerequisite for cursor editing** `src/camtasia/timeline/clips/screen_recording.py` — `unpack_rev_media`
+- [x] **Replace-scope selector (Current/Similar/All)** `src/camtasia/timeline/clips/screen_recording.py` — `replace_cursor(path, scope='current'|'similar'|'all')`
+- [x] **Built-in cursor library / Cursor Type enumeration** `src/camtasia/timeline/clips/screen_recording.py` — `CursorType enum + set_cursor_type`
+- [x] **Hide cursor (No Cursor option)** `src/camtasia/timeline/clips/screen_recording.py` — `hide_cursor()`
+- [x] **Import custom cursor from image file** `src/camtasia/timeline/clips/screen_recording.py` — `import_custom_cursor(image_path)`
+- [x] **Unpack Rev Media prerequisite for cursor editing** `src/camtasia/timeline/clips/screen_recording.py` — `unpack_rev_media`
 - [ ] **ROADMAP.md stale — incorrectly says cursor_image_path has no setter** `ROADMAP.md` — `update line — setter does exist`
 
 ### Speed Up & Slow Down Video Clips
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/clip-speed/
 
-- [ ] **ClipSpeed as named Visual Effect (no add_clip_speed / 'ClipSpeed' effectName producer)** `src/camtasia/timeline/clips/base.py` — `apply_clip_speed_effect`
-- [ ] **Duration-based speed adjustment (set_speed_by_duration)** `src/camtasia/timeline/clips/base.py` — `set_speed_by_duration(target_seconds)`
+- [x] **ClipSpeed as named Visual Effect (no add_clip_speed / 'ClipSpeed' effectName producer)** `src/camtasia/timeline/clips/base.py` — `apply_clip_speed_effect`
+- [x] **Duration-based speed adjustment (set_speed_by_duration)** `src/camtasia/timeline/clips/base.py` — `set_speed_by_duration(target_seconds)`
 
 ### Create the Illusion of 3D Perspective (Corner Pinning)
 
@@ -306,28 +306,28 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/corner-pinning/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/create-a-template/
 
-- [ ] **No save_as_template producing .camtemplate file** `src/camtasia/operations/template.py` — `save_as_template`
-- [ ] **No export_camtemplate operation** `src/camtasia/operations/template.py` — `export_camtemplate`
-- [ ] **No import_camtemplate / new_from_template** `src/camtasia/operations/template.py` — `new_from_template`
-- [ ] **PlaceholderMedia missing 'title' property (canvas-visible title distinct from note)** `src/camtasia/timeline/clips/placeholder.py` — `PlaceholderMedia.title`
-- [ ] **No Track.add_placeholder convenience** `src/camtasia/timeline/track.py` — `Track.add_placeholder(time, duration, title, note)`
+- [x] **No save_as_template producing .camtemplate file** `src/camtasia/operations/template.py` — `save_as_template`
+- [x] **No export_camtemplate operation** `src/camtasia/operations/template.py` — `export_camtemplate`
+- [x] **No import_camtemplate / new_from_template** `src/camtasia/operations/template.py` — `new_from_template`
+- [x] **PlaceholderMedia missing 'title' property (canvas-visible title distinct from note)** `src/camtasia/timeline/clips/placeholder.py` — `PlaceholderMedia.title`
+- [x] **No Track.add_placeholder convenience** `src/camtasia/timeline/track.py` — `Track.add_placeholder(time, duration, title, note)`
 
 ### Create Custom Assets
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/create-custom-assets/
 
-- [ ] **Save grouped media as reusable custom asset** `src/camtasia/timeline/clips/group.py` — `Group.save_as_asset`
-- [ ] **Favorite annotations/callouts for reuse** `src/camtasia/annotations/callouts.py` — `Callout.add_to_favorites`
-- [ ] **Export asset library as .campackage archive** `src/camtasia/export/` — `export_campackage`
-- [ ] **Custom asset library management (add/list/reuse)** `src/camtasia/library.py` — `AssetLibrary.add_asset / list_assets`
-- [ ] **Quick Property Editor (link/unlink/label/assign_theme/toggle visible on group)** `src/camtasia/timeline/clips/group.py` — `Group.quick_properties`
+- [x] **Save grouped media as reusable custom asset** `src/camtasia/timeline/clips/group.py` — `Group.save_as_asset`
+- [x] **Favorite annotations/callouts for reuse** `src/camtasia/annotations/callouts.py` — `Callout.add_to_favorites`
+- [x] **Export asset library as .campackage archive** `src/camtasia/export/` — `export_campackage`
+- [x] **Custom asset library management (add/list/reuse)** `src/camtasia/library.py` — `AssetLibrary.add_asset / list_assets`
+- [x] **Quick Property Editor (link/unlink/label/assign_theme/toggle visible on group)** `src/camtasia/timeline/clips/group.py` — `Group.quick_properties`
 
 ### Create Vertical Videos
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/create-vertical-videos/
 
-- [ ] **No vertical aspect presets (9:16 FHD, 9:16 HD, 4:5, 1:1)** `src/camtasia/project.py` — `set_vertical_preset / CanvasPreset enum`
-- [ ] **No Crop visual effect / crop_to_aspect / fit_to_canvas helper** `src/camtasia/effects/visual.py` — `Crop class + Clip.crop_to_aspect / fit_to_canvas`
+- [x] **No vertical aspect presets (9:16 FHD, 9:16 HD, 4:5, 1:1)** `src/camtasia/project.py` — `set_vertical_preset / CanvasPreset enum`
+- [x] **No Crop visual effect / crop_to_aspect / fit_to_canvas helper** `src/camtasia/effects/visual.py` — `Crop class + Clip.crop_to_aspect / fit_to_canvas`
 
 ### Create a Video from a Script
 
@@ -345,11 +345,11 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/create-video-from-scr
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/cursor-editing-basics/
 
-- [ ] **No cursor elevation/always-on-top property** `src/camtasia/timeline/clips/screen_recording.py` — `ScreenVMFile.cursor_elevation`
-- [ ] **No keyframe support for cursor_scale over time** `src/camtasia/timeline/clips/screen_recording.py` — `set_cursor_scale_keyframes`
-- [ ] **No keyframe support for cursor_opacity over time** `src/camtasia/timeline/clips/screen_recording.py` — `set_cursor_opacity_keyframes`
-- [ ] **No hide_cursor / show_cursor wrappers** `src/camtasia/timeline/clips/screen_recording.py` — `hide_cursor / show_cursor`
-- [ ] **No 'No Cursor' image replacement at specific keyframe** `src/camtasia/timeline/clips/screen_recording.py` — `set_no_cursor_at(time)`
+- [x] **No cursor elevation/always-on-top property** `src/camtasia/timeline/clips/screen_recording.py` — `ScreenVMFile.cursor_elevation`
+- [x] **No keyframe support for cursor_scale over time** `src/camtasia/timeline/clips/screen_recording.py` — `set_cursor_scale_keyframes`
+- [x] **No keyframe support for cursor_opacity over time** `src/camtasia/timeline/clips/screen_recording.py` — `set_cursor_opacity_keyframes`
+- [x] **No hide_cursor / show_cursor wrappers** `src/camtasia/timeline/clips/screen_recording.py` — `hide_cursor / show_cursor`
+- [x] **No 'No Cursor' image replacement at specific keyframe** `src/camtasia/timeline/clips/screen_recording.py` — `set_no_cursor_at(time)`
 
 ### Add Cursor Effects
 
@@ -360,7 +360,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/cursor-effects/
 - [x] **CursorHighlight effect missing** `src/camtasia/effects/cursor.py` — `class CursorHighlight: size, color, opacity`
 - [x] **CursorIsolation effect missing** `src/camtasia/effects/cursor.py` — `class CursorIsolation: size, feather`
 - [x] **CursorMagnify effect missing** `src/camtasia/effects/cursor.py` — `class CursorMagnify: scale, size`
-- [ ] **CursorPathCreator effect missing** `src/camtasia/effects/cursor.py` — `class CursorPathCreator: keyframes`
+- [x] **CursorPathCreator effect missing** `src/camtasia/effects/cursor.py` — `class CursorPathCreator: keyframes`
 - [x] **CursorSmoothing effect missing** `src/camtasia/effects/cursor.py` — `class CursorSmoothing: level`
 - [x] **CursorSpotlight effect missing** `src/camtasia/effects/cursor.py` — `class CursorSpotlight: size, opacity, blur, color`
 - [x] **CursorGradient effect missing** `src/camtasia/effects/cursor.py` — `class CursorGradient: color, size, opacity`
@@ -408,24 +408,24 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/device-frames/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/dynamic-backgrounds/
 
-- [ ] **No high-level add_dynamic_background(asset_name=...) API — only add_gradient_background** `src/camtasia/builders/` — `add_dynamic_background(asset_name, duration, colors)`
-- [ ] **No named-asset catalog for dynamic background shader assets** `src/camtasia/` — `DynamicBackgroundAsset enum / catalog`
-- [ ] **No wrapper for Lottie-based dynamic backgrounds (source handles Color000 padded keys but no public helper)** `src/camtasia/builders/` — `add_lottie_background`
+- [x] **No high-level add_dynamic_background(asset_name=...) API — only add_gradient_background** `src/camtasia/builders/` — `add_dynamic_background(asset_name, duration, colors)`
+- [x] **No named-asset catalog for dynamic background shader assets** `src/camtasia/` — `DynamicBackgroundAsset enum / catalog`
+- [x] **No wrapper for Lottie-based dynamic backgrounds (source handles Color000 padded keys but no public helper)** `src/camtasia/builders/` — `add_lottie_background`
 - [ ] **No mapping of tutorial's UI property labels to SourceEffect parameter keys (Color0-3, MidPoint, Speed)** `src/camtasia/effects/source.py` — `documented property name aliases`
 
 ### Add Dynamic Captions
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/dynamic-captions/
 
-- [ ] **Dynamic Caption Style presets / library** `src/camtasia/timeline/captions.py` — `DynamicCaptionStyle class + apply_dynamic_style`
-- [ ] **Auto-generate dynamic captions from audio transcript** `src/camtasia/audiate/transcript.py` — `Transcript.to_dynamic_caption_clip`
-- [ ] **Word-by-word highlight animation per transcript timing** `src/camtasia/timeline/captions.py` — `DynamicCaptionClip.active_word_at(t)`
-- [ ] **Per-caption styling distinct from timeline-wide CaptionAttributes** `src/camtasia/timeline/clips/callout.py` — `DynamicCaptionClip.text_properties`
-- [ ] **Save custom style as Dynamic Caption preset** `src/camtasia/templates/behavior_presets.py` — `save_dynamic_caption_preset`
-- [ ] **Transcript word editing: add/delete/convert-to-gap** `src/camtasia/audiate/transcript.py` — `Transcript.add_word/delete_word/convert_to_gap`
-- [ ] **Per-word transcription timing drag** `src/camtasia/audiate/transcript.py` — `Transcript.set_word_timing`
-- [ ] **Transcript gap indicators** `src/camtasia/audiate/transcript.py` — `Transcript.gaps property`
-- [ ] **Dynamic caption canvas position/size handles** `src/camtasia/timeline/clips/callout.py` — `DynamicCaptionClip.canvas_rect`
+- [x] **Dynamic Caption Style presets / library** `src/camtasia/timeline/captions.py` — `DynamicCaptionStyle class + apply_dynamic_style`
+- [x] **Auto-generate dynamic captions from audio transcript** `src/camtasia/audiate/transcript.py` — `Transcript.to_dynamic_caption_clip`
+- [x] **Word-by-word highlight animation per transcript timing** `src/camtasia/timeline/captions.py` — `DynamicCaptionClip.active_word_at(t)`
+- [x] **Per-caption styling distinct from timeline-wide CaptionAttributes** `src/camtasia/timeline/clips/callout.py` — `DynamicCaptionClip.text_properties`
+- [x] **Save custom style as Dynamic Caption preset** `src/camtasia/templates/behavior_presets.py` — `save_dynamic_caption_preset`
+- [x] **Transcript word editing: add/delete/convert-to-gap** `src/camtasia/audiate/transcript.py` — `Transcript.add_word/delete_word/convert_to_gap`
+- [x] **Per-word transcription timing drag** `src/camtasia/audiate/transcript.py` — `Transcript.set_word_timing`
+- [x] **Transcript gap indicators** `src/camtasia/audiate/transcript.py` — `Transcript.gaps property`
+- [x] **Dynamic caption canvas position/size handles** `src/camtasia/timeline/clips/callout.py` — `DynamicCaptionClip.canvas_rect`
 - [ ] **Extend caption duration with transcript rescoping** `src/camtasia/timeline/clips/base.py` — `DynamicCaptionClip.set_duration with rescope`
 - [ ] **Preserve transcription edits when style deleted/swapped** `src/camtasia/timeline/clips/audio.py` — `AudioClip.dynamic_caption_transcription persistence`
 
@@ -433,19 +433,19 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/dynamic-captions/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/edit-zoom-recording/
 
-- [ ] **Import Zoom cloud recording via OAuth** `src/camtasia/project.py` — `Project.import_zoom_recording`
-- [ ] **Zoom-specific metadata (meeting ID, host, topic, date)** `src/camtasia/media_bin/media_bin.py` — `Media.zoom_metadata`
+- [x] **Import Zoom cloud recording via OAuth** `src/camtasia/project.py` — `Project.import_zoom_recording`
+- [x] **Zoom-specific metadata (meeting ID, host, topic, date)** `src/camtasia/media_bin/media_bin.py` — `Media.zoom_metadata`
 
 ### Edit Audio
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/editing-audio/
 
-- [ ] **Silence range of audio (right-click > Silence Audio)** `src/camtasia/timeline/clips/base.py` — `silence_audio(start, end)`
-- [ ] **Separate/strip audio from video clip** `src/camtasia/timeline/clips/base.py` — `separate_video_and_audio`
-- [ ] **Audio-specific fade_in/fade_out (current fade methods animate opacity)** `src/camtasia/timeline/clips/base.py` — `audio_fade_in / audio_fade_out`
-- [ ] **Multi-point audio point API (add/move/remove volume keyframes)** `src/camtasia/timeline/clips/base.py` — `add_audio_point / remove_all_audio_points`
+- [x] **Silence range of audio (right-click > Silence Audio)** `src/camtasia/timeline/clips/base.py` — `silence_audio(start, end)`
+- [x] **Separate/strip audio from video clip** `src/camtasia/timeline/clips/base.py` — `separate_video_and_audio`
+- [x] **Audio-specific fade_in/fade_out (current fade methods animate opacity)** `src/camtasia/timeline/clips/base.py` — `audio_fade_in / audio_fade_out`
+- [x] **Multi-point audio point API (add/move/remove volume keyframes)** `src/camtasia/timeline/clips/base.py` — `add_audio_point / remove_all_audio_points`
 - [ ] **Mix-to-Mono setter missing (attribute exists, no dedicated setter)** `src/camtasia/timeline/clips/audio.py` — `mix_to_mono setter`
-- [ ] **set_volume_fade supports only single start->end; no multi-keyframe volume envelope** `src/camtasia/timeline/clips/base.py` — `set_volume_keyframes`
+- [x] **set_volume_fade supports only single start->end; no multi-keyframe volume envelope** `src/camtasia/timeline/clips/base.py` — `set_volume_keyframes`
 
 ### Enhance Your Video Overview
 
@@ -461,32 +461,32 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/enhance-video/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/export-audio/
 
-- [ ] **Export standalone audio file (mp3/m4a/wav) from project timeline** `src/camtasia/export/audio.py` — `export_audio(project, out_path, format=...)`
-- [ ] **File-type/format selection (mp3/m4a/wav)** `src/camtasia/export/audio.py` — `export_audio(format literal)`
-- [ ] **Mixed export of enabled audio tracks** `src/camtasia/export/audio.py` — `mix enabled tracks in export_audio`
-- [ ] **Per-track / solo audio export honoring enabled flag** `src/camtasia/export/audio.py` — `export_audio_clips(solo_track=...)`
-- [ ] **Public API export in export/__init__.py for audio functions** `src/camtasia/export/__init__.py` — `export export_audio/export_audio_clips`
+- [x] **Export standalone audio file (mp3/m4a/wav) from project timeline** `src/camtasia/export/audio.py` — `export_audio(project, out_path, format=...)`
+- [x] **File-type/format selection (mp3/m4a/wav)** `src/camtasia/export/audio.py` — `export_audio(format literal)`
+- [x] **Mixed export of enabled audio tracks** `src/camtasia/export/audio.py` — `mix enabled tracks in export_audio`
+- [x] **Per-track / solo audio export honoring enabled flag** `src/camtasia/export/audio.py` — `export_audio_clips(solo_track=...)`
+- [x] **Public API export in export/__init__.py for audio functions** `src/camtasia/export/__init__.py` — `export export_audio/export_audio_clips`
 
 ### Freeze Video Clips with Extend Frame
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/extend-frame/
 
-- [ ] **ripple_extend operation (extend clip + push following clips forward)** `src/camtasia/operations/layout.py` — `ripple_extend(track, clip_id, extend_seconds)`
-- [ ] **Extend clip to absolute target duration** `src/camtasia/timeline/track.py` — `extend_clip_to(clip_id, target_duration)`
-- [ ] **freeze_at_clip_start convenience** `src/camtasia/timeline/track.py` — `freeze_at_clip_start`
-- [ ] **freeze_at_clip_end convenience** `src/camtasia/timeline/track.py` — `freeze_at_clip_end`
-- [ ] **add_exported_frame (exports a frame as image on new track)** `src/camtasia/timeline/track.py` — `add_exported_frame`
+- [x] **ripple_extend operation (extend clip + push following clips forward)** `src/camtasia/operations/layout.py` — `ripple_extend(track, clip_id, extend_seconds)`
+- [x] **Extend clip to absolute target duration** `src/camtasia/timeline/track.py` — `extend_clip_to(clip_id, target_duration)`
+- [x] **freeze_at_clip_start convenience** `src/camtasia/timeline/track.py` — `freeze_at_clip_start`
+- [x] **freeze_at_clip_end convenience** `src/camtasia/timeline/track.py` — `freeze_at_clip_end`
+- [x] **add_exported_frame (exports a frame as image on new track)** `src/camtasia/timeline/track.py` — `add_exported_frame`
 - [ ] **extend_clip has no ripple option** `src/camtasia/timeline/track.py` — `extend_clip(..., ripple=False)`
 
 ### Add Video Filters
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/filters/
 
-- [ ] **Range controls (shadowRampStart/End, highlightRampStart/End, channel) written by add_lut_effect but not typed on LutEffect** `src/camtasia/effects/visual.py` — `LutEffect.shadow_ramp_start/end, highlight_ramp_start/end, channel`
+- [x] **Range controls (shadowRampStart/End, highlightRampStart/End, channel) written by add_lut_effect but not typed on LutEffect** `src/camtasia/effects/visual.py` — `LutEffect.shadow_ramp_start/end, highlight_ramp_start/end, channel`
 - [ ] **Range blend preset dropdown selection has no API** `src/camtasia/effects/visual.py` — `LutEffect.range_preset`
 - [ ] **Ease In / Ease Out (Mac) transition seconds not exposed** `src/camtasia/effects/visual.py` — `LutEffect.ease_in / LutEffect.ease_out`
 - [ ] **Add Preset button (save customized LUT) has no API** `src/camtasia/timeline/clips/base.py` — `save_lut_preset`
-- [ ] **LUT filename dropdown has no enum/catalog** `src/camtasia/types.py` — `LutPreset enum`
+- [x] **LUT filename dropdown has no enum/catalog** `src/camtasia/types.py` — `LutPreset enum`
 
 ### How to Make an Intro for a Video
 
@@ -503,20 +503,20 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/how-to-make-an-intro/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/how-to-remove-a-color/
 
-- [ ] **Hue slider parameter not exposed on ChromaKey effect** `src/camtasia/effects/visual.py` — `ChromaKey.hue property`
+- [x] **Hue slider parameter not exposed on ChromaKey effect** `src/camtasia/effects/visual.py` — `ChromaKey.hue property`
 
 ### Import & Manage Your Project Media
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/import-manage-media/
 
-- [ ] **Rename media in bin** `src/camtasia/media_bin/media_bin.py` — `Media.rename / identity setter`
-- [ ] **Delete unused media (not on timeline)** `src/camtasia/media_bin/media_bin.py` — `MediaBin.delete_unused / unused_media property`
-- [ ] **Sort media by field** `src/camtasia/media_bin/media_bin.py` — `MediaBin.sorted(key, reverse)`
-- [ ] **Create proxy video** `src/camtasia/media_bin/media_bin.py` — `Media.create_proxy`
-- [ ] **Delete proxy video** `src/camtasia/media_bin/media_bin.py` — `Media.delete_proxy`
-- [ ] **Create reverse video** `src/camtasia/media_bin/media_bin.py` — `Media.reverse`
-- [ ] **Import folder of media** `src/camtasia/media_bin/media_bin.py` — `MediaBin.import_folder`
-- [ ] **Import multiple files at once** `src/camtasia/media_bin/media_bin.py` — `MediaBin.import_many(paths)`
+- [x] **Rename media in bin** `src/camtasia/media_bin/media_bin.py` — `Media.rename / identity setter`
+- [x] **Delete unused media (not on timeline)** `src/camtasia/media_bin/media_bin.py` — `MediaBin.delete_unused / unused_media property`
+- [x] **Sort media by field** `src/camtasia/media_bin/media_bin.py` — `MediaBin.sorted(key, reverse)`
+- [x] **Create proxy video** `src/camtasia/media_bin/media_bin.py` — `Media.create_proxy`
+- [x] **Delete proxy video** `src/camtasia/media_bin/media_bin.py` — `Media.delete_proxy`
+- [x] **Create reverse video** `src/camtasia/media_bin/media_bin.py` — `Media.reverse`
+- [x] **Import folder of media** `src/camtasia/media_bin/media_bin.py` — `MediaBin.import_folder`
+- [x] **Import multiple files at once** `src/camtasia/media_bin/media_bin.py` — `MediaBin.import_many(paths)`
 
 ### Import Presentation Slides
 
@@ -532,17 +532,17 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/import-powerpoint-sli
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/library/
 
-- [ ] **No Library panel/model abstraction** `src/camtasia/library/library.py` — `Library class + Libraries container`
-- [ ] **No add-asset-to-library API** `src/camtasia/library/library.py` — `Library.add_asset(clip, name, use_canvas_size)`
-- [ ] **No add-timeline-selection-to-library** `src/camtasia/library/library.py` — `Library.add_timeline_selection`
-- [ ] **No insert-library-asset-on-timeline API** `src/camtasia/timeline/timeline.py` — `Timeline.add_library_asset`
-- [ ] **No create-custom-library API** `src/camtasia/library/library.py` — `Libraries.create(name, start_from=None)`
-- [ ] **No library folder / organization API** `src/camtasia/library/library.py` — `Library.create_folder / move`
-- [ ] **No .libzip import** `src/camtasia/library/libzip.py` — `import_libzip`
-- [ ] **No .libzip export** `src/camtasia/library/libzip.py` — `export_libzip`
-- [ ] **No default vs custom library distinction** `src/camtasia/library/library.py` — `Libraries.default / is_default`
-- [ ] **No Import Media to Library operation** `src/camtasia/library/library.py` — `Library.import_media`
-- [ ] **No bridge MediaBin -> Library** `src/camtasia/media_bin/media_bin.py` — `MediaBin.add_to_library`
+- [x] **No Library panel/model abstraction** `src/camtasia/library/library.py` — `Library class + Libraries container`
+- [x] **No add-asset-to-library API** `src/camtasia/library/library.py` — `Library.add_asset(clip, name, use_canvas_size)`
+- [x] **No add-timeline-selection-to-library** `src/camtasia/library/library.py` — `Library.add_timeline_selection`
+- [x] **No insert-library-asset-on-timeline API** `src/camtasia/timeline/timeline.py` — `Timeline.add_library_asset`
+- [x] **No create-custom-library API** `src/camtasia/library/library.py` — `Libraries.create(name, start_from=None)`
+- [x] **No library folder / organization API** `src/camtasia/library/library.py` — `Library.create_folder / move`
+- [x] **No .libzip import** `src/camtasia/library/libzip.py` — `import_libzip`
+- [x] **No .libzip export** `src/camtasia/library/libzip.py` — `export_libzip`
+- [x] **No default vs custom library distinction** `src/camtasia/library/library.py` — `Libraries.default / is_default`
+- [x] **No Import Media to Library operation** `src/camtasia/library/library.py` — `Library.import_media`
+- [x] **No bridge MediaBin -> Library** `src/camtasia/media_bin/media_bin.py` — `MediaBin.add_to_library`
 
 ### Close Timeline Gaps with Magnetic Tracks
 
@@ -551,29 +551,29 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/magnetic-tracks/
 - [ ] **Enabling magnetic on a track does not auto-close existing gaps** `src/camtasia/timeline/track.py` — `Track.magnetic setter should call pack_track when set to True`
 - [ ] **No automatic ripple-insert when dropping media between clips on magnetic track** `src/camtasia/timeline/track.py` — `Track.add_clip should ripple_insert when self.magnetic`
 - [ ] **No automatic ripple-close when moving clips on magnetic track** `src/camtasia/timeline/track.py` — `Track.move_clip should re-pack track when magnetic`
-- [ ] **No snap-to-clip-edge (only snap_to_grid exists)** `src/camtasia/operations/layout.py` — `snap_to_clip_edge(track, tolerance)`
-- [ ] **No all-tracks magnetic toggle on Timeline** `src/camtasia/timeline/timeline.py` — `Timeline.set_all_magnetic(value)`
+- [x] **No snap-to-clip-edge (only snap_to_grid exists)** `src/camtasia/operations/layout.py` — `snap_to_clip_edge(track, tolerance)`
+- [x] **No all-tracks magnetic toggle on Timeline** `src/camtasia/timeline/timeline.py` — `Timeline.set_all_magnetic(value)`
 - [ ] **Groups-on-magnetic-tracks-keep-spaces rule not honored** `src/camtasia/operations/layout.py` — `pack_track preserve spacing for Group clips`
 
 ### Add Markers & Video Table of Contents
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/markers-and-table-of-contents/
 
-- [ ] **Rename an existing marker in place** `src/camtasia/timeline/markers.py` — `MarkerList.rename(old_name, new_name)`
-- [ ] **Move/reposition existing marker without delete+add** `src/camtasia/timeline/markers.py` — `MarkerList.move(old_time, new_time)`
-- [ ] **Promote timeline marker to media marker (attach to clip)** `src/camtasia/timeline/track.py` — `Track.promote_marker_to_media`
-- [ ] **Demote media marker to timeline marker** `src/camtasia/timeline/track.py` — `Track.demote_marker_to_timeline`
-- [ ] **Export Smart Player TOC manifest (XML/JSON sidecar)** `src/camtasia/export/toc.py` — `export_toc`
-- [ ] **Export chapters in WebVTT/MP4 atom/YouTube list formats** `src/camtasia/export/chapters.py` — `export_chapters(format=...)`
-- [ ] **Navigate next/prev marker from a time** `src/camtasia/timeline/markers.py` — `MarkerList.next_after/prev_before`
-- [ ] **Remove single marker by name** `src/camtasia/timeline/markers.py` — `MarkerList.remove_by_name`
-- [ ] **Auto-generate slide markers from presentation metadata** `src/camtasia/operations/slide_markers.py` — `mark_slides_from_presentation`
+- [x] **Rename an existing marker in place** `src/camtasia/timeline/markers.py` — `MarkerList.rename(old_name, new_name)`
+- [x] **Move/reposition existing marker without delete+add** `src/camtasia/timeline/markers.py` — `MarkerList.move(old_time, new_time)`
+- [x] **Promote timeline marker to media marker (attach to clip)** `src/camtasia/timeline/track.py` — `Track.promote_marker_to_media`
+- [x] **Demote media marker to timeline marker** `src/camtasia/timeline/track.py` — `Track.demote_marker_to_timeline`
+- [x] **Export Smart Player TOC manifest (XML/JSON sidecar)** `src/camtasia/export/toc.py` — `export_toc`
+- [x] **Export chapters in WebVTT/MP4 atom/YouTube list formats** `src/camtasia/export/chapters.py` — `export_chapters(format=...)`
+- [x] **Navigate next/prev marker from a time** `src/camtasia/timeline/markers.py` — `MarkerList.next_after/prev_before`
+- [x] **Remove single marker by name** `src/camtasia/timeline/markers.py` — `MarkerList.remove_by_name`
+- [x] **Auto-generate slide markers from presentation metadata** `src/camtasia/operations/slide_markers.py` — `mark_slides_from_presentation`
 
 ### Edit Microsoft Teams & Other Meeting Recordings
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/meeting-recordings/
 
-- [ ] **One-shot Suggested Edits helper (filler+pause removal)** `src/camtasia/audiate/project.py` — `apply_suggested_edits`
+- [x] **One-shot Suggested Edits helper (filler+pause removal)** `src/camtasia/audiate/project.py` — `apply_suggested_edits`
 
 ### Add Movement to Any Object (Motion Paths)
 
@@ -584,7 +584,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/motion-path/
 - [ ] **No per-motion-point Line Type control (angle/curve/combination)** `src/camtasia/timeline/clips/base.py` — `set_position_keyframes_with_line_type`
 - [ ] **No bezier control-point / tangent handle API** `src/camtasia/timeline/clips/base.py` — `set_position_bezier_handles`
 - [ ] **No add_motion_point helper** `src/camtasia/timeline/clips/base.py` — `add_motion_point(time, x, y, line_type)`
-- [ ] **InterpolationType enum missing easi/easo/bezi members** `src/camtasia/types.py` — `InterpolationType.EASE_IN/EASE_OUT/BEZIER`
+- [x] **InterpolationType enum missing easi/easo/bezi members** `src/camtasia/types.py` — `InterpolationType.EASE_IN/EASE_OUT/BEZIER`
 - [ ] **No high-level apply_motion_path wrapper combining MotionPath effect + position keyframes** `src/camtasia/timeline/clips/base.py` — `apply_motion_path(points, easing, auto_orient, line_type)`
 
 ### Recommended Audio Edits
@@ -592,8 +592,8 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/motion-path/
 Source: https://www.techsmith.com/learn/tutorials/camtasia/recommended-audio-edits/
 
 - [ ] **Audio compression effect not wrapped** `src/camtasia/timeline/clips/base.py` — `add_compression(threshold,ratio,attack,release,makeup_gain)`
-- [ ] **Equalization not wrapped** `src/camtasia/timeline/clips/base.py` — `add_equalizer(bands)`
-- [ ] **Silence trim operation** `src/camtasia/operations/` — `trim_silences(clip, threshold_db, min_silence_ms)`
+- [x] **Equalization not wrapped** `src/camtasia/timeline/clips/base.py` — `add_equalizer(bands)`
+- [x] **Silence trim operation** `src/camtasia/operations/` — `trim_silences(clip, threshold_db, min_silence_ms)`
 
 ### Build Your First Video
 
@@ -609,8 +609,8 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/record-edit-share/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/ripple-move/
 
-- [ ] **ripple_move on single track (shift one clip and all clips to its right)** `src/camtasia/operations/layout.py` — `ripple_move(track, clip_id, delta_seconds)`
-- [ ] **ripple_move across multiple tracks** `src/camtasia/operations/layout.py` — `ripple_move_multi(tracks, clip_ids_per_track, delta_seconds)`
+- [x] **ripple_move on single track (shift one clip and all clips to its right)** `src/camtasia/operations/layout.py` — `ripple_move(track, clip_id, delta_seconds)`
+- [x] **ripple_move across multiple tracks** `src/camtasia/operations/layout.py` — `ripple_move_multi(tracks, clip_ids_per_track, delta_seconds)`
 
 ### Join Clips Together
 
@@ -626,76 +626,76 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/stitch-media/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/themes/
 
-- [ ] **No .camtheme export/import (file-based theme sharing)** `src/camtasia/themes.py` — `export_theme / import_theme`
-- [ ] **No Theme.logo_path attribute** `src/camtasia/themes.py` — `Theme.logo_path`
-- [ ] **No theme manager / named registry** `src/camtasia/themes.py` — `ThemeManager.create/rename/delete`
+- [x] **No .camtheme export/import (file-based theme sharing)** `src/camtasia/themes.py` — `export_theme / import_theme`
+- [x] **No Theme.logo_path attribute** `src/camtasia/themes.py` — `Theme.logo_path`
+- [x] **No theme manager / named registry** `src/camtasia/themes.py` — `ThemeManager.create/rename/delete`
 - [ ] **apply_theme does not handle 'annotation background' slot distinct from fill** `src/camtasia/themes.py` — `annotation-background mapping`
-- [ ] **No add_annotation_from_theme helper** `src/camtasia/themes.py` — `add_annotation_from_theme`
-- [ ] **No stroke-width/stroke-style mapping in apply_theme** `src/camtasia/themes.py` — `apply_theme stroke-width`
+- [x] **No add_annotation_from_theme helper** `src/camtasia/themes.py` — `add_annotation_from_theme`
+- [x] **No stroke-width/stroke-style mapping in apply_theme** `src/camtasia/themes.py` — `apply_theme stroke-width`
 - [ ] **Theme has fixed slots; no Add Color / dynamic accent-N support** `src/camtasia/themes.py` — `Theme.add_color / dynamic slots`
 
 ### Translate Your Script, Audio, and Captions
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/translate/
 
-- [ ] **Translate script to target language (overwrites transcript)** `src/camtasia/audiate/project.py` — `AudiateProject.translate_script(target_language)`
-- [ ] **Generate TTS audio from translated script** `src/camtasia/audiate/project.py` — `AudiateProject.generate_audio(voice, apply_to_entire_project=True)`
-- [ ] **Generate AI video avatar for translated audio** `src/camtasia/audiate/project.py` — `AudiateProject.generate_avatar`
-- [ ] **Export translated captions to .srt per language** `src/camtasia/export/captions.py` — `export_captions_multilang`
-- [ ] **Supported-language enumeration** `src/camtasia/audiate/project.py` — `SUPPORTED_TRANSLATION_LANGUAGES`
-- [ ] **Multi-language package export** `src/camtasia/export/captions.py` — `export_multilang_package`
-- [ ] **Writable project language (currently read-only)** `src/camtasia/audiate/project.py` — `AudiateProject.language setter`
-- [ ] **Save-as helper for language-suffixed copies** `src/camtasia/audiate/project.py` — `save_as_translation(language_code)`
+- [x] **Translate script to target language (overwrites transcript)** `src/camtasia/audiate/project.py` — `AudiateProject.translate_script(target_language)`
+- [x] **Generate TTS audio from translated script** `src/camtasia/audiate/project.py` — `AudiateProject.generate_audio(voice, apply_to_entire_project=True)`
+- [x] **Generate AI video avatar for translated audio** `src/camtasia/audiate/project.py` — `AudiateProject.generate_avatar`
+- [x] **Export translated captions to .srt per language** `src/camtasia/export/captions.py` — `export_captions_multilang`
+- [x] **Supported-language enumeration** `src/camtasia/audiate/project.py` — `SUPPORTED_TRANSLATION_LANGUAGES`
+- [x] **Multi-language package export** `src/camtasia/export/captions.py` — `export_multilang_package`
+- [x] **Writable project language (currently read-only)** `src/camtasia/audiate/project.py` — `AudiateProject.language setter`
+- [x] **Save-as helper for language-suffixed copies** `src/camtasia/audiate/project.py` — `save_as_translation(language_code)`
 
 ### How to Use a Template
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/use-a-template/
 
-- [ ] **No replace_placeholder supporting Ripple Replace / Clip Speed / From Start/End modes** `src/camtasia/operations/template.py` — `replace_placeholder(placeholder, new_media, mode=...)`
+- [x] **No replace_placeholder supporting Ripple Replace / Clip Speed / From Start/End modes** `src/camtasia/operations/template.py` — `replace_placeholder(placeholder, new_media, mode=...)`
 - [ ] **No .camtemplate import/install** `src/camtasia/operations/template.py` — `install_camtemplate / import_template`
-- [ ] **No new_project_from_template(name)** `src/camtasia/operations/template.py` — `new_project_from_template`
-- [ ] **No Template Manager (list/rename/delete installed templates)** `src/camtasia/operations/template.py` — `TemplateManager`
-- [ ] **PlaceholderMedia.set_source raises TypeError; no replace_with(media, mode) convenience** `src/camtasia/timeline/clips/placeholder.py` — `PlaceholderMedia.replace_with`
+- [x] **No new_project_from_template(name)** `src/camtasia/operations/template.py` — `new_project_from_template`
+- [x] **No Template Manager (list/rename/delete installed templates)** `src/camtasia/operations/template.py` — `TemplateManager`
+- [x] **PlaceholderMedia.set_source raises TypeError; no replace_with(media, mode) convenience** `src/camtasia/timeline/clips/placeholder.py` — `PlaceholderMedia.replace_with`
 
 ### Remove a Background from Your Video
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/video-background-removal/
 
-- [ ] **AI Background Removal visual effect not implemented (distinct from ChromaKey/MediaMatte)** `src/camtasia/effects/visual.py` — `@register_effect('BackgroundRemoval') class with intensity/threshold/edge-softness/invert parameters`
+- [x] **AI Background Removal visual effect not implemented (distinct from ChromaKey/MediaMatte)** `src/camtasia/effects/visual.py` — `@register_effect('BackgroundRemoval') class with intensity/threshold/edge-softness/invert parameters`
 - [ ] **No convenience add_background_removal() helper on BaseClip** `src/camtasia/timeline/clips/base.py` — `add_background_removal near add_media_matte`
-- [ ] **BACKGROUND_REMOVAL missing from types enum and schema effect-name enum** `src/camtasia/types.py` — `BACKGROUND_REMOVAL constant`
+- [x] **BACKGROUND_REMOVAL missing from types enum and schema effect-name enum** `src/camtasia/types.py` — `BACKGROUND_REMOVAL constant`
 - [ ] **ChromaKey effect marked unverified — no fixture-backed parameter validation** `src/camtasia/effects/visual.py` — `verify ChromaKey parameters against fixture`
 
 ### Explore the Timeline
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/video-editing/
 
-- [ ] **Timeline UI zoom level + fit-to-project** `src/camtasia/timeline/timeline.py` — `zoom_level / fit_to_project`
-- [ ] **Per-track and global track height** `src/camtasia/timeline/track.py` — `Track.track_height + Timeline.track_height_scale`
-- [ ] **Detach/Reattach Timeline (Ctrl+3)** `src/camtasia/timeline/timeline.py` — `detached / detach / reattach`
-- [ ] **J/K/L variable-speed playback transport** `src/camtasia/timeline/timeline.py` — `playback_rate / play / pause`
-- [ ] **Track enabled (eye icon) runtime on/off distinct from lock** `src/camtasia/timeline/track.py` — `Track.enabled`
+- [x] **Timeline UI zoom level + fit-to-project** `src/camtasia/timeline/timeline.py` — `zoom_level / fit_to_project`
+- [x] **Per-track and global track height** `src/camtasia/timeline/track.py` — `Track.track_height + Timeline.track_height_scale`
+- [x] **Detach/Reattach Timeline (Ctrl+3)** `src/camtasia/timeline/timeline.py` — `detached / detach / reattach`
+- [x] **J/K/L variable-speed playback transport** `src/camtasia/timeline/timeline.py` — `playback_rate / play / pause`
+- [x] **Track enabled (eye icon) runtime on/off distinct from lock** `src/camtasia/timeline/track.py` — `Track.enabled`
 - [ ] **Quiz/Marker view show-hide toggles** `src/camtasia/timeline/markers.py` — `markers_view_visible / quiz_view_visible`
-- [ ] **Track scroll position** `src/camtasia/timeline/timeline.py` — `Timeline.scroll_offset`
+- [x] **Track scroll position** `src/camtasia/timeline/timeline.py` — `Timeline.scroll_offset`
 
 ### Add a Transition
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/video-transitions/
 
-- [ ] **Gradient Wipe transition preset missing** `src/camtasia/timeline/transitions.py` — `add_gradient_wipe`
-- [ ] **Card Swipe transition preset missing** `src/camtasia/timeline/transitions.py` — `add_card_swipe`
-- [ ] **Cube Rotate transition preset missing** `src/camtasia/timeline/transitions.py` — `add_cube_rotate`
-- [ ] **Swap transition preset missing** `src/camtasia/timeline/transitions.py` — `add_swap`
+- [x] **Gradient Wipe transition preset missing** `src/camtasia/timeline/transitions.py` — `add_gradient_wipe`
+- [x] **Card Swipe transition preset missing** `src/camtasia/timeline/transitions.py` — `add_card_swipe`
+- [x] **Cube Rotate transition preset missing** `src/camtasia/timeline/transitions.py` — `add_cube_rotate`
+- [x] **Swap transition preset missing** `src/camtasia/timeline/transitions.py` — `add_swap`
 
 ### Watermark Your Videos
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/video-watermark/
 
-- [ ] **scale parameter on add_watermark** `src/camtasia/project.py` — `add_watermark(scale=...)`
-- [ ] **x_offset parameter on add_watermark** `src/camtasia/project.py` — `add_watermark(x_offset=...)`
-- [ ] **y_offset parameter on add_watermark** `src/camtasia/project.py` — `add_watermark(y_offset=...)`
-- [ ] **Text watermark variant (copyright/website)** `src/camtasia/project.py` — `add_text_watermark`
-- [ ] **builders/video_production.py add_watermark does not expose scale/position/text** `src/camtasia/builders/video_production.py` — `add_watermark`
+- [x] **scale parameter on add_watermark** `src/camtasia/project.py` — `add_watermark(scale=...)`
+- [x] **x_offset parameter on add_watermark** `src/camtasia/project.py` — `add_watermark(x_offset=...)`
+- [x] **y_offset parameter on add_watermark** `src/camtasia/project.py` — `add_watermark(y_offset=...)`
+- [x] **Text watermark variant (copyright/website)** `src/camtasia/project.py` — `add_text_watermark`
+- [x] **builders/video_production.py add_watermark does not expose scale/position/text** `src/camtasia/builders/video_production.py` — `add_watermark`
 
 ### Visual Effects Overview
 
@@ -705,7 +705,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/visual-effects/
 - [ ] **Sepia (Mac)** `src/camtasia/effects/visual.py` — `add @register_effect("Sepia") class`
 - [ ] **Border (colored border around media)** `src/camtasia/effects/visual.py` — `add @register_effect("Border") class with color RGBA + thickness parameters`
 - [ ] **CRT Monitor (scanlines + curvature)** `src/camtasia/effects/visual.py` — `add @register_effect("CRTMonitor") class with scanline/curvature/intensity parameters`
-- [ ] **Cursor Path Creator** `src/camtasia/effects/cursor.py` — `add @register_effect("CursorPathCreator") class`
+- [x] **Cursor Path Creator** `src/camtasia/effects/cursor.py` — `add @register_effect("CursorPathCreator") class`
 - [ ] **Device Frame effect (distinct from builders/device_frame.py overlay)** `src/camtasia/effects/visual.py` — `add @register_effect("DeviceFrame") class with frame-id parameter`
 - [ ] **Keystroke effect (Mac)** `src/camtasia/effects/visual.py` — `add @register_effect("Keystroke") class`
 - [ ] **Interactive Hotspot** `src/camtasia/effects/visual.py` — `add @register_effect("Hotspot") class with url/action/pause parameters`
@@ -717,12 +717,12 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/visual-effects/
 - [ ] **Torn Edge** `src/camtasia/effects/visual.py` — `add @register_effect("TornEdge") class with jaggedness/margin parameters`
 - [ ] **Window Spotlight (Mac)** `src/camtasia/effects/visual.py` — `add @register_effect("WindowSpotlight") class`
 - [ ] **Vignette** `src/camtasia/effects/visual.py` — `add @register_effect("Vignette") class with amount/falloff/color parameters`
-- [ ] **Background Removal (AI, non-green-screen) distinct from ChromaKey** `src/camtasia/effects/visual.py` — `add @register_effect("BackgroundRemoval") class`
+- [x] **Background Removal (AI, non-green-screen) distinct from ChromaKey** `src/camtasia/effects/visual.py` — `add @register_effect("BackgroundRemoval") class`
 - [ ] **Freeze Region (freeze a sub-region of the clip)** `src/camtasia/effects/visual.py` — `add @register_effect("FreezeRegion") class with positionX/positionY/width/height parameters`
 - [ ] **Motion Path as visual effect** `src/camtasia/effects/visual.py` — `add @register_effect("MotionPath") class with path keyframes`
 - [ ] **BlurRegion defined but not registered** `src/camtasia/effects/visual.py` — `add @register_effect("BlurRegion") decorator to existing class after fixture verification`
 
-_Total: 315 gaps across 54 tutorials (42 false positives removed during adversarial verification)._
+_Total: 139 remaining gaps (170 implemented) across 54 tutorials (42 false positives removed during adversarial verification)._
 
 ## High-Level API Improvement Ideas (from demo production)
 

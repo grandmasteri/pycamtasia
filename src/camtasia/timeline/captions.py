@@ -1,8 +1,8 @@
 """Caption styling configuration."""
 from __future__ import annotations
 
-import json
 from dataclasses import asdict, dataclass
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
