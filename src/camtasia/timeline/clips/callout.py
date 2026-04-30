@@ -429,3 +429,84 @@ class Callout(BaseClip):
         effect = get_behavior_preset(preset, self.duration)
         self._data.setdefault('effects', []).append(effect)
         return self
+
+    # ------------------------------------------------------------------
+    # Text properties (per-clip font/color/stroke/bg)
+    # ------------------------------------------------------------------
+
+    @property
+    def text_properties(self) -> dict[str, Any]:
+        """Per-clip text styling as a dict with font, color, stroke, and bg keys.
+
+        Returns:
+            Dict with keys ``font_name``, ``font_size``, ``fill_color``,
+            ``stroke_color``, ``background_color``.
+        """
+        d = self.definition
+        font = d.get('font', {})
+        return {
+            'font_name': font.get('name', ''),
+            'font_size': font.get('size', 0.0),
+            'fill_color': self.fill_color,
+            'stroke_color': self.stroke_color,
+            'background_color': self.background_color,
+        }
+
+    @text_properties.setter
+    def text_properties(self, value: dict[str, Any]) -> None:
+        """Set per-clip text styling from a dict.
+
+        Accepted keys: ``font_name``, ``font_size``, ``fill_color``,
+        ``stroke_color``, ``background_color``.
+        """
+        d = self._data.setdefault('def', {})  # type: ignore[typeddict-item]
+        if 'font_name' in value or 'font_size' in value:
+            font = d.setdefault('font', {})
+            if 'font_name' in value:
+                font['name'] = value['font_name']
+            if 'font_size' in value:
+                font['size'] = value['font_size']
+        if 'fill_color' in value:
+            self.fill_color = value['fill_color']
+        if 'stroke_color' in value:
+            self.stroke_color = value['stroke_color']
+        if 'background_color' in value:
+            bg = value['background_color']
+            d['background-color-red'] = bg[0]
+            d['background-color-green'] = bg[1]
+            d['background-color-blue'] = bg[2]
+            d['background-color-opacity'] = bg[3] if len(bg) > 3 else 1.0
+
+    @property
+    def background_color(self) -> tuple[float, float, float, float]:
+        """Background color as ``(r, g, b, opacity)``."""
+        d = self.definition
+
+        def _val(key: str, default: float) -> float:
+            v = d.get(key, default)
+            return float(v['defaultValue']) if isinstance(v, dict) else float(v)
+
+        return (
+            _val('background-color-red', 0.0),
+            _val('background-color-green', 0.0),
+            _val('background-color-blue', 0.0),
+            _val('background-color-opacity', 0.0),
+        )
+
+    # ------------------------------------------------------------------
+    # Canvas rect (position + size as a single tuple)
+    # ------------------------------------------------------------------
+
+    @property
+    def canvas_rect(self) -> tuple[float, float, float, float]:
+        """Position and size as ``(x, y, width, height)``."""
+        x, y = self.translation
+        return (x, y, self.width, self.height)
+
+    @canvas_rect.setter
+    def canvas_rect(self, value: tuple[float, float, float, float]) -> None:
+        """Set position and size from ``(x, y, width, height)``."""
+        x, y, w, h = value
+        self.move_to(x, y)
+        self.width = w
+        self.height = h
