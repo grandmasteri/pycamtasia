@@ -906,6 +906,79 @@ LeftClickSound = register_effect("LeftClickSound")(_click_sound_class("LeftClick
 RightClickSound = register_effect("RightClickSound")(_click_sound_class("RightClickSound"))
 
 
+@register_effect("CursorPathCreator")
+class CursorPathCreator(Effect):
+    """Cursor path creator effect — defines a synthetic cursor path via keyframes.
+
+    .. warning:: Unverified fixture — parameter names inferred from convention.
+
+    Use :meth:`add_point` to build a cursor path from scratch, then attach
+    the effect to any clip via :meth:`BaseClip.add_cursor_path_creator`.
+
+    Parameters:
+        cursorPath (point array stored as keyframes)
+    """
+
+    @property
+    def keyframes(self) -> list[dict[str, float]]:
+        """Return the cursor path as a list of ``{time, x, y}`` dicts.
+
+        Times are in seconds; coordinates are canvas pixels.
+        """
+        from camtasia.timing import ticks_to_seconds
+        path = self.parameters.get('cursorPath', {})
+        result: list[dict[str, float]] = []
+        for kf in path.get('keyframes', []):
+            val = kf.get('value', [0, 0, 0])
+            result.append({
+                'time': ticks_to_seconds(kf['time']),
+                'x': float(val[0]),
+                'y': float(val[1]),
+            })
+        return result
+
+    def add_point(self, time_seconds: float, x: float, y: float) -> None:
+        """Append a cursor position keyframe.
+
+        Args:
+            time_seconds: Time in seconds.
+            x: Cursor X coordinate.
+            y: Cursor Y coordinate.
+        """
+        from camtasia.timing import seconds_to_ticks
+        ticks = seconds_to_ticks(time_seconds)
+        params = self._data.setdefault('parameters', {})
+        path = params.setdefault('cursorPath', {
+            'type': 'point', 'defaultValue': [0, 0, 0], 'keyframes': [],
+        })
+        kfs: list[dict] = path.setdefault('keyframes', [])
+        new_kf = {
+            'endTime': ticks, 'time': ticks,
+            'value': [x, y, 0], 'duration': 0,
+        }
+        # Insert in sorted order
+        idx = 0
+        for i, kf in enumerate(kfs):
+            if kf['time'] > ticks:
+                break
+            idx = i + 1
+        kfs.insert(idx, new_kf)
+        # Recompute durations
+        for i in range(len(kfs)):
+            if i + 1 < len(kfs):
+                kfs[i]['duration'] = kfs[i + 1]['time'] - kfs[i]['time']
+                kfs[i]['endTime'] = kfs[i + 1]['time']
+            else:
+                kfs[i]['duration'] = 0
+                kfs[i]['endTime'] = kfs[i]['time']
+
+    def clear_points(self) -> None:
+        """Remove all cursor path keyframes."""
+        path = self._data.get('parameters', {}).get('cursorPath', {})
+        if 'keyframes' in path:
+            path['keyframes'] = []
+
+
 @register_effect("RightClickScaling")
 class RightClickScaling(Effect):
     """Right-click cursor scaling effect (mirror of LeftClickScaling).

@@ -1,4 +1,4 @@
-from camtasia.builders.device_frame import add_device_frame
+from camtasia.builders.device_frame import add_device_frame, remove_device_frame
 from camtasia.builders.dynamic_background import (
     DynamicBackgroundAsset,
     add_dynamic_background,
@@ -21,4 +21,5 @@ __all__ = [
     'build_from_screenplay',
     'import_powerpoint',
     'import_slide_images',
+    'remove_device_frame',
 ]
