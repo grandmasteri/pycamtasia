@@ -2863,6 +2863,194 @@ class Track:
             partitioned_clips[clip.clip_type].append(clip)
         return dict(partitioned_clips)
 
+    # ------------------------------------------------------------------
+    # Selection / cut / copy / paste
+    # ------------------------------------------------------------------
+
+    @property
+    def selection(self) -> dict[str, float] | None:
+        """Current timeline selection, or ``None`` if cleared.
+
+        Returns a dict with ``start`` and ``end`` keys (seconds).
+        """
+        meta = self._attributes.get('metadata', {})
+        sel = meta.get('timeline_selection')
+        if sel is None:
+            return None
+        return dict(sel)
+
+    def set_selection(self, start_seconds: float, end_seconds: float) -> None:
+        """Set a timeline selection range on this track.
+
+        Args:
+            start_seconds: Selection start in seconds.
+            end_seconds: Selection end in seconds.
+
+        Raises:
+            ValueError: If start >= end.
+        """
+        if start_seconds >= end_seconds:
+            raise ValueError(f'start must be < end, got {start_seconds} >= {end_seconds}')
+        self._attributes.setdefault('metadata', {})['timeline_selection'] = {
+            'start': start_seconds,
+            'end': end_seconds,
+        }
+
+    def clear_selection(self) -> None:
+        """Clear the current timeline selection."""
+        meta = self._attributes.get('metadata', {})
+        meta.pop('timeline_selection', None)
+
+    def _clips_in_selection(self) -> list[dict[str, Any]]:
+        """Return raw media dicts that overlap the current selection."""
+        sel = self.selection
+        if sel is None:
+            return []
+        sel_start = seconds_to_ticks(sel['start'])
+        sel_end = seconds_to_ticks(sel['end'])
+        result: list[dict[str, Any]] = []
+        for m in self._data.get('medias', []):
+            clip_start = m.get('start', 0)
+            clip_end = clip_start + m.get('duration', 0)
+            if clip_start < sel_end and clip_end > sel_start:
+                result.append(m)
+        return result
+
+    def cut_selection(self) -> list[dict[str, Any]]:
+        """Remove clips overlapping the selection and return their dicts.
+
+        Returns:
+            List of deep-copied clip dicts that were removed.
+
+        Raises:
+            ValueError: If no selection is set.
+        """
+        if self.selection is None:
+            raise ValueError('No selection set')
+        clips = self._clips_in_selection()
+        result = [copy.deepcopy(m) for m in clips]
+        for m in clips:
+            self.remove_clip(m['id'])
+        self.clear_selection()
+        return result
+
+    def copy_selection(self) -> list[dict[str, Any]]:
+        """Return deep copies of clip dicts overlapping the selection.
+
+        Raises:
+            ValueError: If no selection is set.
+        """
+        if self.selection is None:
+            raise ValueError('No selection set')
+        return [copy.deepcopy(m) for m in self._clips_in_selection()]
+
+    def paste_at(self, clip_dicts: list[dict[str, Any]], time_seconds: float) -> list[BaseClip]:
+        """Insert clip dicts starting at the given time.
+
+        Each clip dict is deep-copied, assigned a fresh ID, and its
+        start time is offset so the earliest clip begins at
+        *time_seconds*.
+
+        Args:
+            clip_dicts: List of clip dicts (e.g. from :meth:`cut_selection`).
+            time_seconds: Timeline position for the first clip.
+
+        Returns:
+            List of newly created clip objects.
+        """
+        if not clip_dicts:
+            return []
+        earliest = min(d.get('start', 0) for d in clip_dicts)
+        offset = seconds_to_ticks(time_seconds) - earliest
+        placed: list[BaseClip] = []
+        for d in clip_dicts:
+            new_data = copy.deepcopy(d)
+            new_data['start'] = new_data.get('start', 0) + offset
+            new_data['id'] = self._next_clip_id()
+            _propagate_start_to_unified(new_data)
+            self._data.setdefault('medias', []).append(new_data)
+            placed.append(clip_from_dict(new_data))
+        return placed
+
+    # ------------------------------------------------------------------
+    # Exported frame / ripple replace
+    # ------------------------------------------------------------------
+
+    def add_exported_frame(self, source_clip_id: int, at_seconds: float) -> IMFile:
+        """Create an IMFile snapshot placeholder at the given time.
+
+        The clip references the source clip's source ID and uses a
+        placeholder path convention. Duration defaults to 5 seconds.
+
+        Args:
+            source_clip_id: ID of the clip to snapshot from.
+            at_seconds: Timeline position for the snapshot.
+
+        Returns:
+            The newly created IMFile clip.
+
+        Raises:
+            KeyError: If no clip with *source_clip_id* exists.
+        """
+        source = self.find_clip(source_clip_id)
+        if source is None:
+            raise KeyError(f'No clip with id={source_clip_id}')
+        src_id = source.source_id if source.source_id is not None else 0
+        clip = self.add_image(
+            src_id,
+            at_seconds,
+            5.0,
+            metadata={'exported_frame': {'source_clip_id': source_clip_id, 'at_seconds': at_seconds}},
+        )
+        return clip
+
+    def ripple_replace_media(
+        self,
+        old_clip_id: int,
+        new_media: dict[str, Any],
+        *,
+        mode: str = 'ripple',
+    ) -> BaseClip:
+        """Replace a clip with new media, optionally rippling timing.
+
+        In ``'ripple'`` mode, subsequent clips shift to accommodate
+        the duration difference. In ``'overwrite'`` mode, only the
+        clip itself is replaced (no ripple).
+
+        Args:
+            old_clip_id: ID of the clip to replace.
+            new_media: Dict describing the replacement clip.
+            mode: ``'ripple'`` (default) or ``'overwrite'``.
+
+        Returns:
+            The replacement clip.
+
+        Raises:
+            KeyError: If no clip with *old_clip_id* exists.
+            ValueError: If *mode* is not recognized.
+        """
+        if mode not in ('ripple', 'overwrite'):
+            raise ValueError(f"mode must be 'ripple' or 'overwrite', got {mode!r}")
+        old_clip = self.find_clip(old_clip_id)
+        if old_clip is None:
+            raise KeyError(f'No clip with id={old_clip_id}')
+        old_duration = old_clip.duration
+        new_data = copy.deepcopy(new_media)
+        new_data['start'] = old_clip.start
+        new_duration = new_data.get('duration', old_duration)
+        if mode == 'ripple' and new_duration != old_duration:
+            delta = new_duration - old_duration
+            for m in self._data.get('medias', []):
+                if m.get('start', 0) > old_clip.start:
+                    m['start'] = m.get('start', 0) + delta
+                    _propagate_start_to_unified(m)
+            self._data['transitions'] = []
+        self.remove_clip(old_clip_id)
+        new_data['id'] = self._next_clip_id()
+        _propagate_start_to_unified(new_data)
+        self._data.setdefault('medias', []).append(new_data)
+        return clip_from_dict(new_data)
+
 
 class _ClipAccessor:
     """Lightweight iterable/indexable accessor over a track's clips."""

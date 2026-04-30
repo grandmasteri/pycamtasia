@@ -357,3 +357,51 @@ def snap_to_grid(track: Track, grid_seconds: float = 1.0) -> None:
             shifted = True
     if shifted:
         track._data['transitions'] = []
+
+
+def ripple_replace_in_group(
+    group: Any,
+    clip_id: int,
+    new_media: dict[str, Any],
+) -> bool:
+    """Replace a clip inside a Group's internal tracks, rippling timing.
+
+    Recurses into nested Group clips. Returns ``True`` if the clip was
+    found and replaced, ``False`` otherwise.
+
+    Args:
+        group: A Group clip (or any object with a ``_data`` dict
+            containing ``tracks``).
+        clip_id: ID of the clip to replace.
+        new_media: Dict describing the replacement media.
+
+    Returns:
+        ``True`` if the replacement was made.
+    """
+    import copy as _copy
+
+    for inner_track in group._data.get('tracks', []):
+        medias = inner_track.get('medias', [])
+        for i, m in enumerate(medias):
+            if m.get('id') == clip_id:
+                old_duration = m.get('duration', 0)
+                replacement = _copy.deepcopy(new_media)
+                replacement['start'] = m.get('start', 0)
+                new_duration = replacement.get('duration', old_duration)
+                delta = new_duration - old_duration
+                replacement['id'] = clip_id
+                _propagate_start_to_unified(replacement)
+                medias[i] = replacement
+                if delta != 0:
+                    for other in medias:
+                        if other is not replacement and other.get('start', 0) > replacement['start']:
+                            other['start'] = other.get('start', 0) + delta
+                            _propagate_start_to_unified(other)
+                return True
+            # Recurse into nested Groups
+            if m.get('_type') == 'Group':
+                from camtasia.timeline.clips import clip_from_dict
+                nested = clip_from_dict(m)
+                if ripple_replace_in_group(nested, clip_id, new_media):
+                    return True
+    return False
