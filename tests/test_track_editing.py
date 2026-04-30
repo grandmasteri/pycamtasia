@@ -1,8 +1,6 @@
 """Tests for Track selection/cut/copy/paste, exported frame, and ripple replace."""
 from __future__ import annotations
 
-import copy
-
 import pytest
 
 from camtasia.operations.layout import ripple_replace_in_group
@@ -98,7 +96,7 @@ class TestCopySelection:
 class TestPasteAt:
     def test_paste_inserts_clips_at_time(self, project):
         track = project.timeline.get_or_create_track('Video')
-        clip = track.add_image(1, 0.0, 2.0)
+        track.add_image(1, 0.0, 2.0)
         track.set_selection(0.0, 3.0)
         copied = track.copy_selection()
         pasted = track.paste_at(copied, 5.0)

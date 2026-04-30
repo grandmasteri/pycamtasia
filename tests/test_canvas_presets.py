@@ -53,7 +53,7 @@ class TestPlatform:
     """Tests for the Platform enum."""
 
     def test_members(self):
-        assert set(p.value for p in Platform) == {
+        assert {p.value for p in Platform} == {
             'instagram_reels', 'youtube_shorts', 'tiktok',
         }
 

@@ -461,7 +461,6 @@ def replace_placeholder(
     """
     from fractions import Fraction
 
-    from camtasia.timing import EDIT_RATE
 
     valid_modes = ('ripple', 'clip_speed', 'from_end', 'from_start')
     if mode not in valid_modes:

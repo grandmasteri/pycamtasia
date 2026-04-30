@@ -78,7 +78,7 @@ class TestImportLibzipLibrary:
         assert result.assets[0].name == 'asset1'
 
     def test_import_merges_into_existing(self, project: Project, tmp_path):
-        from camtasia.library import Library, Libraries, export_libzip
+        from camtasia.library import Libraries, Library, export_libzip
 
         # Set up existing library on project
         project._libraries = Libraries()

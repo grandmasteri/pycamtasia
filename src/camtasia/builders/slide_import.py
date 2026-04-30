@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from camtasia.timing import EDIT_RATE, seconds_to_ticks
+from camtasia.timing import seconds_to_ticks
 
 if TYPE_CHECKING:
     from camtasia.project import Project

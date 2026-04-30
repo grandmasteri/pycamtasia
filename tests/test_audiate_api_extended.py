@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 from camtasia.audiate.project import SUPPORTED_TRANSLATION_LANGUAGES, AudiateProject
-from camtasia.audiate.transcript import Transcript, Word
+from camtasia.audiate.transcript import Transcript
 from camtasia.operations.sync import (
     delete_words_from_timeline,
     send_media_to_audiate,
@@ -61,7 +64,7 @@ def _make_audiate_data(
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def audiate_file(tmp_path: Path) -> Path:
     data = _make_audiate_data()
     fp = tmp_path / "test.audiate"
@@ -69,7 +72,7 @@ def audiate_file(tmp_path: Path) -> Path:
     return fp
 
 
-@pytest.fixture()
+@pytest.fixture
 def audiate_with_scenes(tmp_path: Path) -> Path:
     scenes = [{"start": 0.0, "end": 5.0, "label": "intro"}, {"start": 5.0, "end": 10.0, "label": "body"}]
     data = _make_audiate_data(smart_scenes=scenes)

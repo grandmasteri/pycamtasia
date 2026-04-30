@@ -315,7 +315,6 @@ class MediaBin:
         Returns:
             The :class:`~camtasia.library.LibraryAsset` created.
         """
-        from camtasia.library.library import Library as _Library
 
         return library.add_asset(media._data, media.identity)
 

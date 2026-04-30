@@ -51,7 +51,7 @@ class SafeZone:
     platform: Platform
 
 
-#: Default safe zones per platform (for 1080×1920 canvas).
+#: Default safe zones per platform (for 1080x1920 canvas).
 _SAFE_ZONES: dict[Platform, SafeZone] = {
     Platform.INSTAGRAM_REELS: SafeZone(top=250, bottom=400, left=40, right=40, platform=Platform.INSTAGRAM_REELS),
     Platform.YOUTUBE_SHORTS: SafeZone(top=200, bottom=300, left=40, right=40, platform=Platform.YOUTUBE_SHORTS),

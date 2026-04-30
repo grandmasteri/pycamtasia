@@ -14,7 +14,7 @@ class TestSetVerticalPreset:
     """Tests for Project.set_vertical_preset()."""
 
     @pytest.mark.parametrize(
-        'preset, expected_w, expected_h',
+        ("preset", "expected_w", "expected_h"),
         [
             ('9:16_FHD', 1080, 1920),
             ('9:16_HD', 720, 1280),

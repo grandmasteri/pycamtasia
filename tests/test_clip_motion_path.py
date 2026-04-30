@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import pytest
-
 from camtasia.timeline.clips import BaseClip, clip_from_dict
 from camtasia.timing import seconds_to_ticks
 

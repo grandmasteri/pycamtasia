@@ -283,7 +283,7 @@ def delete_words_from_timeline(
         if word is not None and word.end is not None:
             spans.append((word.start, word.end))
 
-    for start, end in reversed(sorted(spans)):
+    for start, end in sorted(spans, reverse=True):
         for track in camtasia_project.timeline.tracks:
             ripple_delete_range(track, start, end)
 

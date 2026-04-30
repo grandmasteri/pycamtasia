@@ -1,10 +1,6 @@
 """Tests for Media zoom_metadata property."""
 from __future__ import annotations
 
-from pathlib import Path
-
-import pytest
-
 from camtasia.media_bin import Media
 
 

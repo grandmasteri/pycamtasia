@@ -6,7 +6,6 @@ import pytest
 from camtasia.timeline.clips.screen_recording import CursorType, ScreenIMFile
 from camtasia.timing import seconds_to_ticks
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
