@@ -15,7 +15,9 @@ import warnings
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator
 
+    from camtasia.canvas_presets import SafeZone
     from camtasia.history import ChangeHistory
+    from camtasia.library import Library, LibraryAsset
     from camtasia.timeline.clips import BaseClip
     from camtasia.timeline.clips.group import Group
     from camtasia.timeline.track import Track
@@ -3038,6 +3040,143 @@ class Project:
             raise KeyError(f'Clip not found: {clip_id}')
         _, clip = result
         clip.add_noise_removal(amount=amount)
+
+    # ------------------------------------------------------------------
+    # Vertical presets & safe zones
+    # ------------------------------------------------------------------
+
+    def set_vertical_preset(self, preset: str) -> None:
+        """Set canvas dimensions from a named aspect-ratio preset.
+
+        Args:
+            preset: One of ``'9:16_FHD'``, ``'9:16_HD'``, ``'4:5'``,
+                ``'1:1'``, ``'16:9_FHD'``.
+
+        Raises:
+            ValueError: Unknown preset name.
+        """
+        from camtasia.canvas_presets import PRESET_NAMES
+
+        if preset not in PRESET_NAMES:
+            raise ValueError(
+                f"Unknown preset {preset!r}. Valid: {sorted(PRESET_NAMES)}"
+            )
+        w, h = PRESET_NAMES[preset].value
+        self.width = w
+        self.height = h
+
+    def get_safe_zone(self, platform: str) -> SafeZone:
+        """Return the safe zone for a social-media platform.
+
+        Args:
+            platform: Platform identifier (e.g. ``'instagram_reels'``).
+
+        Returns:
+            A :class:`~camtasia.canvas_presets.SafeZone` instance.
+        """
+        from camtasia.canvas_presets import get_safe_zone as _get_safe_zone
+
+        return _get_safe_zone(platform)
+
+    # ------------------------------------------------------------------
+    # Zoom recording import
+    # ------------------------------------------------------------------
+
+    def import_zoom_recording(
+        self,
+        path: Path | str,
+        *,
+        meeting_id: str | None = None,
+        host: str | None = None,
+        topic: str | None = None,
+        date: str | None = None,
+    ) -> Media:
+        """Import a Zoom recording MP4 and attach metadata.
+
+        Args:
+            path: Path to the ``.mp4`` file.
+            meeting_id: Zoom meeting ID.
+            host: Meeting host name.
+            topic: Meeting topic.
+            date: Recording date string.
+
+        Returns:
+            The imported :class:`Media` entry with Zoom metadata attached.
+        """
+        media = self.import_media(path)
+        zoom_meta: dict[str, str] = {}
+        if meeting_id is not None:
+            zoom_meta['meeting_id'] = meeting_id
+        if host is not None:
+            zoom_meta['host'] = host
+        if topic is not None:
+            zoom_meta['topic'] = topic
+        if date is not None:
+            zoom_meta['date'] = date
+        if zoom_meta:
+            media._data['_zoomMeta'] = zoom_meta
+        return media
+
+    # ------------------------------------------------------------------
+    # Library helpers
+    # ------------------------------------------------------------------
+
+    def import_libzip_library(self, path: Path | str) -> Library:
+        """Import a pycamtasia ``.libzip`` archive into a project-scoped library.
+
+        If the project already has a default library, assets are merged
+        into it. Otherwise a new library is created.
+
+        Args:
+            path: Path to the ``.libzip`` file.
+
+        Returns:
+            The :class:`~camtasia.library.Library` containing imported assets.
+        """
+        from camtasia.library import import_libzip
+
+        if not hasattr(self, '_libraries'):
+            from camtasia.library import Libraries
+            self._libraries = Libraries()
+
+        try:
+            target = self._libraries.default
+        except RuntimeError:
+            target = None
+
+        lib = import_libzip(Path(path), target_library=target, create_new=True)
+        if target is None:
+            self._libraries._libraries[lib.name] = lib
+            self._libraries._default_name = lib.name
+        return lib
+
+    def save_timeline_group_to_library(
+        self,
+        group_clip: Group,
+        name: str,
+        *,
+        library: Library | None = None,
+    ) -> LibraryAsset:
+        """Save a timeline group clip as a reusable library asset.
+
+        Args:
+            group_clip: A :class:`~camtasia.timeline.clips.group.Group` clip.
+            name: Display name for the library asset.
+            library: Target library. If ``None``, uses the project's
+                default library (creating one if needed).
+
+        Returns:
+            The newly created :class:`~camtasia.library.LibraryAsset`.
+        """
+        if library is None:
+            if not hasattr(self, '_libraries'):
+                from camtasia.library import Libraries
+                self._libraries = Libraries()
+            try:
+                library = self._libraries.default
+            except RuntimeError:
+                library = self._libraries.create('Default')
+        return library.add_asset(group_clip._data, name)
 
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
