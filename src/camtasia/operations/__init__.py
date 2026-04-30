@@ -32,6 +32,7 @@ from camtasia.operations.layout import (
     snap_to_grid,
 )
 from camtasia.operations.merge import merge_tracks
+from camtasia.operations.slide_markers import mark_slides_from_presentation
 from camtasia.operations.speed import rescale_project, set_audio_speed
 from camtasia.operations.sync import (
     SyncSegment,
@@ -75,6 +76,7 @@ __all__ = [
     "generate_captions_from_audio",
     "install_camtemplate",
     "list_installed_templates",
+    "mark_slides_from_presentation",
     "match_marker_to_transcript",
     "merge_tracks",
     "move_all",
