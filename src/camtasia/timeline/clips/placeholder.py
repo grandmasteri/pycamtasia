@@ -13,6 +13,17 @@ class PlaceholderMedia(BaseClip):
         raise TypeError('Cannot set_source on PlaceholderMedia; replace the clip instead')
 
     @property
+    def title(self) -> str:
+        """Title text for the placeholder clip."""
+        val = self._data.get('metadata', {}).get('placeHolderTitle', '')
+        return val if val is not None else ''
+
+    @title.setter
+    def title(self, value: str) -> None:
+        """Set the title text for the placeholder clip."""
+        self._data.setdefault('metadata', {})['placeHolderTitle'] = value
+
+    @property
     def subtitle(self) -> str:
         """Subtitle text for the placeholder clip."""
         val = self._data.get('metadata', {}).get('placeHolderSubTitle', '')

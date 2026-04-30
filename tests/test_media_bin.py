@@ -583,3 +583,209 @@ class TestRapidImportNoCollision:
 
         # Both media records must have distinct src paths
         assert m1._data['src'] != m2._data['src']
+
+
+# ── Media.rename ───────────────────────────────────────────────────
+
+
+class TestMediaRename:
+    def test_rename_updates_identity(self):
+        entry = _make_media_entry(src="./media/old_name.mov")
+        media = Media(entry)
+        media.rename("new_name")
+        assert media.identity == "new_name"
+
+    def test_rename_preserves_extension(self):
+        entry = _make_media_entry(src="./media/clip.mp4")
+        media = Media(entry)
+        media.rename("renamed")
+        assert str(media.source).endswith(".mp4")
+
+    def test_rename_preserves_directory(self):
+        entry = _make_media_entry(src="./media/subdir/clip.mov")
+        media = Media(entry)
+        media.rename("new")
+        assert media._data["src"] == "media/subdir/new.mov"
+
+
+# ── MediaBin.unused_media / delete_unused ──────────────────────────
+
+
+class _FakeClip:
+    def __init__(self, source_id):
+        self._source_id = source_id
+
+    @property
+    def source_id(self):
+        return self._source_id
+
+
+class _FakeTimeline:
+    def __init__(self, source_ids):
+        self._clips = [_FakeClip(sid) for sid in source_ids]
+
+    def all_clips(self):
+        return self._clips
+
+
+class TestUnusedMedia:
+    def test_all_unused_when_timeline_empty(self):
+        entries = [_make_media_entry(media_id=1), _make_media_entry(media_id=2)]
+        mb = MediaBin(entries, Path("/fake"))
+        timeline = _FakeTimeline([])
+        unused = mb.unused_media(timeline)
+        assert len(unused) == 2
+
+    def test_none_unused_when_all_referenced(self):
+        entries = [_make_media_entry(media_id=1), _make_media_entry(media_id=2)]
+        mb = MediaBin(entries, Path("/fake"))
+        timeline = _FakeTimeline([1, 2])
+        assert mb.unused_media(timeline) == []
+
+    def test_partial_unused(self):
+        entries = [
+            _make_media_entry(media_id=1, src="./a.mov"),
+            _make_media_entry(media_id=2, src="./b.mov"),
+            _make_media_entry(media_id=3, src="./c.mov"),
+        ]
+        mb = MediaBin(entries, Path("/fake"))
+        timeline = _FakeTimeline([2])
+        unused = mb.unused_media(timeline)
+        assert {m.id for m in unused} == {1, 3}
+
+
+class TestDeleteUnused:
+    def test_delete_unused_removes_entries(self):
+        entries = [
+            _make_media_entry(media_id=1, src="./a.mov"),
+            _make_media_entry(media_id=2, src="./b.mov"),
+        ]
+        mb = MediaBin(entries, Path("/fake"))
+        timeline = _FakeTimeline([1])
+        removed = mb.delete_unused(timeline)
+        assert removed == ["b"]
+        assert len(mb) == 1
+
+    def test_delete_unused_returns_empty_when_all_used(self):
+        entries = [_make_media_entry(media_id=1)]
+        mb = MediaBin(entries, Path("/fake"))
+        timeline = _FakeTimeline([1])
+        assert mb.delete_unused(timeline) == []
+
+    def test_delete_unused_clips_with_none_source_id(self):
+        """Clips with source_id=None should not prevent media from being unused."""
+        entries = [_make_media_entry(media_id=1, src="./a.mov")]
+        mb = MediaBin(entries, Path("/fake"))
+        timeline = _FakeTimeline([None])
+        removed = mb.delete_unused(timeline)
+        assert removed == ["a"]
+
+
+# ── MediaBin.sorted ────────────────────────────────────────────────
+
+
+class TestMediaBinSorted:
+    def _make_bin(self):
+        entries = [
+            _make_media_entry(media_id=1, src="./charlie.mov", rect=[0, 0, 640, 480], last_mod="20200101T120000"),
+            _make_media_entry(media_id=2, src="./alpha.mov", rect=[0, 0, 1920, 1080], last_mod="20190101T120000"),
+            _make_media_entry(media_id=3, src="./bravo.mov", rect=[0, 0, 1280, 720], last_mod="20210101T120000"),
+        ]
+        return MediaBin(entries, Path("/fake"))
+
+    def test_sorted_by_name(self):
+        mb = self._make_bin()
+        result = mb.sorted(key='name')
+        assert [m.identity for m in result] == ['alpha', 'bravo', 'charlie']
+
+    def test_sorted_by_name_reverse(self):
+        mb = self._make_bin()
+        result = mb.sorted(key='name', reverse=True)
+        assert [m.identity for m in result] == ['charlie', 'bravo', 'alpha']
+
+    def test_sorted_by_width(self):
+        mb = self._make_bin()
+        result = mb.sorted(key='width')
+        assert [m.dimensions[0] for m in result] == [640, 1280, 1920]
+
+    def test_sorted_by_height(self):
+        mb = self._make_bin()
+        result = mb.sorted(key='height')
+        assert [m.dimensions[1] for m in result] == [480, 720, 1080]
+
+    def test_sorted_by_date(self):
+        mb = self._make_bin()
+        result = mb.sorted(key='date')
+        assert [m.id for m in result] == [2, 1, 3]
+
+    def test_sorted_by_duration(self):
+        entries = [
+            _make_media_entry(media_id=1, src="./a.mov", range_vals=[0, 3000]),
+            _make_media_entry(media_id=2, src="./b.mov", range_vals=[0, 1000]),
+        ]
+        mb = MediaBin(entries, Path("/fake"))
+        result = mb.sorted(key='duration')
+        assert [m.id for m in result] == [2, 1]
+
+    def test_sorted_invalid_key_raises(self):
+        mb = MediaBin([], Path("/fake"))
+        with pytest.raises(ValueError, match="Invalid sort key"):
+            mb.sorted(key='invalid')
+
+
+# ── MediaBin.import_folder / import_many ───────────────────────────
+
+
+class TestImportMany:
+    def test_import_many_imports_all_files(self, project, tmp_path):
+        files = []
+        for name in ('a.png', 'b.png'):
+            f = tmp_path / name
+            f.write_bytes(b'\x89PNG\r\n\x1a\n')
+            files.append(f)
+        initial = len(project.media_bin)
+        result = project.media_bin.import_many(files)
+        assert len(result) == 2
+        assert len(project.media_bin) == initial + 2
+
+    def test_import_many_empty_list(self, project):
+        result = project.media_bin.import_many([])
+        assert result == []
+
+
+class TestImportFolder:
+    def test_import_folder_non_recursive(self, project, tmp_path):
+        (tmp_path / 'a.png').write_bytes(b'\x89PNG\r\n\x1a\n')
+        (tmp_path / 'b.txt').write_text('not media')
+        sub = tmp_path / 'sub'
+        sub.mkdir()
+        (sub / 'c.png').write_bytes(b'\x89PNG\r\n\x1a\n')
+        initial = len(project.media_bin)
+        result = project.media_bin.import_folder(tmp_path, recursive=False)
+        assert len(result) == 1  # only a.png, not sub/c.png or b.txt
+        assert len(project.media_bin) == initial + 1
+
+    def test_import_folder_recursive(self, project, tmp_path):
+        import_dir = tmp_path / 'import_src'
+        import_dir.mkdir()
+        (import_dir / 'a.png').write_bytes(b'\x89PNG\r\n\x1a\n')
+        sub = import_dir / 'sub'
+        sub.mkdir()
+        (sub / 'b.png').write_bytes(b'\x89PNG\r\n\x1a\n')
+        initial = len(project.media_bin)
+        result = project.media_bin.import_folder(import_dir, recursive=True)
+        assert len(result) == 2
+        assert len(project.media_bin) == initial + 2
+
+    def test_import_folder_custom_extensions(self, project, tmp_path):
+        import shutil
+        import_dir = tmp_path / 'import_src'
+        import_dir.mkdir()
+        (import_dir / 'a.png').write_bytes(b'\x89PNG\r\n\x1a\n')
+        shutil.copy(FIXTURES / 'empty.wav', import_dir / 'b.wav')
+        result = project.media_bin.import_folder(import_dir, extensions=('.wav',))
+        assert len(result) == 1
+
+    def test_import_folder_empty_dir(self, project, tmp_path):
+        result = project.media_bin.import_folder(tmp_path)
+        assert result == []

@@ -408,6 +408,74 @@ class TestTransitionConvenienceAdds:
         assert t.name == "SphericalSpin"
 
 
+class TestNewTransitionPresets:
+    def _tl(self) -> TransitionList:
+        return TransitionList({"transitions": []})
+
+    def test_add_gradient_wipe_roundtrip(self):
+        tl = self._tl()
+        t = tl.add_gradient_wipe(1, 2)
+        assert isinstance(t, Transition)
+        assert tl[0] == t
+
+    def test_add_gradient_wipe_effect_name(self):
+        t = self._tl().add_gradient_wipe(1, 2)
+        assert t.name == "GradientWipe"
+
+    def test_add_gradient_wipe_duration(self):
+        t = self._tl().add_gradient_wipe(1, 2, duration_seconds=2.0)
+        assert t.duration_seconds == pytest.approx(2.0)
+
+    def test_add_card_swipe_roundtrip(self):
+        tl = self._tl()
+        t = tl.add_card_swipe(1, 2)
+        assert isinstance(t, Transition)
+        assert tl[0] == t
+
+    def test_add_card_swipe_effect_name(self):
+        t = self._tl().add_card_swipe(1, 2)
+        assert t.name == "CardSwipe"
+
+    def test_add_card_swipe_duration(self):
+        t = self._tl().add_card_swipe(1, 2, duration_seconds=1.5)
+        assert t.duration_seconds == pytest.approx(1.5)
+
+    def test_add_cube_rotate_roundtrip(self):
+        tl = self._tl()
+        t = tl.add_cube_rotate(1, 2)
+        assert isinstance(t, Transition)
+        assert tl[0] == t
+
+    def test_add_cube_rotate_effect_name(self):
+        t = self._tl().add_cube_rotate(1, 2)
+        assert t.name == "CubeRotate"
+
+    def test_add_cube_rotate_duration(self):
+        t = self._tl().add_cube_rotate(1, 2, duration_seconds=0.75)
+        assert t.duration_seconds == pytest.approx(0.75)
+
+    def test_add_swap_roundtrip(self):
+        tl = self._tl()
+        t = tl.add_swap(1, 2)
+        assert isinstance(t, Transition)
+        assert tl[0] == t
+
+    def test_add_swap_effect_name(self):
+        t = self._tl().add_swap(1, 2)
+        assert t.name == "Swap"
+
+    def test_add_swap_duration(self):
+        t = self._tl().add_swap(1, 2, duration_seconds=3.0)
+        assert t.duration_seconds == pytest.approx(3.0)
+
+    def test_default_duration_is_one_second(self):
+        """All four new presets default to 1.0s."""
+        tl = self._tl()
+        for method in (tl.add_gradient_wipe, tl.add_card_swipe, tl.add_cube_rotate, tl.add_swap):
+            t = method(1, 2)
+            assert t.duration_seconds == pytest.approx(1.0)
+
+
 class TestTransitionListClear:
     def test_clear_removes_all(self):
         data = {"transitions": [_fade_through_black_record(), _fade_through_black_record()]}

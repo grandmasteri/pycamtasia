@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from camtasia.types import ClipType, EffectName
 
 from camtasia.annotations import callouts
-from camtasia.timeline.clips import AMFile, BaseClip, Callout, Group, IMFile, VMFile, clip_from_dict
+from camtasia.timeline.clips import AMFile, BaseClip, Callout, Group, IMFile, PlaceholderMedia, VMFile, clip_from_dict
 from camtasia.timeline.clips.callout import _WEIGHT_REVERSE
 from camtasia.timeline.marker import Marker
 from camtasia.timeline.markers import MarkerList
@@ -1475,6 +1475,88 @@ class Track:
             trackNumber=0,
         )
         return freeze_clip
+
+    def add_placeholder(
+        self,
+        start_seconds: float,
+        duration_seconds: float,
+        *,
+        title: str = '',
+        note: str = '',
+    ) -> PlaceholderMedia:
+        """Add a placeholder clip to the track.
+
+        Args:
+            start_seconds: Timeline position in seconds.
+            duration_seconds: Playback duration in seconds.
+            title: Optional title text for the placeholder.
+            note: Optional subtitle/note text for the placeholder.
+
+        Returns:
+            The newly created PlaceholderMedia clip.
+        """
+        metadata: dict[str, Any] = {}
+        if title:
+            metadata['placeHolderTitle'] = title
+        if note:
+            metadata['placeHolderSubTitle'] = note
+        clip = self.add_clip(
+            'PlaceholderMedia', None,
+            seconds_to_ticks(start_seconds),
+            seconds_to_ticks(duration_seconds),
+            metadata=metadata,
+        )
+        return clip  # type: ignore[return-value]
+
+    def freeze_at_clip_start(self, clip_id: int, *, freeze_duration_seconds: float) -> None:
+        """Add a freeze frame at the start of a clip.
+
+        Args:
+            clip_id: ID of the clip to freeze at the start of.
+            freeze_duration_seconds: Duration of the freeze frame.
+
+        Raises:
+            KeyError: Clip not found.
+        """
+        clip = self.find_clip(clip_id)
+        if clip is None:
+            raise KeyError(f'No clip with id={clip_id}')
+        self.add_freeze_frame(clip, at_seconds=clip.start_seconds, freeze_duration_seconds=freeze_duration_seconds)
+
+    def freeze_at_clip_end(self, clip_id: int, *, freeze_duration_seconds: float) -> None:
+        """Add a freeze frame at the end of a clip.
+
+        Args:
+            clip_id: ID of the clip to freeze at the end of.
+            freeze_duration_seconds: Duration of the freeze frame.
+
+        Raises:
+            KeyError: Clip not found.
+        """
+        clip = self.find_clip(clip_id)
+        if clip is None:
+            raise KeyError(f'No clip with id={clip_id}')
+        end_seconds = clip.start_seconds + clip.duration_seconds
+        # Use a point just before the end to stay within the clip range
+        epsilon = ticks_to_seconds(1)
+        self.add_freeze_frame(clip, at_seconds=end_seconds - epsilon, freeze_duration_seconds=freeze_duration_seconds)
+
+    def extend_clip_to(self, clip_id: int, *, target_duration_seconds: float) -> None:
+        """Extend or shorten a clip to a target duration.
+
+        Args:
+            clip_id: ID of the clip to resize.
+            target_duration_seconds: Desired final duration in seconds.
+
+        Raises:
+            KeyError: Clip not found.
+            ValueError: Target duration is non-positive.
+        """
+        clip = self.find_clip(clip_id)
+        if clip is None:
+            raise KeyError(f'No clip with id={clip_id}')
+        delta = target_duration_seconds - clip.duration_seconds
+        self.extend_clip(clip_id, extend_seconds=delta)
 
     def extend_clip(self, clip_id: int, *, extend_seconds: float) -> None:
         """Extend or shorten a clip's duration.

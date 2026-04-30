@@ -89,6 +89,12 @@ class TestAudiateProjectProperties:
         proj = AudiateProject(audiate_file)
         assert proj.language == "en"
 
+    def test_language_setter(self, audiate_file: Path):
+        proj = AudiateProject(audiate_file)
+        assert proj.language == "en"
+        proj.language = "de"
+        assert proj.language == "de"
+
     def test_session_id(self, audiate_file: Path):
         proj = AudiateProject(audiate_file)
         assert proj.session_id == "test-session-uuid"

@@ -19,6 +19,9 @@ from camtasia.types import MediaType
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+# Alias builtin sorted() so the MediaBin.sorted() method can use it.
+builtins_sorted = sorted
+
 # Shader/Lottie assets use INT64_MAX to signal unbounded duration.
 _INT64_MAX = 9223372036854775807
 
@@ -126,6 +129,18 @@ class Media:
         """Unique integer ID referenced by clips via ``src``."""
         return int(self._data["id"])
 
+    def rename(self, new_name: str) -> None:
+        """Rename this media entry by updating the filename stem in ``src``.
+
+        The directory portion and extension are preserved; only the stem
+        (the ``identity``) changes.
+
+        Args:
+            new_name: The new filename stem (without extension).
+        """
+        src = Path(self._data["src"])
+        self._data["src"] = str(src.with_name(new_name + src.suffix))
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Media):
             return NotImplemented
@@ -202,6 +217,98 @@ class MediaBin:
     def image_files(self) -> list[Media]:
         """All image media entries."""
         return self.find_by_type(MediaType.Image)
+
+    def unused_media(self, timeline: Any) -> list[Media]:
+        """Return media entries not referenced by any clip on *timeline*.
+
+        A media entry is considered "used" if any clip's ``src`` field
+        matches the entry's ``id``.
+
+        Args:
+            timeline: A timeline object with an ``all_clips()`` method.
+
+        Returns:
+            List of :class:`Media` entries not referenced on the timeline.
+        """
+        used_ids = {c.source_id for c in timeline.all_clips() if c.source_id is not None}
+        return [m for m in self if m.id not in used_ids]
+
+    def delete_unused(self, timeline: Any) -> list[str]:
+        """Remove media entries not referenced by any clip on *timeline*.
+
+        Args:
+            timeline: A timeline object with an ``all_clips()`` method.
+
+        Returns:
+            List of identity names of the removed entries.
+        """
+        unused = self.unused_media(timeline)
+        names = [m.identity for m in unused]
+        for m in unused:
+            del self[m.id]
+        return names
+
+    def sorted(self, *, key: str = 'name', reverse: bool = False) -> list[Media]:
+        """Return media entries sorted by the given key.
+
+        Args:
+            key: Sort key — one of ``'name'``, ``'duration'``, ``'width'``,
+                ``'height'``, ``'date'``.
+            reverse: If ``True``, sort in descending order.
+
+        Returns:
+            A new sorted list of :class:`Media` entries.
+
+        Raises:
+            ValueError: *key* is not a recognised sort key.
+        """
+        key_funcs: dict[str, Any] = {
+            'name': lambda m: m.identity.lower(),
+            'duration': lambda m: m.duration_seconds or 0.0,
+            'width': lambda m: m.dimensions[0],
+            'height': lambda m: m.dimensions[1],
+            'date': lambda m: m.last_modification,
+        }
+        if key not in key_funcs:
+            raise ValueError(f"Invalid sort key {key!r}. Valid keys: {', '.join(key_funcs)}")
+        return builtins_sorted(self, key=key_funcs[key], reverse=reverse)
+
+    def import_folder(
+        self,
+        folder_path: Path | str,
+        *,
+        recursive: bool = False,
+        extensions: tuple[str, ...] = ('.mp4', '.mov', '.png', '.jpg', '.jpeg', '.wav', '.mp3', '.m4a'),
+    ) -> list[Media]:
+        """Batch-import all matching files from a directory.
+
+        Args:
+            folder_path: Directory to scan.
+            recursive: If ``True``, scan subdirectories as well.
+            extensions: File extensions to include (case-insensitive).
+
+        Returns:
+            List of newly imported :class:`Media` entries.
+        """
+        folder_path = Path(folder_path)
+        pattern = '**/*' if recursive else '*'
+        ext_lower = {e.lower() for e in extensions}
+        paths = sorted(
+            p for p in folder_path.glob(pattern)
+            if p.is_file() and p.suffix.lower() in ext_lower
+        )
+        return self.import_many(paths)
+
+    def import_many(self, paths: list[Path] | list[str]) -> list[Media]:
+        """Import multiple media files.
+
+        Args:
+            paths: List of file paths to import.
+
+        Returns:
+            List of newly imported :class:`Media` entries.
+        """
+        return [self.import_media(Path(p)) for p in paths]
 
     def __delitem__(self, media_id: int) -> None:
         """Remove a media entry by its integer ID.

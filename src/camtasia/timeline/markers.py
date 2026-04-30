@@ -109,6 +109,60 @@ class MarkerList:
         """Remove all markers."""
         self._ensure_keyframes().clear()
 
+    def rename(self, old_name: str, new_name: str) -> None:
+        """Rename the first marker matching *old_name*.
+
+        Raises:
+            ValueError: No marker with the given name.
+        """
+        for kf in self._ensure_keyframes():
+            if kf['value'] == old_name:
+                kf['value'] = new_name
+                return
+        raise ValueError(f'No marker named {old_name!r}')
+
+    def move(self, old_time_ticks: int, new_time_ticks: int) -> None:
+        """Move the first marker at *old_time_ticks* to *new_time_ticks*.
+
+        Raises:
+            ValueError: No marker at the given time.
+        """
+        for kf in self._ensure_keyframes():
+            if kf['time'] == old_time_ticks:
+                kf['time'] = new_time_ticks
+                kf['endTime'] = new_time_ticks
+                return
+        raise ValueError(f'No marker at time={old_time_ticks}')
+
+    def remove_by_name(self, name: str) -> None:
+        """Remove the first marker matching *name*.
+
+        Raises:
+            ValueError: No marker with the given name.
+        """
+        keyframes = self._ensure_keyframes()
+        for i, kf in enumerate(keyframes):
+            if kf['value'] == name:
+                del keyframes[i]
+                return
+        raise ValueError(f'No marker named {name!r}')
+
+    def next_after(self, time_ticks: int) -> Marker | None:
+        """Return the first marker with time > *time_ticks*, or ``None``."""
+        best: dict[str, Any] | None = None
+        for kf in self._keyframes:
+            if kf['time'] > time_ticks and (best is None or kf['time'] < best['time']):
+                best = kf
+        return Marker(name=best['value'], time=best['time']) if best else None
+
+    def prev_before(self, time_ticks: int) -> Marker | None:
+        """Return the last marker with time < *time_ticks*, or ``None``."""
+        best: dict[str, Any] | None = None
+        for kf in self._keyframes:
+            if kf['time'] < time_ticks and (best is None or kf['time'] > best['time']):
+                best = kf
+        return Marker(name=best['value'], time=best['time']) if best else None
+
     def replace(self, markers: list[tuple[str, int]]) -> None:
         """Replace all markers with a new set.
 

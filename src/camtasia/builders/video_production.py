@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class _Section:
     name: str
     voiceover: Path | None = None
-    images: list[Path] = field(default_factory=list)
+    images: list[Path | str] = field(default_factory=list)
     screen_recording: Path | None = None
 
 
@@ -86,8 +86,18 @@ class VideoProductionBuilder:
         self,
         image_path: Path | str,
         opacity: float = 0.3,
+        *,
+        scale: float = 1.0,
+        x_offset: float = 0.0,
+        y_offset: float = 0.0,
     ) -> VideoProductionBuilder:
-        self._watermark = {'path': Path(image_path), 'opacity': opacity}
+        self._watermark = {
+            'path': Path(image_path),
+            'opacity': opacity,
+            'scale': scale,
+            'x_offset': x_offset,
+            'y_offset': y_offset,
+        }
         return self
 
     def build(self) -> dict[str, Any]:
@@ -128,7 +138,7 @@ class VideoProductionBuilder:
             if section.screen_recording:
                 media = p.import_media(section.screen_recording)
                 track = p.timeline.get_or_create_track('Screen Recording')
-                track.add_video(media.id, start_seconds=cursor, duration_seconds=media.duration_seconds)
+                track.add_video(media.id, start_seconds=cursor, duration_seconds=media.duration_seconds or 0.0)
 
         if self._outro:
             p.add_end_card(
@@ -146,6 +156,9 @@ class VideoProductionBuilder:
             p.add_watermark(
                 self._watermark['path'],
                 opacity=self._watermark['opacity'],
+                scale=self._watermark['scale'],
+                x_offset=self._watermark['x_offset'],
+                y_offset=self._watermark['y_offset'],
             )
 
         return {

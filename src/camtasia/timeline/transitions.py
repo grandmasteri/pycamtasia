@@ -335,6 +335,46 @@ class TransitionList:
         ticks = seconds_to_ticks(duration_seconds)
         return self.add(TransitionType.SPHERICAL_SPIN, self._clip_id(left_clip), self._clip_id(right_clip), ticks)
 
+    def add_gradient_wipe(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 1.0,
+    ) -> Transition:
+        """Add a gradient-wipe transition."""
+        ticks = seconds_to_ticks(duration_seconds)
+        return self.add('GradientWipe', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
+    def add_card_swipe(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 1.0,
+    ) -> Transition:
+        """Add a card-swipe transition."""
+        ticks = seconds_to_ticks(duration_seconds)
+        return self.add('CardSwipe', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
+    def add_cube_rotate(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 1.0,
+    ) -> Transition:
+        """Add a cube-rotate transition."""
+        ticks = seconds_to_ticks(duration_seconds)
+        return self.add('CubeRotate', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
+    def add_swap(
+        self,
+        left_clip: Any,
+        right_clip: Any,
+        duration_seconds: float = 1.0,
+    ) -> Transition:
+        """Add a swap transition."""
+        ticks = seconds_to_ticks(duration_seconds)
+        return self.add('Swap', self._clip_id(left_clip), self._clip_id(right_clip), ticks)
+
     def remove(self, index: int) -> None:
         """Remove a transition by index.
 

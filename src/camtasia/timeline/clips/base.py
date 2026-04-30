@@ -4,7 +4,7 @@ from __future__ import annotations
 import copy
 from fractions import Fraction
 import sys
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 import warnings
 
 if sys.version_info >= (3, 11):  # pragma: no cover
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from camtasia.timeline.track import Track
 
-from camtasia.effects.visual import Glow
+from camtasia.effects.visual import Emphasize, Glow
 from camtasia.timing import seconds_to_ticks
 from camtasia.types import BlendMode, ClipType, EffectName, _ClipData
 
@@ -1398,24 +1398,51 @@ class BaseClip:
         })
         return self
 
-    def add_emphasize(self, *, amount: float = 0.5) -> Self:
-        """Add an audio emphasis effect.
+    _RAMP_POSITION_MAP: ClassVar[dict[str, int]] = {
+        'outside': 0,
+        'span': 1,
+        'inside': 2,
+    }
+
+    def add_emphasize(
+        self,
+        *,
+        ramp_position: str = 'inside',
+        ramp_in_seconds: float = 0.0,
+        ramp_out_seconds: float = 0.0,
+        intensity: float = 0.5,
+    ) -> Emphasize:
+        """Add an audio emphasis effect wrapping the :class:`Emphasize` effect.
 
         Args:
-            amount: Emphasis amount 0.0-1.0.
+            ramp_position: Ramp position — ``'outside'``, ``'span'``, or ``'inside'``.
+            ramp_in_seconds: Ramp-in duration in seconds.
+            ramp_out_seconds: Ramp-out duration in seconds.
+            intensity: Emphasis strength (0.0-1.0).
+
+        Returns:
+            The created :class:`Emphasize` effect instance.
+
+        Raises:
+            ValueError: If *ramp_position* is not one of the accepted values.
         """
-        self.add_effect({
+        if ramp_position not in self._RAMP_POSITION_MAP:
+            raise ValueError(
+                f"ramp_position must be 'outside', 'span', or 'inside', got {ramp_position!r}"
+            )
+        record: dict[str, Any] = {
             'effectName': EffectName.EMPHASIZE,
             'bypassed': False,
             'category': 'categoryAudioEffects',
             'parameters': {
-                'emphasizeAmount': amount,
-                'emphasizeRampPosition': 0,
-                'emphasizeRampInTime': EDIT_RATE,
-                'emphasizeRampOutTime': EDIT_RATE,
+                'emphasizeAmount': intensity,
+                'emphasizeRampPosition': self._RAMP_POSITION_MAP[ramp_position],
+                'emphasizeRampInTime': seconds_to_ticks(ramp_in_seconds),
+                'emphasizeRampOutTime': seconds_to_ticks(ramp_out_seconds),
             },
-        })
-        return self
+        }
+        self._data.setdefault('effects', []).append(record)
+        return Emphasize(record)
 
     def add_noise_removal(self, *, amount: float = 0.8, bypassed: bool = False) -> Self:
         """Add a DFN3 VST noise-removal effect to this clip.

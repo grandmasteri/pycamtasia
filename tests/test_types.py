@@ -63,7 +63,7 @@ class TestEffectNameValues:
             assert EffectName[name].value == value
 
     def test_effect_name_count(self):
-        assert len(EffectName) == 17
+        assert len(EffectName) == 20
 
 
 class TestTransitionTypeValues:

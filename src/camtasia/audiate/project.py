@@ -43,6 +43,10 @@ class AudiateProject:
         """Project language code (e.g. 'en')."""
         return self._data["metadata"]["projectLanguage"]  # type: ignore[no-any-return]
 
+    @language.setter
+    def language(self, value: str) -> None:
+        self._data["metadata"]["projectLanguage"] = value
+
     @property
     def session_id(self) -> str:
         """Camtasia linking UUID (caiCamtasiaSessionId)."""

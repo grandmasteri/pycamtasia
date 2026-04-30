@@ -16,11 +16,13 @@ def _find_clip_by_id(data: dict[str, Any], clip_id: int) -> dict[str, Any] | Non
     for track in data['timeline']['sceneTrack']['scenes'][0]['csml']['tracks']:
         for m in track.get('medias', []):
             if m.get('id') == clip_id:
-                return m
+                result: dict[str, Any] = m
+                return result
             for t in m.get('tracks', []):
                 for inner in t.get('medias', []):
                     if inner.get('id') == clip_id:
-                        return inner
+                        result = inner
+                        return result
     return None
 
 

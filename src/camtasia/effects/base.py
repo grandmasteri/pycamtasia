@@ -103,7 +103,7 @@ class Effect:
         return self._data.get('start')
 
     @property
-    def duration(self) -> int | None:
+    def duration(self) -> float | None:
         """Effect duration in ticks, or ``None`` if not time-bounded."""
         return self._data.get('duration')
 

@@ -639,6 +639,393 @@ class CornerPin(Effect):
         self.set_parameter("bottomRightY", value[1])
 
 
+@register_effect("Sepia")
+class Sepia(Effect):
+    """Sepia tone effect.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+    """
+
+
+@register_effect("Vignette")
+class Vignette(Effect):
+    """Vignette darkening around edges.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        amount, falloff, color (RGBA via separate keys).
+    """
+
+    @property
+    def amount(self) -> float:
+        return float(self.get_parameter("amount"))
+
+    @amount.setter
+    def amount(self, value: float) -> None:
+        self.set_parameter("amount", value)
+
+    @property
+    def falloff(self) -> float:
+        return float(self.get_parameter("falloff"))
+
+    @falloff.setter
+    def falloff(self, value: float) -> None:
+        self.set_parameter("falloff", value)
+
+    @property
+    def color(self) -> tuple[float, float, float, float]:
+        return _color_rgba(self.parameters, "color")
+
+    @color.setter
+    def color(self, rgba: tuple[float, float, float, float]) -> None:
+        _set_color_rgba(self._data.setdefault('parameters', {}), "color", rgba)
+
+
+@register_effect("Reflection")
+class Reflection(Effect):
+    """Reflection effect below the clip.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        opacity, distance, falloff.
+    """
+
+    @property
+    def opacity(self) -> float:
+        return float(self.get_parameter("opacity"))
+
+    @opacity.setter
+    def opacity(self, value: float) -> None:
+        self.set_parameter("opacity", value)
+
+    @property
+    def distance(self) -> float:
+        return float(self.get_parameter("distance"))
+
+    @distance.setter
+    def distance(self, value: float) -> None:
+        self.set_parameter("distance", value)
+
+    @property
+    def falloff(self) -> float:
+        return float(self.get_parameter("falloff"))
+
+    @falloff.setter
+    def falloff(self, value: float) -> None:
+        self.set_parameter("falloff", value)
+
+
+@register_effect("StaticNoise")
+class StaticNoise(Effect):
+    """Static noise / film grain overlay.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        intensity.
+    """
+
+    @property
+    def intensity(self) -> float:
+        return float(self.get_parameter("intensity"))
+
+    @intensity.setter
+    def intensity(self, value: float) -> None:
+        self.set_parameter("intensity", value)
+
+
+@register_effect("Tiling")
+class Tiling(Effect):
+    """Tile/repeat the clip image.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        scale, positionX, positionY, opacity.
+    """
+
+    @property
+    def scale(self) -> float:
+        return float(self.get_parameter("scale"))
+
+    @scale.setter
+    def scale(self, value: float) -> None:
+        self.set_parameter("scale", value)
+
+    @property
+    def position_x(self) -> float:
+        return float(self.get_parameter("positionX"))
+
+    @position_x.setter
+    def position_x(self, value: float) -> None:
+        self.set_parameter("positionX", value)
+
+    @property
+    def position_y(self) -> float:
+        return float(self.get_parameter("positionY"))
+
+    @position_y.setter
+    def position_y(self, value: float) -> None:
+        self.set_parameter("positionY", value)
+
+    @property
+    def opacity(self) -> float:
+        return float(self.get_parameter("opacity"))
+
+    @opacity.setter
+    def opacity(self, value: float) -> None:
+        self.set_parameter("opacity", value)
+
+
+@register_effect("TornEdge")
+class TornEdge(Effect):
+    """Torn/ripped edge effect.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        jaggedness, margin.
+    """
+
+    @property
+    def jaggedness(self) -> float:
+        return float(self.get_parameter("jaggedness"))
+
+    @jaggedness.setter
+    def jaggedness(self, value: float) -> None:
+        self.set_parameter("jaggedness", value)
+
+    @property
+    def margin(self) -> float:
+        return float(self.get_parameter("margin"))
+
+    @margin.setter
+    def margin(self, value: float) -> None:
+        self.set_parameter("margin", value)
+
+
+@register_effect("CRTMonitor")
+class CRTMonitor(Effect):
+    """CRT monitor / retro TV effect.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        scanline, curvature, intensity.
+    """
+
+    @property
+    def scanline(self) -> float:
+        return float(self.get_parameter("scanline"))
+
+    @scanline.setter
+    def scanline(self, value: float) -> None:
+        self.set_parameter("scanline", value)
+
+    @property
+    def curvature(self) -> float:
+        return float(self.get_parameter("curvature"))
+
+    @curvature.setter
+    def curvature(self, value: float) -> None:
+        self.set_parameter("curvature", value)
+
+    @property
+    def intensity(self) -> float:
+        return float(self.get_parameter("intensity"))
+
+    @intensity.setter
+    def intensity(self, value: float) -> None:
+        self.set_parameter("intensity", value)
+
+
+@register_effect("Mosaic")
+class Mosaic(Effect):
+    """Mosaic / pixelation effect.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        pixelSize.
+    """
+
+    @property
+    def pixel_size(self) -> float:
+        return float(self.get_parameter("pixelSize"))
+
+    @pixel_size.setter
+    def pixel_size(self, value: float) -> None:
+        self.set_parameter("pixelSize", value)
+
+
+@register_effect("OutlineEdges")
+class OutlineEdges(Effect):
+    """Edge detection / outline effect.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        threshold, intensity.
+    """
+
+    @property
+    def threshold(self) -> float:
+        return float(self.get_parameter("threshold"))
+
+    @threshold.setter
+    def threshold(self, value: float) -> None:
+        self.set_parameter("threshold", value)
+
+    @property
+    def intensity(self) -> float:
+        return float(self.get_parameter("intensity"))
+
+    @intensity.setter
+    def intensity(self, value: float) -> None:
+        self.set_parameter("intensity", value)
+
+
+@register_effect("WindowSpotlight")
+class WindowSpotlight(Effect):
+    """Window spotlight effect.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+    """
+
+
+@register_effect("ColorTint")
+class ColorTint(Effect):
+    """Two-tone color tint (light/dark regions).
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        lightColor (RGBA), darkColor (RGBA) — via separate keys.
+    """
+
+    @property
+    def light_color(self) -> tuple[float, float, float, float]:
+        return _color_rgba(self.parameters, "lightColor")
+
+    @light_color.setter
+    def light_color(self, rgba: tuple[float, float, float, float]) -> None:
+        _set_color_rgba(self._data.setdefault('parameters', {}), "lightColor", rgba)
+
+    @property
+    def dark_color(self) -> tuple[float, float, float, float]:
+        return _color_rgba(self.parameters, "darkColor")
+
+    @dark_color.setter
+    def dark_color(self, rgba: tuple[float, float, float, float]) -> None:
+        _set_color_rgba(self._data.setdefault('parameters', {}), "darkColor", rgba)
+
+
+@register_effect("Border")
+class Border(Effect):
+    """Border effect around a clip.
+
+    Parameters:
+        width, color (RGBA via separate keys), corner-radius.
+    """
+
+    @property
+    def width(self) -> float:
+        return float(self.get_parameter("width"))
+
+    @width.setter
+    def width(self, value: float) -> None:
+        self.set_parameter("width", value)
+
+    @property
+    def color(self) -> tuple[float, float, float, float]:
+        return _color_rgba(self.parameters, "color")
+
+    @color.setter
+    def color(self, rgba: tuple[float, float, float, float]) -> None:
+        _set_color_rgba(self._data.setdefault('parameters', {}), "color", rgba)
+
+    @property
+    def corner_radius(self) -> float:
+        return float(self.get_parameter("corner-radius"))
+
+    @corner_radius.setter
+    def corner_radius(self, value: float) -> None:
+        self.set_parameter("corner-radius", value)
+
+
+@register_effect("Colorize")
+class Colorize(Effect):
+    """Colorize / tint effect.
+
+    Parameters:
+        color (RGB via separate keys), intensity.
+    """
+
+    @property
+    def color(self) -> tuple[float, float, float]:
+        """RGB color as ``(red, green, blue)`` floats."""
+        params = self.parameters
+        return (
+            float(params["color-red"]["defaultValue"] if isinstance(params["color-red"], dict) else params["color-red"]),
+            float(params["color-green"]["defaultValue"] if isinstance(params["color-green"], dict) else params["color-green"]),
+            float(params["color-blue"]["defaultValue"] if isinstance(params["color-blue"], dict) else params["color-blue"]),
+        )
+
+    @color.setter
+    def color(self, rgb: tuple[float, float, float]) -> None:
+        params = self._data.setdefault('parameters', {})
+        for suffix, value in zip(("red", "green", "blue"), rgb):
+            key = f"color-{suffix}"
+            v = params.get(key)
+            if isinstance(v, dict):
+                v["defaultValue"] = value
+            else:
+                params[key] = value
+
+    @property
+    def intensity(self) -> float:
+        return float(self.get_parameter("intensity"))
+
+    @intensity.setter
+    def intensity(self, value: float) -> None:
+        self.set_parameter("intensity", value)
+
+
 @register_effect("ChromaKey")
 class ChromaKey(Effect):
     """Chroma key / green-screen removal.

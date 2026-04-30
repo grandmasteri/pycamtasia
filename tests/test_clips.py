@@ -10,6 +10,7 @@ import warnings
 
 import pytest
 
+from camtasia.effects.base import Effect
 from camtasia.project import Project
 from camtasia.timeline.clips import (
     EDIT_RATE,
@@ -1286,8 +1287,8 @@ class TestEffectAddMethods:
 
     def test_add_emphasize(self):
         clip = self._clip()
-        result = clip.add_emphasize(amount=0.3)
-        assert result is clip
+        result = clip.add_emphasize(intensity=0.3)
+        assert isinstance(result, Effect)
         eff = clip._data['effects'][-1]
         assert eff['effectName'] == 'Emphasize'
         assert eff['parameters']['emphasizeAmount'] == 0.3

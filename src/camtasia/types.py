@@ -77,6 +77,9 @@ class EffectName(str, Enum):
     CURSOR_PHYSICS = 'CursorPhysics'
     LEFT_CLICK_SCALING = 'LeftClickScaling'
     VST_NOISE_REMOVAL = 'VSTEffect-DFN3NoiseRemoval'
+    AUDIO_COMPRESSION = 'AudioCompression'
+    PITCH = 'Pitch'
+    CLIP_SPEED_AUDIO = 'ClipSpeedAudio'
 
 
 class TransitionType(str, Enum):

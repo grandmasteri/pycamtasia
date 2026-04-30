@@ -2650,12 +2650,28 @@ class Project:
     def add_watermark(
         self,
         image_path: str | Path,
+        *,
         opacity: float = 0.3,
+        scale: float = 1.0,
+        x_offset: float = 0.0,
+        y_offset: float = 0.0,
         track_name: str = 'Watermark',
     ) -> BaseClip:
         """Add a watermark image that spans the entire timeline.
 
-        The image is placed on its own track with reduced opacity.
+        The image is placed on its own track with reduced opacity and
+        optional scale/position adjustments.
+
+        Args:
+            image_path: Path to the watermark image file.
+            opacity: Watermark opacity (0.0-1.0).
+            scale: Uniform scale factor (1.0 = original size).
+            x_offset: Horizontal translation in pixels.
+            y_offset: Vertical translation in pixels.
+            track_name: Name of the track to place the watermark on.
+
+        Returns:
+            The created image clip.
         """
         media = self.import_media(Path(image_path))
         track = self.timeline.get_or_create_track(track_name)
@@ -2668,7 +2684,59 @@ class Project:
             duration_seconds=timeline_duration,
         )
         clip.opacity = opacity
+        if scale != 1.0:
+            clip.scale = (scale, scale)
+        if x_offset != 0.0 or y_offset != 0.0:
+            clip.translation = (x_offset, y_offset)
         return clip
+
+    def add_text_watermark(
+        self,
+        text: str,
+        *,
+        font_name: str = 'Arial',
+        font_size: float = 36.0,
+        font_color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
+        opacity: float = 0.5,
+        scale: float = 1.0,
+        x_offset: float = 0.0,
+        y_offset: float = 0.0,
+        track_name: str = 'Watermark',
+    ) -> BaseClip:
+        """Add a text watermark that spans the entire timeline.
+
+        Creates a callout clip with the given text, styled as a watermark
+        with reduced opacity and optional positioning.
+
+        Args:
+            text: Watermark text content.
+            font_name: Font family name.
+            font_size: Font size in points.
+            font_color: RGBA color as 0.0-1.0 floats.
+            opacity: Watermark opacity (0.0-1.0).
+            scale: Uniform scale factor (1.0 = original size).
+            x_offset: Horizontal translation in pixels.
+            y_offset: Vertical translation in pixels.
+            track_name: Name of the track to place the watermark on.
+
+        Returns:
+            The created callout clip.
+        """
+        track = self.timeline.get_or_create_track(track_name)
+        timeline_duration: float = self.duration_seconds
+        if timeline_duration == 0:
+            timeline_duration = 60.0
+        callout = track.add_callout(
+            text, 0.0, timeline_duration,
+            font_name=font_name, font_size=font_size,
+        )
+        callout.set_colors(font_color=font_color)
+        callout.opacity = opacity
+        if scale != 1.0:
+            callout.scale = (scale, scale)
+        if x_offset != 0.0 or y_offset != 0.0:
+            callout.translation = (x_offset, y_offset)
+        return callout
 
     def add_countdown(
         self,
