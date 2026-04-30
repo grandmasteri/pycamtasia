@@ -3,8 +3,8 @@ annotation-background/stroke-width/stroke-style in apply_theme, and add_annotati
 from __future__ import annotations
 
 import json
-import tempfile
 from pathlib import Path
+import tempfile
 
 import pytest
 
@@ -17,7 +17,6 @@ from camtasia.themes import (
     export_theme,
     import_theme,
 )
-
 
 # ---------------------------------------------------------------------------
 # Theme.logo_path

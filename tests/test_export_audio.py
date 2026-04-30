@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import csv
 import json
-from pathlib import Path
 
 import pytest
 
@@ -90,7 +89,7 @@ class TestExportAudioCsv:
         ])
         actual_path = export_audio(project, tmp_path / 'audio.csv')
         with actual_path.open() as f:
-            actual_row = list(csv.DictReader(f))[0]
+            actual_row = next(iter(csv.DictReader(f)))
         assert actual_row['effects'] == 'NoiseRemoval; AudioCompression'
 
 

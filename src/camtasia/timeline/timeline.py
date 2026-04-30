@@ -1427,7 +1427,7 @@ class Timeline:
         second_start = original_start_seconds + at_seconds
         second_duration = ticks_to_seconds(original_duration - split_ticks)
         attrs = self.caption_attributes
-        new_clip = track.add_callout(
+        track.add_callout(
             second_text, second_start, second_duration,
             font_name=attrs.font_name,
             font_size=float(attrs.font_size),

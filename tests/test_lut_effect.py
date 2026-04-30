@@ -6,8 +6,8 @@ import pytest
 from camtasia.effects.base import effect_from_dict
 from camtasia.effects.visual import LutEffect
 from camtasia.timeline.clips.base import BaseClip
-from camtasia.timing import EDIT_RATE, seconds_to_ticks
-from camtasia.types import EffectName, LutPreset
+from camtasia.timing import seconds_to_ticks
+from camtasia.types import LutPreset
 
 
 def _param(value, type_: str = "double", interp: str = "linr") -> dict:

@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from camtasia.effects.base import Effect, register_effect
-
 from camtasia.timing import EDIT_RATE
 
 if TYPE_CHECKING:
@@ -565,10 +564,10 @@ class LutEffect(Effect):
         easeInTime (Mac-only, ticks), easeOutTime (Mac-only, ticks).
     """
 
-    _CHANNEL_MAP: dict[str, int] = {
+    _CHANNEL_MAP: ClassVar[dict[str, int]] = {
         'all': 0, 'red': 1, 'green': 2, 'blue': 3,
     }
-    _CHANNEL_REVERSE: dict[int, str] = {v: k for k, v in _CHANNEL_MAP.items()}
+    _CHANNEL_REVERSE: ClassVar[dict[int, str]] = {v: k for k, v in _CHANNEL_MAP.items()}
 
     @property
     def lut_source(self) -> str:

@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import json
-import zipfile
 from pathlib import Path
 from unittest.mock import MagicMock
+import zipfile
 
 import pytest
 
@@ -237,14 +237,14 @@ class TestExportImportLibzip:
 
     def test_export_appends_suffix(self, tmp_path):
         lib = Library("lib")
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="custom JSON-based format"):
             path = export_libzip(lib, tmp_path / "archive")
         assert path.suffix == ".libzip"
 
     def test_export_zip_structure(self, tmp_path):
         lib = Library("lib")
         lib.add_asset({"key": "val"}, "asset1")
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="custom JSON-based format"):
             path = export_libzip(lib, tmp_path / "out.libzip")
         with zipfile.ZipFile(path) as zf:
             names = zf.namelist()
@@ -256,28 +256,26 @@ class TestExportImportLibzip:
             assert asset_data["name"] == "asset1"
 
     def test_import_not_found(self, tmp_path):
-        with pytest.warns(UserWarning):
-            with pytest.raises(FileNotFoundError):
-                import_libzip(tmp_path / "missing.libzip")
+        with pytest.warns(UserWarning, match="custom JSON-based format"), pytest.raises(FileNotFoundError):
+            import_libzip(tmp_path / "missing.libzip")
 
     def test_import_no_target_no_create(self, tmp_path):
         # Create a valid archive first
         lib = Library("x")
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="custom JSON-based format"):
             path = export_libzip(lib, tmp_path / "x.libzip")
-        with pytest.warns(UserWarning):
-            with pytest.raises(ValueError, match="create_new is False"):
-                import_libzip(path, create_new=False)
+        with pytest.warns(UserWarning, match="custom JSON-based format"), pytest.raises(ValueError, match="create_new is False"):
+            import_libzip(path, create_new=False)
 
     def test_import_into_existing_library(self, tmp_path):
         lib = Library("source")
         lib.add_asset({"src": 1}, "original")
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="custom JSON-based format"):
             path = export_libzip(lib, tmp_path / "src.libzip")
 
         target = Library("target")
         target.add_asset({"src": 99}, "existing")
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="custom JSON-based format"):
             result = import_libzip(path, target_library=target)
         assert result is target
         assert len(result.assets) == 2
@@ -287,17 +285,17 @@ class TestExportImportLibzip:
         lib = Library("thumbs")
         asset = LibraryAsset(name="pic", kind="media", payload={"src": "img.png"}, thumbnail_path=Path("/t.png"))
         lib.assets.append(asset)
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="custom JSON-based format"):
             path = export_libzip(lib, tmp_path / "thumbs.libzip")
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="custom JSON-based format"):
             imported = import_libzip(path)
         assert imported.assets[0].thumbnail_path == Path("/t.png")
 
     def test_asset_without_thumbnail_roundtrip(self, tmp_path):
         lib = Library("no_thumb")
         lib.add_asset({"src": 1}, "clip")
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="custom JSON-based format"):
             path = export_libzip(lib, tmp_path / "no_thumb.libzip")
-        with pytest.warns(UserWarning):
+        with pytest.warns(UserWarning, match="custom JSON-based format"):
             imported = import_libzip(path)
         assert imported.assets[0].thumbnail_path is None

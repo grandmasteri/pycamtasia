@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -12,7 +11,7 @@ from camtasia.audiate.transcript import Transcript, Word, _format_srt_time
 from camtasia.timing import EDIT_RATE
 
 if TYPE_CHECKING:
-    pass
+    from pathlib import Path
 
 
 def _make_words(*specs: tuple[str, float, float | None]) -> list[Word]:
@@ -30,7 +29,7 @@ def _make_words(*specs: tuple[str, float, float | None]) -> list[Word]:
 
 class TestFormatSrtTime:
     @pytest.mark.parametrize(
-        "seconds, expected",
+        ("seconds", "expected"),
         [
             (0.0, "00:00:00,000"),
             (1.5, "00:00:01,500"),
@@ -230,7 +229,7 @@ class TestShortenPauses:
     def test_returns_new_transcript(self):
         words = _make_words(("a", 0.0, 0.5), ("b", 2.0, 2.5))
         original = Transcript(words)
-        result = original.shorten_pauses(min_gap_seconds=0.5)
+        original.shorten_pauses(min_gap_seconds=0.5)
         assert original.words[1].start == 2.0  # unchanged
 
     def test_none_end_word(self):
@@ -297,10 +296,10 @@ class TestFindLinkedMedia:
             "lastMod": "20260101T000000",
             "sourceTracks": [],
         })
-        track = list(project.timeline.tracks)[0]
+        track = next(iter(project.timeline.tracks))
         from camtasia.timing import EDIT_RATE as ER
         track.add_clip("AMFile", 42, 0, ER * 2)
-        clip = list(track.clips)[0]
+        clip = next(iter(track.clips))
         clip._data["audiateLinkedSession"] = "linked-uuid"
 
         result = audiate.find_linked_media(project)

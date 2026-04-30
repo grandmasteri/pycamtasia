@@ -4,11 +4,8 @@ from __future__ import annotations
 from pathlib import Path
 import warnings
 
-import pytest
-
 from camtasia.builders.screenplay_builder import _find_audio_file, build_from_screenplay
 from camtasia.screenplay import PauseMarker, Screenplay, ScreenplaySection, VOBlock
-
 
 WAV_FIXTURE = Path(__file__).parent / 'fixtures' / 'empty.wav'
 

@@ -1,12 +1,9 @@
 """Tests for Project SmartFocus, animation preset, and noise removal methods."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
 import pytest
 
 from camtasia.timing import seconds_to_ticks
-
 
 # ------------------------------------------------------------------
 # Helpers

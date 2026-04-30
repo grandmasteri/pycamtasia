@@ -14,9 +14,9 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import warnings
 import zipfile
-from pathlib import Path
 
 from camtasia.library.library import Library, LibraryAsset
 
