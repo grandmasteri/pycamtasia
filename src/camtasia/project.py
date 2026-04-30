@@ -2924,6 +2924,118 @@ class Project:
         self.timeline.markers.clear()
         self.remove_orphaned_media()
 
+    # ------------------------------------------------------------------
+    # SmartFocus, animation presets, and audio helpers
+    # ------------------------------------------------------------------
+
+    def apply_smart_focus(self, track_name: str | None = None) -> int:
+        """Auto-add zoom/pan keyframes based on cursor movement in screen recordings.
+
+        Finds ScreenIMFile clips (cursor overlays) and detects sharp cursor
+        position changes. For each significant jump, emits a zoom-pan
+        keyframe on the timeline.
+
+        Args:
+            track_name: Restrict to clips on this track. None = all tracks.
+
+        Returns:
+            Number of zoom keyframes added.
+        """
+        from camtasia.timing import ticks_to_seconds
+
+        count = 0
+        for track, clip in self.all_clips:
+            if track_name is not None and track.name != track_name:
+                continue
+            if clip.clip_type != 'ScreenIMFile':
+                continue
+            kfs = clip.cursor_location_keyframes
+            if len(kfs) < 2:
+                continue
+            for i in range(1, len(kfs)):
+                prev_val = kfs[i - 1].get('value', [0, 0, 0])
+                curr_val = kfs[i].get('value', [0, 0, 0])
+                dx = curr_val[0] - prev_val[0]
+                dy = curr_val[1] - prev_val[1]
+                distance = (dx * dx + dy * dy) ** 0.5
+                # Threshold: 20% of canvas diagonal
+                diag = (self.width ** 2 + self.height ** 2) ** 0.5
+                if distance > diag * 0.2:
+                    t = ticks_to_seconds(kfs[i].get('time', 0))
+                    cx = curr_val[0] / self.width if self.width else 0.5
+                    cy = curr_val[1] / self.height if self.height else 0.5
+                    self.timeline.add_zoom_pan(
+                        t, scale=1.5,
+                        center_x=min(1.0, max(0.0, cx)),
+                        center_y=min(1.0, max(0.0, cy)),
+                    )
+                    count += 1
+        return count
+
+    def apply_smart_focus_at_time(self, time_seconds: float) -> None:
+        """Add a single zoom-pan keyframe at the given playhead position.
+
+        Args:
+            time_seconds: Timeline position in seconds.
+        """
+        self.timeline.add_zoom_pan(time_seconds, scale=1.5)
+
+    def add_scale_to_fit(self) -> None:
+        """Reset to full canvas by clearing all zoom/pan keyframes."""
+        self.timeline.clear_zoom_pan()
+
+    def add_animation_preset(
+        self,
+        preset: str,
+        clip_id: int,
+        **kwargs: Any,
+    ) -> None:
+        """Apply an animation preset to a clip.
+
+        Args:
+            preset: One of 'ScaleUp', 'ScaleDown', 'ScaleToFit', 'Custom'.
+            clip_id: ID of the clip to animate.
+            **kwargs: For 'Custom' preset, pass ``scale``, ``duration_seconds``.
+
+        Raises:
+            ValueError: If preset is not recognized.
+            KeyError: If clip_id is not found.
+        """
+        valid = {'ScaleUp', 'ScaleDown', 'ScaleToFit', 'Custom'}
+        if preset not in valid:
+            raise ValueError(f'Unknown preset {preset!r}, must be one of {valid}')
+        result = self.timeline.find_clip(clip_id)
+        if result is None:
+            raise KeyError(f'Clip not found: {clip_id}')
+        _, clip = result
+        dur = clip.duration_seconds
+        if preset == 'ScaleUp':
+            clip.set_scale_keyframes([(0.0, 0.5), (min(0.5, dur), 1.0)])
+        elif preset == 'ScaleDown':
+            clip.set_scale_keyframes([(max(0.0, dur - 0.5), 1.0), (dur, 0.5)])
+        elif preset == 'ScaleToFit':
+            clip.set_scale_keyframes([(0.0, 1.0)])
+        else:  # Custom
+            scale = kwargs.get('scale', 2.0)
+            anim_dur = kwargs.get('duration_seconds', 0.5)
+            clip.set_scale_keyframes([(0.0, 1.0), (min(anim_dur, dur), scale)])
+
+    def add_ai_noise_removal(self, clip_id: int, *, amount: float = 0.5) -> None:
+        """Apply a NoiseRemoval audio effect to the specified clip.
+
+        Args:
+            clip_id: ID of the clip to apply noise removal to.
+            amount: Noise-removal strength (0.0-1.0).
+
+        Raises:
+            KeyError: If clip_id is not found.
+        """
+        result = self.timeline.find_clip(clip_id)
+        if result is None:
+            raise KeyError(f'Clip not found: {clip_id}')
+        _, clip = result
+        clip.add_noise_removal(amount=amount)
+
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
     """Load a Camtasia project from disk.

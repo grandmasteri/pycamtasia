@@ -119,7 +119,7 @@ class TestBehaviorPresetValues:
             assert BehaviorPreset[name].value == value
 
     def test_behavior_preset_count(self):
-        assert len(BehaviorPreset) == 7
+        assert len(BehaviorPreset) == 10
 
     def test_str_enum_comparison(self):
         assert BehaviorPreset.REVEAL == 'reveal'
@@ -149,7 +149,7 @@ class TestBehaviorInnerNameValues:
             assert BehaviorInnerName[name].value == value
 
     def test_behavior_inner_name_count(self):
-        assert len(BehaviorInnerName) == 14
+        assert len(BehaviorInnerName) == 16
 
     def test_str_enum_comparison(self):
         assert BehaviorInnerName.FADE_IN == 'fadeIn'

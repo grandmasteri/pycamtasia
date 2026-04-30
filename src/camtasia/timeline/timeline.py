@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
     from camtasia.timeline.captions import CaptionAttributes
     from camtasia.timeline.clips import BaseClip
+    from camtasia.timeline.clips.callout import Callout
     from camtasia.timeline.clips.group import Group
     from camtasia.types import TimelineSummary
 
@@ -1280,6 +1281,225 @@ class Timeline:
                 })
             cursor += found_media.get('duration', 0)
             prev_id = clip_id
+
+
+    # ------------------------------------------------------------------
+    # Caption helpers
+    # ------------------------------------------------------------------
+
+    def _caption_track(self, track_name: str) -> Track:
+        """Get or create the caption track."""
+        return self.get_or_create_track(track_name)
+
+    def _caption_clips(self, track_name: str) -> list:
+        """Return Callout clips on the caption track, sorted by start time."""
+        track = self.find_track_by_name(track_name)
+        if track is None:
+            return []
+        return sorted(
+            [c for c in track.clips if c.clip_type == 'Callout'],
+            key=lambda c: c.start,
+        )
+
+    def add_caption(
+        self,
+        text: str,
+        start_seconds: float,
+        duration_seconds: float,
+        *,
+        track_name: str = 'Subtitles',
+    ) -> Callout:
+        """Add a caption clip to the named track.
+
+        Uses the timeline's :attr:`caption_attributes` for font styling.
+        Creates the track if it does not exist.
+
+        Args:
+            text: Caption text.
+            start_seconds: Start time in seconds.
+            duration_seconds: Duration in seconds.
+            track_name: Name of the caption track.
+
+        Returns:
+            The created Callout clip.
+        """
+        track = self._caption_track(track_name)
+        attrs = self.caption_attributes
+        return track.add_callout(
+            text, start_seconds, duration_seconds,
+            font_name=attrs.font_name,
+            font_size=float(attrs.font_size),
+        )
+
+    def edit_caption(
+        self,
+        index: int,
+        *,
+        text: str | None = None,
+        duration_seconds: float | None = None,
+        track_name: str = 'Subtitles',
+    ) -> None:
+        """Edit an existing caption by index.
+
+        Args:
+            index: Zero-based index among Callout clips on the track.
+            text: New caption text (None to keep existing).
+            duration_seconds: New duration in seconds (None to keep existing).
+            track_name: Name of the caption track.
+
+        Raises:
+            IndexError: If index is out of range.
+        """
+        clips = self._caption_clips(track_name)
+        if not (0 <= index < len(clips)):
+            raise IndexError(f'Caption index {index} out of range (have {len(clips)})')
+        clip = clips[index]
+        if text is not None:
+            clip._data.setdefault('def', {})['text'] = text
+        if duration_seconds is not None:
+            clip._data['duration'] = seconds_to_ticks(duration_seconds)
+
+    def remove_caption(self, index: int, *, track_name: str = 'Subtitles') -> None:
+        """Remove a caption by index.
+
+        Args:
+            index: Zero-based index among Callout clips on the track.
+            track_name: Name of the caption track.
+
+        Raises:
+            IndexError: If index is out of range.
+        """
+        clips = self._caption_clips(track_name)
+        if not (0 <= index < len(clips)):
+            raise IndexError(f'Caption index {index} out of range (have {len(clips)})')
+        track = self.find_track_by_name(track_name)
+        assert track is not None
+        track.remove_clip(clips[index].id)
+
+    def split_caption(
+        self,
+        index: int,
+        at_seconds: float,
+        *,
+        track_name: str = 'Subtitles',
+    ) -> None:
+        """Split a caption into two at the given time offset from its start.
+
+        The first caption keeps text up to the split; the second gets the
+        remainder. If the text has no natural split point, the full text
+        is kept on the first caption and the second is empty.
+
+        Args:
+            index: Zero-based index among Callout clips on the track.
+            at_seconds: Seconds from the caption's start to split at.
+            track_name: Name of the caption track.
+
+        Raises:
+            IndexError: If index is out of range.
+            ValueError: If at_seconds is not within the caption's duration.
+        """
+        clips = self._caption_clips(track_name)
+        if not (0 <= index < len(clips)):
+            raise IndexError(f'Caption index {index} out of range (have {len(clips)})')
+        clip = clips[index]
+        split_ticks = seconds_to_ticks(at_seconds)
+        if split_ticks <= 0 or split_ticks >= clip.duration:
+            raise ValueError(
+                f'at_seconds={at_seconds} not within caption duration '
+                f'{ticks_to_seconds(clip.duration):.3f}s'
+            )
+        original_text = clip._data.get('def', {}).get('text', '')
+        words = original_text.split()
+        mid = max(1, len(words) // 2) if words else 0
+        first_text = ' '.join(words[:mid]) if words else ''
+        second_text = ' '.join(words[mid:]) if words else ''
+
+        original_start_seconds = ticks_to_seconds(clip.start)
+        original_duration = clip.duration
+        # Update first caption
+        clip._data['duration'] = split_ticks
+        if first_text or not original_text:
+            clip._data.setdefault('def', {})['text'] = first_text
+
+        # Add second caption
+        track = self.find_track_by_name(track_name)
+        assert track is not None
+        second_start = original_start_seconds + at_seconds
+        second_duration = ticks_to_seconds(original_duration - split_ticks)
+        attrs = self.caption_attributes
+        new_clip = track.add_callout(
+            second_text, second_start, second_duration,
+            font_name=attrs.font_name,
+            font_size=float(attrs.font_size),
+        )
+
+    def merge_caption_with_next(
+        self,
+        index: int,
+        *,
+        track_name: str = 'Subtitles',
+    ) -> None:
+        """Merge a caption with the next one, combining text and duration.
+
+        Args:
+            index: Zero-based index among Callout clips on the track.
+            track_name: Name of the caption track.
+
+        Raises:
+            IndexError: If index is out of range or no next caption exists.
+        """
+        clips = self._caption_clips(track_name)
+        if not (0 <= index < len(clips) - 1):
+            raise IndexError(
+                f'Caption index {index} out of range for merge (have {len(clips)}, need index < {len(clips) - 1})'
+            )
+        clip = clips[index]
+        next_clip = clips[index + 1]
+        # Extend duration to cover both captions
+        new_end = next_clip.start + next_clip.duration
+        clip._data['duration'] = new_end - clip.start
+        # Merge text
+        text_a = clip._data.get('def', {}).get('text', '')
+        text_b = next_clip._data.get('def', {}).get('text', '')
+        merged = f'{text_a} {text_b}'.strip()
+        clip._data.setdefault('def', {})['text'] = merged
+        # Remove the next caption
+        track = self.find_track_by_name(track_name)
+        assert track is not None
+        track.remove_clip(next_clip.id)
+
+    # ------------------------------------------------------------------
+    # UI / preference helpers
+    # ------------------------------------------------------------------
+
+    def set_all_magnetic(self, value: bool) -> None:
+        """Set magnetic snapping on all tracks.
+
+        Args:
+            value: Whether to enable magnetic snapping.
+        """
+        for track in self.tracks:
+            track.magnetic = value
+
+    @property
+    def playhead_seconds(self) -> float:
+        """Playhead position in seconds (from docPrefs)."""
+        prefs = self._data.get('docPrefs', {})
+        return float(prefs.get('DocPrefPlayheadTime', 0))
+
+    @playhead_seconds.setter
+    def playhead_seconds(self, value: float) -> None:
+        self._data.setdefault('docPrefs', {})['DocPrefPlayheadTime'] = value
+
+    @property
+    def ui_zoom_level(self) -> float:
+        """UI timeline zoom level (from docPrefs)."""
+        prefs = self._data.get('docPrefs', {})
+        return float(prefs.get('DocPrefZoomValue', 1.0))
+
+    @ui_zoom_level.setter
+    def ui_zoom_level(self, value: float) -> None:
+        self._data.setdefault('docPrefs', {})['DocPrefZoomValue'] = value
 
 
 class _TrackAccessor:

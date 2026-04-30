@@ -1,3 +1,4 @@
+from camtasia.export.audio import export_audio, export_audio_clips
 from camtasia.export.captions import CaptionEntry, export_captions, import_captions
 from camtasia.export.csv_export import export_csv
 from camtasia.export.edl import export_edl
@@ -7,6 +8,8 @@ from camtasia.export.timeline_json import export_timeline_json, load_timeline_js
 
 __all__ = [
     'CaptionEntry',
+    'export_audio',
+    'export_audio_clips',
     'export_captions',
     'export_csv',
     'export_edl',

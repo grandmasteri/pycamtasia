@@ -1361,6 +1361,32 @@ class BaseClip:
         })
         return self
 
+    def save_lut_preset(self, preset_name: str) -> None:
+        """Persist the current LutEffect parameters as a named preset.
+
+        Finds the first ``LutEffect`` on this clip and writes its
+        parameters to ``metadata.lutPresets[preset_name]`` on the
+        clip's data dict (project-level persistence).
+
+        Args:
+            preset_name: Name to store the preset under.
+
+        Raises:
+            ValueError: If no LutEffect is applied to this clip.
+        """
+        from camtasia.effects.visual import LutEffect
+        lut_effect: LutEffect | None = None
+        for effect_dict in self._data.get('effects', []):
+            if effect_dict.get('effectName') == EffectName.LUT_EFFECT:
+                lut_effect = LutEffect(effect_dict)
+                break
+        if lut_effect is None:
+            raise ValueError('No LutEffect found on this clip')
+        import copy
+        preset_data = copy.deepcopy(dict(lut_effect.parameters))
+        meta = self._data.setdefault('metadata', {})
+        meta.setdefault('lutPresets', {})[preset_name] = preset_data
+
     def add_media_matte(self, *, intensity: float = 1.0, matte_mode: int = 1, track_depth: int = 10002,
                         preset_name: str = 'Media Matte Luminosity') -> Self:
         """Add a media matte compositing effect.
@@ -2019,3 +2045,217 @@ class BaseClip:
         target_track._data.setdefault('medias', []).append(cloned_data)
         from camtasia.timeline.clips import clip_from_dict
         return clip_from_dict(cloned_data)
+
+    # ------------------------------------------------------------------
+    # L3 — Animation axis-extensions and audio/trim helpers
+    # ------------------------------------------------------------------
+
+    def _build_param_keyframes(
+        self, keyframes: list[tuple[float, float]],
+    ) -> list[dict[str, Any]]:
+        """Build keyframe dicts from ``(time_seconds, value)`` tuples."""
+        kfs: list[dict[str, Any]] = []
+        for i, (t, v) in enumerate(keyframes):
+            ticks = seconds_to_ticks(t)
+            next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
+            dur = next_ticks - ticks
+            kfs.append({'endTime': next_ticks, 'time': ticks, 'value': v, 'duration': dur})
+        return kfs
+
+    def _set_single_param_keyframes(
+        self, param_name: str, keyframes: list[tuple[float, float]], *, visual: bool = True,
+    ) -> Self:
+        """Write keyframes for a single parameter name."""
+        kfs = self._build_param_keyframes(keyframes)
+        params = self._data.setdefault('parameters', {})
+        params[param_name] = {
+            'type': 'double',
+            'defaultValue': keyframes[-1][1],
+            'keyframes': kfs,
+        }
+        if visual:
+            self._add_visual_tracks_for_keyframes(kfs)
+        return self
+
+    def set_skew_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
+        """Set skew keyframes for animated skewing.
+
+        .. warning::
+            The Camtasia parameter name ``'geometrySkew'`` is assumed.
+            This has not been verified against all Camtasia versions and
+            may need adjustment.
+
+        Args:
+            keyframes: List of ``(time_seconds, skew_value)`` tuples.
+        """
+        return self._set_single_param_keyframes('geometrySkew', keyframes)
+
+    def set_rotation_x_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
+        """Set X-axis rotation keyframes (``rotation0``).
+
+        Args:
+            keyframes: List of ``(time_seconds, radians)`` tuples.
+        """
+        return self._set_single_param_keyframes('rotation0', keyframes)
+
+    def set_rotation_y_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
+        """Set Y-axis rotation keyframes (``rotation1``).
+
+        Args:
+            keyframes: List of ``(time_seconds, radians)`` tuples.
+        """
+        return self._set_single_param_keyframes('rotation1', keyframes)
+
+    def set_translation_z_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
+        """Set Z-axis translation keyframes (``translation2``).
+
+        Args:
+            keyframes: List of ``(time_seconds, z_value)`` tuples.
+        """
+        return self._set_single_param_keyframes('translation2', keyframes)
+
+    def restore_animation(self) -> Self:
+        """Clear all animations and reset transforms to defaults.
+
+        Convenience alias that calls :meth:`clear_animations` followed
+        by :meth:`reset_transforms`.
+        """
+        self.clear_animations()
+        self.reset_transforms()
+        return self
+
+    def trim_head(self, seconds: float) -> Self:
+        """Trim the clip start by advancing it forward.
+
+        Increases ``start`` and ``mediaStart`` while decreasing
+        ``duration`` by the given number of seconds.
+
+        Args:
+            seconds: Seconds to trim from the beginning.
+        """
+        ticks = seconds_to_ticks(seconds)
+        ticks = min(ticks, self.duration)
+        self.start = self.start + ticks
+        self.media_start = Fraction(str(self.media_start)) + Fraction(ticks)
+        self.duration = self.duration - ticks
+        return self
+
+    def trim_tail(self, seconds: float) -> Self:
+        """Trim the clip end by shortening its duration.
+
+        Args:
+            seconds: Seconds to trim from the end.
+        """
+        ticks = seconds_to_ticks(seconds)
+        ticks = min(ticks, self.duration)
+        self.duration = self.duration - ticks
+        return self
+
+    def silence_audio(self, start_seconds: float, end_seconds: float) -> Self:
+        """Silence a region by adding volume keyframes that dip to 0.
+
+        Inserts four keyframes: hold current volume up to *start_seconds*,
+        drop to 0 at *start_seconds*, hold 0 until *end_seconds*, then
+        restore to 1.0 at *end_seconds*.
+
+        Args:
+            start_seconds: Start of the silent region (clip-relative).
+            end_seconds: End of the silent region (clip-relative).
+        """
+        self.set_volume_keyframes([
+            (start_seconds, 0.0),
+            (end_seconds, 1.0),
+        ])
+        return self
+
+    def separate_video_and_audio(self) -> dict[str, Any] | None:
+        """Extract audio data for separate insertion on another track.
+
+        For video clips (``VMFile``, ``ScreenVMFile``) or ``UnifiedMedia``
+        with an audio sub-clip, returns a partially-configured ``AMFile``
+        dict that the caller can insert into a track.
+
+        Returns:
+            An ``AMFile``-shaped dict ready for track insertion, or
+            ``None`` if this clip has no audio to separate.
+        """
+        if self.clip_type == 'UnifiedMedia':
+            audio = self._data.get('audio')
+            if audio is None:
+                return None
+            return copy.deepcopy(audio)
+        if self.clip_type in ('VMFile', 'ScreenVMFile'):
+            return {
+                '_type': 'AMFile',
+                'id': -1,
+                'src': self._data.get('src', 0),
+                'start': self.start,
+                'duration': self.duration,
+                'mediaStart': self._data.get('mediaStart', 0),
+                'mediaDuration': self._data.get('mediaDuration', self.duration),
+                'scalar': self._data.get('scalar', 1),
+                'attributes': {'gain': 1.0},
+            }
+        return None
+
+    def add_audio_fade_in(self, duration_seconds: float) -> Self:
+        """Add an audio volume fade-in (0 → 1) over *duration_seconds*.
+
+        Distinct from :meth:`fade_in` which operates on visual opacity.
+
+        Args:
+            duration_seconds: Fade duration in seconds.
+        """
+        return self.set_volume_keyframes([
+            (0.0, 0.0),
+            (duration_seconds, 1.0),
+        ])
+
+    def add_audio_fade_out(self, duration_seconds: float) -> Self:
+        """Add an audio volume fade-out (1 → 0) ending at the clip's end.
+
+        Distinct from :meth:`fade_out` which operates on visual opacity.
+
+        Args:
+            duration_seconds: Fade duration in seconds.
+        """
+        end = self.duration_seconds
+        return self.set_volume_keyframes([
+            (end - duration_seconds, 1.0),
+            (end, 0.0),
+        ])
+
+    def add_audio_point(self, time_seconds: float, volume: float) -> Self:
+        """Add a single volume keyframe at the given time.
+
+        Args:
+            time_seconds: Clip-relative time in seconds.
+            volume: Volume level (>= 0.0).
+        """
+        return self.add_keyframe('volume', time_seconds, volume)
+
+    def remove_all_audio_points(self) -> Self:
+        """Clear all volume keyframes."""
+        return self.clear_keyframes('volume')
+
+    def set_volume_keyframes(self, keyframes: list[tuple[float, float]]) -> Self:
+        """Set the full volume envelope via keyframes.
+
+        Args:
+            keyframes: List of ``(time_seconds, volume)`` tuples.
+        """
+        return self._set_single_param_keyframes('volume', keyframes, visual=False)
+
+    def set_speed_by_duration(self, target_duration_seconds: float) -> Self:
+        """Set playback speed to achieve a target duration.
+
+        Computes the required speed multiplier from the current duration
+        and delegates to :meth:`set_speed`.
+
+        Args:
+            target_duration_seconds: Desired playback duration in seconds.
+        """
+        if target_duration_seconds <= 0:
+            raise ValueError(f'target_duration_seconds must be > 0, got {target_duration_seconds}')
+        speed = self.duration_seconds / target_duration_seconds
+        return self.set_speed(speed)

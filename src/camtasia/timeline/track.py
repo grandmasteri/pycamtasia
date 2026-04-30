@@ -344,6 +344,49 @@ class Track:
         """Set whether the track is locked against editing."""
         self._attributes.setdefault('metadata', {})['IsLocked'] = str(value)
 
+    @property
+    def track_height(self) -> int:
+        """Track height in pixels (UI row height).
+
+        Reads/writes ``attributes.metadata.trackHeight`` as a
+        string-encoded integer, matching the Camtasia JSON convention.
+        Defaults to ``0`` when unset (Camtasia uses its own default).
+        """
+        raw = self._attributes.get('metadata', {}).get('trackHeight', '0')
+        return int(raw)
+
+    @track_height.setter
+    def track_height(self, value: int) -> None:
+        self._attributes.setdefault('metadata', {})['trackHeight'] = str(value)
+
+    @property
+    def enabled(self) -> bool:
+        """Whether the track is enabled (eye icon — runtime on/off).
+
+        Distinct from :attr:`is_locked` which prevents editing.
+        Reads/writes ``attributes.metadata.trackEnabled`` as a
+        string-encoded boolean.  Defaults to ``True`` when unset.
+        """
+        raw = self._attributes.get('metadata', {}).get('trackEnabled', 'True')
+        return raw == 'True'
+
+    @enabled.setter
+    def enabled(self, value: bool) -> None:
+        self._attributes.setdefault('metadata', {})['trackEnabled'] = str(value)
+
+    @property
+    def matte_mode(self) -> int:
+        """Matte compositing mode for this track.
+
+        Reads/writes the ``matte`` field on the track data dict.
+        ``0`` means no matte (default).
+        """
+        return int(self._data.get('matte', 0))
+
+    @matte_mode.setter
+    def matte_mode(self, value: int) -> None:
+        self._data['matte'] = value
+
     # ------------------------------------------------------------------
     # Clips
     # ------------------------------------------------------------------
@@ -2143,6 +2186,38 @@ class Track:
                 ]
                 return
         raise KeyError(f'No clip with id={clip_id}')
+
+    def ripple_move(self, clip_id: int, delta_seconds: float) -> None:
+        """Shift a clip and all clips to its right on this track.
+
+        Moves the target clip by *delta_seconds* and shifts every clip
+        whose start is at or after the target clip's original start by
+        the same amount.  Transitions are cleared because adjacency
+        relationships may change.
+
+        Args:
+            clip_id: ID of the clip to move.
+            delta_seconds: Seconds to shift (positive = forward,
+                negative = backward).  Clips are clamped to not go
+                before time 0.
+
+        Raises:
+            KeyError: No clip with the given ID on this track.
+        """
+        delta_ticks = seconds_to_ticks(delta_seconds)
+        target = None
+        for m in self._data.get('medias', []):
+            if m.get('id') == clip_id:
+                target = m
+                break
+        if target is None:
+            raise KeyError(f'No clip with id={clip_id} on track {self.index}')
+        threshold = target.get('start', 0)
+        for m in self._data.get('medias', []):
+            if m.get('start', 0) >= threshold:
+                m['start'] = max(0, m.get('start', 0) + delta_ticks)
+                _propagate_start_to_unified(m)
+        self._data['transitions'] = []
 
     def split_clip(self, clip_id: int, split_at_seconds: float) -> tuple:
         """Split a clip into two halves at a timeline position.

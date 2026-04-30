@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from camtasia.audiate.transcript import Transcript
 from camtasia.timing import EDIT_RATE
+
+if TYPE_CHECKING:
+    from camtasia.media_bin.media_bin import Media
+    from camtasia.project import Project
 
 
 class AudiateProject:
@@ -72,6 +77,32 @@ class AudiateProject:
             if entry["id"] == src_id:
                 return (self._file_path.parent / entry["src"]).resolve()  # type: ignore[no-any-return]
         raise FileNotFoundError(f"Source with id={src_id} not found in sourceBin")
+
+    def find_linked_media(self, project: Project) -> Media | None:
+        """Find the Camtasia media entry linked to this Audiate session.
+
+        Searches clips in the Camtasia project for one whose
+        ``audiateLinkedSession`` matches this project's ``session_id``,
+        then returns the corresponding ``Media`` from the source bin.
+
+        Args:
+            project: A loaded Camtasia Project.
+
+        Returns:
+            The linked Media, or None if no match is found.
+        """
+        sid = self.session_id
+        for track in project.timeline.tracks:
+            for clip in track.clips:
+                linked = clip._data.get("audiateLinkedSession", "")
+                if linked == sid:
+                    src_id = clip._data.get("src")
+                    if src_id is not None:
+                        try:
+                            return project.media_bin[int(src_id)]
+                        except KeyError:
+                            pass
+        return None
 
     def __repr__(self) -> str:
         return f'AudiateProject(file_path="{self._file_path}")'

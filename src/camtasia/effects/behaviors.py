@@ -131,6 +131,146 @@ class BehaviorPhase:
         """Raw parameters dict (direction keyframes, etc.)."""
         return self._data.setdefault("parameters", {})
 
+    # ------------------------------------------------------------------
+    # Center-phase loop properties
+    # ------------------------------------------------------------------
+
+    @property
+    def seconds_per_loop(self) -> float:
+        """Seconds per animation loop cycle."""
+        val = self._attrs.get("secondsPerLoop", 0)
+        if isinstance(val, str):
+            from fractions import Fraction
+            return float(Fraction(val))
+        return float(val)
+
+    @seconds_per_loop.setter
+    def seconds_per_loop(self, value: float) -> None:
+        """Set seconds per loop cycle."""
+        self._attrs["secondsPerLoop"] = value
+
+    @property
+    def number_of_loops(self) -> int:
+        """Number of loops (-1 = infinite)."""
+        return int(self._attrs.get("numberOfLoops", 0))
+
+    @number_of_loops.setter
+    def number_of_loops(self, value: int) -> None:
+        """Set number of loops (-1 = infinite)."""
+        self._attrs["numberOfLoops"] = value
+
+    @property
+    def delay_between_loops(self) -> float:
+        """Delay between loop cycles in seconds."""
+        return float(self._attrs.get("delayBetweenLoops", 0))
+
+    @delay_between_loops.setter
+    def delay_between_loops(self, value: float) -> None:
+        """Set delay between loop cycles."""
+        self._attrs["delayBetweenLoops"] = value
+
+    # ------------------------------------------------------------------
+    # Animation parameter accessors (read from parameters dict)
+    # ------------------------------------------------------------------
+
+    @property
+    def opacity(self) -> float:
+        """Opacity parameter default value."""
+        p = self._data.get("parameters", {}).get("opacity")
+        if isinstance(p, dict):
+            return float(p.get("defaultValue", 1.0))
+        return float(p) if p is not None else 1.0
+
+    @opacity.setter
+    def opacity(self, value: float) -> None:
+        """Set opacity parameter default value."""
+        params = self._data.setdefault("parameters", {})
+        p = params.get("opacity")
+        if isinstance(p, dict):
+            p["defaultValue"] = value
+        else:
+            params["opacity"] = value
+
+    @property
+    def jump(self) -> float:
+        """Jump parameter default value."""
+        p = self._data.get("parameters", {}).get("jump")
+        if isinstance(p, dict):
+            return float(p.get("defaultValue", 0.0))
+        return float(p) if p is not None else 0.0
+
+    @jump.setter
+    def jump(self, value: float) -> None:
+        """Set jump parameter default value."""
+        params = self._data.setdefault("parameters", {})
+        p = params.get("jump")
+        if isinstance(p, dict):
+            p["defaultValue"] = value
+        else:
+            params["jump"] = value
+
+    @property
+    def rotation(self) -> float:
+        """Rotation parameter default value."""
+        p = self._data.get("parameters", {}).get("rotation")
+        if isinstance(p, dict):
+            return float(p.get("defaultValue", 0.0))
+        return float(p) if p is not None else 0.0
+
+    @rotation.setter
+    def rotation(self, value: float) -> None:
+        """Set rotation parameter default value."""
+        params = self._data.setdefault("parameters", {})
+        p = params.get("rotation")
+        if isinstance(p, dict):
+            p["defaultValue"] = value
+        else:
+            params["rotation"] = value
+
+    @property
+    def scale(self) -> float:
+        """Scale parameter default value."""
+        p = self._data.get("parameters", {}).get("scale")
+        if isinstance(p, dict):
+            return float(p.get("defaultValue", 1.0))
+        return float(p) if p is not None else 1.0
+
+    @scale.setter
+    def scale(self, value: float) -> None:
+        """Set scale parameter default value."""
+        params = self._data.setdefault("parameters", {})
+        p = params.get("scale")
+        if isinstance(p, dict):
+            p["defaultValue"] = value
+        else:
+            params["scale"] = value
+
+    @property
+    def shift(self) -> tuple[float, float]:
+        """Shift as (horizontal, vertical) from parameters."""
+        params = self._data.get("parameters", {})
+        h = params.get("horizontal")
+        v = params.get("vertical")
+        hv = float(h["defaultValue"] if isinstance(h, dict) else (h or 0.0))
+        vv = float(v["defaultValue"] if isinstance(v, dict) else (v or 0.0))
+        return (hv, vv)
+
+    @shift.setter
+    def shift(self, value: tuple[float, float]) -> None:
+        """Set shift as (horizontal, vertical)."""
+        params = self._data.setdefault("parameters", {})
+        h, v = value
+        ph = params.get("horizontal")
+        pv = params.get("vertical")
+        if isinstance(ph, dict):
+            ph["defaultValue"] = h
+        else:
+            params["horizontal"] = h
+        if isinstance(pv, dict):
+            pv["defaultValue"] = v
+        else:
+            params["vertical"] = v
+
     def __repr__(self) -> str:
         """Return a developer-friendly string representation."""
         return f"BehaviorPhase(name={self.name!r}, type={self.phase_type})"
@@ -149,6 +289,27 @@ class GenericBehaviorEffect(Effect):
 
     def __init__(self, data: dict[str, Any]) -> None:
         Effect.__init__(self, data)
+
+    @classmethod
+    def from_preset(cls, name: str, duration_seconds: float = 2.0) -> GenericBehaviorEffect:
+        """Create a behavior effect from a named preset.
+
+        Args:
+            name: Preset name (e.g. ``'flyOut'``, ``'emphasize'``, ``'jiggle'``).
+            duration_seconds: Effect duration in seconds.
+
+        Returns:
+            A new ``GenericBehaviorEffect`` wrapping the preset data.
+
+        Raises:
+            ValueError: Unknown preset name.
+        """
+        from camtasia.templates.behavior_presets import get_behavior_preset
+        from camtasia.timing import seconds_to_ticks
+
+        ticks = seconds_to_ticks(duration_seconds)
+        data = get_behavior_preset(name, ticks)
+        return cls(data)
 
     @property
     def effect_name(self) -> str:

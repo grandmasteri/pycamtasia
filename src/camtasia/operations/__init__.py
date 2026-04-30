@@ -13,7 +13,17 @@ from camtasia.operations.batch import (
 )
 from camtasia.operations.cleanup import compact_project, remove_empty_tracks, remove_orphaned_media
 from camtasia.operations.diff import ProjectDiff, diff_projects
-from camtasia.operations.layout import pack_track, ripple_delete, ripple_insert, snap_to_grid
+from camtasia.operations.layout import (
+    pack_track,
+    ripple_delete,
+    ripple_delete_range,
+    ripple_extend,
+    ripple_insert,
+    ripple_move,
+    ripple_move_multi,
+    snap_to_clip_edge,
+    snap_to_grid,
+)
 from camtasia.operations.merge import merge_tracks
 from camtasia.operations.speed import rescale_project, set_audio_speed
 from camtasia.operations.sync import SyncSegment, apply_sync, match_marker_to_transcript, plan_sync
@@ -41,9 +51,14 @@ __all__ = [
     "replace_media_source",
     "rescale_project",
     "ripple_delete",
+    "ripple_delete_range",
+    "ripple_extend",
     "ripple_insert",
+    "ripple_move",
+    "ripple_move_multi",
     "scale_all",
     "set_audio_speed",
     "set_opacity_all",
+    "snap_to_clip_edge",
     "snap_to_grid",
 ]

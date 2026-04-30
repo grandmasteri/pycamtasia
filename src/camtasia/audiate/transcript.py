@@ -4,9 +4,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+from pathlib import Path
 import re
 
 from camtasia.timing import EDIT_RATE
+
+_DEFAULT_FILLERS: set[str] = {"um", "uh", "ah", "like"}
+
+
+def _format_srt_time(seconds: float) -> str:
+    """Format seconds as SRT timecode ``HH:MM:SS,mmm``."""
+    seconds = max(0.0, seconds)
+    total_ms = round(seconds * 1000)
+    h = total_ms // 3_600_000
+    total_ms %= 3_600_000
+    m = total_ms // 60_000
+    total_ms %= 60_000
+    s = total_ms // 1000
+    ms = total_ms % 1000
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
 @dataclass
@@ -93,6 +109,123 @@ class Transcript:
             List of words in the time range.
         """
         return [w for w in self._words if start_seconds <= w.start <= end_seconds]
+
+    def to_srt(self, path: Path | None = None) -> str:
+        """Serialize transcript words into SRT subtitle format.
+
+        Each word becomes one SRT cue. Words without an end time use
+        the next word's start (or ``start + 0.5`` for the last word).
+
+        Args:
+            path: If given, also write the SRT string to this file.
+
+        Returns:
+            The SRT-formatted string.
+        """
+        lines: list[str] = []
+        for i, word in enumerate(self._words):
+            end = word.end
+            if end is None:
+                end = (
+                    self._words[i + 1].start
+                    if i + 1 < len(self._words)
+                    else word.start + 0.5
+                )
+            lines.append(str(i + 1))
+            lines.append(f"{_format_srt_time(word.start)} --> {_format_srt_time(end)}")
+            lines.append(word.text)
+            lines.append("")
+        result = "\n".join(lines)
+        if path is not None:
+            Path(path).write_text(result)
+        return result
+
+    def detect_filler_words(
+        self, fillers: set[str] = _DEFAULT_FILLERS,
+    ) -> list[Word]:
+        """Return words whose text matches a filler word (case-insensitive).
+
+        Args:
+            fillers: Set of filler words to detect.
+
+        Returns:
+            List of matching Word objects.
+        """
+        lower_fillers = {f.lower() for f in fillers}
+        return [w for w in self._words if w.text.lower() in lower_fillers]
+
+    def remove_filler_words(
+        self, fillers: set[str] = _DEFAULT_FILLERS,
+    ) -> Transcript:
+        """Return a new Transcript with filler words removed.
+
+        Args:
+            fillers: Set of filler words to remove.
+
+        Returns:
+            A new Transcript without the filler words.
+        """
+        lower_fillers = {f.lower() for f in fillers}
+        return Transcript([w for w in self._words if w.text.lower() not in lower_fillers])
+
+    def detect_pauses(self, min_gap_seconds: float = 0.5) -> list[tuple[float, float]]:
+        """Detect gaps between consecutive words.
+
+        A pause is a gap where the previous word's end time is before the
+        next word's start time by at least *min_gap_seconds*.
+
+        Args:
+            min_gap_seconds: Minimum gap duration to report.
+
+        Returns:
+            List of ``(gap_start, gap_end)`` tuples.
+        """
+        pauses: list[tuple[float, float]] = []
+        for i in range(len(self._words) - 1):
+            end = self._words[i].end
+            if end is None:
+                continue
+            next_start = self._words[i + 1].start
+            if next_start - end >= min_gap_seconds:
+                pauses.append((end, next_start))
+        return pauses
+
+    def shorten_pauses(
+        self,
+        min_gap_seconds: float = 0.5,
+        target_gap_seconds: float = 0.2,
+    ) -> Transcript:
+        """Return a new Transcript with long pauses shortened.
+
+        Words after each detected pause are shifted earlier so the gap
+        equals *target_gap_seconds*.
+
+        Args:
+            min_gap_seconds: Minimum gap to consider a pause.
+            target_gap_seconds: Desired gap duration after shortening.
+
+        Returns:
+            A new Transcript with adjusted timings.
+        """
+        if not self._words:
+            return Transcript([])
+        new_words: list[Word] = []
+        shift = 0.0
+        for i, word in enumerate(self._words):
+            if i > 0:
+                prev = self._words[i - 1]
+                if prev.end is not None:
+                    gap = word.start - prev.end
+                    if gap >= min_gap_seconds:
+                        shift += gap - target_gap_seconds
+            new_end = word.end - shift if word.end is not None else None
+            new_words.append(Word(
+                text=word.text,
+                start=word.start - shift,
+                end=new_end,
+                word_id=word.word_id,
+            ))
+        return Transcript(new_words)
 
     @classmethod
     def from_audiate_keyframes(cls, keyframes: list[dict]) -> Transcript:

@@ -11,6 +11,7 @@ __all__ = [
     'BlendMode',
     'CalloutKind',
     'CalloutShape',
+    'CharacterOrder',
     'ClipSummary',
     'ClipType',
     'ColorAdjustmentParams',
@@ -21,8 +22,10 @@ __all__ = [
     'EffectName',
     'HealthCheckResult',
     'InterpolationType',
+    'LutPreset',
     'MaskShape',
     'MediaType',
+    'Movement',
     'ReportFormat',
     'RoundCornersParams',
     'ScreenplayBuildResult',
@@ -102,9 +105,12 @@ class BehaviorPreset(str, Enum):
     SLIDING = 'sliding'
     FADE = 'fade'
     FLY_IN = 'flyIn'
+    FLY_OUT = 'flyOut'
     POP_UP = 'popUp'
     PULSATING = 'pulsating'
     SHIFTING = 'shifting'
+    EMPHASIZE = 'emphasize'
+    JIGGLE = 'jiggle'
 
 
 class BehaviorInnerName(str, Enum):
@@ -126,6 +132,24 @@ class BehaviorInnerName(str, Enum):
     NONE = 'none'
     TREMBLE = 'tremble'
     PULSATE = 'pulsate'
+    EMPHASIZE = 'emphasize'
+    JIGGLE = 'jiggle'
+
+
+class LutPreset(str, Enum):
+    """Known LUT filename presets for color grading.
+
+    .. warning::
+        These preset filenames are plausible names based on common LUT
+        naming conventions but have **not been verified** against actual
+        Camtasia-bundled LUT files. If your Camtasia version uses
+        different filenames, please file an issue with the correct names.
+    """
+    BLACK_AND_WHITE = 'Black and White.cube'
+    VINTAGE = 'Vintage.cube'
+    WARM = 'Warm.cube'
+    COOL = 'Cool.cube'
+    HIGH_CONTRAST = 'High Contrast.cube'
 
 
 class BlendMode(IntEnum):
@@ -187,6 +211,40 @@ class MediaType(IntEnum):
     Video = 0
     Image = 1
     Audio = 2
+
+
+# ---------------------------------------------------------------------------
+# Behavior animation enums — movement direction and character order
+# ---------------------------------------------------------------------------
+
+
+class Movement(IntEnum):
+    """Movement direction/style for behavior phase animations.
+
+    Values reverse-engineered from Camtasia project files.
+    """
+    NONE = 0
+    FADE = 6
+    SLIDE = 8
+    DIRECTION = 16
+    PULSATE = 27
+    SPRING = 30
+    DISABLED = -1
+
+
+class CharacterOrder(IntEnum):
+    """Order in which characters animate in behavior phases.
+
+    Values reverse-engineered from Camtasia project files.
+    """
+    LEFT_TO_RIGHT = 0
+    RIGHT_TO_LEFT = 1
+    CENTER_OUT = 2
+    RANDOM = 3
+    FROM_TOP = 4
+    FROM_BOTTOM = 5
+    ALL_AT_ONCE = 6
+    BY_WORD = 7
 
 
 # ---------------------------------------------------------------------------
@@ -378,3 +436,5 @@ class ScreenplayBuildResult(TypedDict):
     clips_placed: int
     pauses_added: int
     total_duration: float
+    markers_added: NotRequired[int]
+    captions_added: NotRequired[int]

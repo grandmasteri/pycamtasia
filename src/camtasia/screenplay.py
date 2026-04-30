@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from pathlib import Path
 import re
@@ -41,6 +45,24 @@ class ScreenplaySection:
     pauses: list[PauseMarker] = field(default_factory=list)
     transitions: list[TransitionMarker] = field(default_factory=list)
     images: list[ImageRef] = field(default_factory=list)
+
+    @classmethod
+    def from_paragraphs(cls, paragraphs: list[str], *, title: str = 'Untitled', level: int = 2) -> ScreenplaySection:
+        """Create a section from plain text paragraphs, each becoming a VO block.
+
+        Args:
+            paragraphs: List of text strings, one per VO block.
+            title: Section title.
+            level: Heading level.
+
+        Returns:
+            A new ScreenplaySection with numbered VO blocks.
+        """
+        vo_blocks = [
+            VOBlock(id=str(i + 1), text=p, section=title)
+            for i, p in enumerate(paragraphs)
+        ]
+        return cls(title=title, level=level, vo_blocks=vo_blocks)
 
 
 @dataclass

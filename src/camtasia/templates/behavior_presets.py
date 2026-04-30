@@ -224,6 +224,78 @@ PRESETS = {
         'out': _NONE_OUT,
         'metadata': {'presetName': 'Shifting'},
     },
+    'flyOut': {
+        'effectName': 'flyOut',
+        'start': 0,
+        'in': {
+            'attributes': {
+                'name': 'none', 'type': 1, 'characterOrder': 6,
+                'offsetBetweenCharacters': 0,
+                'suggestedDurationPerCharacter': 0,
+                'overlapProportion': 0, 'movement': -1,
+                'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
+            },
+        },
+        'center': _NONE_CENTER,
+        'out': {
+            'attributes': {
+                'name': 'flyOut', 'type': 0, 'characterOrder': 6,
+                'offsetBetweenCharacters': 35280000,
+                'suggestedDurationPerCharacter': 705600000,
+                'overlapProportion': 0, 'movement': 16,
+                'springDamping': 5.0, 'springStiffness': 50.0, 'bounceBounciness': 0.45,
+            },
+            'parameters': {'direction': _DIRECTION_PARAM_OUT},
+        },
+        'metadata': {'presetName': 'FlyOut'},
+    },
+    'emphasize': {
+        'effectName': 'emphasize',
+        'start': 0,
+        'in': _NONE_OUT,
+        'center': {
+            'attributes': {
+                'name': 'emphasize', 'type': 1, 'characterOrder': 6,
+                'offsetBetweenCharacters': 0, 'secondsPerLoop': 1,
+                'numberOfLoops': -1, 'delayBetweenLoops': 0,
+            },
+            'parameters': {
+                'scale': {'type': 'double', 'defaultValue': 1.15,
+                    'valueBounds': {'minValue': 0.01, 'maxValue': 2.0, 'defaultValue': 1.15},
+                    'uiHints': {'userInterfaceType': 1, 'unitType': 1}},
+                'opacity': {'type': 'double', 'defaultValue': 0.8,
+                    'valueBounds': {'minValue': 0.0, 'maxValue': 1.0, 'defaultValue': 0.8},
+                    'uiHints': {'userInterfaceType': 1, 'unitType': 0}},
+            },
+        },
+        'out': _NONE_OUT,
+        'metadata': {'presetName': 'Emphasize'},
+    },
+    'jiggle': {
+        'effectName': 'jiggle',
+        'start': 0,
+        'in': _NONE_OUT,
+        'center': {
+            'attributes': {
+                'name': 'jiggle', 'type': 0, 'characterOrder': 6,
+                'offsetBetweenCharacters': 0, 'secondsPerLoop': '1/2',
+                'numberOfLoops': -1, 'delayBetweenLoops': 0,
+            },
+            'parameters': {
+                'rotation': {'type': 'double', 'defaultValue': 0.035,
+                    'valueBounds': {'minValue': 0.0, 'maxValue': 1.0, 'defaultValue': 0.035},
+                    'uiHints': {'userInterfaceType': 1, 'unitType': 3}},
+                'horizontal': {'type': 'double', 'defaultValue': 3.0,
+                    'valueBounds': {'minValue': 0.0, 'maxValue': 32.0, 'defaultValue': 3.0},
+                    'uiHints': {'userInterfaceType': 1, 'unitType': 0}},
+                'vertical': {'type': 'double', 'defaultValue': 3.0,
+                    'valueBounds': {'minValue': 0.0, 'maxValue': 32.0, 'defaultValue': 3.0},
+                    'uiHints': {'userInterfaceType': 1, 'unitType': 0}},
+            },
+        },
+        'out': _NONE_OUT,
+        'metadata': {'presetName': 'Jiggle'},
+    },
 }
 
 PRESETS = {k: copy.deepcopy(v) for k, v in PRESETS.items()}  # Break shared references between presets

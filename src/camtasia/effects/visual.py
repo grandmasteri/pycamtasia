@@ -1,9 +1,12 @@
 """Visual effects: RoundCorners, DropShadow."""
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Any
 
 from camtasia.effects.base import Effect, register_effect
+
+from camtasia.timing import EDIT_RATE
 
 if TYPE_CHECKING:
     from camtasia.types import MaskShape
@@ -298,6 +301,43 @@ class Mask(Effect):
         """Set the mask corner radius."""
         self.set_parameter("mask-cornerRadius", value)
 
+    def animate_to(
+        self,
+        time_seconds: float,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+    ) -> None:
+        """Append keyframes for position and dimensions at the given time.
+
+        Converts *time_seconds* to editRate ticks and appends a keyframe
+        to each of the four animatable mask parameters.
+
+        Args:
+            time_seconds: Time in seconds for the keyframe.
+            x: Horizontal position value.
+            y: Vertical position value.
+            width: Mask width value.
+            height: Mask height value.
+        """
+        ticks = round(time_seconds * EDIT_RATE)
+        params = self._data.setdefault("parameters", {})
+        for key, val in (
+            ("mask-positionX", x),
+            ("mask-positionY", y),
+            ("mask-width", width),
+            ("mask-height", height),
+        ):
+            entry = params.get(key)
+            if not isinstance(entry, dict):
+                entry = {"defaultValue": entry if entry is not None else 0.0,
+                         "type": "double", "interp": "linr", "keyframes": []}
+                params[key] = entry
+            entry.setdefault("keyframes", []).append(
+                {"time": ticks, "value": val, "interp": "linr"}
+            )
+
 
 @register_effect("Glow")
 class Glow(Effect):
@@ -329,16 +369,14 @@ class Glow(Effect):
 
 
 # Not registered via @register_effect — unverified against real Camtasia projects.
+@register_effect("BlurRegion")
 class BlurRegion(Effect):
     """Blur region effect.
 
-    .. warning::
-        This effect is **not registered** with ``effect_from_dict`` because it
-        has not been verified against any TechSmith sample project.  Parameter
-        names and semantics may differ from what Camtasia actually produces.
-
     Parameters:
-        sigma, mask-cornerRadius, mask-invert, color-alpha
+        sigma, mask-cornerRadius, mask-invert, color (RGBA via separate keys),
+        mask-shape, mask-blend, mask-opacity, mask-width, mask-height,
+        mask-positionX, mask-positionY, ease-in, ease-out.
     """
 
     @property
@@ -381,6 +419,108 @@ class BlurRegion(Effect):
         """Set the alpha channel of the blur region overlay color."""
         self.set_parameter("color-alpha", value)
 
+    # -- new properties --
+
+    @property
+    def color(self) -> tuple[float, float, float, float]:
+        """RGBA color as ``(red, green, blue, alpha)`` floats."""
+        return _color_rgba(self.parameters, "color")
+
+    @color.setter
+    def color(self, rgba: tuple[float, float, float, float]) -> None:
+        """Set the RGBA overlay color."""
+        _set_color_rgba(self._data.setdefault("parameters", {}), "color", rgba)
+
+    @property
+    def shape(self) -> int:
+        """Mask shape identifier (0 = rectangle, 1 = ellipse)."""
+        return int(self.get_parameter("mask-shape"))
+
+    @shape.setter
+    def shape(self, value: int | MaskShape) -> None:
+        """Set the mask shape identifier."""
+        self.set_parameter("mask-shape", int(value))
+
+    @property
+    def feather(self) -> float:
+        """Edge feather (softness) amount."""
+        return float(self.get_parameter("mask-blend"))
+
+    @feather.setter
+    def feather(self, value: float) -> None:
+        """Set the edge feather amount."""
+        self.set_parameter("mask-blend", value)
+
+    @property
+    def opacity(self) -> float:
+        """Mask opacity from 0.0 (transparent) to 1.0 (opaque)."""
+        return float(self.get_parameter("mask-opacity"))
+
+    @opacity.setter
+    def opacity(self, value: float) -> None:
+        """Set the mask opacity."""
+        self.set_parameter("mask-opacity", value)
+
+    @property
+    def ease_in_seconds(self) -> float:
+        """Ease-in duration in seconds."""
+        return int(self.get_parameter("ease-in")) / EDIT_RATE
+
+    @ease_in_seconds.setter
+    def ease_in_seconds(self, value: float) -> None:
+        """Set the ease-in duration in seconds."""
+        self.set_parameter("ease-in", round(value * EDIT_RATE))
+
+    @property
+    def ease_out_seconds(self) -> float:
+        """Ease-out duration in seconds."""
+        return int(self.get_parameter("ease-out")) / EDIT_RATE
+
+    @ease_out_seconds.setter
+    def ease_out_seconds(self, value: float) -> None:
+        """Set the ease-out duration in seconds."""
+        self.set_parameter("ease-out", round(value * EDIT_RATE))
+
+    @property
+    def mask_width(self) -> float:
+        """Mask width."""
+        return self.get_parameter("mask-width")  # type: ignore[no-any-return]
+
+    @mask_width.setter
+    def mask_width(self, value: float) -> None:
+        """Set the mask width."""
+        self.set_parameter("mask-width", value)
+
+    @property
+    def mask_height(self) -> float:
+        """Mask height."""
+        return self.get_parameter("mask-height")  # type: ignore[no-any-return]
+
+    @mask_height.setter
+    def mask_height(self, value: float) -> None:
+        """Set the mask height."""
+        self.set_parameter("mask-height", value)
+
+    @property
+    def mask_position_x(self) -> float:
+        """Mask horizontal position."""
+        return self.get_parameter("mask-positionX")  # type: ignore[no-any-return]
+
+    @mask_position_x.setter
+    def mask_position_x(self, value: float) -> None:
+        """Set the mask horizontal position."""
+        self.set_parameter("mask-positionX", value)
+
+    @property
+    def mask_position_y(self) -> float:
+        """Mask vertical position."""
+        return self.get_parameter("mask-positionY")  # type: ignore[no-any-return]
+
+    @mask_position_y.setter
+    def mask_position_y(self, value: float) -> None:
+        """Set the mask vertical position."""
+        self.set_parameter("mask-positionY", value)
+
 
 
 @register_effect("ColorAdjustment")
@@ -417,7 +557,18 @@ class ColorAdjustment(Effect):
 
 @register_effect("LutEffect")
 class LutEffect(Effect):
-    """Color grading via a .cube LUT file."""
+    """Color grading via a .cube LUT file.
+
+    Parameters:
+        lutSource, lut_intensity, channel, shadowRampStart, shadowRampEnd,
+        highlightRampStart, highlightRampEnd, rangePreset,
+        easeInTime (Mac-only, ticks), easeOutTime (Mac-only, ticks).
+    """
+
+    _CHANNEL_MAP: dict[str, int] = {
+        'all': 0, 'red': 1, 'green': 2, 'blue': 3,
+    }
+    _CHANNEL_REVERSE: dict[int, str] = {v: k for k, v in _CHANNEL_MAP.items()}
 
     @property
     def lut_source(self) -> str:
@@ -436,6 +587,89 @@ class LutEffect(Effect):
     @intensity.setter
     def intensity(self, value: float) -> None:
         self.set_parameter("lut_intensity", value)
+
+    @property
+    def shadow_ramp_start(self) -> float:
+        """Shadow ramp start (0.0-1.0)."""
+        return float(self.get_parameter("shadowRampStart"))
+
+    @shadow_ramp_start.setter
+    def shadow_ramp_start(self, value: float) -> None:
+        self.set_parameter("shadowRampStart", value)
+
+    @property
+    def shadow_ramp_end(self) -> float:
+        """Shadow ramp end (0.0-1.0)."""
+        return float(self.get_parameter("shadowRampEnd"))
+
+    @shadow_ramp_end.setter
+    def shadow_ramp_end(self, value: float) -> None:
+        self.set_parameter("shadowRampEnd", value)
+
+    @property
+    def highlight_ramp_start(self) -> float:
+        """Highlight ramp start (0.0-1.0)."""
+        return float(self.get_parameter("highlightRampStart"))
+
+    @highlight_ramp_start.setter
+    def highlight_ramp_start(self, value: float) -> None:
+        self.set_parameter("highlightRampStart", value)
+
+    @property
+    def highlight_ramp_end(self) -> float:
+        """Highlight ramp end (0.0-1.0)."""
+        return float(self.get_parameter("highlightRampEnd"))
+
+    @highlight_ramp_end.setter
+    def highlight_ramp_end(self, value: float) -> None:
+        self.set_parameter("highlightRampEnd", value)
+
+    @property
+    def channel(self) -> str:
+        """Color channel: 'all', 'red', 'green', or 'blue'."""
+        raw = self.get_parameter("channel")
+        if isinstance(raw, str):
+            return raw
+        return self._CHANNEL_REVERSE.get(int(raw), 'all')
+
+    @channel.setter
+    def channel(self, value: str | int) -> None:
+        """Set color channel by name or integer."""
+        if isinstance(value, int):
+            self.set_parameter("channel", value)
+        else:
+            self.set_parameter("channel", self._CHANNEL_MAP.get(value, 0))
+
+    @property
+    def range_preset(self) -> str:
+        """Named range preset string."""
+        return str(self.get_parameter("rangePreset"))
+
+    @range_preset.setter
+    def range_preset(self, value: str) -> None:
+        self.set_parameter("rangePreset", value)
+
+    @property
+    def ease_in_seconds(self) -> float:
+        """Ease-in duration in seconds (Mac-only, stored as ticks)."""
+        from camtasia.timing import ticks_to_seconds
+        return ticks_to_seconds(int(self.get_parameter("easeInTime")))
+
+    @ease_in_seconds.setter
+    def ease_in_seconds(self, value: float) -> None:
+        from camtasia.timing import seconds_to_ticks
+        self.set_parameter("easeInTime", seconds_to_ticks(value))
+
+    @property
+    def ease_out_seconds(self) -> float:
+        """Ease-out duration in seconds (Mac-only, stored as ticks)."""
+        from camtasia.timing import ticks_to_seconds
+        return ticks_to_seconds(int(self.get_parameter("easeOutTime")))
+
+    @ease_out_seconds.setter
+    def ease_out_seconds(self, value: float) -> None:
+        from camtasia.timing import seconds_to_ticks
+        self.set_parameter("easeOutTime", seconds_to_ticks(value))
 
 
 @register_effect("BlendModeEffect")
@@ -637,6 +871,70 @@ class CornerPin(Effect):
     def bottom_right(self, value: tuple[float, float]) -> None:
         self.set_parameter("bottomRightX", value[0])
         self.set_parameter("bottomRightY", value[1])
+
+    # ------------------------------------------------------------------
+    # Derived / computed properties
+    # ------------------------------------------------------------------
+
+    @property
+    def position(self) -> tuple[float, float]:
+        """Centroid (x, y) computed as the mean of the four corners."""
+        tl = self.top_left
+        tr = self.top_right
+        bl = self.bottom_left
+        br = self.bottom_right
+        return (
+            (tl[0] + tr[0] + bl[0] + br[0]) / 4.0,
+            (tl[1] + tr[1] + bl[1] + br[1]) / 4.0,
+        )
+
+    @property
+    def skew(self) -> float:
+        """Skew as the difference between top-edge and bottom-edge lengths."""
+        tl, tr = self.top_left, self.top_right
+        bl, br = self.bottom_left, self.bottom_right
+        top_len = math.hypot(tr[0] - tl[0], tr[1] - tl[1])
+        bot_len = math.hypot(br[0] - bl[0], br[1] - bl[1])
+        return top_len - bot_len
+
+    @property
+    def rotation(self) -> float:
+        """Rotation in degrees — angle between the top edge and horizontal."""
+        tl, tr = self.top_left, self.top_right
+        return math.degrees(math.atan2(tr[1] - tl[1], tr[0] - tl[0]))
+
+    def add_keyframe(
+        self,
+        time_seconds: float,
+        corner: str,
+        x: float,
+        y: float,
+    ) -> None:
+        """Add a position keyframe for a specific corner.
+
+        Args:
+            time_seconds: Keyframe time in seconds.
+            corner: One of ``'topLeft'``, ``'topRight'``,
+                ``'bottomLeft'``, ``'bottomRight'``.
+            x: Horizontal position (normalized 0.0-1.0).
+            y: Vertical position (normalized 0.0-1.0).
+
+        Raises:
+            ValueError: If *corner* is not a valid corner name.
+        """
+        valid = ('topLeft', 'topRight', 'bottomLeft', 'bottomRight')
+        if corner not in valid:
+            raise ValueError(f"corner must be one of {valid}, got {corner!r}")
+        tick = int(time_seconds * EDIT_RATE)
+        params = self._data.setdefault('parameters', {})
+        for suffix, val in (('X', x), ('Y', y)):
+            key = f"{corner}{suffix}"
+            param = params.get(key)
+            if not isinstance(param, dict):
+                param = {'type': 'double', 'defaultValue': val, 'interp': 'linr'}
+                params[key] = param
+            kfs = param.setdefault('keyframes', [])
+            kfs.append({'time': tick, 'value': val, 'interp': 'linr'})
 
 
 @register_effect("Sepia")
@@ -1083,9 +1381,107 @@ class ChromaKey(Effect):
         self.set_parameter("defringe", value)
 
     @property
+    def hue(self) -> float:
+        """Hue angle for the key color (0.0-360.0)."""
+        return float(self.get_parameter("hue"))
+
+    @hue.setter
+    def hue(self, value: float) -> None:
+        """Set the hue angle for the key color."""
+        self.set_parameter("hue", value)
+
+    @property
     def invert(self) -> int:
         return int(self.get_parameter("invert"))
 
     @invert.setter
     def invert(self, value: int) -> None:
         self.set_parameter("invert", value)
+
+
+@register_effect("MotionPath")
+class MotionPath(Effect):
+    """Motion path animation — move a clip along a defined path.
+
+    .. warning::
+        This effect has **not been verified** against a real TechSmith fixture.
+        Parameter names and semantics may differ from what Camtasia actually
+        produces. If your Camtasia version rejects these names, please file
+        an issue with a fixture project.
+
+    Parameters:
+        ``autoOrient`` (bool), ``lineType`` (str), position keyframes.
+    """
+
+    @property
+    def auto_orient(self) -> bool:
+        """Whether the clip auto-orients to the path direction."""
+        return bool(self.get_parameter("autoOrient"))
+
+    @auto_orient.setter
+    def auto_orient(self, value: bool) -> None:
+        self.set_parameter("autoOrient", float(value))
+
+    @property
+    def line_type(self) -> str:
+        """Path interpolation: ``'angle'``, ``'curve'``, or ``'combination'``."""
+        return str(self.get_parameter("lineType"))
+
+    @line_type.setter
+    def line_type(self, value: str) -> None:
+        self.set_parameter("lineType", value)
+
+    @property
+    def keyframes(self) -> list[dict]:
+        """Position keyframes as a list of dicts with ``time``, ``x``, ``y``."""
+        params = self.parameters
+        pos_x = params.get("positionX", {})
+        pos_y = params.get("positionY", {})
+        kfs_x = pos_x.get("keyframes", []) if isinstance(pos_x, dict) else []
+        kfs_y = pos_y.get("keyframes", []) if isinstance(pos_y, dict) else []
+        result: list[dict] = []
+        for kx, ky in zip(kfs_x, kfs_y):
+            result.append({"time": kx["time"], "x": kx["value"], "y": ky["value"]})
+        return result
+
+
+@register_effect("BackgroundRemoval")
+class BackgroundRemoval(Effect):
+    """AI-based background removal effect.
+
+    .. warning::
+        This effect has **not been verified** against a real TechSmith fixture.
+        Parameter names and semantics may differ from what Camtasia actually
+        produces. If your Camtasia version rejects these names, please file
+        an issue with a fixture project.
+
+    Parameters:
+        ``intensity`` (float), ``edgeSoftness`` (float), ``invert`` (0 or 1).
+    """
+
+    @property
+    def intensity(self) -> float:
+        """Removal strength (0.0-1.0)."""
+        return float(self.get_parameter("intensity"))
+
+    @intensity.setter
+    def intensity(self, value: float) -> None:
+        self.set_parameter("intensity", value)
+
+    @property
+    def edge_softness(self) -> float:
+        """Edge feathering amount (0.0-1.0)."""
+        return float(self.get_parameter("edgeSoftness"))
+
+    @edge_softness.setter
+    def edge_softness(self, value: float) -> None:
+        self.set_parameter("edgeSoftness", value)
+
+    @property
+    def invert(self) -> bool:
+        """Whether to invert the mask (remove foreground instead)."""
+        return bool(self.get_parameter("invert"))
+
+    @invert.setter
+    def invert(self, value: bool) -> None:
+        self.set_parameter("invert", float(value))
