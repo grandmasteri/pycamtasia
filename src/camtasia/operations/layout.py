@@ -154,7 +154,7 @@ def ripple_delete_range(track: Track, start_seconds: float, end_seconds: float) 
     if start_seconds < 0:
         raise ValueError(f'start_seconds must be non-negative, got {start_seconds}')
     if end_seconds <= start_seconds:
-        raise ValueError(f'end_seconds must be greater than start_seconds')
+        raise ValueError('end_seconds must be greater than start_seconds')
     range_start = seconds_to_ticks(start_seconds)
     range_end = seconds_to_ticks(end_seconds)
     range_width = range_end - range_start
@@ -303,7 +303,7 @@ def snap_to_clip_edge(track: Track, tolerance_seconds: float = 0.05) -> None:
         best_start_dist = tolerance_ticks + 1
         best_start_edge = clip_start
         for e in edges:
-            if e == clip_start or e == clip_end:
+            if e in (clip_start, clip_end):
                 continue
             dist = abs(clip_start - e)
             if dist <= tolerance_ticks and dist < best_start_dist:
@@ -313,7 +313,7 @@ def snap_to_clip_edge(track: Track, tolerance_seconds: float = 0.05) -> None:
         best_end_dist = tolerance_ticks + 1
         best_end_edge = clip_end
         for e in edges:
-            if e == clip_start or e == clip_end:
+            if e in (clip_start, clip_end):
                 continue
             dist = abs(clip_end - e)
             if dist <= tolerance_ticks and dist < best_end_dist:
