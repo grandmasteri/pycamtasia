@@ -11,6 +11,12 @@ from camtasia.operations.batch import (
     scale_all,
     set_opacity_all,
 )
+from camtasia.operations.captions import (
+    TrimRange,
+    generate_captions_from_audio,
+    sync_script_to_captions,
+    trim_silences,
+)
 from camtasia.operations.cleanup import compact_project, remove_empty_tracks, remove_orphaned_media
 from camtasia.operations.diff import ProjectDiff, diff_projects
 from camtasia.operations.layout import (
@@ -54,6 +60,7 @@ __all__ = [
     "ProjectDiff",
     "SyncSegment",
     "TemplateManager",
+    "TrimRange",
     "apply_sync",
     "apply_to_all_tracks",
     "apply_to_clips",
@@ -67,6 +74,7 @@ __all__ = [
     "fade_all",
     "install_camtemplate",
     "list_installed_templates",
+    "generate_captions_from_audio",
     "match_marker_to_transcript",
     "merge_tracks",
     "move_all",
@@ -94,4 +102,6 @@ __all__ = [
     "snap_to_clip_edge",
     "snap_to_grid",
     "sync_audiate_edits_to_timeline",
+    "sync_script_to_captions",
+    "trim_silences",
 ]

@@ -112,5 +112,17 @@ class CaptionAttributes:
         """Set whether the caption background is enabled."""
         self._data['backgroundEnabled'] = value
 
+    @property
+    def default_duration_seconds(self) -> float:
+        """Get the default caption duration in seconds."""
+        return float(self._data.get('defaultDurationSeconds', 4.0))
+
+    @default_duration_seconds.setter
+    def default_duration_seconds(self, value: float) -> None:
+        """Set the default caption duration in seconds (must be > 0)."""
+        if value <= 0:
+            raise ValueError(f'default_duration_seconds must be > 0, got {value}')
+        self._data['defaultDurationSeconds'] = value
+
     def __repr__(self) -> str:
         return f'CaptionAttributes(font={self.font_name!r}, size={self.font_size}, lang={self.lang!r})'

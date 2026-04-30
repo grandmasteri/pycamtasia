@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
+import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -23,6 +24,228 @@ class CaptionEntry:
     start_seconds: float
     duration_seconds: float
     text: str
+
+
+def _parse_srt_time(ts: str) -> float:
+    """Parse SRT timecode 'HH:MM:SS,mmm' to seconds."""
+    m = re.match(r'(\d+):(\d+):(\d+)[,.](\d+)', ts.strip())
+    if not m:
+        raise ValueError(f'Invalid SRT timecode: {ts!r}')
+    h, mn, s, ms = int(m[1]), int(m[2]), int(m[3]), int(m[4].ljust(3, '0')[:3])
+    return h * 3600 + mn * 60 + s + ms / 1000
+
+
+def _format_srt_time(seconds: float) -> str:
+    """Format seconds as SRT timecode HH:MM:SS,mmm."""
+    seconds = max(0.0, seconds)
+    total_ms = round(seconds * 1000)
+    h = total_ms // 3600000
+    total_ms %= 3600000
+    m = total_ms // 60000
+    total_ms %= 60000
+    s = total_ms // 1000
+    ms = total_ms % 1000
+    return f'{h:02d}:{m:02d}:{s:02d},{ms:03d}'
+
+
+def import_captions_srt(path: Path) -> list[CaptionEntry]:
+    """Parse an SRT subtitle file into caption entries.
+
+    Args:
+        path: Path to the .srt file.
+
+    Returns:
+        List of CaptionEntry parsed from the file.
+    """
+    text = Path(path).read_text(encoding='utf-8-sig')
+    entries: list[CaptionEntry] = []
+    blocks = re.split(r'\n\s*\n', text.strip())
+    for block in blocks:
+        lines = block.strip().splitlines()
+        if len(lines) < 3:
+            continue
+        # lines[0] = index, lines[1] = timecodes, lines[2:] = text
+        tc = lines[1]
+        m = re.match(r'(.+?)\s*-->\s*(.+)', tc)
+        if not m:
+            continue
+        start = _parse_srt_time(m[1])
+        end = _parse_srt_time(m[2])
+        caption_text = '\n'.join(lines[2:])
+        entries.append(CaptionEntry(
+            start_seconds=round(start, 3),
+            duration_seconds=round(end - start, 3),
+            text=caption_text,
+        ))
+    return entries
+
+
+def import_captions_vtt(path: Path) -> list[CaptionEntry]:
+    """Parse a WebVTT subtitle file into caption entries.
+
+    Args:
+        path: Path to the .vtt file.
+
+    Returns:
+        List of CaptionEntry parsed from the file.
+    """
+    text = Path(path).read_text(encoding='utf-8-sig')
+    entries: list[CaptionEntry] = []
+    blocks = re.split(r'\n\s*\n', text.strip())
+    for block in blocks:
+        lines = block.strip().splitlines()
+        # Find the line with '-->'
+        tc_idx = None
+        for i, line in enumerate(lines):
+            if '-->' in line:
+                tc_idx = i
+                break
+        if tc_idx is None:
+            continue
+        m = re.match(r'(.+?)\s*-->\s*(.+)', lines[tc_idx])
+        if not m:
+            continue
+        start = _parse_srt_time(m[1])
+        end = _parse_srt_time(m[2])
+        caption_text = '\n'.join(lines[tc_idx + 1:])
+        if not caption_text:
+            continue
+        entries.append(CaptionEntry(
+            start_seconds=round(start, 3),
+            duration_seconds=round(end - start, 3),
+            text=caption_text,
+        ))
+    return entries
+
+
+def export_captions_srt(
+    project: Project,
+    path: str | Path,
+    *,
+    track_name: str = 'Subtitles',
+) -> Path:
+    """Export caption entries from a project track as an SRT file.
+
+    Args:
+        project: Source project.
+        path: Destination .srt file path.
+        track_name: Name of the caption track.
+
+    Returns:
+        The written path.
+
+    Raises:
+        KeyError: If no track with the given name exists.
+    """
+    from camtasia.timing import ticks_to_seconds
+    out = Path(path)
+    track = project.timeline.find_track_by_name(track_name)
+    if track is None:
+        raise KeyError(f'No track named {track_name!r}')
+    lines: list[str] = []
+    idx = 0
+    for clip in track.clips:
+        if clip.clip_type != 'Callout':
+            continue
+        idx += 1
+        start = ticks_to_seconds(clip.start)
+        end = start + ticks_to_seconds(clip.duration)
+        text: str = (clip._data.get('def', {}) or {}).get('text', '')
+        lines.append(str(idx))
+        lines.append(f'{_format_srt_time(start)} --> {_format_srt_time(end)}')
+        lines.append(text)
+        lines.append('')
+    out.write_text('\n'.join(lines), encoding='utf-8')
+    return out
+
+
+def export_captions_multilang(
+    project: Project,
+    output_dir: str | Path,
+    languages: list[str],
+    *,
+    track_name: str = 'Subtitles',
+) -> list[Path]:
+    """Export one SRT file per language.
+
+    Uses ``Project.captions_by_language`` if available, otherwise falls
+    back to exporting the raw caption track for each language.
+
+    Args:
+        project: Source project.
+        output_dir: Directory to write SRT files into.
+        languages: Language codes to export (e.g. ['en', 'fr', 'de']).
+        track_name: Name of the caption track (fallback).
+
+    Returns:
+        List of written file paths.
+    """
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    paths: list[Path] = []
+    if hasattr(project, 'captions_by_language'):
+        by_lang = project.captions_by_language  # type: ignore[attr-defined]
+        for lang in languages:
+            srt_path = out_dir / f'{lang}.srt'
+            entries = by_lang.get(lang, [])
+            lines: list[str] = []
+            for i, entry in enumerate(entries, 1):
+                lines.append(str(i))
+                start = entry.start_seconds
+                end = start + entry.duration_seconds
+                lines.append(f'{_format_srt_time(start)} --> {_format_srt_time(end)}')
+                lines.append(entry.text)
+                lines.append('')
+            srt_path.write_text('\n'.join(lines), encoding='utf-8')
+            paths.append(srt_path)
+    else:
+        for lang in languages:
+            srt_path = out_dir / f'{lang}.srt'
+            export_captions_srt(project, srt_path, track_name=track_name)
+            paths.append(srt_path)
+    return paths
+
+
+def export_multilang_package(
+    project: Project,
+    output_dir: str | Path,
+    languages: list[str],
+    *,
+    track_name: str = 'Subtitles',
+) -> Path:
+    """Export a multilanguage package with subfolders per language.
+
+    Each language subfolder contains:
+    - ``captions.srt`` — SRT captions for that language
+    - ``metadata.json`` — language code and project info
+
+    Args:
+        project: Source project.
+        output_dir: Root output directory.
+        languages: Language codes to export.
+        track_name: Name of the caption track (fallback).
+
+    Returns:
+        The root output directory path.
+    """
+    root = Path(output_dir)
+    root.mkdir(parents=True, exist_ok=True)
+    srt_files = export_captions_multilang(
+        project, root, languages, track_name=track_name,
+    )
+    for lang, srt_path in zip(languages, srt_files):
+        lang_dir = root / lang
+        lang_dir.mkdir(parents=True, exist_ok=True)
+        srt_path.rename(lang_dir / 'captions.srt')
+        metadata = {
+            'language': lang,
+            'track_name': track_name,
+        }
+        (lang_dir / 'metadata.json').write_text(
+            json.dumps(metadata, indent=2, ensure_ascii=False),
+            encoding='utf-8',
+        )
+    return root
 
 
 def export_captions(
