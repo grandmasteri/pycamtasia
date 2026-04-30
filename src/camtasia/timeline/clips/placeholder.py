@@ -70,7 +70,7 @@ class PlaceholderMedia(BaseClip):
         if mode not in valid_modes:
             raise ValueError(f"mode must be one of {sorted(valid_modes)}, got {mode!r}")
 
-        new_type = media_dict.get('_type', self._data.get('_type'))
+        new_type = str(media_dict.get('_type', self._data.get('_type', '')))
         new_duration = int(media_dict.get('duration', self._data.get('duration', 0)))
         old_duration = int(self._data.get('duration', 0))
 

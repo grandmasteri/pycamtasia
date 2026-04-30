@@ -47,7 +47,8 @@ def load_favorite(name: str, favorites_dir: Path | None = None) -> dict:
     """
     d = favorites_dir or _DEFAULT_FAVORITES_DIR
     path = d / f'{name}.json'
-    return json.loads(path.read_text())
+    result: dict = json.loads(path.read_text())
+    return result
 
 
 def list_favorites(favorites_dir: Path | None = None) -> list[str]:

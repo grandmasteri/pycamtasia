@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import sys
-from typing import Any, NoReturn
+from typing import Any, NoReturn, TYPE_CHECKING
 
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover
     from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 from camtasia.types import BehaviorPreset, CalloutShape
 

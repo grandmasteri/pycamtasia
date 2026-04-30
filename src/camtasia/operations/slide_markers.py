@@ -7,6 +7,8 @@ from camtasia.timing import seconds_to_ticks
 
 if TYPE_CHECKING:
     from camtasia.project import Project
+    from camtasia.timeline.markers import MarkerList
+    from camtasia.timeline.timeline import _TimelineMarkers
 
 
 def mark_slides_from_presentation(
@@ -32,6 +34,7 @@ def mark_slides_from_presentation(
     Raises:
         KeyError: If *track_name* is given but no matching track exists.
     """
+    marker_list: MarkerList | _TimelineMarkers
     if track_name is not None:
         track = project.timeline.find_track_by_name(track_name)
         if track is None:
