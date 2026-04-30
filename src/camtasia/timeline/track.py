@@ -368,7 +368,7 @@ class Track:
         string-encoded boolean.  Defaults to ``True`` when unset.
         """
         raw = self._attributes.get('metadata', {}).get('trackEnabled', 'True')
-        return raw == 'True'
+        return bool(raw == 'True')
 
     @enabled.setter
     def enabled(self, value: bool) -> None:

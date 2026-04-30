@@ -2949,6 +2949,9 @@ class Project:
                 continue
             if clip.clip_type != 'ScreenIMFile':
                 continue
+            from camtasia.timeline.clips.screen_recording import ScreenIMFile
+            if not isinstance(clip, ScreenIMFile):
+                continue
             kfs = clip.cursor_location_keyframes
             if len(kfs) < 2:
                 continue
