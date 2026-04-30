@@ -885,7 +885,7 @@ class Group(BaseClip):
         })
         for key in ('linked', 'labels', 'theme_slots', 'visible'):
             qp.setdefault(key, {})
-        return qp
+        return cast('dict[str, Any]', qp)
 
     @quick_properties.setter
     def quick_properties(self, value: dict[str, Any]) -> None:
@@ -987,7 +987,7 @@ class Group(BaseClip):
 
         if not isinstance(library, Library):
             raise TypeError(f'Expected Library, got {type(library).__name__}')
-        return library.add_asset(cast(dict[str, Any], self._data), name)
+        return library.add_asset(cast('dict[str, Any]', self._data), name)
 
     def sync_internal_durations(self) -> Self:
         """Trim all internal clips to match the Group's duration.
