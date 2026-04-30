@@ -1,11 +1,25 @@
 """Screen recording clips (ScreenVMFile, ScreenIMFile)."""
 from __future__ import annotations
 
+import enum
 from typing import Any, NoReturn
 
 from typing_extensions import Self
 
 from .base import BaseClip
+
+
+class CursorType(enum.Enum):
+    """Predefined cursor type sentinels for :meth:`ScreenIMFile.set_cursor_type`."""
+
+    ARROW = 'cursor://arrow'
+    HAND = 'cursor://hand'
+    IBEAM = 'cursor://ibeam'
+    CROSSHAIR = 'cursor://crosshair'
+    WAIT = 'cursor://wait'
+    HELP = 'cursor://help'
+    TEXT = 'cursor://text'
+    NO_CURSOR = 'cursor://none'
 
 
 class ScreenVMFile(BaseClip):
@@ -496,6 +510,115 @@ class ScreenIMFile(BaseClip):
         """
         self.cursor_image_path = 'no_cursor'
         self.add_cursor_point(time_seconds, 0, 0)
+
+    # -- Cursor replacement / import --
+
+    _VALID_CURSOR_EXTENSIONS = frozenset({'.bmp', '.jpeg', '.jpg', '.png', '.tif', '.tiff'})
+
+    def replace_cursor(self, path: str, scope: str = 'current') -> Self:
+        """Replace the cursor image for this clip.
+
+        Args:
+            path: Path or identifier for the replacement cursor image.
+            scope: Replacement scope — ``'current'`` replaces only this
+                clip's cursor, ``'similar'`` or ``'all'`` also writes
+                ``metadata.cursorReplaceScope``.
+
+        Returns:
+            ``self`` for chaining.
+
+        Raises:
+            ValueError: If *scope* is not one of the accepted values.
+        """
+        valid_scopes = {'current', 'similar', 'all'}
+        if scope not in valid_scopes:
+            raise ValueError(f"scope must be one of {valid_scopes!r}, got {scope!r}")
+        self.cursor_image_path = path
+        if scope != 'current':
+            self._data.setdefault('metadata', {})['cursorReplaceScope'] = scope
+        return self
+
+    def import_custom_cursor(self, image_path: str) -> Self:
+        """Import a custom cursor image after validating its extension.
+
+        Supported formats: BMP, JPEG, PNG, TIF.
+
+        Args:
+            image_path: Filesystem path to the cursor image.
+
+        Returns:
+            ``self`` for chaining.
+
+        Raises:
+            ValueError: If the file extension is not supported.
+        """
+        import os
+        _, ext = os.path.splitext(image_path)
+        if ext.lower() not in self._VALID_CURSOR_EXTENSIONS:
+            raise ValueError(
+                f"Unsupported cursor image extension {ext!r}; "
+                f"expected one of {sorted(self._VALID_CURSOR_EXTENSIONS)}"
+            )
+        return self.replace_cursor(image_path)
+
+    def unpack_rev_media(self) -> bool:
+        """Check if this clip references a Rev-packed source and flag for unpacking.
+
+        Inspects the clip's source reference for ``.trec`` indicators. If
+        found, sets ``metadata.needsUnpack`` to ``True``.
+
+        Returns:
+            ``True`` if the clip was flagged for unpacking, ``False`` otherwise.
+        """
+        src = self._data.get('src')
+        src_str = str(src) if src is not None else ''
+        needs = '.trec' in src_str
+        if not needs:
+            # Also check metadata for rev-packed indicators
+            meta = self._data.get('metadata', {})
+            needs = bool(meta.get('revPacked'))
+        if needs:
+            self._data.setdefault('metadata', {})['needsUnpack'] = True
+        return needs
+
+    def extend_cursor_path(self, time_seconds: float) -> None:
+        """Extend cursor keyframes to reach the given time.
+
+        If the last keyframe ends before *time_seconds*, a new keyframe
+        is appended at *time_seconds* copying the last known cursor
+        position.
+
+        Args:
+            time_seconds: Target end time in seconds.
+        """
+        from camtasia.timing import seconds_to_ticks
+        target_ticks = seconds_to_ticks(time_seconds)
+        kfs = self._get_cursor_kfs()
+        if not kfs:
+            return
+        last = kfs[-1]
+        if last['time'] >= target_ticks:
+            return
+        new_kf: dict[str, Any] = {
+            'endTime': target_ticks,
+            'time': target_ticks,
+            'value': list(last['value']),
+            'duration': 0,
+        }
+        kfs.append(new_kf)
+        self._recompute_cursor_durations(kfs)
+
+    def set_cursor_type(self, cursor_type: CursorType) -> Self:
+        """Set the cursor to a predefined type via sentinel path.
+
+        Args:
+            cursor_type: A :class:`CursorType` enum member.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        self.cursor_image_path = cursor_type.value
+        return self
 
     # -- Internal helpers --
 
