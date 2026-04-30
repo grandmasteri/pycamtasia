@@ -355,26 +355,26 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/cursor-editing-basics
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/cursor-effects/
 
-- [ ] **CursorColor effect missing** `src/camtasia/effects/cursor.py` — `class CursorColor: fill_color, outline_color`
-- [ ] **CursorGlow effect missing** `src/camtasia/effects/cursor.py` — `class CursorGlow: color, opacity, radius`
-- [ ] **CursorHighlight effect missing** `src/camtasia/effects/cursor.py` — `class CursorHighlight: size, color, opacity`
-- [ ] **CursorIsolation effect missing** `src/camtasia/effects/cursor.py` — `class CursorIsolation: size, feather`
-- [ ] **CursorMagnify effect missing** `src/camtasia/effects/cursor.py` — `class CursorMagnify: scale, size`
+- [x] **CursorColor effect missing** `src/camtasia/effects/cursor.py` — `class CursorColor: fill_color, outline_color`
+- [x] **CursorGlow effect missing** `src/camtasia/effects/cursor.py` — `class CursorGlow: color, opacity, radius`
+- [x] **CursorHighlight effect missing** `src/camtasia/effects/cursor.py` — `class CursorHighlight: size, color, opacity`
+- [x] **CursorIsolation effect missing** `src/camtasia/effects/cursor.py` — `class CursorIsolation: size, feather`
+- [x] **CursorMagnify effect missing** `src/camtasia/effects/cursor.py` — `class CursorMagnify: scale, size`
 - [ ] **CursorPathCreator effect missing** `src/camtasia/effects/cursor.py` — `class CursorPathCreator: keyframes`
-- [ ] **CursorSmoothing effect missing** `src/camtasia/effects/cursor.py` — `class CursorSmoothing: level`
-- [ ] **CursorSpotlight effect missing** `src/camtasia/effects/cursor.py` — `class CursorSpotlight: size, opacity, blur, color`
-- [ ] **CursorGradient effect missing** `src/camtasia/effects/cursor.py` — `class CursorGradient: color, size, opacity`
-- [ ] **CursorLens effect missing** `src/camtasia/effects/cursor.py` — `class CursorLens: scale, size`
-- [ ] **CursorNegative effect missing** `src/camtasia/effects/cursor.py` — `class CursorNegative: size, feather`
-- [ ] **ClickBurst1-4 (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickBurst1..4 / RightClickBurst1..4`
-- [ ] **ClickZoom (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickZoom / RightClickZoom`
-- [ ] **ClickRings (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickRings / RightClickRings`
-- [ ] **ClickRipple (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickRipple / RightClickRipple`
-- [ ] **RightClickScaling (mirror of LeftClickScaling) missing** `src/camtasia/effects/cursor.py` — `RightClickScaling`
-- [ ] **ClickScope (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickScope / RightClickScope`
-- [ ] **ClickSound (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickSound / RightClickSound`
-- [ ] **ClickTarget (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickTarget / RightClickTarget`
-- [ ] **ClickWarp (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickWarp / RightClickWarp`
+- [x] **CursorSmoothing effect missing** `src/camtasia/effects/cursor.py` — `class CursorSmoothing: level`
+- [x] **CursorSpotlight effect missing** `src/camtasia/effects/cursor.py` — `class CursorSpotlight: size, opacity, blur, color`
+- [x] **CursorGradient effect missing** `src/camtasia/effects/cursor.py` — `class CursorGradient: color, size, opacity`
+- [x] **CursorLens effect missing** `src/camtasia/effects/cursor.py` — `class CursorLens: scale, size`
+- [x] **CursorNegative effect missing** `src/camtasia/effects/cursor.py` — `class CursorNegative: size, feather`
+- [x] **ClickBurst1-4 (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickBurst1..4 / RightClickBurst1..4`
+- [x] **ClickZoom (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickZoom / RightClickZoom`
+- [x] **ClickRings (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickRings / RightClickRings`
+- [x] **ClickRipple (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickRipple / RightClickRipple`
+- [x] **RightClickScaling (mirror of LeftClickScaling) missing** `src/camtasia/effects/cursor.py` — `RightClickScaling`
+- [x] **ClickScope (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickScope / RightClickScope`
+- [x] **ClickSound (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickSound / RightClickSound`
+- [x] **ClickTarget (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickTarget / RightClickTarget`
+- [x] **ClickWarp (left & right) effects missing** `src/camtasia/effects/cursor.py` — `LeftClickWarp / RightClickWarp`
 
 ### Customize the Cursor Path
 
