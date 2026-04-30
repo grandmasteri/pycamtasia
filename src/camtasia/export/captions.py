@@ -5,7 +5,7 @@ from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from camtasia.project import Project
@@ -150,7 +150,7 @@ def export_captions_srt(
         idx += 1
         start = ticks_to_seconds(clip.start)
         end = start + ticks_to_seconds(clip.duration)
-        text: str = (clip._data.get('def', {}) or {}).get('text', '')
+        text: str = (cast(dict, clip._data.get('def', {})) or {}).get('text', '')
         lines.append(str(idx))
         lines.append(f'{_format_srt_time(start)} --> {_format_srt_time(end)}')
         lines.append(text)

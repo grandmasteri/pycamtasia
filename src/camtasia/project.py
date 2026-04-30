@@ -9,7 +9,7 @@ from importlib import resources as importlib_resources
 import json
 from pathlib import Path
 import shutil
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 import warnings
 
 if TYPE_CHECKING:
@@ -3176,7 +3176,7 @@ class Project:
                 library = self._libraries.default
             except RuntimeError:
                 library = self._libraries.create('Default')
-        return library.add_asset(group_clip._data, name)
+        return library.add_asset(cast(dict[str, Any], group_clip._data), name)
 
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
