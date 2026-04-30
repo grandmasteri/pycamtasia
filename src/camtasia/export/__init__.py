@@ -1,6 +1,8 @@
 from camtasia.export.audio import export_audio, export_audio_clips
+from camtasia.export.campackage import export_campackage
 from camtasia.export.captions import (
     CaptionEntry,
+    export_burned_in_captions_stub,
     export_captions,
     export_captions_multilang,
     export_captions_srt,
@@ -19,6 +21,8 @@ __all__ = [
     'CaptionEntry',
     'export_audio',
     'export_audio_clips',
+    'export_burned_in_captions_stub',
+    'export_campackage',
     'export_captions',
     'export_captions_multilang',
     'export_captions_srt',

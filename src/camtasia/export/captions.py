@@ -340,3 +340,59 @@ def import_captions(
         match._data.setdefault('def', {})['text'] = entry.text  # type: ignore[typeddict-item]
         updated += 1
     return updated
+
+
+def export_burned_in_captions_stub(
+    project: Project,
+    dest_dir: str | Path,
+    *,
+    track_name: str = 'Subtitles',
+) -> Path:
+    """Export metadata describing captions that WOULD be burned into the video.
+
+    Actual rendering of burned-in captions is out of scope for pycamtasia.
+    This stub writes a JSON metadata file listing each caption entry with its
+    timing and text, suitable for passing to an external rendering pipeline.
+
+    Args:
+        project: Source project.
+        dest_dir: Directory to write the metadata file into.
+        track_name: Name of the caption track.
+
+    Returns:
+        Path to the written ``burned_in_captions.json`` file.
+
+    Raises:
+        KeyError: If no track with the given name exists.
+    """
+    from camtasia.timing import ticks_to_seconds
+
+    track = project.timeline.find_track_by_name(track_name)
+    if track is None:
+        raise KeyError(f'No track named {track_name!r}')
+
+    entries: list[dict] = []
+    for clip in track.clips:
+        if clip.clip_type != 'Callout':
+            continue
+        callout_def: dict = clip._data.get('def', {}) or {}  # type: ignore[assignment]
+        text: str = callout_def.get('text', '')
+        entries.append({
+            'start_seconds': round(ticks_to_seconds(clip.start), 3),
+            'duration_seconds': round(ticks_to_seconds(clip.duration), 3),
+            'text': text,
+        })
+
+    out_dir = Path(dest_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / 'burned_in_captions.json'
+    metadata = {
+        'format': 'pycamtasia-burned-in-stub',
+        'version': '1.0',
+        'note': 'Actual rendering is out of scope. This file describes captions for an external pipeline.',
+        'track_name': track_name,
+        'entry_count': len(entries),
+        'entries': entries,
+    }
+    out_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False))
+    return out_path
