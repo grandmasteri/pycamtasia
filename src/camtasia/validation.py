@@ -557,3 +557,128 @@ def validate_against_schema(project_data: dict[str, Any]) -> list[ValidationIssu
         path = '/'.join(str(p) for p in error.absolute_path) or '(root)'
         issues.append(ValidationIssue('error', f'Schema violation at {path}: {error.message}'))
     return issues
+
+
+def _relative_luminance(rgba: list[int]) -> float:
+    """Compute WCAG 2.x relative luminance from an RGBA list (0-255)."""
+    channels = []
+    for c in rgba[:3]:
+        s = c / 255.0
+        channels.append(s / 12.92 if s <= 0.04045 else ((s + 0.055) / 1.055) ** 2.4)
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+
+
+def _contrast_ratio(fg: list[int], bg: list[int]) -> float:
+    """Compute WCAG contrast ratio between two RGBA colors."""
+    l1 = _relative_luminance(fg)
+    l2 = _relative_luminance(bg)
+    lighter = max(l1, l2)
+    darker = min(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def validate_caption_accessibility(
+    project: Any,
+    *,
+    max_words_per_line: int = 7,
+    max_duration_seconds: float = 7.0,
+    min_contrast_ratio: float = 4.5,
+) -> list[dict]:
+    """Check caption clips for accessibility issues.
+
+    Inspects all Callout clips on the 'Subtitles' track and returns a list
+    of issue dicts. Each dict has keys: ``type``, ``clip_index``, ``message``,
+    and optionally ``value``.
+
+    Checks performed:
+    - ``line_too_long``: A line exceeds *max_words_per_line* words.
+    - ``duration_too_long``: Clip duration exceeds *max_duration_seconds*.
+    - ``duration_too_short``: Clip duration is less than 1 second.
+    - ``low_contrast``: Foreground/background contrast ratio is below
+      *min_contrast_ratio*. Returns ``None`` for contrast if colors are
+      unavailable.
+
+    Args:
+        project: A :class:`~camtasia.project.Project` instance.
+        max_words_per_line: Maximum words allowed per caption line.
+        max_duration_seconds: Maximum caption duration in seconds.
+        min_contrast_ratio: Minimum WCAG contrast ratio.
+
+    Returns:
+        List of issue dicts.
+    """
+    from camtasia.timing import ticks_to_seconds
+
+    issues: list[dict] = []
+
+    # Get caption attributes for contrast check
+    attrs = project.timeline.caption_attributes
+    fg = getattr(attrs, 'foreground_color', None)
+    bg = getattr(attrs, 'background_color', None)
+
+    contrast: float | None = None
+    if fg is not None and bg is not None:
+        contrast = _contrast_ratio(fg, bg)
+
+    if contrast is not None and contrast < min_contrast_ratio:
+        issues.append({
+            'type': 'low_contrast',
+            'clip_index': None,
+            'message': (
+                f'Caption contrast ratio {contrast:.2f} is below '
+                f'minimum {min_contrast_ratio}'
+            ),
+            'value': round(contrast, 2),
+        })
+
+    # Find subtitle track
+    track = project.timeline.find_track_by_name('Subtitles')
+    if track is None:
+        return issues
+
+    idx = 0
+    for clip in track.clips:
+        if clip.clip_type != 'Callout':
+            continue
+        duration_s = ticks_to_seconds(clip.duration)
+        text: str = (clip._data.get('def', {}) or {}).get('text', '')
+
+        # Check duration
+        if duration_s > max_duration_seconds:
+            issues.append({
+                'type': 'duration_too_long',
+                'clip_index': idx,
+                'message': (
+                    f'Caption {idx} duration {duration_s:.1f}s exceeds '
+                    f'maximum {max_duration_seconds}s'
+                ),
+                'value': round(duration_s, 3),
+            })
+        if duration_s < 1.0:
+            issues.append({
+                'type': 'duration_too_short',
+                'clip_index': idx,
+                'message': (
+                    f'Caption {idx} duration {duration_s:.1f}s is below '
+                    f'minimum 1.0s'
+                ),
+                'value': round(duration_s, 3),
+            })
+
+        # Check words per line
+        for line in text.splitlines():
+            word_count = len(line.split())
+            if word_count > max_words_per_line:
+                issues.append({
+                    'type': 'line_too_long',
+                    'clip_index': idx,
+                    'message': (
+                        f'Caption {idx} line has {word_count} words '
+                        f'(max {max_words_per_line})'
+                    ),
+                    'value': word_count,
+                })
+
+        idx += 1
+
+    return issues

@@ -396,3 +396,7 @@ def export_burned_in_captions_stub(
     }
     out_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False))
     return out_path
+
+
+# Tutorial-referenced aliases
+export_captions_as_srt = export_captions_srt
