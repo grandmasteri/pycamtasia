@@ -2465,3 +2465,81 @@ class BaseClip:
             raise ValueError(f'target_duration_seconds must be > 0, got {target_duration_seconds}')
         speed = self.duration_seconds / target_duration_seconds
         return self.set_speed(speed)
+
+    # ------------------------------------------------------------------
+    # L2 — Crop / fit helpers
+    # ------------------------------------------------------------------
+
+    def crop_to_aspect(self, aspect_ratio: float) -> Self:
+        """Add a Crop effect sized to match the given aspect ratio.
+
+        Computes symmetric left/right or top/bottom crop values so the
+        visible area matches *aspect_ratio* (width / height). Assumes
+        the clip currently fills a 1:1 normalized space (the Crop effect
+        works in 0.0-1.0 normalized coordinates).
+
+        Args:
+            aspect_ratio: Target width / height ratio (e.g. 16/9 ≈ 1.778).
+
+        Returns:
+            ``self`` for chaining.
+        """
+        if aspect_ratio <= 0:
+            raise ValueError(f'aspect_ratio must be > 0, got {aspect_ratio}')
+        from camtasia.effects.visual import Crop as CropEffect
+        if aspect_ratio > 1.0:
+            # Wider than tall — crop top/bottom
+            crop_v = (1.0 - 1.0 / aspect_ratio) / 2.0
+            crop_h = 0.0
+        else:
+            # Taller than wide — crop left/right
+            crop_h = (1.0 - aspect_ratio) / 2.0
+            crop_v = 0.0
+        record: dict[str, Any] = {
+            'effectName': 'Crop',
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {
+                'left': crop_h,
+                'right': crop_h,
+                'top': crop_v,
+                'bottom': crop_v,
+            },
+        }
+        self._data.setdefault('effects', []).append(record)
+        return self
+
+    def fit_to_canvas(self, mode: str = 'cover') -> Self:
+        """Adjust scale and translation to fit the clip to the canvas.
+
+        Args:
+            mode: Fitting strategy.
+                - ``'cover'``: scale up so the clip fully covers the canvas
+                  (may crop edges).
+                - ``'contain'``: scale down so the entire clip is visible
+                  (may show letterbox/pillarbox).
+                - ``'center'``: reset scale to 1.0 and center the clip
+                  (no scaling, just positioning).
+
+        Returns:
+            ``self`` for chaining.
+
+        Raises:
+            ValueError: If *mode* is not one of the accepted values.
+        """
+        valid_modes = {'cover', 'contain', 'center'}
+        if mode not in valid_modes:
+            raise ValueError(f"mode must be one of {valid_modes}, got {mode!r}")
+        sx, sy = self.scale
+        if mode == 'center':
+            self.scale = (1.0, 1.0)
+            self.translation = (0.0, 0.0)
+        elif mode == 'cover':
+            factor = max(sx, sy) if sx != sy else max(1.0, sx)
+            self.scale = (factor, factor)
+            self.translation = (0.0, 0.0)
+        else:  # contain
+            factor = min(sx, sy) if sx != sy else min(1.0, sx)
+            self.scale = (factor, factor)
+            self.translation = (0.0, 0.0)
+        return self
