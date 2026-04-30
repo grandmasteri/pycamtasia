@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from camtasia.timing import ticks_to_seconds
@@ -24,7 +24,7 @@ def _seconds_to_hms(seconds: float) -> str:
 
 def _collect_chapters(project: Project) -> list[dict]:
     """Collect marker data as chapter dicts."""
-    chapters = []
+    chapters: list[dict[str, Any]] = []
     for marker in project.timeline.markers:
         secs = ticks_to_seconds(marker.time)
         chapters.append({

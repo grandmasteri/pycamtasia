@@ -12,6 +12,9 @@ if sys.version_info >= (3, 11):  # pragma: no cover
 else:  # pragma: no cover
     from typing_extensions import Self
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 from camtasia.types import BehaviorPreset, CalloutShape
 
 from .base import BaseClip
