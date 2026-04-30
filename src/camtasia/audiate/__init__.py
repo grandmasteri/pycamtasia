@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from camtasia.audiate.project import AudiateProject
+from camtasia.audiate.project import SUPPORTED_TRANSLATION_LANGUAGES, AudiateProject
 from camtasia.audiate.transcript import Transcript, Word
 
-__all__ = ["AudiateProject", "Transcript", "Word"]
+__all__ = ["AudiateProject", "SUPPORTED_TRANSLATION_LANGUAGES", "Transcript", "Word"]
