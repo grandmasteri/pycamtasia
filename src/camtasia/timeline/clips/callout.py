@@ -510,3 +510,16 @@ class Callout(BaseClip):
         self.move_to(x, y)
         self.width = w
         self.height = h
+
+    def add_to_favorites(self, name: str) -> 'Path':
+        """Save this callout's definition as a favorite.
+
+        Args:
+            name: Favorite name (used as the filename stem).
+
+        Returns:
+            Path to the saved JSON file.
+        """
+        from pathlib import Path
+        from camtasia.annotations.callouts import save_as_favorite
+        return save_as_favorite(dict(self.definition), name)

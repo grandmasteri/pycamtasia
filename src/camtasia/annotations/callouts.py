@@ -1,9 +1,85 @@
 """Callout annotations.
 """
+from __future__ import annotations
+
+import json
+from pathlib import Path
 
 from camtasia.timeline.clips.callout import _WEIGHT_MAP
 
 from .types import Color, FillStyle, HorizontalAlignment, StrokeStyle, VerticalAlignment
+
+_DEFAULT_FAVORITES_DIR = Path.home() / '.pycamtasia' / 'favorites'
+
+
+def save_as_favorite(callout: dict, name: str, favorites_dir: Path | None = None) -> Path:
+    """Write a callout dict as JSON to the favorites directory.
+
+    Args:
+        callout: Callout definition dict.
+        name: Favorite name (used as the filename stem).
+        favorites_dir: Directory to store favorites. Defaults to
+            ``~/.pycamtasia/favorites/``.
+
+    Returns:
+        Path to the saved JSON file.
+    """
+    d = favorites_dir or _DEFAULT_FAVORITES_DIR
+    d.mkdir(parents=True, exist_ok=True)
+    path = d / f'{name}.json'
+    path.write_text(json.dumps(callout, indent=2))
+    return path
+
+
+def load_favorite(name: str, favorites_dir: Path | None = None) -> dict:
+    """Load a callout favorite from JSON.
+
+    Args:
+        name: Favorite name (filename stem).
+        favorites_dir: Directory containing favorites. Defaults to
+            ``~/.pycamtasia/favorites/``.
+
+    Returns:
+        The callout definition dict.
+
+    Raises:
+        FileNotFoundError: If the favorite does not exist.
+    """
+    d = favorites_dir or _DEFAULT_FAVORITES_DIR
+    path = d / f'{name}.json'
+    return json.loads(path.read_text())
+
+
+def list_favorites(favorites_dir: Path | None = None) -> list[str]:
+    """List saved favorite names.
+
+    Args:
+        favorites_dir: Directory containing favorites. Defaults to
+            ``~/.pycamtasia/favorites/``.
+
+    Returns:
+        Sorted list of favorite names (without ``.json`` extension).
+    """
+    d = favorites_dir or _DEFAULT_FAVORITES_DIR
+    if not d.is_dir():
+        return []
+    return sorted(p.stem for p in d.glob('*.json'))
+
+
+def delete_favorite(name: str, favorites_dir: Path | None = None) -> None:
+    """Delete a saved favorite.
+
+    Args:
+        name: Favorite name to delete.
+        favorites_dir: Directory containing favorites. Defaults to
+            ``~/.pycamtasia/favorites/``.
+
+    Raises:
+        FileNotFoundError: If the favorite does not exist.
+    """
+    d = favorites_dir or _DEFAULT_FAVORITES_DIR
+    path = d / f'{name}.json'
+    path.unlink()
 
 
 def _text_attributes(text: str, font_name: str, font_weight: str | int, font_size: float, font_color: Color) -> list[dict]:
