@@ -21,6 +21,7 @@ from camtasia.operations.layout import (
     ripple_insert,
     ripple_move,
     ripple_move_multi,
+    ripple_replace_in_group,
     snap_to_clip_edge,
     snap_to_grid,
 )
@@ -56,6 +57,7 @@ __all__ = [
     "ripple_insert",
     "ripple_move",
     "ripple_move_multi",
+    "ripple_replace_in_group",
     "scale_all",
     "set_audio_speed",
     "set_opacity_all",
