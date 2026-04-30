@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover
     from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from camtasia.effects.audio_visualizer import AudioVisualizer
 
 from .base import BaseClip
 
@@ -89,3 +92,54 @@ class AMFile(BaseClip):
             raise ValueError(f'Gain must be non-negative, got {gain}')
         self._data.setdefault('attributes', {})['gain'] = gain
         return self
+
+    def add_audio_visualizer(
+        self,
+        *,
+        type: str = 'bars',
+        color: tuple[float, float, float, float] = (1, 1, 1, 1),
+        height: float = 100.0,
+        sensitivity: float = 0.7,
+    ) -> AudioVisualizer:
+        """Add an audio visualizer overlay effect.
+
+        .. warning::
+            Unverified fixture — see
+            :mod:`camtasia.effects.audio_visualizer` for details.
+
+        Args:
+            type: Visualizer style (``'bars'``, ``'wave'``, ``'circular'``,
+                  ``'spectrum'``).
+            color: RGBA colour tuple.
+            height: Visualizer height in pixels.
+            sensitivity: Audio sensitivity (0.0–1.0).
+
+        Returns:
+            The wrapped :class:`AudioVisualizer` effect.
+
+        Raises:
+            ValueError: If *type* is not a recognised visualizer style.
+        """
+        from camtasia.effects.audio_visualizer import AudioVisualizer as _AV
+
+        if type not in _AV.VALID_TYPES:
+            raise ValueError(
+                f"Invalid visualizer type {type!r}; "
+                f"expected one of {sorted(_AV.VALID_TYPES)}"
+            )
+        effect = self.add_effect({
+            'effectName': 'AudioVisualizer',
+            'bypassed': False,
+            'category': 'categoryAudioEffects',
+            'parameters': {
+                'type': type,
+                'color-red': color[0],
+                'color-green': color[1],
+                'color-blue': color[2],
+                'color-alpha': color[3],
+                'height': height,
+                'sensitivity': sensitivity,
+            },
+        })
+        assert isinstance(effect, _AV)
+        return effect

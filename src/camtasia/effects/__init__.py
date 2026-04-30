@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from camtasia.effects.audio import NoiseRemoval
+from camtasia.effects.audio_visualizer import AudioVisualizer
 from camtasia.effects.base import Effect, effect_from_dict
 from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
 from camtasia.effects.cursor import (
@@ -77,6 +78,7 @@ class EffectSchema:
         )
 
 __all__ = [
+    "AudioVisualizer",
     "BehaviorPhase",
     "BlendModeEffect",
     "BlurRegion",
