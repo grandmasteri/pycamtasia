@@ -38,7 +38,7 @@ def _build_source_effect_data(
     """Build a SourceEffect dict with color and speed parameters.
 
     Args:
-        colors: Optional list of RGBA tuples (0.0–1.0).
+        colors: Optional list of RGBA tuples (0.0-1.0).
         speed: Animation speed.
 
     Returns:
@@ -99,7 +99,7 @@ def add_dynamic_background(
         project: Target project.
         asset_name: A :class:`DynamicBackgroundAsset` member or its string value.
         duration_seconds: Duration of the background clip.
-        colors: Optional RGBA colour list (0.0–1.0 per channel).
+        colors: Optional RGBA colour list (0.0-1.0 per channel).
         speed: Animation speed multiplier.
         track_name: Name of the background track.
 

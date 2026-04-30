@@ -1,13 +1,10 @@
 """Tests for operations/captions.py stubs and CaptionAttributes.default_duration_seconds."""
 from __future__ import annotations
 
-import tempfile
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from camtasia import Project
 from camtasia.operations.captions import (
     TrimRange,
     generate_captions_from_audio,

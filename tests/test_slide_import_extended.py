@@ -1,10 +1,10 @@
 """Tests for extended slide import: import_powerpoint, slide_titles, emit_markers, append."""
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
+import tempfile
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 

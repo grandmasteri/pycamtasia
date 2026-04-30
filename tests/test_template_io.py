@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import zipfile
-from pathlib import Path
 
 import pytest
 
@@ -19,11 +18,9 @@ from camtasia.operations.template import (
     replace_placeholder,
     save_as_template,
 )
-from camtasia.project import load_project
 from camtasia.timeline.clips import clip_from_dict
 from camtasia.timeline.clips.placeholder import PlaceholderMedia
 from camtasia.timing import seconds_to_ticks
-
 
 # ------------------------------------------------------------------
 # save_as_template
@@ -158,7 +155,7 @@ class TestInstallAndList:
         monkeypatch.setattr('camtasia.operations.template._TEMPLATES_DIR', tmp_path / 'tpl')
         bad = tmp_path / 'bad.camtemplate'
         bad.write_text('not a zip')
-        with pytest.raises(Exception):
+        with pytest.raises(zipfile.BadZipFile):
             install_camtemplate(bad)
 
 

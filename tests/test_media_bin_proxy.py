@@ -3,10 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from camtasia.media_bin import Media, MediaBin, MediaType
 from camtasia.library.library import Library
+from camtasia.media_bin import Media, MediaBin
 
 
 def _make_media_entry(

@@ -1,8 +1,6 @@
 """Tests for builders.dynamic_background module."""
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from camtasia import Project
