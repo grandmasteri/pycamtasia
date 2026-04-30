@@ -1,10 +1,70 @@
 """Caption styling configuration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from camtasia.types import _CaptionData
+
+
+@dataclass
+class DynamicCaptionStyle:
+    """Style preset for dynamic (word-highlighted) captions.
+
+    Attributes:
+        name: Human-readable style name.
+        font_name: Font family name.
+        font_size: Font size in points.
+        fill_color: Text fill color as ``(r, g, b, a)`` 0-255.
+        stroke_color: Text stroke color as ``(r, g, b, a)`` 0-255.
+        stroke_width: Stroke width in pixels.
+        highlight_color: Active-word highlight color as ``(r, g, b, a)`` 0-255.
+        background_color: Caption background color as ``(r, g, b, a)`` 0-255.
+    """
+
+    name: str
+    font_name: str = 'Arial'
+    font_size: int = 32
+    fill_color: tuple[int, int, int, int] = (255, 255, 255, 255)
+    stroke_color: tuple[int, int, int, int] = (0, 0, 0, 255)
+    stroke_width: int = 2
+    highlight_color: tuple[int, int, int, int] = (255, 255, 0, 255)
+    background_color: tuple[int, int, int, int] = (0, 0, 0, 180)
+
+
+DEFAULT_DYNAMIC_STYLES: dict[str, DynamicCaptionStyle] = {
+    'classic': DynamicCaptionStyle(
+        name='classic',
+        font_name='Arial',
+        font_size=32,
+        fill_color=(255, 255, 255, 255),
+        stroke_color=(0, 0, 0, 255),
+        stroke_width=2,
+        highlight_color=(255, 255, 0, 255),
+        background_color=(0, 0, 0, 180),
+    ),
+    'bold': DynamicCaptionStyle(
+        name='bold',
+        font_name='Montserrat',
+        font_size=48,
+        fill_color=(255, 255, 255, 255),
+        stroke_color=(0, 0, 0, 255),
+        stroke_width=3,
+        highlight_color=(0, 200, 255, 255),
+        background_color=(0, 0, 0, 220),
+    ),
+    'minimal': DynamicCaptionStyle(
+        name='minimal',
+        font_name='Helvetica',
+        font_size=28,
+        fill_color=(220, 220, 220, 255),
+        stroke_color=(0, 0, 0, 0),
+        stroke_width=0,
+        highlight_color=(255, 200, 50, 255),
+        background_color=(0, 0, 0, 0),
+    ),
+}
 
 
 class CaptionAttributes:
@@ -126,3 +186,32 @@ class CaptionAttributes:
 
     def __repr__(self) -> str:
         return f'CaptionAttributes(font={self.font_name!r}, size={self.font_size}, lang={self.lang!r})'
+
+    def active_word_at(
+        self,
+        time_seconds: float,
+        words: list[str],
+        clip_duration_seconds: float,
+    ) -> str | None:
+        """Return the word that should be highlighted at a given time.
+
+        Stub implementation: assumes even distribution of words across the
+        clip duration.
+
+        Args:
+            time_seconds: Playback time in seconds (relative to clip start).
+            words: Ordered list of caption words.
+            clip_duration_seconds: Total clip duration in seconds.
+
+        Returns:
+            The active word, or None if *time_seconds* is out of range or
+            *words* is empty.
+        """
+        if not words or clip_duration_seconds <= 0:
+            return None
+        if time_seconds < 0 or time_seconds > clip_duration_seconds:
+            return None
+        word_duration = clip_duration_seconds / len(words)
+        index = int(time_seconds / word_duration)
+        index = min(index, len(words) - 1)
+        return words[index]
