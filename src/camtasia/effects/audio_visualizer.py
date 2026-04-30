@@ -31,7 +31,7 @@ class AudioVisualizer(Effect):
               ``'spectrum'``).
         color-red / color-green / color-blue / color-alpha: RGBA colour.
         height: Visualizer height in pixels.
-        sensitivity: Audio sensitivity (0.0–1.0).
+        sensitivity: Audio sensitivity (0.0-1.0).
     """
 
     VALID_TYPES = frozenset({'bars', 'wave', 'circular', 'spectrum'})
@@ -87,7 +87,7 @@ class AudioVisualizer(Effect):
 
     @property
     def sensitivity(self) -> float:
-        """Audio sensitivity (0.0–1.0)."""
+        """Audio sensitivity (0.0-1.0)."""
         return float(self.get_parameter('sensitivity'))
 
     @sensitivity.setter

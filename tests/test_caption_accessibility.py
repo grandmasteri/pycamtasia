@@ -1,8 +1,8 @@
 """Tests for validate_caption_accessibility in camtasia.validation."""
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
+import tempfile
 
 import pytest
 

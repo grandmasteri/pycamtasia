@@ -112,7 +112,7 @@ class AMFile(BaseClip):
                   ``'spectrum'``).
             color: RGBA colour tuple.
             height: Visualizer height in pixels.
-            sensitivity: Audio sensitivity (0.0–1.0).
+            sensitivity: Audio sensitivity (0.0-1.0).
 
         Returns:
             The wrapped :class:`AudioVisualizer` effect.

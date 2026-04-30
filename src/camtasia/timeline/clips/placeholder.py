@@ -4,7 +4,6 @@ from fractions import Fraction
 from typing import Any, NoReturn
 
 from camtasia.timeline.clips.base import BaseClip
-from camtasia.timing import seconds_to_ticks
 
 
 class PlaceholderMedia(BaseClip):

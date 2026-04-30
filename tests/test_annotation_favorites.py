@@ -12,7 +12,6 @@ from camtasia.annotations.callouts import (
     save_as_favorite,
     text,
 )
-from camtasia.annotations.types import Color
 
 
 class TestSaveAsFavorite:
@@ -84,10 +83,10 @@ class TestDeleteFavorite:
 class TestCalloutAddToFavorites:
     def test_saves_definition_via_clip(self, project):
         track = project.timeline.tracks[0]
-        callout_def = text('Fav', 'Arial', 'Bold')
+        text('Fav', 'Arial', 'Bold')
         clip = track.add_callout('Fav', start_seconds=0, duration_seconds=3, font_name='Arial', font_weight='Bold')
-        import tempfile
         from pathlib import Path
+        import tempfile
         with tempfile.TemporaryDirectory() as td:
             fav_dir = Path(td)
             import camtasia.annotations.callouts as mod

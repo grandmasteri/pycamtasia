@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import sys
-from typing import Any, NoReturn
+from typing import TYPE_CHECKING, Any, NoReturn
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -511,7 +514,7 @@ class Callout(BaseClip):
         self.width = w
         self.height = h
 
-    def add_to_favorites(self, name: str) -> 'Path':
+    def add_to_favorites(self, name: str) -> Path:
         """Save this callout's definition as a favorite.
 
         Args:
@@ -520,6 +523,5 @@ class Callout(BaseClip):
         Returns:
             Path to the saved JSON file.
         """
-        from pathlib import Path
         from camtasia.annotations.callouts import save_as_favorite
         return save_as_favorite(dict(self.definition), name)
