@@ -865,6 +865,130 @@ class Group(BaseClip):
                             sub['mediaStart'] = m['mediaStart']
                             sub['scalar'] = m['scalar']
 
+    # ------------------------------------------------------------------
+    # Quick properties editor
+    # ------------------------------------------------------------------
+
+    @property
+    def quick_properties(self) -> dict[str, Any]:
+        """Quick properties dict with ``linked``, ``labels``, ``theme_slots``, ``visible`` keys.
+
+        Returns:
+            A mutable dict stored in the Group's metadata.
+        """
+        meta = self._data.setdefault('metadata', {})
+        qp = meta.setdefault('quickProperties', {
+            'linked': {},
+            'labels': {},
+            'theme_slots': {},
+            'visible': {},
+        })
+        for key in ('linked', 'labels', 'theme_slots', 'visible'):
+            qp.setdefault(key, {})
+        return qp
+
+    @quick_properties.setter
+    def quick_properties(self, value: dict[str, Any]) -> None:
+        """Replace the quick properties dict entirely.
+
+        Args:
+            value: Dict with ``linked``, ``labels``, ``theme_slots``, ``visible`` keys.
+        """
+        self._data.setdefault('metadata', {})['quickProperties'] = value
+
+    def link_property(self, name: str, source_path: str) -> Self:
+        """Link a property to a source path.
+
+        Args:
+            name: Property name.
+            source_path: Source path to link to.
+
+        Returns:
+            ``self`` for fluent chaining.
+        """
+        self.quick_properties['linked'][name] = source_path
+        return self
+
+    def unlink_property(self, name: str) -> Self:
+        """Remove a linked property.
+
+        Args:
+            name: Property name to unlink.
+
+        Returns:
+            ``self`` for fluent chaining.
+
+        Raises:
+            KeyError: If the property is not linked.
+        """
+        del self.quick_properties['linked'][name]
+        return self
+
+    def set_label(self, name: str, label: str) -> Self:
+        """Set a display label for a property.
+
+        Args:
+            name: Property name.
+            label: Display label string.
+
+        Returns:
+            ``self`` for fluent chaining.
+        """
+        self.quick_properties['labels'][name] = label
+        return self
+
+    def assign_theme_slot(self, name: str, slot: str) -> Self:
+        """Assign a theme slot to a property (e.g. ``'accent-1'``).
+
+        Args:
+            name: Property name.
+            slot: Theme slot identifier.
+
+        Returns:
+            ``self`` for fluent chaining.
+        """
+        self.quick_properties['theme_slots'][name] = slot
+        return self
+
+    def set_property_visible(self, name: str, visible: bool) -> Self:
+        """Set whether a property is visible in the quick properties panel.
+
+        Args:
+            name: Property name.
+            visible: Whether the property should be visible.
+
+        Returns:
+            ``self`` for fluent chaining.
+        """
+        self.quick_properties['visible'][name] = visible
+        return self
+
+    # ------------------------------------------------------------------
+    # Save as library asset
+    # ------------------------------------------------------------------
+
+    def save_as_asset(self, library: Any, name: str) -> Any:
+        """Serialize this Group as a library asset.
+
+        Uses lazy import of :class:`~camtasia.library.Library` to avoid
+        circular dependencies.
+
+        Args:
+            library: A :class:`~camtasia.library.Library` instance.
+            name: Display name for the asset.
+
+        Returns:
+            The newly created :class:`~camtasia.library.LibraryAsset`.
+
+        Raises:
+            TypeError: If *library* is not a Library instance.
+        """
+        from camtasia.library import Library, LibraryAsset
+
+        if not isinstance(library, Library):
+            raise TypeError(f'Expected Library, got {type(library).__name__}')
+        return library.add_asset(self._data, name)
+
     def sync_internal_durations(self) -> Self:
         """Trim all internal clips to match the Group's duration.
 
