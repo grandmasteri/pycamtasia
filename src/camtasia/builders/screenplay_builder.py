@@ -100,18 +100,7 @@ def build_from_screenplay(
 
                 # Validate alignment: compare audio duration to estimated text duration
                 if validate_alignment:
-                    audio_dur = clip.duration_seconds
-                    word_count = len(vo.text.split())
-                    if word_count > 0:
-                        expected_dur = word_count / _WORDS_PER_SECOND
-                        if expected_dur > 0 and abs(audio_dur - expected_dur) / expected_dur > 0.2:
-                            warnings.warn(
-                                f'VO {vo.id}: audio duration {audio_dur:.1f}s '
-                                f'differs from estimated text duration '
-                                f'{expected_dur:.1f}s by >'
-                                f'20%',
-                                stacklevel=2,
-                            )
+                    _validate_vo_alignment(vo, clip.duration_seconds)
             else:
                 if audio_path:
                     warnings.warn(f'Audio file not found: {audio_path}', stacklevel=2)
@@ -120,10 +109,10 @@ def build_from_screenplay(
                 vo_placed = False
 
             # Emit caption from VO text
-            if emit_captions and vo.text:
+            if emit_captions:
                 caption_dur = builder.cursor - caption_start if vo_placed else 2.0
-                project.add_caption(vo.text, caption_start, caption_dur)
-                captions_added += 1
+                if _emit_captions_for_vo(project, vo, caption_start, caption_dur):
+                    captions_added += 1
 
             # Insert interleaved explicit pauses that follow this VO block
             if has_explicit_pauses:
@@ -158,6 +147,37 @@ def build_from_screenplay(
     if emit_captions:
         result['captions_added'] = captions_added
     return result
+
+
+def _validate_vo_alignment(vo: VOBlock, audio_duration: float) -> None:
+    """Warn if audio duration differs from estimated text duration by >20%.
+
+    Estimated duration uses *_WORDS_PER_SECOND* (2.5 wps).
+    """
+    word_count = len(vo.text.split())
+    if word_count == 0:
+        return
+    expected_dur = word_count / _WORDS_PER_SECOND
+    if expected_dur > 0 and abs(audio_duration - expected_dur) / expected_dur > 0.2:
+        warnings.warn(
+            f'VO {vo.id}: audio duration {audio_duration:.1f}s '
+            f'differs from estimated text duration '
+            f'{expected_dur:.1f}s by >20%',
+            stacklevel=3,
+        )
+
+
+def _emit_captions_for_vo(
+    project: Project,
+    vo: VOBlock,
+    current_time: float,
+    audio_duration: float,
+) -> bool:
+    """Add a caption for a VO block. Returns True if a caption was added."""
+    if not vo.text:
+        return False
+    project.add_caption(text=vo.text, start_seconds=current_time, duration_seconds=audio_duration)
+    return True
 
 
 def _find_audio_file(audio_dir: Path, vo_id: str) -> Path | None:
