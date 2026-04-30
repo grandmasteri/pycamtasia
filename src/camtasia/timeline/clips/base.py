@@ -1470,6 +1470,30 @@ class BaseClip:
         self._data.setdefault('effects', []).append(record)
         return Emphasize(record)
 
+    def add_cursor_path_creator(self) -> Effect:
+        """Add a CursorPathCreator effect to this clip.
+
+        .. warning:: Unverified fixture — parameter names inferred from convention.
+
+        Returns:
+            The created :class:`CursorPathCreator` effect instance.
+        """
+        from camtasia.effects.cursor import CursorPathCreator
+        record: dict[str, Any] = {
+            'effectName': 'CursorPathCreator',
+            'bypassed': False,
+            'category': 'cursor',
+            'parameters': {
+                'cursorPath': {
+                    'type': 'point',
+                    'defaultValue': [0, 0, 0],
+                    'keyframes': [],
+                },
+            },
+        }
+        self._data.setdefault('effects', []).append(record)
+        return CursorPathCreator(record)
+
     def add_noise_removal(self, *, amount: float = 0.8, bypassed: bool = False) -> Self:
         """Add a DFN3 VST noise-removal effect to this clip.
 

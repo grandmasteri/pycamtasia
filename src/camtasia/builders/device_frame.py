@@ -46,3 +46,23 @@ def add_device_frame(
     )
     frame_clip.scale = (scale, scale)
     return frame_clip
+
+
+def remove_device_frame(
+    project: Project,
+    track_name: str = 'Device Frame',
+) -> None:
+    """Remove the device frame track created by :func:`add_device_frame`.
+
+    Finds the track by name and removes it from the timeline.
+
+    Args:
+        project: Target project.
+        track_name: Name of the device frame track to remove.
+
+    Raises:
+        ValueError: If no track with the given name exists.
+    """
+    removed = project.timeline.remove_tracks_by_name(track_name)
+    if removed == 0:
+        raise ValueError(f'No track named {track_name!r} found')
