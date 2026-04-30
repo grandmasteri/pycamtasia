@@ -169,3 +169,33 @@ class VideoProductionBuilder:
             'has_watermark': self._watermark is not None,
             'total_duration': p.duration_seconds,
         }
+
+
+def insert_intro_template(
+    project: Project,
+    template_name: str = 'default',
+    *,
+    duration: float = 5.0,
+) -> dict[str, Any]:
+    """Insert a minimal intro title card at the start of the timeline.
+
+    Stub that uses :meth:`Project.add_title_card` to place a title card
+    and records the template name in project metadata for downstream
+    tooling.
+
+    Args:
+        project: The project to modify.
+        template_name: Name of the intro template.
+        duration: Duration of the intro card in seconds.
+
+    Returns:
+        Summary dict with ``template_name`` and ``duration``.
+    """
+    project.add_title_card(
+        f'Intro: {template_name}',
+        duration_seconds=duration,
+        track_name='Intro',
+        font_size=72.0,
+    )
+    project.timeline._data.setdefault('metadata', {})['pendingIntroTemplate'] = template_name
+    return {'template_name': template_name, 'duration': duration}

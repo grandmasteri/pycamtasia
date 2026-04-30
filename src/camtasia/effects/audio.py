@@ -1,6 +1,8 @@
 """Audio effects — typed wrappers over Camtasia audio effect dicts."""
 from __future__ import annotations
 
+import warnings
+
 from camtasia.effects.base import Effect, register_effect
 
 
@@ -171,3 +173,41 @@ class ClipSpeedAudio(Effect):
     @effect_duration.setter
     def effect_duration(self, value: float) -> None:
         self.set_parameter("duration", value)
+
+
+@register_effect("Equalizer")
+class Equalizer(Effect):
+    """Audio equalizer effect with frequency bands.
+
+    .. warning::
+        The ``Equalizer`` effect name is assumed from Camtasia's internal
+        naming. This has not been verified against all Camtasia versions
+        and may need adjustment.
+
+    Each band is stored as a parameter pair: ``band-N-frequency`` and
+    ``band-N-gain-db`` where N is the zero-based band index.
+    """
+
+    @property
+    def bands(self) -> list[dict[str, float]]:
+        """List of equalizer bands as ``{'frequency': Hz, 'gain_db': float}``."""
+        result: list[dict[str, float]] = []
+        params = self.parameters
+        i = 0
+        while f'band-{i}-frequency' in params:
+            freq = self.get_parameter(f'band-{i}-frequency')
+            gain = self.get_parameter(f'band-{i}-gain-db')
+            result.append({'frequency': float(freq), 'gain_db': float(gain)})
+            i += 1
+        return result
+
+    @bands.setter
+    def bands(self, value: list[dict[str, float]]) -> None:
+        """Set equalizer bands.
+
+        Args:
+            value: List of ``{'frequency': Hz, 'gain_db': float}`` dicts.
+        """
+        for i, band in enumerate(value):
+            self.set_parameter(f'band-{i}-frequency', band['frequency'])
+            self.set_parameter(f'band-{i}-gain-db', band['gain_db'])
