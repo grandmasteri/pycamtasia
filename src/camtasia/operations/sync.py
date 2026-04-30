@@ -16,7 +16,9 @@ from typing import TYPE_CHECKING
 from camtasia.timing import EDIT_RATE
 
 if TYPE_CHECKING:
-    from camtasia.audiate.transcript import Word
+    from camtasia.audiate.project import AudiateProject
+    from camtasia.audiate.transcript import Transcript, Word
+    from camtasia.project import Project
     from camtasia.timeline.clips.group import Group
 
 
@@ -185,6 +187,107 @@ def plan_sync(
         ))
 
     return segments
+
+
+def sync_audiate_edits_to_timeline(
+    audiate_project: AudiateProject,
+    camtasia_project: Project,
+    *,
+    mode: str = "edit_timeline",
+) -> list[tuple[float, float]]:
+    """Apply Audiate word-deletions to the Camtasia timeline.
+
+    Compares the original transcript against the edited (fillers/pauses
+    removed) version and creates ``ripple_delete_range`` calls for each
+    deleted word's time span on every track.
+
+    Args:
+        audiate_project: Loaded AudiateProject with transcript.
+        camtasia_project: Target Camtasia Project.
+        mode: Operation mode (currently only ``'edit_timeline'``).
+
+    Returns:
+        List of ``(start, end)`` second pairs that were deleted.
+    """
+    original = audiate_project.transcript
+    edits = audiate_project.apply_suggested_edits()
+    edited: Transcript = edits["transcript"]
+
+    edited_ids = {w.word_id for w in edited.words}
+    deleted_spans: list[tuple[float, float]] = []
+    for word in original.words:
+        if word.word_id not in edited_ids and word.end is not None:
+            deleted_spans.append((word.start, word.end))
+
+    if mode == "edit_timeline":
+        from camtasia.operations.layout import ripple_delete_range
+
+        # Apply in reverse order so earlier deletions don't shift later spans
+        for start, end in reversed(deleted_spans):
+            for track in camtasia_project.timeline.tracks:
+                ripple_delete_range(track, start, end)
+
+    return deleted_spans
+
+
+def send_media_to_audiate(
+    project: Project,
+    media_or_clip: object,
+) -> dict:
+    """Export audio from a Camtasia clip as an Audiate session stub.
+
+    This is a stub — actual export requires the Audiate backend. Returns
+    a dict describing the intended export.
+
+    Args:
+        project: Source Camtasia Project.
+        media_or_clip: A clip or media entry to export.
+
+    Returns:
+        Dict with ``status`` and ``source`` keys describing the intent.
+    """
+    src_id = getattr(media_or_clip, "id", None) or getattr(
+        media_or_clip, "_data", {},
+    ).get("id")
+    return {
+        "status": "pending",
+        "source": src_id,
+        "format": ".audiate",
+    }
+
+
+def delete_words_from_timeline(
+    audiate_project: AudiateProject,
+    camtasia_project: Project,
+    word_ids: list[str],
+) -> list[tuple[float, float]]:
+    """Delete specific words' time spans from the Camtasia timeline.
+
+    Looks up each word by ID in the Audiate transcript and applies
+    ``ripple_delete_range`` for words that have valid time spans.
+
+    Args:
+        audiate_project: Loaded AudiateProject with transcript.
+        camtasia_project: Target Camtasia Project.
+        word_ids: List of word IDs to delete.
+
+    Returns:
+        List of ``(start, end)`` second pairs that were deleted.
+    """
+    from camtasia.operations.layout import ripple_delete_range
+
+    words_by_id = {w.word_id: w for w in audiate_project.transcript.words}
+    spans: list[tuple[float, float]] = []
+    for wid in word_ids:
+        word = words_by_id.get(wid)
+        if word is not None and word.end is not None:
+            spans.append((word.start, word.end))
+
+    for start, end in reversed(sorted(spans)):
+        for track in camtasia_project.timeline.tracks:
+            ripple_delete_range(track, start, end)
+
+    return spans
 
 
 def apply_sync(

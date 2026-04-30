@@ -27,7 +27,15 @@ from camtasia.operations.layout import (
 )
 from camtasia.operations.merge import merge_tracks
 from camtasia.operations.speed import rescale_project, set_audio_speed
-from camtasia.operations.sync import SyncSegment, apply_sync, match_marker_to_transcript, plan_sync
+from camtasia.operations.sync import (
+    SyncSegment,
+    apply_sync,
+    delete_words_from_timeline,
+    match_marker_to_transcript,
+    plan_sync,
+    send_media_to_audiate,
+    sync_audiate_edits_to_timeline,
+)
 from camtasia.operations.template import (
     TemplateManager,
     clone_project_structure,
@@ -52,6 +60,7 @@ __all__ = [
     "apply_to_track",
     "clone_project_structure",
     "compact_project",
+    "delete_words_from_timeline",
     "diff_projects",
     "duplicate_project",
     "export_camtemplate",
@@ -79,8 +88,10 @@ __all__ = [
     "ripple_replace_in_group",
     "save_as_template",
     "scale_all",
+    "send_media_to_audiate",
     "set_audio_speed",
     "set_opacity_all",
     "snap_to_clip_edge",
     "snap_to_grid",
+    "sync_audiate_edits_to_timeline",
 ]
