@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import NoReturn
+from fractions import Fraction
+from typing import Any, NoReturn
 
 from camtasia.timeline.clips.base import BaseClip
+from camtasia.timing import seconds_to_ticks
 
 
 class PlaceholderMedia(BaseClip):
@@ -43,3 +45,53 @@ class PlaceholderMedia(BaseClip):
     def height(self) -> float:
         """Height of the placeholder in pixels."""
         return float(self._data.get('attributes', {}).get('heightAttr', 0.0))
+
+    def replace_with(self, media_dict: dict[str, Any], mode: str = 'ripple') -> dict[str, Any]:
+        """Substitute this placeholder's media data in-place.
+
+        A simple path for replacing placeholder media where
+        :meth:`set_source` raises.
+
+        Args:
+            media_dict: New media dict (must include ``_type``, ``duration``).
+            mode: Replacement strategy:
+                - ``'ripple'``: adopt the new media's duration.
+                - ``'clip_speed'``: keep current duration, set scalar.
+                - ``'from_end'``: align end points (shift start).
+                - ``'from_start'``: keep current start and duration.
+
+        Returns:
+            The updated clip data dict.
+
+        Raises:
+            ValueError: If *mode* is not one of the accepted values.
+        """
+        valid_modes = {'ripple', 'clip_speed', 'from_end', 'from_start'}
+        if mode not in valid_modes:
+            raise ValueError(f"mode must be one of {sorted(valid_modes)}, got {mode!r}")
+
+        new_type = media_dict.get('_type', self._data.get('_type'))
+        new_duration = int(media_dict.get('duration', self._data.get('duration', 0)))
+        old_duration = int(self._data.get('duration', 0))
+
+        self._data['_type'] = new_type
+        if 'src' in media_dict:
+            self._data['src'] = media_dict['src']
+
+        if mode == 'ripple':
+            self._data['duration'] = new_duration
+            self._data['mediaDuration'] = new_duration
+        elif mode == 'clip_speed':
+            if new_duration > 0:
+                scalar = Fraction(old_duration, new_duration)
+                self._data['scalar'] = 1 if scalar == 1 else str(scalar)
+            self._data['mediaDuration'] = new_duration
+        elif mode == 'from_end':
+            old_end = self.start + old_duration
+            self._data['duration'] = new_duration
+            self._data['mediaDuration'] = new_duration
+            self._data['start'] = old_end - new_duration
+        else:  # from_start
+            pass  # keep current start and duration
+
+        return dict(self._data)

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from camtasia.effects.audio import NoiseRemoval
 from camtasia.effects.audio_visualizer import AudioVisualizer
+from camtasia.effects.audio import Equalizer, NoiseRemoval
 from camtasia.effects.base import Effect, effect_from_dict
 from camtasia.effects.behaviors import BehaviorPhase, GenericBehaviorEffect
 from camtasia.effects.cursor import (
@@ -105,6 +106,7 @@ __all__ = [
     "Effect",
     "EffectSchema",
     "Emphasize",
+    "Equalizer",
     "GenericBehaviorEffect",
     "Glow",
     "LeftClickBurst1",

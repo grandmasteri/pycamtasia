@@ -1512,6 +1512,26 @@ class BaseClip:
         })
         return self
 
+    def add_equalizer(self, bands: list[tuple[float, float]]) -> Effect:
+        """Add an equalizer audio effect.
+
+        Args:
+            bands: List of ``(frequency_hz, gain_db)`` tuples.
+
+        Returns:
+            Wrapped :class:`~camtasia.effects.audio.Equalizer` effect.
+        """
+        params: dict[str, Any] = {}
+        for i, (freq, gain) in enumerate(bands):
+            params[f'band-{i}-frequency'] = freq
+            params[f'band-{i}-gain-db'] = gain
+        return self.add_effect({
+            'effectName': 'Equalizer',
+            'bypassed': False,
+            'category': 'categoryAudioEffects',
+            'parameters': params,
+        })
+
     def add_blend_mode(self, *, mode: int | BlendMode = BlendMode.NORMAL, intensity: float = 1.0) -> Self:
         """Add a blend mode compositing effect.
 

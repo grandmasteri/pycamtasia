@@ -1550,6 +1550,26 @@ class Timeline:
     def scroll_offset(self, value: float) -> None:
         self._data.setdefault('docPrefs', {})['DocPrefHorizontalScrollBarValue'] = value
 
+    @property
+    def markers_view_visible(self) -> bool:
+        """Whether the markers view panel is visible."""
+        prefs = self._data.get('docPrefs', {})
+        return bool(prefs.get('DocPrefMarkersViewVisible', False))
+
+    @markers_view_visible.setter
+    def markers_view_visible(self, value: bool) -> None:
+        self._data.setdefault('docPrefs', {})['DocPrefMarkersViewVisible'] = value
+
+    @property
+    def quiz_view_visible(self) -> bool:
+        """Whether the quiz view panel is visible."""
+        prefs = self._data.get('docPrefs', {})
+        return bool(prefs.get('DocPrefQuizViewVisible', False))
+
+    @quiz_view_visible.setter
+    def quiz_view_visible(self, value: bool) -> None:
+        self._data.setdefault('docPrefs', {})['DocPrefQuizViewVisible'] = value
+
     # ------------------------------------------------------------------
     # Viewport-rect zoom
     # ------------------------------------------------------------------
