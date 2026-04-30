@@ -12,11 +12,13 @@ from camtasia.export.captions import (
     import_captions_srt,
     import_captions_vtt,
 )
+from camtasia.export.chapters import export_chapters
 from camtasia.export.csv_export import export_csv
 from camtasia.export.edl import export_edl
 from camtasia.export.report import export_project_report
 from camtasia.export.srt import export_markers_as_srt
 from camtasia.export.timeline_json import export_timeline_json, load_timeline_json
+from camtasia.export.toc import export_toc
 
 __all__ = [
     'CaptionEntry',
@@ -28,12 +30,14 @@ __all__ = [
     'export_captions_as_srt',
     'export_captions_multilang',
     'export_captions_srt',
+    'export_chapters',
     'export_csv',
     'export_edl',
     'export_markers_as_srt',
     'export_multilang_package',
     'export_project_report',
     'export_timeline_json',
+    'export_toc',
     'import_captions',
     'import_captions_srt',
     'import_captions_vtt',
