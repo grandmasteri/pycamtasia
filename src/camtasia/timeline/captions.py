@@ -1,11 +1,16 @@
 """Caption styling configuration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+import json
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from camtasia.timeline.clips.callout import Callout
     from camtasia.types import _CaptionData
+
+_DEFAULT_PRESETS_DIR = Path.home() / '.pycamtasia' / 'dynamic_caption_presets'
 
 
 @dataclass
@@ -215,3 +220,91 @@ class CaptionAttributes:
         index = int(time_seconds / word_duration)
         index = min(index, len(words) - 1)
         return words[index]
+
+
+def _rgba_255_to_float(rgba: tuple[int, int, int, int]) -> tuple[float, float, float, float]:
+    """Convert 0-255 RGBA to 0.0-1.0 floats."""
+    return (rgba[0] / 255.0, rgba[1] / 255.0, rgba[2] / 255.0, rgba[3] / 255.0)
+
+
+def apply_dynamic_style(callout: Callout, style: DynamicCaptionStyle) -> None:
+    """Apply a *DynamicCaptionStyle* to a Callout clip.
+
+    Sets the callout's font, fill color, stroke color, and background color
+    from the style.  Colors in the style are 0-255 integers; the callout
+    stores them as 0.0-1.0 floats.
+
+    Args:
+        callout: The Callout clip to style.
+        style: The dynamic caption style to apply.
+    """
+    callout.text_properties = {
+        'font_name': style.font_name,
+        'font_size': float(style.font_size),
+        'fill_color': _rgba_255_to_float(style.fill_color),
+        'stroke_color': _rgba_255_to_float(style.stroke_color),
+        'background_color': _rgba_255_to_float(style.background_color),
+    }
+
+
+def save_dynamic_caption_preset(
+    style: DynamicCaptionStyle,
+    name: str,
+    presets_dir: Path | None = None,
+) -> Path:
+    """Write a *DynamicCaptionStyle* as JSON to the presets directory.
+
+    Args:
+        style: The style to persist.
+        name: Preset name (used as the JSON filename stem).
+        presets_dir: Override the default presets directory.
+
+    Returns:
+        Path to the written JSON file.
+    """
+    directory = presets_dir or _DEFAULT_PRESETS_DIR
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f'{name}.json'
+    path.write_text(json.dumps(asdict(style), indent=2))
+    return path
+
+
+def load_dynamic_caption_preset(
+    name: str,
+    presets_dir: Path | None = None,
+) -> DynamicCaptionStyle:
+    """Load a *DynamicCaptionStyle* from the presets directory.
+
+    Args:
+        name: Preset name (filename stem without ``.json``).
+        presets_dir: Override the default presets directory.
+
+    Returns:
+        The loaded style.
+
+    Raises:
+        FileNotFoundError: If the preset file does not exist.
+    """
+    directory = presets_dir or _DEFAULT_PRESETS_DIR
+    path = directory / f'{name}.json'
+    data = json.loads(path.read_text())
+    # Convert color lists back to tuples
+    for key in ('fill_color', 'stroke_color', 'highlight_color', 'background_color'):
+        if key in data and isinstance(data[key], list):
+            data[key] = tuple(data[key])
+    return DynamicCaptionStyle(**data)
+
+
+def list_dynamic_caption_presets(presets_dir: Path | None = None) -> list[str]:
+    """List saved dynamic caption preset names.
+
+    Args:
+        presets_dir: Override the default presets directory.
+
+    Returns:
+        Sorted list of preset names (without ``.json`` extension).
+    """
+    directory = presets_dir or _DEFAULT_PRESETS_DIR
+    if not directory.is_dir():
+        return []
+    return sorted(p.stem for p in directory.glob('*.json'))
