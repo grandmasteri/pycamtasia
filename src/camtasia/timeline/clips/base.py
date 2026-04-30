@@ -2246,6 +2246,212 @@ class BaseClip:
         """
         return self._set_single_param_keyframes('volume', keyframes, visual=False)
 
+    # ------------------------------------------------------------------
+    # L3 — Motion path, ClipSpeed effect, and animation helpers
+    # ------------------------------------------------------------------
+
+    def apply_to_all_animations(self, func: Callable[[dict[str, Any]], Any]) -> Self:
+        """Call *func* on each animation entry in ``animationTracks.visual``.
+
+        Args:
+            func: Callable receiving a single animation dict.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        for anim in self._data.get('animationTracks', {}).get('visual', []):
+            func(anim)
+        return self
+
+    def apply_clip_speed_effect(self, speed: float, duration: int | None = None) -> Self:
+        """Register a Camtasia-native ``ClipSpeed`` effect if not already present.
+
+        Args:
+            speed: Speed multiplier for the effect parameters.
+            duration: Optional effect duration in ticks. Defaults to clip duration.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        if self.is_effect_applied('ClipSpeed'):
+            return self
+        record: dict[str, Any] = {
+            'effectName': 'ClipSpeed',
+            'bypassed': False,
+            'category': '',
+            'parameters': {'speed': speed},
+        }
+        if duration is not None:
+            record['duration'] = duration
+        self._data.setdefault('effects', []).append(record)
+        return self
+
+    def set_position_keyframes_with_line_type(
+        self,
+        keyframes: list[tuple[float, float, float]],
+        line_types: list[str],
+    ) -> Self:
+        """Set position keyframes tagging each with a line type.
+
+        Args:
+            keyframes: List of ``(time_seconds, x, y)`` tuples.
+            line_types: Per-keyframe line type: ``'angle'``, ``'curve'``,
+                or ``'combination'``.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        params = self._data.setdefault('parameters', {})
+        x_kfs: list[dict[str, Any]] = []
+        y_kfs: list[dict[str, Any]] = []
+        for i, (t, x, y) in enumerate(keyframes):
+            ticks = seconds_to_ticks(t)
+            next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
+            dur = next_ticks - ticks
+            lt = line_types[i] if i < len(line_types) else 'curve'
+            kf: dict[str, Any] = {
+                'endTime': next_ticks, 'time': ticks, 'value': x,
+                'duration': dur, 'lineType': lt,
+            }
+            x_kfs.append(kf)
+            y_kfs.append({
+                'endTime': next_ticks, 'time': ticks, 'value': y,
+                'duration': dur, 'lineType': lt,
+            })
+        params['translation0'] = {'type': 'double', 'defaultValue': keyframes[-1][1], 'keyframes': x_kfs}
+        params['translation1'] = {'type': 'double', 'defaultValue': keyframes[-1][2], 'keyframes': y_kfs}
+        self._add_visual_tracks_for_keyframes(x_kfs)
+        return self
+
+    def set_position_bezier_handles(
+        self,
+        keyframes_with_in_out_tangents: list[dict[str, Any]],
+    ) -> Self:
+        """Write bezier tangent control points for position keyframes.
+
+        Each entry must have keys: ``time``, ``x``, ``y``, and optionally
+        ``in_tangent`` (dict with ``x``, ``y``) and ``out_tangent``
+        (dict with ``x``, ``y``).
+
+        Args:
+            keyframes_with_in_out_tangents: Keyframe dicts with tangent data.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        params = self._data.setdefault('parameters', {})
+        x_kfs: list[dict[str, Any]] = []
+        y_kfs: list[dict[str, Any]] = []
+        entries = keyframes_with_in_out_tangents
+        for i, entry in enumerate(entries):
+            ticks = seconds_to_ticks(entry['time'])
+            next_ticks = seconds_to_ticks(entries[i + 1]['time']) if i + 1 < len(entries) else ticks
+            dur = next_ticks - ticks
+            x_kf: dict[str, Any] = {
+                'endTime': next_ticks, 'time': ticks, 'value': entry['x'],
+                'duration': dur, 'interp': 'bezi',
+            }
+            y_kf: dict[str, Any] = {
+                'endTime': next_ticks, 'time': ticks, 'value': entry['y'],
+                'duration': dur, 'interp': 'bezi',
+            }
+            if 'in_tangent' in entry:
+                x_kf['inTangent'] = entry['in_tangent']['x']
+                y_kf['inTangent'] = entry['in_tangent']['y']
+            if 'out_tangent' in entry:
+                x_kf['outTangent'] = entry['out_tangent']['x']
+                y_kf['outTangent'] = entry['out_tangent']['y']
+            x_kfs.append(x_kf)
+            y_kfs.append(y_kf)
+        params['translation0'] = {'type': 'double', 'defaultValue': entries[-1]['x'], 'keyframes': x_kfs}
+        params['translation1'] = {'type': 'double', 'defaultValue': entries[-1]['y'], 'keyframes': y_kfs}
+        self._add_visual_tracks_for_keyframes(x_kfs)
+        return self
+
+    def add_motion_point(
+        self,
+        time_seconds: float,
+        x: float,
+        y: float,
+        line_type: str = 'curve',
+    ) -> Self:
+        """Add a single motion point to existing position keyframes.
+
+        Convenience wrapper that appends to the current translation
+        keyframes or creates them if absent.
+
+        Args:
+            time_seconds: Time in seconds.
+            x: X position.
+            y: Y position.
+            line_type: Line type tag (``'angle'``, ``'curve'``, ``'combination'``).
+
+        Returns:
+            ``self`` for chaining.
+        """
+        params = self._data.setdefault('parameters', {})
+        ticks = seconds_to_ticks(time_seconds)
+        kf_x: dict[str, Any] = {
+            'endTime': ticks, 'time': ticks, 'value': x,
+            'duration': 0, 'lineType': line_type,
+        }
+        kf_y: dict[str, Any] = {
+            'endTime': ticks, 'time': ticks, 'value': y,
+            'duration': 0, 'lineType': line_type,
+        }
+        # Patch previous keyframe's endTime/duration to point to this one
+        for param_name, kf in [('translation0', kf_x), ('translation1', kf_y)]:
+            existing = params.get(param_name)
+            if isinstance(existing, dict) and existing.get('keyframes'):
+                prev = existing['keyframes'][-1]
+                prev['endTime'] = ticks
+                prev['duration'] = ticks - prev['time']
+                existing['keyframes'].append(kf)
+                existing['defaultValue'] = kf['value']
+            else:
+                params[param_name] = {
+                    'type': 'double',
+                    'defaultValue': kf['value'],
+                    'keyframes': [kf],
+                }
+        self._add_visual_tracks_for_keyframes([kf_x])
+        return self
+
+    def apply_motion_path(
+        self,
+        points: list[tuple[float, float, float]],
+        *,
+        easing: str = 'linear',
+        auto_orient: bool = False,
+        line_type: str = 'curve',
+    ) -> Self:
+        """Apply a MotionPath effect and set position keyframes.
+
+        High-level wrapper that:
+        1. Adds a ``MotionPath`` effect (if not already present).
+        2. Sets position keyframes with the given line type.
+        3. Optionally stores ``autoOrient`` metadata.
+
+        Args:
+            points: List of ``(time_seconds, x, y)`` tuples.
+            easing: Easing mode stored in the effect parameters.
+            auto_orient: Whether to auto-orient the clip along the path.
+            line_type: Line type for all keyframes.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        if not self.is_effect_applied('MotionPath'):
+            self._data.setdefault('effects', []).append({
+                'effectName': 'MotionPath',
+                'bypassed': False,
+                'category': 'categoryVisualEffects',
+                'parameters': {'easing': easing, 'autoOrient': auto_orient},
+            })
+        line_types = [line_type] * len(points)
+        self.set_position_keyframes_with_line_type(points, line_types)
+        return self
+
     def set_speed_by_duration(self, target_duration_seconds: float) -> Self:
         """Set playback speed to achieve a target duration.
 
