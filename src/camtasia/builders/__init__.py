@@ -21,6 +21,6 @@ __all__ = [
     'build_from_screenplay',
     'import_powerpoint',
     'import_slide_images',
-    'remove_device_frame',
     'insert_intro_template',
+    'remove_device_frame',
 ]

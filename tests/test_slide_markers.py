@@ -52,7 +52,7 @@ class TestMarkSlidesTrack:
 
     def test_markers_on_named_track(self, project):
         # The default project has at least one track; get its name
-        track = list(project.timeline.tracks)[0]
+        track = next(iter(project.timeline.tracks))
         track_name = track.name
         slides = [{'time_seconds': 2.0, 'title': 'Track Slide'}]
         count = mark_slides_from_presentation(project, slides, track_name=track_name)
@@ -62,7 +62,7 @@ class TestMarkSlidesTrack:
         assert markers[0].name == 'Track Slide'
 
     def test_timeline_markers_unchanged_when_track_specified(self, project):
-        track = list(project.timeline.tracks)[0]
+        track = next(iter(project.timeline.tracks))
         slides = [{'time_seconds': 0.0, 'title': 'On Track'}]
         mark_slides_from_presentation(project, slides, track_name=track.name)
         assert list(project.timeline.markers) == []

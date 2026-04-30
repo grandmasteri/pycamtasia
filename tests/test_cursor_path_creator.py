@@ -5,7 +5,7 @@ import pytest
 
 from camtasia.effects.base import _EFFECT_REGISTRY, effect_from_dict
 from camtasia.effects.cursor import CursorPathCreator
-from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+from camtasia.timing import seconds_to_ticks
 
 
 def _effect_dict(name: str, **params) -> dict:

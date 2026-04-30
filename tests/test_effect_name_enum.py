@@ -8,7 +8,6 @@ import pytest
 
 from camtasia.types import EffectName, MatteMode
 
-
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "src" / "camtasia" / "resources" / "camtasia-project-schema.json"
 
 

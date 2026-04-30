@@ -1,8 +1,6 @@
 """Audio effects — typed wrappers over Camtasia audio effect dicts."""
 from __future__ import annotations
 
-import warnings
-
 from camtasia.effects.base import Effect, register_effect
 
 

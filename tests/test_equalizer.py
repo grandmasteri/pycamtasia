@@ -1,8 +1,6 @@
 """Tests for the Equalizer audio effect and BaseClip.add_equalizer."""
 from __future__ import annotations
 
-import pytest
-
 from camtasia.effects.audio import Equalizer
 from camtasia.effects.base import effect_from_dict
 
@@ -66,7 +64,7 @@ class TestBaseClipAddEqualizer:
     def test_bands_match(self):
         from camtasia.timeline.clips.base import BaseClip
         clip = BaseClip(self._make_clip())
-        effect = clip.add_equalizer([(200.0, 1.5)])
+        clip.add_equalizer([(200.0, 1.5)])
         eq = Equalizer(clip.effects[0])
         assert eq.bands == [{'frequency': 200.0, 'gain_db': 1.5}]
 
