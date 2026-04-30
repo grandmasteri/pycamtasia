@@ -195,6 +195,7 @@
         "effectName": {
           "type": "string",
           "enum": [
+            "BackgroundRemoval",
             "BlendModeEffect",
             "ColorAdjustment",
             "CursorMotionBlur",
