@@ -8,7 +8,7 @@ from camtasia.effects.base import Effect, register_effect
 from camtasia.timing import EDIT_RATE
 
 if TYPE_CHECKING:
-    from camtasia.types import MaskShape
+    from camtasia.types import MaskShape, MatteMode
 
 
 @register_effect("RoundCorners")
@@ -801,12 +801,20 @@ class MediaMatte(Effect):
 
     @property
     def mode(self) -> int:
-        """Matte mode code (integer)."""
+        """Matte mode code (integer).
+
+        Values correspond to :class:`~camtasia.types.MatteMode`:
+
+        - ``1`` — ALPHA: use the matte clip's alpha channel.
+        - ``2`` — ALPHA_INVERT: inverted alpha channel.
+        - ``3`` — LUMINOSITY: use the matte clip's luminance.
+        - ``4`` — LUMINOSITY_INVERT: inverted luminance.
+        """
         return int(self.get_parameter("matteMode"))
 
     @mode.setter
-    def mode(self, value: int) -> None:
-        self.set_parameter("matteMode", value)
+    def mode(self, value: int | MatteMode) -> None:
+        self.set_parameter("matteMode", int(value))
 
     @property
     def track_depth(self) -> int:
@@ -1484,3 +1492,54 @@ class BackgroundRemoval(Effect):
     @invert.setter
     def invert(self, value: bool) -> None:
         self.set_parameter("invert", float(value))
+
+
+@register_effect("Crop")
+class Crop(Effect):
+    """Crop effect — trim edges of a clip.
+
+    .. warning::
+        This effect has **not been verified** against a real TechSmith fixture.
+        Parameter names and semantics may differ from what Camtasia actually
+        produces. If your Camtasia version rejects these names, please file
+        an issue with a fixture project.
+
+    Parameters:
+        left, right, top, bottom (all float, 0.0-1.0 normalized).
+    """
+
+    @property
+    def left(self) -> float:
+        """Left crop amount (0.0-1.0)."""
+        return float(self.get_parameter("left"))
+
+    @left.setter
+    def left(self, value: float) -> None:
+        self.set_parameter("left", value)
+
+    @property
+    def right(self) -> float:
+        """Right crop amount (0.0-1.0)."""
+        return float(self.get_parameter("right"))
+
+    @right.setter
+    def right(self, value: float) -> None:
+        self.set_parameter("right", value)
+
+    @property
+    def top(self) -> float:
+        """Top crop amount (0.0-1.0)."""
+        return float(self.get_parameter("top"))
+
+    @top.setter
+    def top(self, value: float) -> None:
+        self.set_parameter("top", value)
+
+    @property
+    def bottom(self) -> float:
+        """Bottom crop amount (0.0-1.0)."""
+        return float(self.get_parameter("bottom"))
+
+    @bottom.setter
+    def bottom(self, value: float) -> None:
+        self.set_parameter("bottom", value)
