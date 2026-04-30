@@ -3178,6 +3178,139 @@ class Project:
                 library = self._libraries.create('Default')
         return library.add_asset(cast('dict[str, Any]', group_clip._data), name)
 
+    # ------------------------------------------------------------------
+    # Canvas preview & Rev layout/style stubs
+    # ------------------------------------------------------------------
+
+    _REV_LAYOUTS: ClassVar[set[str]] = {
+        'picture_in_picture', 'side_by_side', 'split_screen',
+        'full_screen_camera', 'full_screen_screen',
+    }
+
+    _REV_STYLES: ClassVar[set[str]] = {
+        'modern', 'minimal', 'vibrant', 'professional',
+    }
+
+    def preview_frame(self, time_seconds: float) -> dict[str, Any]:
+        """Describe the frame composition at a given playhead time.
+
+        Returns a dict with ``clips`` (visible clips and their transforms)
+        and ``effects`` (active effects) at the specified time.
+
+        Args:
+            time_seconds: Playhead position in seconds.
+
+        Returns:
+            ``{'clips': [...], 'effects': [...]}`` describing the frame.
+        """
+        from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+
+        target_ticks = seconds_to_ticks(time_seconds)
+        visible_clips: list[dict[str, Any]] = []
+        active_effects: list[dict[str, Any]] = []
+
+        for track, clip in self.all_clips:
+            clip_end = clip.start + clip.duration
+            if clip.start <= target_ticks < clip_end:
+                clip_info: dict[str, Any] = {
+                    'id': clip.id,
+                    'type': clip.clip_type,
+                    'track': track.name,
+                    'start_seconds': clip.start_seconds,
+                    'duration_seconds': clip.duration_seconds,
+                }
+                params = clip._data.get('parameters', {})
+                if params:
+                    clip_info['transforms'] = {
+                        k: v.get('defaultValue') if isinstance(v, dict) else v
+                        for k, v in params.items()
+                    }
+                visible_clips.append(clip_info)
+                for effect in clip._data.get('effects', []):
+                    active_effects.append({
+                        'clip_id': clip.id,
+                        'effect_name': effect.get('effectName', '?'),
+                    })
+
+        return {'clips': visible_clips, 'effects': active_effects}
+
+    def render_canvas_preview(self, time_seconds: float, out_path: Path) -> Path:
+        """Write a JSON file describing what would be rendered at a playhead time.
+
+        This is a **stub** — actual pixel rendering requires the Camtasia
+        engine.  The output JSON contains the visible clips, their
+        transforms, and active effects at the given time, which can be
+        used for tooling, debugging, or driving an external renderer.
+
+        Args:
+            time_seconds: Playhead position in seconds.
+            out_path: Destination path for the JSON file.
+
+        Returns:
+            The *out_path* that was written.
+
+        Note:
+            Actual frame rendering requires the Camtasia engine.  This
+            method only produces a machine-readable description of the
+            frame composition.
+        """
+        frame = self.preview_frame(time_seconds)
+        payload: dict[str, Any] = {
+            'time_seconds': time_seconds,
+            'canvas': {'width': self.width, 'height': self.height},
+            'frame': frame,
+            '_note': 'Stub output — actual rendering requires the Camtasia engine.',
+        }
+        out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(payload, indent=2))
+        return out_path
+
+    def apply_rev_layout(self, layout_name: str) -> None:
+        """Record a pending Rev layout change in project metadata.
+
+        This is a **stub** — applying the layout visually requires the
+        Camtasia engine.  The chosen layout is stored in
+        ``metadata.pendingRevLayout`` so that a future Camtasia session
+        (or an external tool) can act on it.
+
+        Args:
+            layout_name: One of ``'picture_in_picture'``,
+                ``'side_by_side'``, ``'split_screen'``,
+                ``'full_screen_camera'``, ``'full_screen_screen'``.
+
+        Raises:
+            ValueError: If *layout_name* is not a supported layout.
+        """
+        if layout_name not in self._REV_LAYOUTS:
+            raise ValueError(
+                f"Unknown Rev layout {layout_name!r}. "
+                f"Supported: {sorted(self._REV_LAYOUTS)}"
+            )
+        self._data.setdefault('metadata', {})['pendingRevLayout'] = layout_name
+
+    def apply_rev_style(self, style_name: str) -> None:
+        """Record a pending Rev style change in project metadata.
+
+        This is a **stub** — applying the style visually requires the
+        Camtasia engine.  The chosen style is stored in
+        ``metadata.pendingRevStyle`` so that a future Camtasia session
+        (or an external tool) can act on it.
+
+        Args:
+            style_name: One of ``'modern'``, ``'minimal'``,
+                ``'vibrant'``, ``'professional'``.
+
+        Raises:
+            ValueError: If *style_name* is not a supported style.
+        """
+        if style_name not in self._REV_STYLES:
+            raise ValueError(
+                f"Unknown Rev style {style_name!r}. "
+                f"Supported: {sorted(self._REV_STYLES)}"
+            )
+        self._data.setdefault('metadata', {})['pendingRevStyle'] = style_name
+
 
 def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
     """Load a Camtasia project from disk.
