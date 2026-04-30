@@ -438,3 +438,108 @@ class TestArrowFillProperties:
         assert result['stroke-color-red'] == 1.0
         assert result['fill-color-red'] == 0.0
         assert result['fill-color-green'] == 1.0
+
+
+class TestLineAnnotation:
+    """Tests for the line() annotation factory."""
+
+    def test_default_line(self):
+        from camtasia.annotations.callouts import line
+        result = line()
+        assert result['shape'] == 'arrow'
+        assert result['style'] == 'line'
+        assert result['tail-x'] == 0
+        assert result['tail-y'] == 0
+        assert result['head-x'] == 100
+        assert result['head-y'] == 0
+        assert result['stroke-width'] == 3.0
+
+    def test_custom_line(self):
+        from camtasia.annotations.callouts import line
+        result = line(
+            tail=(10, 20),
+            head=(200, 300),
+            stroke_color=Color(0.0, 1.0, 0.0),
+            width=5.0,
+        )
+        assert result['tail-x'] == 10
+        assert result['tail-y'] == 20
+        assert result['head-x'] == 200
+        assert result['head-y'] == 300
+        assert result['stroke-color-green'] == 1.0
+        assert result['stroke-width'] == 5.0
+
+    def test_line_exported_from_annotations(self):
+        from camtasia.annotations import line
+        result = line()
+        assert result['style'] == 'line'
+
+
+class TestDropShadow:
+    """Tests for drop_shadow parameter on callouts."""
+
+    def test_square_drop_shadow_enabled(self):
+        result = square('test', 'Arial', 'Bold', drop_shadow=True)
+        assert result['hasDropShadow'] == 1.0
+
+    def test_square_drop_shadow_disabled_by_default(self):
+        result = square('test', 'Arial', 'Bold')
+        assert result['hasDropShadow'] == 0.0
+
+    def test_keystroke_drop_shadow(self):
+        result = keystroke_callout('Ctrl+C', drop_shadow=True)
+        assert result['hasDropShadow'] == 1.0
+
+
+class TestCornerRadius:
+    """Tests for corner_radius parameter on square callout."""
+
+    def test_square_corner_radius(self):
+        result = square('test', 'Arial', 'Bold', corner_radius=12.0)
+        assert result['corner-radius'] == 12.0
+
+    def test_square_corner_radius_default_zero(self):
+        result = square('test', 'Arial', 'Bold')
+        assert result['corner-radius'] == 0.0
+
+
+class TestTextFormatting:
+    """Tests for italic, underline, strikethrough on text callouts."""
+
+    def test_text_italic(self):
+        from camtasia.annotations.callouts import text
+        result = text('hello', 'Arial', 'Bold', italic=True)
+        attrs = result['textAttributes']['keyframes'][0]['value']
+        italic_attr = next(a for a in attrs if a['name'] == 'fontItalic')
+        assert italic_attr['value'] == 1
+
+    def test_text_underline(self):
+        from camtasia.annotations.callouts import text
+        result = text('hello', 'Arial', 'Bold', underline=True)
+        attrs = result['textAttributes']['keyframes'][0]['value']
+        underline_attr = next(a for a in attrs if a['name'] == 'underline')
+        assert underline_attr['value'] == 1
+
+    def test_text_strikethrough(self):
+        from camtasia.annotations.callouts import text
+        result = text('hello', 'Arial', 'Bold', strikethrough=True)
+        attrs = result['textAttributes']['keyframes'][0]['value']
+        strike_attr = next(a for a in attrs if a['name'] == 'strikethrough')
+        assert strike_attr['value'] == 1
+
+    def test_text_defaults_no_formatting(self):
+        from camtasia.annotations.callouts import text
+        result = text('hello', 'Arial', 'Bold')
+        attrs = result['textAttributes']['keyframes'][0]['value']
+        italic_attr = next(a for a in attrs if a['name'] == 'fontItalic')
+        underline_attr = next(a for a in attrs if a['name'] == 'underline')
+        strike_attr = next(a for a in attrs if a['name'] == 'strikethrough')
+        assert italic_attr['value'] == 0
+        assert underline_attr['value'] == 0
+        assert strike_attr['value'] == 0
+
+    def test_square_italic(self):
+        result = square('test', 'Arial', 'Bold', italic=True)
+        attrs = result['textAttributes']['keyframes'][0]['value']
+        italic_attr = next(a for a in attrs if a['name'] == 'fontItalic')
+        assert italic_attr['value'] == 1

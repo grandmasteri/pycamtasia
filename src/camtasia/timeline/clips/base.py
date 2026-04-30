@@ -1424,6 +1424,42 @@ class BaseClip:
         })
         return self
 
+    def add_background_removal(
+        self,
+        *,
+        intensity: float = 1.0,
+        edge_softness: float = 0.5,
+        invert: bool = False,
+    ) -> Self:
+        """Add an AI background removal effect.
+
+        .. warning::
+            Unverified fixture — parameter names may differ from what
+            Camtasia actually produces.
+
+        Args:
+            intensity: Removal strength (0.0-1.0).
+            edge_softness: Edge feathering (0.0-1.0).
+            invert: When True, remove the foreground instead.
+
+        Returns:
+            self for chaining.
+        """
+        self.add_effect({
+            'effectName': EffectName.BACKGROUND_REMOVAL,
+            'bypassed': False,
+            'category': 'categoryVisualEffects',
+            'parameters': {
+                'intensity': intensity,
+                'edgeSoftness': edge_softness,
+                'invert': 1 if invert else 0,
+            },
+            'metadata': {
+                'presetName': 'Background Removal',
+            },
+        })
+        return self
+
     _RAMP_POSITION_MAP: ClassVar[dict[str, int]] = {
         'outside': 0,
         'span': 1,

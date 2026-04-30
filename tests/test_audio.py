@@ -120,3 +120,33 @@ def test_amfile_not_muted_when_both_nonzero():
     data = _amfile_dict(attributes={'ident': '', 'gain': 0.8, 'mixToMono': False, 'loudnessNormalization': False})
     clip = AMFile(data)
     assert clip.is_muted is False
+
+
+# ------------------------------------------------------------------
+# mix_to_mono property
+# ------------------------------------------------------------------
+
+class TestMixToMono:
+    def test_mix_to_mono_getter(self):
+        data = _amfile_dict()
+        clip = AMFile(data)
+        assert clip.mix_to_mono is False
+
+    def test_mix_to_mono_setter(self):
+        data = _base(_type="AMFile")
+        clip = AMFile(data)
+        clip.mix_to_mono = True
+        assert data["attributes"]["mixToMono"] is True
+
+    def test_mix_to_mono_default_false(self):
+        data = _base_clip_dict(_type="AMFile")
+        clip = AMFile(data)
+        assert clip.mix_to_mono is False
+
+    def test_mix_to_mono_roundtrip(self):
+        data = _base(_type="AMFile")
+        clip = AMFile(data)
+        clip.mix_to_mono = True
+        assert clip.mix_to_mono is True
+        clip.mix_to_mono = False
+        assert clip.mix_to_mono is False

@@ -182,3 +182,36 @@ class TestDropShadowEnabled:
         ds = DropShadow(data)
         ds.enabled = 0
         assert ds.enabled == 0
+
+
+# ------------------------------------------------------------------
+# BackgroundRemoval
+# ------------------------------------------------------------------
+
+class TestAddBackgroundRemoval:
+    def test_add_background_removal_creates_effect(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        clip.add_background_removal()
+        effect = data["effects"][0]
+        assert effect["effectName"] == "BackgroundRemoval"
+        assert effect["bypassed"] is False
+        assert effect["category"] == "categoryVisualEffects"
+        assert effect["parameters"]["intensity"] == 1.0
+        assert effect["parameters"]["edgeSoftness"] == 0.5
+        assert effect["parameters"]["invert"] == 0
+
+    def test_add_background_removal_custom_values(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        clip.add_background_removal(intensity=0.8, edge_softness=0.3, invert=True)
+        params = data["effects"][0]["parameters"]
+        assert params["intensity"] == 0.8
+        assert params["edgeSoftness"] == 0.3
+        assert params["invert"] == 1
+
+    def test_add_background_removal_chaining(self):
+        data = _base_clip_dict()
+        clip = BaseClip(data)
+        result = clip.add_background_removal()
+        assert result is clip

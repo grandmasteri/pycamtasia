@@ -212,8 +212,8 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/annotations/
 
 - [x] **Sketch Motion Callout (animated drawing callout: sketch circle, sketch arrow)** `annotations/callouts.py` — `sketch_motion_callout`
 - [x] **Sketch Motion draw-time property** `annotations/callouts.py` — `sketch_motion_callout(..., draw_time=...)`
-- [ ] **Line annotation (tutorial lists 'Arrows & Lines' — only arrow() exists)** `annotations/callouts.py` — `line`
-- [ ] **Ellipse / circle shape annotation** `annotations/shapes.py` — `ellipse`
+- [x] **Line annotation (tutorial lists 'Arrows & Lines' — only arrow() exists)** `annotations/callouts.py` — `line`
+- [x] **Ellipse / circle shape annotation** `annotations/shapes.py` — `ellipse`
 - [x] **Favorites / preset annotations** `annotations/__init__.py` — `save_as_favorite / load_favorite`
 
 ### annotations
@@ -222,11 +222,11 @@ Source:
 
 - [x] **Sketch Motion Callout (animated drawing callout: sketch circle, sketch arrow) — no factory, no 'sketch' style anywhere in library** `annotations/callouts.py` — `sketch_motion_callout`
 - [x] **Sketch Motion draw-time property (how long the sketch animates on)** `annotations/callouts.py` — `sketch_motion_callout(..., draw_time=...)`
-- [ ] **Additional shapes shown in Shapes subtab (polygon, rounded-rectangle, triangle, speech bubble) — only rectangle() exposed** `annotations/shapes.py` — `polygon / rounded_rectangle / triangle`
-- [ ] **Shadow (hasDropShadow) on callout/shape annotations — hardcoded to 0.0 in square/keystroke, not exposed as parameter** `annotations/callouts.py` — `square(..., drop_shadow=True)`
-- [ ] **Corner-radius on shape/square callouts — hardcoded to 0.0, not exposed** `annotations/shapes.py` — `rectangle(..., corner_radius=...)`
+- [x] **Additional shapes shown in Shapes subtab (polygon, rounded-rectangle, triangle, speech bubble) — only rectangle() exposed** `annotations/shapes.py` — `polygon / rounded_rectangle / triangle`
+- [x] **Shadow (hasDropShadow) on callout/shape annotations — hardcoded to 0.0 in square/keystroke, not exposed as parameter** `annotations/callouts.py` — `square(..., drop_shadow=True)`
+- [x] **Corner-radius on shape/square callouts — hardcoded to 0.0, not exposed** `annotations/shapes.py` — `rectangle(..., corner_radius=...)`
 - [x] **Callout tail for speech-bubble style — tail-x/tail-y hardcoded, not parameterized** `annotations/callouts.py` — `square(..., tail=(x,y))`
-- [ ] **Italic / underline / strikethrough text properties — _text_attributes always writes 0 and callers cannot override** `annotations/callouts.py` — `text(..., italic=..., underline=..., strikethrough=...)`
+- [x] **Italic / underline / strikethrough text properties — _text_attributes always writes 0 and callers cannot override** `annotations/callouts.py` — `text(..., italic=..., underline=..., strikethrough=...)`
 - [x] **Lower-third / title preset callout helpers — templates/lower_third.py exists but no public annotation factory in camtasia.annotations** `annotations/__init__.py` — `lower_third / title`
 - [ ] **Gradient fill for callouts/shapes — FillStyle.Gradient exists but no gradient-stop parameters accepted** `annotations/callouts.py` — `square(..., gradient_stops=...)`
 - [x] **Favorites / preset annotations (save/load custom annotation for reuse)** `annotations/__init__.py` — `save_as_favorite / load_favorite`
@@ -442,7 +442,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/editing-audio/
 - [x] **Separate/strip audio from video clip** `src/camtasia/timeline/clips/base.py` — `separate_video_and_audio`
 - [x] **Audio-specific fade_in/fade_out (current fade methods animate opacity)** `src/camtasia/timeline/clips/base.py` — `audio_fade_in / audio_fade_out`
 - [x] **Multi-point audio point API (add/move/remove volume keyframes)** `src/camtasia/timeline/clips/base.py` — `add_audio_point / remove_all_audio_points`
-- [ ] **Mix-to-Mono setter missing (attribute exists, no dedicated setter)** `src/camtasia/timeline/clips/audio.py` — `mix_to_mono setter`
+- [x] **Mix-to-Mono setter missing (attribute exists, no dedicated setter)** `src/camtasia/timeline/clips/audio.py` — `mix_to_mono setter`
 - [x] **set_volume_fade supports only single start->end; no multi-keyframe volume envelope** `src/camtasia/timeline/clips/base.py` — `set_volume_keyframes`
 
 ### Enhance Your Video Overview
@@ -660,7 +660,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/use-a-template/
 Source: https://www.techsmith.com/learn/tutorials/camtasia/video-background-removal/
 
 - [x] **AI Background Removal visual effect not implemented (distinct from ChromaKey/MediaMatte)** `src/camtasia/effects/visual.py` — `@register_effect('BackgroundRemoval') class with intensity/threshold/edge-softness/invert parameters`
-- [ ] **No convenience add_background_removal() helper on BaseClip** `src/camtasia/timeline/clips/base.py` — `add_background_removal near add_media_matte`
+- [x] **No convenience add_background_removal() helper on BaseClip** `src/camtasia/timeline/clips/base.py` — `add_background_removal near add_media_matte`
 - [x] **BACKGROUND_REMOVAL missing from types enum and schema effect-name enum** `src/camtasia/types.py` — `BACKGROUND_REMOVAL constant`
 - [ ] **ChromaKey effect marked unverified — no fixture-backed parameter validation** `src/camtasia/effects/visual.py` — `verify ChromaKey parameters against fixture`
 
