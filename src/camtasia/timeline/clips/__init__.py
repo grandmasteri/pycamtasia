@@ -16,7 +16,7 @@ from .callout import Callout, CalloutBuilder
 from .group import Group, GroupTrack
 from .image import IMFile
 from .placeholder import PlaceholderMedia
-from .screen_recording import ScreenIMFile, ScreenVMFile
+from .screen_recording import CursorType, ScreenIMFile, ScreenVMFile
 from .stitched import StitchedMedia
 from .unified import UnifiedMedia
 from .video import VMFile
@@ -55,6 +55,7 @@ __all__ = [
     'BaseClip',
     'Callout',
     'CalloutBuilder',
+    'CursorType',
     'Group',
     'GroupTrack',
     'IMFile',
