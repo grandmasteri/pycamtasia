@@ -3052,6 +3052,187 @@ class Track:
         return clip_from_dict(new_data)
 
 
+    # ------------------------------------------------------------------
+    # Marker promote / demote
+    # ------------------------------------------------------------------
+
+    def promote_marker_to_media(self, time_ticks: int, clip_id: int) -> None:
+        """Move a timeline marker into a clip's media markers (TOC).
+
+        Finds the timeline marker at *time_ticks* on this track,
+        removes it, and adds it to the clip's ``parameters.toc``
+        keyframes.
+
+        Args:
+            time_ticks: Position of the timeline marker in ticks.
+            clip_id: ID of the clip to receive the marker.
+
+        Raises:
+            KeyError: No timeline marker at *time_ticks* or no clip
+                with *clip_id*.
+        """
+        # Find the timeline marker
+        track_kfs = (
+            self._data
+            .get('parameters', {})
+            .get('toc', {})
+            .get('keyframes', [])
+        )
+        marker_kf = None
+        for kf in track_kfs:
+            if kf['time'] == time_ticks:
+                marker_kf = kf
+                break
+        if marker_kf is None:
+            raise KeyError(f'No timeline marker at time={time_ticks}')
+
+        # Find the clip
+        clip_data = None
+        for m in self._data.get('medias', []):
+            if m.get('id') == clip_id:
+                clip_data = m
+                break
+        if clip_data is None:
+            raise KeyError(f'No clip with id={clip_id}')
+
+        # Remove from track markers
+        track_kfs.remove(marker_kf)
+
+        # Add to clip's parameters.toc
+        params = clip_data.setdefault('parameters', {})
+        toc = params.setdefault('toc', {'type': 'string'})
+        kfs = toc.setdefault('keyframes', [])
+        kfs.append({
+            'time': time_ticks,
+            'endTime': time_ticks,
+            'value': marker_kf['value'],
+            'duration': 0,
+        })
+
+    def demote_marker_to_timeline(self, clip_id: int, time_ticks: int) -> None:
+        """Move a media marker from a clip back to the timeline.
+
+        Removes the marker at *time_ticks* from the clip's
+        ``parameters.toc`` keyframes and adds it to this track's
+        timeline markers.
+
+        Args:
+            clip_id: ID of the clip containing the media marker.
+            time_ticks: Position of the media marker in ticks.
+
+        Raises:
+            KeyError: No clip with *clip_id* or no media marker at
+                *time_ticks*.
+        """
+        # Find the clip
+        clip_data = None
+        for m in self._data.get('medias', []):
+            if m.get('id') == clip_id:
+                clip_data = m
+                break
+        if clip_data is None:
+            raise KeyError(f'No clip with id={clip_id}')
+
+        # Find and remove the media marker
+        clip_kfs = (
+            clip_data
+            .get('parameters', {})
+            .get('toc', {})
+            .get('keyframes', [])
+        )
+        marker_kf = None
+        for kf in clip_kfs:
+            if kf['time'] == time_ticks:
+                marker_kf = kf
+                break
+        if marker_kf is None:
+            raise KeyError(f'No media marker at time={time_ticks} in clip {clip_id}')
+
+        clip_kfs.remove(marker_kf)
+
+        # Add to track's timeline markers
+        track_params = self._data.setdefault('parameters', {})
+        track_toc = track_params.setdefault('toc', {'type': 'string'})
+        track_kfs = track_toc.setdefault('keyframes', [])
+        track_kfs.append({
+            'time': time_ticks,
+            'endTime': time_ticks,
+            'value': marker_kf['value'],
+            'duration': 0,
+        })
+
+    # ------------------------------------------------------------------
+    # Group property access
+    # ------------------------------------------------------------------
+
+    def set_group_property(self, group_clip_id: int, path: str, value: Any) -> None:
+        """Set a property on a Group clip's internal data via dotted path.
+
+        Walks the Group's ``_data`` dict using a dot-separated path
+        and sets the final key to *value*.
+
+        Args:
+            group_clip_id: ID of the Group clip.
+            path: Dot-separated path (e.g. ``'attributes.ident'``,
+                ``'parameters.scale0.defaultValue'``).
+            value: The value to set.
+
+        Raises:
+            KeyError: No Group clip with *group_clip_id*, or an
+                intermediate path segment does not exist.
+            TypeError: The clip is not a Group.
+        """
+        clip_data = None
+        for m in self._data.get('medias', []):
+            if m.get('id') == group_clip_id:
+                clip_data = m
+                break
+        if clip_data is None:
+            raise KeyError(f'No clip with id={group_clip_id}')
+        if clip_data.get('_type') != 'Group':
+            raise TypeError(f'Clip {group_clip_id} is not a Group (type={clip_data.get("_type")!r})')
+
+        parts = path.split('.')
+        target = clip_data
+        for part in parts[:-1]:
+            if not isinstance(target, dict) or part not in target:
+                raise KeyError(f'Path segment {part!r} not found in group data')
+            target = target[part]
+        if not isinstance(target, dict):
+            raise KeyError(f'Cannot set key on non-dict at path {".".join(parts[:-1])!r}')
+        target[parts[-1]] = value
+
+    def get_nested_subgroup(self, group_clip_id: int, subgroup_name: str) -> Group | None:
+        """Recursively find a subgroup by name within a Group.
+
+        Searches the Group's internal tracks for a nested Group clip
+        whose ``attributes.ident`` matches *subgroup_name*.  Recurses
+        into nested Groups.
+
+        Args:
+            group_clip_id: ID of the top-level Group clip.
+            subgroup_name: The ``ident`` to search for.
+
+        Returns:
+            The matching Group clip, or ``None`` if not found.
+
+        Raises:
+            KeyError: No clip with *group_clip_id*.
+            TypeError: The clip is not a Group.
+        """
+        clip_data = None
+        for m in self._data.get('medias', []):
+            if m.get('id') == group_clip_id:
+                clip_data = m
+                break
+        if clip_data is None:
+            raise KeyError(f'No clip with id={group_clip_id}')
+        if clip_data.get('_type') != 'Group':
+            raise TypeError(f'Clip {group_clip_id} is not a Group (type={clip_data.get("_type")!r})')
+
+        return _find_subgroup_recursive(clip_data, subgroup_name)
+
+
 class _ClipAccessor:
     """Lightweight iterable/indexable accessor over a track's clips."""
 
@@ -3124,6 +3305,19 @@ class _PerMediaMarkers:
 
     def __len__(self) -> int:
         return sum(1 for _ in self)
+
+
+def _find_subgroup_recursive(group_data: dict[str, Any], name: str) -> Group | None:
+    """Recursively search a Group's internal tracks for a subgroup by ident."""
+    for track in group_data.get('tracks', []):
+        for media in track.get('medias', []):
+            if media.get('_type') == 'Group':
+                if media.get('attributes', {}).get('ident') == name:
+                    return Group(media)
+                result = _find_subgroup_recursive(media, name)
+                if result is not None:
+                    return result
+    return None
 
 
 def _max_clip_id(tracks: list[dict[str, Any]]) -> int:
