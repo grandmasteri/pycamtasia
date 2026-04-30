@@ -274,3 +274,56 @@ def keystroke_callout(
             ],
         },
     }
+
+
+_SKETCH_SHAPES = frozenset({'circle', 'arrow', 'underline', 'rectangle'})
+
+
+def sketch_motion_callout(
+    shape: str = 'circle',
+    *,
+    color: tuple[float, float, float, float] = (1, 0, 0, 1),
+    stroke_width: float = 4.0,
+    draw_time_seconds: float = 1.0,
+    size: tuple[float, float] = (200, 200),
+    position: tuple[float, float] = (960, 540),
+) -> dict:
+    """Build a sketch-motion annotation dict matching Camtasia's schema.
+
+    Args:
+        shape: Sketch shape. Must be one of 'circle', 'arrow',
+            'underline', or 'rectangle'.
+        color: RGBA stroke color as floats in [0.0, 1.0].
+        stroke_width: Stroke width in points.
+        draw_time_seconds: Time in seconds for the draw-on animation.
+        size: (width, height) of the annotation in pixels.
+        position: (x, y) center position on the canvas.
+
+    Returns:
+        Annotation definition dict suitable for a Callout clip's ``def`` key.
+
+    Raises:
+        ValueError: If *shape* is not in the allowed set.
+    """
+    if shape not in _SKETCH_SHAPES:
+        raise ValueError(
+            f"shape must be one of {sorted(_SKETCH_SHAPES)}, got {shape!r}"
+        )
+    r, g, b, a = color
+    w, h = size
+    x, y = position
+    return {
+        'kind': 'sketch-motion',
+        'shape': shape,
+        'style': 'basic',
+        'width': float(w),
+        'height': float(h),
+        'position-x': float(x),
+        'position-y': float(y),
+        'stroke-color-red': float(r),
+        'stroke-color-green': float(g),
+        'stroke-color-blue': float(b),
+        'stroke-color-opacity': float(a),
+        'stroke-width': float(stroke_width),
+        'draw-time': float(draw_time_seconds),
+    }
