@@ -100,7 +100,7 @@ from camtasia.types import (
     TransitionType,
     ValidationLevel,
 )
-from camtasia.validation import ValidationIssue, validate_all
+from camtasia.validation import ValidationIssue, validate_all, validate_caption_accessibility
 
 __all__ = [
     # Timing
@@ -193,5 +193,6 @@ __all__ = [
     "ticks_to_seconds",
     "use_project",
     "validate_all",
+    "validate_caption_accessibility",
     "with_undo",
 ]
