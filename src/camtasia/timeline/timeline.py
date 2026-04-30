@@ -1501,6 +1501,133 @@ class Timeline:
     def ui_zoom_level(self, value: float) -> None:
         self._data.setdefault('docPrefs', {})['DocPrefZoomValue'] = value
 
+    @property
+    def detached(self) -> bool:
+        """Whether the timeline panel is detached from the main window."""
+        prefs = self._data.get('docPrefs', {})
+        return bool(prefs.get('DocPrefTimelineDetached', False))
+
+    @detached.setter
+    def detached(self, value: bool) -> None:
+        self._data.setdefault('docPrefs', {})['DocPrefTimelineDetached'] = value
+
+    def detach(self) -> None:
+        """Detach the timeline panel from the main window."""
+        self.detached = True
+
+    def reattach(self) -> None:
+        """Reattach the timeline panel to the main window."""
+        self.detached = False
+
+    @property
+    def playback_rate(self) -> int:
+        """Playback rate for J/K/L transport (1, 2, 4, or 8)."""
+        prefs = self._data.get('docPrefs', {})
+        return int(prefs.get('DocPrefPlaybackRate', 1))
+
+    @playback_rate.setter
+    def playback_rate(self, value: int) -> None:
+        """Set playback rate.
+
+        Args:
+            value: Playback rate (1, 2, 4, or 8).
+
+        Raises:
+            ValueError: If value is not a valid playback rate.
+        """
+        valid = {1, 2, 4, 8}
+        if value not in valid:
+            raise ValueError(f'Playback rate must be one of {sorted(valid)}, got {value}')
+        self._data.setdefault('docPrefs', {})['DocPrefPlaybackRate'] = value
+
+    @property
+    def scroll_offset(self) -> float:
+        """Horizontal scroll offset of the timeline panel."""
+        prefs = self._data.get('docPrefs', {})
+        return float(prefs.get('DocPrefHorizontalScrollBarValue', 0.0))
+
+    @scroll_offset.setter
+    def scroll_offset(self, value: float) -> None:
+        self._data.setdefault('docPrefs', {})['DocPrefHorizontalScrollBarValue'] = value
+
+    # ------------------------------------------------------------------
+    # Viewport-rect zoom
+    # ------------------------------------------------------------------
+
+    def add_zoom_n_pan_rect(
+        self,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        *,
+        time_seconds: float | None = None,
+        duration_seconds: float = 1.0,
+    ) -> dict[str, Any]:
+        """Add a viewport-rect-based zoom/pan keyframe.
+
+        Unlike :meth:`add_zoom_pan` which uses scale + center, this method
+        specifies the visible rectangle directly (matching Camtasia's
+        "Zoom-n-Pan" rectangle tool).
+
+        Args:
+            x: Left edge of the viewport rectangle (pixels).
+            y: Top edge of the viewport rectangle (pixels).
+            width: Width of the viewport rectangle (pixels).
+            height: Height of the viewport rectangle (pixels).
+            time_seconds: Timeline position. Defaults to current playhead.
+            duration_seconds: Duration of the zoom animation.
+
+        Returns:
+            The raw keyframe dict added to the timeline data.
+
+        Raises:
+            ValueError: If width or height is not positive.
+        """
+        if width <= 0:
+            raise ValueError(f'Width must be positive, got {width}')
+        if height <= 0:
+            raise ValueError(f'Height must be positive, got {height}')
+        if time_seconds is None:
+            time_seconds = self.playhead_seconds
+        kf: dict[str, Any] = {
+            'time': seconds_to_ticks(time_seconds),
+            'duration': seconds_to_ticks(duration_seconds),
+            'rect': {'x': x, 'y': y, 'width': width, 'height': height},
+        }
+        self._data.setdefault('zoomNPan', []).append(kf)
+        return kf
+
+    # ------------------------------------------------------------------
+    # Library asset insertion
+    # ------------------------------------------------------------------
+
+    def add_library_asset(
+        self,
+        asset: Any,
+        track_name: str,
+        start_seconds: float,
+    ) -> None:
+        """Insert a LibraryAsset onto a named track.
+
+        Creates the track if it does not exist. The asset's payload is
+        deep-copied and placed at the given start time. Clip IDs are
+        remapped to avoid collisions.
+
+        Args:
+            asset: A :class:`~camtasia.library.LibraryAsset` instance.
+            track_name: Name of the target track (created if missing).
+            start_seconds: Start time in seconds on the timeline.
+        """
+        import copy
+        track = self.get_or_create_track(track_name)
+        clip_data = copy.deepcopy(asset.payload)
+        clip_data['start'] = seconds_to_ticks(start_seconds)
+        _propagate_start_to_unified(clip_data)
+        next_id = [self.next_clip_id()]
+        _remap_clip_ids_recursive(clip_data, next_id)
+        track._data.setdefault('medias', []).append(clip_data)
+
 
 class _TrackAccessor:
     """Iterable/indexable accessor over timeline tracks."""
