@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import enum
-from typing import Any, NoReturn
+from typing import Any, ClassVar, NoReturn
 
 from typing_extensions import Self
 
@@ -249,15 +249,40 @@ class ScreenIMFile(BaseClip):
         """Set cursor location keyframes from ``(time_seconds, x, y)`` tuples."""
         self.set_cursor_location_keyframes(keyframes)
 
+    _INTERP_MAP: ClassVar[dict[str, str]] = {
+        'linear': 'linr',
+        'ease-in': 'easi',
+        'ease-out': 'easo',
+    }
+
+    _LINE_TYPE_INTERP: ClassVar[dict[str, str]] = {
+        'straight': 'linr',
+        'curved': 'bezi',
+        'bezier': 'bezi',
+    }
+
     def set_cursor_location_keyframes(
         self,
         keyframes: list[tuple[float, float, float]],
+        *,
+        line_types: list[str] | None = None,
+        bezier_handles: list[tuple[tuple[float, float], tuple[float, float]]] | None = None,
+        easing: list[str] | None = None,
     ) -> Self:
         """Set custom cursor path keyframes.
 
         Args:
             keyframes: List of ``(time_seconds, x, y)`` tuples. The Z
                 coordinate is set to 0. Must be in ascending time order.
+            line_types: Per-keyframe line type — ``'straight'`` or
+                ``'curved'``/``'bezier'``. When set to a bezier type the
+                keyframe ``interp`` is written as ``'bezi'``.
+            bezier_handles: Per-keyframe ``(in_tangent, out_tangent)``
+                pairs where each tangent is ``(x, y)``. Implies bezier
+                interpolation.
+            easing: Per-keyframe easing — ``'linear'``, ``'ease-in'``,
+                or ``'ease-out'``. Overrides the interpolation code
+                derived from *line_types*.
 
         Returns:
             ``self`` for chaining.
@@ -268,12 +293,25 @@ class ScreenIMFile(BaseClip):
             ticks = seconds_to_ticks(t)
             next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
             dur = next_ticks - ticks
-            kfs.append({
+            kf: dict[str, Any] = {
                 'endTime': next_ticks,
                 'time': ticks,
                 'value': [x, y, 0],
                 'duration': dur,
-            })
+            }
+            # Determine interp code: easing > line_types > default (none)
+            if easing and i < len(easing):
+                kf['interp'] = self._INTERP_MAP.get(easing[i], easing[i])
+            elif line_types and i < len(line_types):
+                kf['interp'] = self._LINE_TYPE_INTERP.get(line_types[i], 'linr')
+            # Bezier tangent handles
+            if bezier_handles and i < len(bezier_handles):
+                in_tan, out_tan = bezier_handles[i]
+                kf['inTangent'] = list(in_tan)
+                kf['outTangent'] = list(out_tan)
+                if 'interp' not in kf:
+                    kf['interp'] = 'bezi'
+            kfs.append(kf)
         params = self._data.setdefault('parameters', {})
         params['cursorLocation'] = {
             'type': 'point',
@@ -281,6 +319,28 @@ class ScreenIMFile(BaseClip):
             'keyframes': kfs,
         }
         return self
+
+    def set_cursor_location_with_bezier(
+        self,
+        keyframes: list[tuple[float, float, float, tuple[float, float], tuple[float, float]]],
+    ) -> Self:
+        """Set cursor path keyframes with bezier tangent handles.
+
+        Convenience wrapper around :meth:`set_cursor_location_keyframes`
+        that unpacks per-point tangent data.
+
+        Args:
+            keyframes: List of ``(time_seconds, x, y, in_tangent, out_tangent)``
+                tuples where each tangent is ``(x, y)``.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        points = [(t, x, y) for t, x, y, _in, _out in keyframes]
+        handles = [(in_t, out_t) for _, _, _, in_t, out_t in keyframes]
+        return self.set_cursor_location_keyframes(
+            points, bezier_handles=handles,
+        )
 
     @property
     def cursor_track_level(self) -> float:
