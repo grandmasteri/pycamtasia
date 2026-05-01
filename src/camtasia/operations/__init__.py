@@ -31,6 +31,7 @@ from camtasia.operations.layout import (
     snap_to_clip_edge,
     snap_to_grid,
 )
+from camtasia.operations.media_ops import add_media_to_track, remove_media
 from camtasia.operations.merge import merge_tracks
 from camtasia.operations.slide_markers import mark_slides_from_presentation
 from camtasia.operations.speed import rescale_project, set_audio_speed
@@ -63,6 +64,7 @@ __all__ = [
     "SyncSegment",
     "TemplateManager",
     "TrimRange",
+    "add_media_to_track",
     "apply_sync",
     "apply_to_all_tracks",
     "apply_to_clips",
@@ -87,6 +89,7 @@ __all__ = [
     "pack_track",
     "plan_sync",
     "remove_empty_tracks",
+    "remove_media",
     "remove_orphaned_media",
     "replace_media_source",
     "replace_placeholder",
