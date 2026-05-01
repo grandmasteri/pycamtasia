@@ -88,3 +88,4 @@ docs/_build/
 src/camtasia/resources/new.cmproj/media/17*
 .coverage
 src/camtasia/resources/new.cmproj/media/
+.mypy_cache/
