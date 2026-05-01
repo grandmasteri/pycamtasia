@@ -296,9 +296,9 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/clip-speed/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/corner-pinning/
 
-- [ ] **Derived position/skew/rotation accessors on CornerPin** `src/camtasia/effects/visual.py` — `CornerPin.position / skew / rotation derived properties`
-- [ ] **Helper to animate pinned corners via keyframes** `src/camtasia/effects/visual.py` — `CornerPin.add_keyframe(time, corner, x, y)`
-- [ ] **CornerPin parameter names unverified against real fixture** `tests/fixtures/ and effects/visual.py` — `add corner-pinning fixture and verify`
+- [x] **Derived position/skew/rotation accessors on CornerPin** `src/camtasia/effects/visual.py` — `CornerPin.position / skew / rotation derived properties`
+- [x] **Helper to animate pinned corners via keyframes** `src/camtasia/effects/visual.py` — `CornerPin.add_keyframe(time, corner, x, y)`
+- [x] **CornerPin parameter names unverified against real fixture** `tests/fixtures/ and effects/visual.py` — `add corner-pinning fixture and verify`
 
 ### Build a Video Template to Share
 
@@ -453,7 +453,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/enhance-video/
 - [x] **Interactive Hotspot effect (clickable regions)** `src/camtasia/effects/visual.py` — `class Hotspot with @register_effect('Hotspot') — url, action, pause, javascript params`
 - [x] **Zoom-n-Pan as a first-class effect** `src/camtasia/effects/visual.py` — `class ZoomNPan with scale, positionX, positionY parameters`
 - [x] **Device Frame as a registered visual effect** `src/camtasia/effects/visual.py` — `class DeviceFrame with @register_effect('DeviceFrame') — frame_type parameter`
-- [ ] **ChromaKey and CornerPin lack fixture verification** `src/camtasia/effects/visual.py` — `add fixture-backed tests and remove unverified warnings`
+- [x] **ChromaKey and CornerPin lack fixture verification** `src/camtasia/effects/visual.py` — `add fixture-backed tests and remove unverified warnings`
 
 ### Export an Audio File
 
@@ -662,7 +662,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/video-background-remo
 - [x] **AI Background Removal visual effect not implemented (distinct from ChromaKey/MediaMatte)** `src/camtasia/effects/visual.py` — `@register_effect('BackgroundRemoval') class with intensity/threshold/edge-softness/invert parameters`
 - [x] **No convenience add_background_removal() helper on BaseClip** `src/camtasia/timeline/clips/base.py` — `add_background_removal near add_media_matte`
 - [x] **BACKGROUND_REMOVAL missing from types enum and schema effect-name enum** `src/camtasia/types.py` — `BACKGROUND_REMOVAL constant`
-- [ ] **ChromaKey effect marked unverified — no fixture-backed parameter validation** `src/camtasia/effects/visual.py` — `verify ChromaKey parameters against fixture`
+- [x] **ChromaKey effect marked unverified — no fixture-backed parameter validation** `src/camtasia/effects/visual.py` — `verify ChromaKey parameters against fixture`
 
 ### Explore the Timeline
 
