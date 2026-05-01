@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     # Requires a "pypi" environment configured on the repo with trusted publisher
     # set up on pypi.org (Publishing -> Trusted publishers).
-    # See docs/PUBLISHING.md for one-time setup instructions.
+    # See docs/development/publishing.md for one-time setup instructions.
     environment:
       name: pypi
       url: https://pypi.org/project/pycamtasia/

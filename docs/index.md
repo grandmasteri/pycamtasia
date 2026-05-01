@@ -97,3 +97,13 @@ camtasia-format-reference
 
 changelog
 ```
+
+## Development
+
+```{toctree}
+:maxdepth: 1
+
+development/contributing
+development/architecture
+development/publishing
+```
