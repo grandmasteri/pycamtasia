@@ -211,3 +211,43 @@ class TestExtractSlidesAsImages:
         monkeypatch.setitem(__import__('sys').modules, 'pptx', None)
         with pytest.raises(ImportError, match='python-pptx is required'):
             _extract_slides_as_images(tmp_path / 'deck.pptx', tmp_path)
+
+
+class TestExtractSlidesPillowFallback:
+    """Test _extract_slides_as_images when Pillow is unavailable."""
+
+    def test_writes_placeholder_when_pillow_missing(self, tmp_path, monkeypatch):
+        import sys
+
+        # Mock pptx
+        mock_slide = SimpleNamespace(
+            shapes=SimpleNamespace(title=SimpleNamespace(text='Slide Title')),
+        )
+        mock_prs = SimpleNamespace(
+            slides=[mock_slide],
+            slide_width=SimpleNamespace(inches=10.0),
+            slide_height=SimpleNamespace(inches=7.5),
+        )
+        mock_pptx = MagicMock()
+        mock_pptx.Presentation.return_value = mock_prs
+        monkeypatch.setitem(sys.modules, 'pptx', mock_pptx)
+
+        # Make PIL import raise ImportError
+        monkeypatch.setitem(sys.modules, 'PIL', None)
+        monkeypatch.setitem(sys.modules, 'PIL.Image', None)
+        monkeypatch.setitem(sys.modules, 'PIL.ImageDraw', None)
+
+        pptx_path = tmp_path / 'deck.pptx'
+        pptx_path.write_bytes(b'PK')
+        out_dir = tmp_path / 'out'
+        out_dir.mkdir()
+
+        result = _extract_slides_as_images(pptx_path, out_dir)
+
+        assert len(result) == 1
+        assert result[0]['title'] == 'Slide Title'
+        slide_file = Path(result[0]['path'])
+        assert slide_file.exists()
+        content = slide_file.read_text()
+        assert 'Placeholder for slide 0' in content
+        assert 'LibreOffice' in content
