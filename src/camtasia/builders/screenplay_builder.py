@@ -28,6 +28,7 @@ def build_from_screenplay(
     emit_scene_markers: bool = False,
     emit_captions: bool = False,
     validate_alignment: bool = True,
+    screen_recording_path: Path | None = None,
 ) -> ScreenplayBuildResult:
     """Build a timeline from a parsed screenplay.
 
@@ -49,6 +50,8 @@ def build_from_screenplay(
         emit_captions: When True, adds caption callouts from VO text lines.
         validate_alignment: When True, warns if VO audio duration differs
             from estimated text duration by more than 20%.
+        screen_recording_path: When given, imports the screen recording as
+            a ScreenVMFile on a separate track aligned with the voiceovers.
 
     Returns:
         Summary dict with counts.
@@ -136,6 +139,18 @@ def build_from_screenplay(
             if has_more_vo and clips_placed > 0:
                 builder.add_pause(effective_section_pause)
                 pauses_added += 1
+
+    # Place screen recording aligned with voiceovers
+    if screen_recording_path is not None:
+        media = project.import_media(screen_recording_path)
+        sr_track = project.timeline.get_or_create_track('Screen Recording')
+        sr_dur = media.duration_seconds if media.duration_seconds else builder.cursor
+        sr_track.add_clip(
+            'ScreenVMFile', media.id,
+            start=0,
+            duration=seconds_to_ticks(min(sr_dur, builder.cursor) if builder.cursor > 0 else sr_dur),
+            trackNumber=0,
+        )
 
     result: ScreenplayBuildResult = {
         'clips_placed': clips_placed,

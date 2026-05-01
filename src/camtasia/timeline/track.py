@@ -1601,7 +1601,7 @@ class Track:
         delta = target_duration_seconds - clip.duration_seconds
         self.extend_clip(clip_id, extend_seconds=delta)
 
-    def extend_clip(self, clip_id: int, *, extend_seconds: float) -> None:
+    def extend_clip(self, clip_id: int, *, extend_seconds: float, ripple: bool = False) -> None:
         """Extend or shorten a clip's duration.
 
         Positive values extend, negative values shorten.
@@ -1609,6 +1609,8 @@ class Track:
         Args:
             clip_id: ID of the clip to extend.
             extend_seconds: Seconds to add (positive) or remove (negative).
+            ripple: When True, push all subsequent clips on the same track
+                forward (or backward) by the extend delta.
 
         Raises:
             KeyError: Clip not found.
@@ -1640,6 +1642,12 @@ class Track:
                                 _adjust_effects_after_split(sub, new_dur)
                 if extend < 0:
                     _adjust_effects_after_split(m, new_dur)
+                if ripple and extend != 0:
+                    clip_end = m['start'] + new_dur
+                    for other in self._data.get('medias', []):
+                        if other is not m and other.get('start', 0) >= clip_end - extend:
+                            other['start'] = other['start'] + extend
+                            _propagate_start_to_unified(other)
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
