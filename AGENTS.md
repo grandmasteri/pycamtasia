@@ -20,7 +20,7 @@ pycamtasia is a Python library for reading, writing, and manipulating TechSmith 
 
 Primary use case: assembling demo videos from voiceover audio, diagram images, screen recordings, and title cards via scripts.
 
-- 783+ commits, 3283+ tests, 76 source files, 19825+ lines, 96% line coverage (`fail_under = 96`), 0 mypy errors, 93+ TechSmith samples validated
+- 968+ commits, 4932+ tests, 92 source files, 30000+ lines, 100% line coverage (`fail_under = 100`), 0 mypy errors, 93+ TechSmith samples validated
 - Python 3.10+, required: `jsonpatch>=1.33`; optional: `pymediainfo`, `docopt-subcommands`
 - Package: `src/camtasia/`, installed as `camtasia`, CLI entry point: `pytsc`
 - Hardened through 9 rounds of unbiased 6-domain adversarial review
@@ -362,10 +362,10 @@ Tests run in **parallel** via `pytest-xdist` (`-n auto` in `pyproject.toml`). Ea
 PYTHONPATH=src python3 -m pytest tests/ -q
 
 # Serial execution (useful for debugging)
-PYTHONPATH=src python3 -m pytest tests/ -n0 -q
+PYTHONPATH=src python3 -m pytest tests/ -p no:xdist -q
 
-# With coverage (CI uses -n0 for accurate coverage collection)
-PYTHONPATH=src python3 -m pytest tests/ -n0 --cov=camtasia --cov-report=term-missing
+# With coverage (runs in parallel; pytest-cov handles xdist correctly)
+PYTHONPATH=src python3 -m pytest tests/ --cov=camtasia --cov-report=term-missing
 
 # Integration tests only (requires Camtasia app on macOS)
 PYTHONPATH=src python3 -m pytest tests/ -m integration
@@ -384,7 +384,7 @@ PYTHONPATH=src python3 -m pytest tests/test_transitions.py -q
 - **Parallel-safe**: All tests run under `-n auto`. No shared mutable state between tests.
 - **Isolated copies**: The `project` fixture in `conftest.py` copies `new.cmproj` into `tmp_path` before loading. Tests that need a project MUST use this fixture or create their own temp copy — never load templates in-place.
 - **No template pollution**: The template at `src/camtasia/resources/new.cmproj` must stay clean (~12KB). The `media/` directory is gitignored. If a test creates media files, they go in `tmp_path`.
-- **Coverage**: 96% line coverage enforced (`fail_under = 96`). CI runs with `-n0` and `--cov`.
+- **Coverage**: 100% line coverage enforced (`fail_under = 100`). CI runs the default parallel pytest with `--cov`.
 - **Temp path cleanup**: `tmp_path_retention_policy = "none"` — pytest cleans up temp dirs after each run.
 
 Key pytest config from `pyproject.toml`:
@@ -527,7 +527,7 @@ After `project.undo()` or `project.redo()`, any previously-obtained references t
 ```
 pycamtasia/
 ├── src/camtasia/           # Library source (the package)
-├── tests/                  # 100+ test files, 3283+ tests (parallel via pytest-xdist)
+├── tests/                  # 250+ test files, 4932+ tests (parallel via pytest-xdist)
 │   ├── conftest.py         # Fixtures: project (isolated tmp_path copy), simple_video, test_project_a_data
 │   └── fixtures/           # .tscproj files and .wav files for testing
 ├── scripts/
@@ -577,7 +577,7 @@ pycamtasia/
 - Tests must run in parallel (pytest-xdist, `-n auto`)
 - Keep template project clean (~12KB) — never commit media files
 - No legacy/deprecated APIs — delete dead code immediately rather than maintaining backward compatibility (no external users)
-- Coverage threshold at 96% — write tests for new code, never lower the threshold without writing tests first
+- Coverage threshold at 100% — write tests for new code, never lower the threshold without writing tests first
 
 ### Documentation
 - Keep AGENTS.md, format reference, JSON schema, CHANGELOG, README up-to-date with every change

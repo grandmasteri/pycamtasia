@@ -49,5 +49,9 @@ source_suffix = {
 }
 myst_enable_extensions = ["deflist", "colon_fence", "tasklist", "fieldlist"]
 
+# Render ```mermaid fences (GitHub-native syntax) as mermaid directives, so diagrams
+# inside included files (e.g. ARCHITECTURE.md) render in Sphinx as they do on GitHub.
+myst_fence_as_directive = ["mermaid"]
+
 # Suppress highlighting warnings for abbreviated JSON examples with { ... }
 suppress_warnings = ["misc.highlighting_failure"]

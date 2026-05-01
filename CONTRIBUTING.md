@@ -2,7 +2,7 @@
 
 Thanks for your interest in contributing! We welcome bug reports, documentation improvements, tests, and code contributions of all sizes.
 
-Before contributing, please read the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to abide by its terms.
+Before contributing, please read the [Code of Conduct](https://github.com/grandmasteri/pycamtasia/blob/main/CODE_OF_CONDUCT.md). By participating, you agree to abide by its terms.
 
 ## Development setup
 
@@ -53,7 +53,7 @@ Before opening a PR:
 - [ ] `mypy src/camtasia` passes
 - [ ] `pytest` passes with 100% coverage maintained
 - [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (e.g. `feat: add X`, `fix: Y`, `docs: Z`)
-- [ ] You've read the [Code of Conduct](CODE_OF_CONDUCT.md)
+- [ ] You've read the [Code of Conduct](https://github.com/grandmasteri/pycamtasia/blob/main/CODE_OF_CONDUCT.md)
 
 ## Key rules
 
@@ -73,13 +73,13 @@ Before opening a PR:
 
 - **Bugs**: [File a bug report](https://github.com/grandmasteri/pycamtasia/issues/new?template=bug_report.yml)
 - **Features**: [File a feature request](https://github.com/grandmasteri/pycamtasia/issues/new?template=feature_request.yml)
-- **Security**: See [SECURITY.md](SECURITY.md) — do NOT file a public issue
+- **Security**: See [SECURITY.md](https://github.com/grandmasteri/pycamtasia/blob/main/SECURITY.md) — do NOT file a public issue
 
 ## Asking questions
 
 - [GitHub Discussions](https://github.com/grandmasteri/pycamtasia/discussions) for Q&A
-- [Documentation](docs/) for guides and API reference
+- [Documentation](https://grandmasteri.github.io/pycamtasia/) for guides and API reference
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+By contributing, you agree that your contributions will be licensed under the [MIT License](https://github.com/grandmasteri/pycamtasia/blob/main/LICENSE).

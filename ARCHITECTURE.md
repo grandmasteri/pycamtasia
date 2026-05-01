@@ -292,14 +292,17 @@ All tests are in the flat `tests/` directory. Test files mirror source modules: 
 
 ### Parallel execution
 
-Tests run in parallel via `pytest-xdist` (`-n auto` configured in `pyproject.toml`). All tests are parallel-safe through isolated `tmp_path` copies. Serial execution (`-n0`) is used for coverage collection and debugging.
+Tests run in parallel via `pytest-xdist` (`-n auto` configured in `pyproject.toml`). All tests are parallel-safe through isolated `tmp_path` copies. Coverage collection (`pytest-cov`) works correctly in parallel — no serial fallback required.
 
 ```bash
 # Default parallel run (integration tests excluded)
 PYTHONPATH=src python3 -m pytest tests/ -q
 
-# With coverage (serial for accuracy)
-PYTHONPATH=src python3 -m pytest tests/ -n0 --cov=camtasia --cov-report=term-missing
+# With coverage (still parallel)
+PYTHONPATH=src python3 -m pytest tests/ --cov=camtasia --cov-report=term-missing
+
+# Serial execution — only useful for debugging ordering-sensitive failures
+PYTHONPATH=src python3 -m pytest tests/ -p no:xdist -q
 ```
 
-Key config: `timeout = 10` per test, `fail_under = 96` coverage, `tmp_path_retention_policy = "none"`.
+Key config: `timeout = 10` per test, `fail_under = 100` coverage, `tmp_path_retention_policy = "none"`.
