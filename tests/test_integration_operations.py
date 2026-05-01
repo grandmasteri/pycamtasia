@@ -5,13 +5,12 @@ opens in Camtasia to verify the result is valid.
 """
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
+import shutil
 
-from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
-
-from camtasia import operations, seconds_to_ticks
+from camtasia import operations
 from camtasia.project import load_project
+from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
 
 pytestmark = INTEGRATION_MARKERS
 

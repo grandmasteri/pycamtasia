@@ -7,15 +7,11 @@ Run with: pytest -m integration tests/test_integration_effects.py
 """
 from __future__ import annotations
 
+from pathlib import Path
 import struct
 import zlib
-from pathlib import Path
 
-import pytest
-
-from camtasia import seconds_to_ticks
 from camtasia.types import BlendMode, MatteMode
-
 from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
 
 FIXTURES = Path(__file__).parent / 'fixtures'

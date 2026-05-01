@@ -5,10 +5,7 @@ to verify the output is accepted without exceptions.
 """
 from __future__ import annotations
 
-import pytest
-
 from camtasia import CalloutBuilder, CalloutKind, CalloutShape
-
 from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
 
 pytestmark = INTEGRATION_MARKERS

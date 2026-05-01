@@ -18,10 +18,10 @@ killing each other.
 """
 from __future__ import annotations
 
+from pathlib import Path
 import subprocess
 import time
 import uuid
-from pathlib import Path
 
 import filelock
 import pytest

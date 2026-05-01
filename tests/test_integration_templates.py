@@ -14,7 +14,6 @@ import pytest
 
 from camtasia import operations, seconds_to_ticks
 from camtasia.operations import TemplateManager
-
 from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
 
 FIXTURES = Path(__file__).parent / 'fixtures'

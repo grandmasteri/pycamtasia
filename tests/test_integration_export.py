@@ -7,14 +7,9 @@ not mutate the project).
 from __future__ import annotations
 
 import csv
-
-import pytest
-
 from pathlib import Path
 
 from camtasia import export_csv, export_edl, export_markers_as_srt
-from camtasia.timing import seconds_to_ticks
-
 from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
 
 pytestmark = INTEGRATION_MARKERS

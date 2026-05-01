@@ -7,9 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from tests.integration_helpers import CAMTASIA_APP, INTEGRATION_MARKERS, open_in_camtasia
+from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
 
 FIXTURES = Path(__file__).parent / 'fixtures'
 EMPTY_WAV = FIXTURES / 'empty.wav'

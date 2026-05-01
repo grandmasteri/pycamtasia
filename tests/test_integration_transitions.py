@@ -8,10 +8,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from camtasia import seconds_to_ticks
-
 from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
 
 pytestmark = INTEGRATION_MARKERS

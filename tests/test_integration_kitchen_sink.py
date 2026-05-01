@@ -6,17 +6,15 @@ combination of features is broken.
 """
 from __future__ import annotations
 
+from pathlib import Path
 import struct
 import zlib
-from pathlib import Path
 
 import pytest
 
 from camtasia import (
     BehaviorPreset,
     CalloutShape,
-    EffectName,
-    InterpolationType,
     TransitionType,
     export_csv,
     export_edl,
@@ -25,13 +23,13 @@ from camtasia import (
 )
 from camtasia.operations import (
     compact_project,
+    new_from_template,
     pack_track,
     remove_empty_tracks,
     ripple_delete,
     ripple_insert,
     ripple_move,
     save_as_template,
-    new_from_template,
 )
 from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
 

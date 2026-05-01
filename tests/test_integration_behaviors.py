@@ -10,7 +10,6 @@ import pytest
 
 from camtasia import seconds_to_ticks
 from camtasia.annotations import callouts, shapes
-
 from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
 
 pytestmark = INTEGRATION_MARKERS

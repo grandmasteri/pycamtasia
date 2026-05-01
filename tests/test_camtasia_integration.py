@@ -20,9 +20,10 @@ import zlib
 import pytest
 
 from camtasia import seconds_to_ticks
-
 from tests.integration_helpers import (
     CAMTASIA_APP,
+)
+from tests.integration_helpers import (
     launch_in_camtasia_raw as _validate_in_camtasia,
 )
 
