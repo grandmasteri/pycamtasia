@@ -26,6 +26,16 @@ Effects
    :undoc-members:
    :show-inheritance:
 
+.. automodule:: camtasia.effects.audio
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: camtasia.effects.audio_visualizer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 .. automodule:: camtasia.effects.behaviors
    :members:
    :undoc-members:
