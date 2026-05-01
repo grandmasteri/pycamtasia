@@ -73,3 +73,20 @@ class TestRemoveMedia:
         remove_media(project, 42, clear_tracks=True)
         track.remove_clip.assert_called_once_with(1)
         project.media_bin.__delitem__.assert_called_once_with(42)
+
+
+class TestAddMediaToTrackUnknownType:
+    """Line 48: unknown media type raises ValueError."""
+
+    def test_raises_on_unknown_media_type(self):
+        track = MagicMock()
+        proj = MagicMock()
+        proj.timeline.tracks.__getitem__ = MagicMock(return_value=track)
+        media = MagicMock()
+        media.range = (0, 200)
+        # Unknown type value
+        media.type.value = 999  # not in _MEDIA_TYPE_TO_CLIP
+        proj.media_bin.__getitem__ = MagicMock(return_value=media)
+
+        with pytest.raises(ValueError, match="Unknown media type"):
+            add_media_to_track(proj, 0, 42, start=100, duration=200)
