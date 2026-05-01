@@ -1,21 +1,61 @@
 # Contributing to pycamtasia
 
-## Setup
+Thanks for your interest in contributing! We welcome bug reports, documentation improvements, tests, and code contributions of all sizes.
+
+Before contributing, please read the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to abide by its terms.
+
+## Development setup
 
 ```bash
-git clone <repo-url> && cd pycamtasia
-pip install -e '.[test]'
+# Clone the repository
+git clone https://github.com/grandmasteri/pycamtasia.git
+cd pycamtasia
+
+# Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # macOS/Linux
+# .venv\Scripts\activate   # Windows
+
+# Install the library in editable mode with all dev extras
+pip install -e '.[test,dev,docs]'
 ```
 
-## Running Tests
+## Running tests and checks
 
 ```bash
-pytest                  # All unit tests (~13s)
-pytest --cov            # With coverage (~27s, must be 100%)
-pytest -m integration   # Integration tests (requires Camtasia on macOS)
+# Linting
+ruff check src/ tests/
+
+# Type checking
+mypy src/camtasia
+
+# Unit tests (parallel, ~30s)
+pytest
+
+# With coverage (100% required)
+pytest --cov=camtasia --cov-fail-under=100
+
+# Integration tests (macOS only; requires Camtasia app)
+pytest -m integration
+
+# Docs build
+cd docs && sphinx-build -b html . _build/html -W
 ```
 
-## Key Rules
+## Pull request checklist
+
+Before opening a PR:
+
+- [ ] Tests have been added or updated
+- [ ] Documentation has been updated (README, docs/, docstrings) if user-facing
+- [ ] `CHANGELOG.md` has an entry under `[Unreleased]` if user-facing
+- [ ] `ruff check src/ tests/` passes
+- [ ] `mypy src/camtasia` passes
+- [ ] `pytest` passes with 100% coverage maintained
+- [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (e.g. `feat: add X`, `fix: Y`, `docs: Z`)
+- [ ] You've read the [Code of Conduct](CODE_OF_CONDUCT.md)
+
+## Key rules
 
 1. **Clip mutations must cascade-delete transitions.** Never delete clips by mutating `_data['medias']` directly — use `track.remove_clip()`, which removes transitions referencing the clip.
 
@@ -27,34 +67,19 @@ pytest -m integration   # Integration tests (requires Camtasia on macOS)
 
 5. **100% line coverage required.** The build fails below 100%.
 
-6. **Use [Conventional Commits](https://www.conventionalcommits.org/).** Examples: `feat: add mask effect`, `fix: cascade-delete on group clips`, `test: cover edge case in split`.
+6. **Use [Conventional Commits](https://www.conventionalcommits.org/).** Examples: `feat: add mask effect`, `fix: cascade-delete on group clips`, `test: cover edge case in split`, `docs: update quickstart`, `chore: bump ruff`.
 
-## How To: Add a New Effect
+## Reporting issues
 
-Follow the pattern in `src/camtasia/effects/base.py` → `add_drop_shadow`:
+- **Bugs**: [File a bug report](https://github.com/grandmasteri/pycamtasia/issues/new?template=bug_report.yml)
+- **Features**: [File a feature request](https://github.com/grandmasteri/pycamtasia/issues/new?template=feature_request.yml)
+- **Security**: See [SECURITY.md](SECURITY.md) — do NOT file a public issue
 
-1. Define the effect class (or reuse an existing one).
-2. Add a factory/convenience method on the clip or effect list.
-3. Use hyphenated parameter keys and plain scalar format.
-4. Add unit tests. Verify in Camtasia if it affects output.
+## Asking questions
 
-## How To: Add a New Transition
+- [GitHub Discussions](https://github.com/grandmasteri/pycamtasia/discussions) for Q&A
+- [Documentation](docs/) for guides and API reference
 
-Follow the pattern in `src/camtasia/timeline/transitions.py` → `add_dissolve`:
+## License
 
-1. Add the transition type constant if needed.
-2. Implement the builder method on `TransitionList`.
-3. Ensure cascade-delete is covered for clips adjacent to the transition.
-4. Add unit tests. Verify in Camtasia.
-
-## How To: Add a Behavior Preset
-
-Add the preset dict to `src/camtasia/templates/behavior_presets.py`. Follow the existing entries for structure and naming. Add a test that round-trips the preset.
-
-## Don't Guess at JSON
-
-Always reverse-engineer from real Camtasia output:
-
-1. Perform the action in the Camtasia GUI.
-2. Diff the `.tscproj` JSON before and after.
-3. Implement based on the diff.
+By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).
