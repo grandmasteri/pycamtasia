@@ -10,12 +10,17 @@ import csv
 
 import pytest
 
+from pathlib import Path
+
 from camtasia import export_csv, export_edl, export_markers_as_srt
 from camtasia.timing import seconds_to_ticks
 
 from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
 
 pytestmark = INTEGRATION_MARKERS
+
+FIXTURES = Path(__file__).parent / 'fixtures'
+EMPTY_WAV = FIXTURES / 'empty.wav'
 
 
 def _add_markers(project, count: int = 3):
@@ -25,10 +30,16 @@ def _add_markers(project, count: int = 3):
 
 
 def _add_clips(project, count: int = 4):
-    """Add `count` clips sequentially on a track."""
-    track = project.timeline.get_or_create_track('Video')
+    """Add `count` audio clips sequentially on a track.
+
+    Uses an imported audio source so each clip has a valid sourceBin reference.
+    Attempting to pass a raw source_id without first importing media would
+    produce a project that fails validate() with 'not found in sourceBin'.
+    """
+    media = project.import_media(EMPTY_WAV)
+    track = project.timeline.add_track('Audio')
     for i in range(count):
-        track.add_clip('VMFile', 1, seconds_to_ticks(i * 5.0), seconds_to_ticks(5.0))
+        track.add_audio(media.id, start_seconds=i * 5.0, duration_seconds=5.0)
 
 
 class TestSrtExport:

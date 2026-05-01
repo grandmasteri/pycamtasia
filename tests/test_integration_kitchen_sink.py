@@ -217,7 +217,7 @@ class TestRippleOperationsChaos:
         ripple_insert(tracks[0], position_seconds=1.5, duration_seconds=2.0)
 
         # ripple_move on track 1
-        ripple_move(tracks[1], clip_id=clips_by_track[1][0].id, new_start_seconds=6.0)
+        ripple_move(tracks[1], clip_id=clips_by_track[1][0].id, delta_seconds=6.0)
 
         # split_clip on track 0
         tracks[0].split_clip(clips_by_track[0][1].id, split_at_seconds=5.0)
@@ -260,11 +260,11 @@ class TestGroupTransitionBehaviorInteractions:
             TransitionType.FADE_THROUGH_BLACK, c1, c2, duration_seconds=0.5,
         )
 
+        # Add behavior to c1 BEFORE grouping (behaviors attach to clips, not groups)
+        c1.add_behavior(BehaviorPreset.REVEAL)
+
         # Group clips 1 and 2
         group = track.group_clips([c1.id, c2.id])
-
-        # Add behavior to the group
-        group.add_behavior(BehaviorPreset.REVEAL)
 
         # Split clip 3 (NOT in the group)
         left, right = track.split_clip(c3.id, split_at_seconds=12.5)
@@ -740,9 +740,11 @@ class TestMultiGroupNestedOperations:
             )
             a_clips.append(c)
 
+        # Apply behavior to a clip BEFORE grouping (behaviors attach to clips, not groups)
+        a_clips[0].add_behavior(BehaviorPreset.FADE)
+
         group_a = track_a.group_clips([a_clips[0].id, a_clips[1].id])
         group_a.add_drop_shadow()
-        group_a.add_behavior(BehaviorPreset.FADE)
 
         # Create clips on track B and group them
         b_clips = []

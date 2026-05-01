@@ -99,7 +99,7 @@ class TestGroupWithBehavior:
         """Add a behavior to a callout, then group it."""
         track = project.timeline.add_track('Behavior')
         c1 = track.add_callout('Animated', 0, 4)
-        c1.add_behavior('Reveal')
+        c1.add_behavior('reveal')
         c2 = track.add_callout('Static', 4, 4)
         track.group_clips([c1.id, c2.id])
         open_in_camtasia(project)
