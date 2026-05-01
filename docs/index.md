@@ -76,6 +76,14 @@ api/frame_stamp
 api/app_validation
 ```
 
+## Examples
+
+```{toctree}
+:maxdepth: 2
+
+examples/index
+```
+
 ## Reference
 
 ```{toctree}
