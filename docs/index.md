@@ -1,5 +1,6 @@
 # pycamtasia
 
+<<<<<<< HEAD
 A Python library for programmatically creating, reading, and manipulating TechSmith Camtasia video projects.
 
 **Key features:**
@@ -13,60 +14,94 @@ A Python library for programmatically creating, reading, and manipulating TechSm
 - Validated against 93 official TechSmith sample projects
 
 ## Getting Started
+=======
+A Python library for programmatically creating, reading, and manipulating TechSmith Camtasia video projects. Automate video production pipelines, batch-apply effects, generate projects from scripts, and integrate Camtasia into CI workflows — all without opening the GUI.
+>>>>>>> doc11-toctree-reorder
 
 ```{toctree}
+:caption: Getting Started
 :maxdepth: 2
 
+overview
+installation
 quickstart
 ```
 
-## Guides
+```{toctree}
+:caption: Core Concepts
+:maxdepth: 2
+
+concepts/project-model
+concepts/timing
+concepts/clip-ontology
+concepts/effect-system
+concepts/the-two-api-layers
+concepts/undo-and-history
+concepts/validation-model
+concepts/camtasia-file-format
+```
 
 ```{toctree}
+:caption: User Guide
 :maxdepth: 2
 
 guides/getting-started
 guides/cookbook
+<<<<<<< HEAD
 guides/best-practices
 guides/troubleshooting
 guides/faq
 concepts/the-two-api-layers
+=======
+>>>>>>> doc11-toctree-reorder
 guides/speed-change
 guides/audio-video-sync
-guides/template-projects
 guides/transcripts
+guides/template-projects
 guides/camtasia-rev
 guides/undo-redo
 guides/type-safety
+<<<<<<< HEAD
+=======
+guides/best-practices
+guides/troubleshooting
+guides/faq
+>>>>>>> doc11-toctree-reorder
 ```
 
-## API Reference
+```{toctree}
+:caption: Examples
+:maxdepth: 1
+
+examples/index
+```
 
 ```{toctree}
+:caption: API Reference
 :maxdepth: 2
 
 api/project
-api/timing
-api/types
-api/color
-api/canvas_presets
-api/media_bin
-api/library
 api/timeline
 api/clips
-api/effects
 api/transitions
 api/markers
 api/captions
 api/annotations
+api/effects
+api/media_bin
+api/library
 api/templates
-api/audiate
-api/operations
-api/history
-api/screenplay
 api/builders
+api/operations
+api/audiate
+api/screenplay
 api/export
 api/validation
+api/history
+api/timing
+api/types
+api/color
+api/canvas_presets
 api/themes
 api/extras
 api/authoring_client
@@ -74,6 +109,7 @@ api/frame_stamp
 api/app_validation
 ```
 
+<<<<<<< HEAD
 ## Examples
 
 ```{toctree}
@@ -84,17 +120,22 @@ examples/index
 
 ## Reference
 
+=======
+>>>>>>> doc11-toctree-reorder
 ```{toctree}
+:caption: Reference
 :maxdepth: 1
 
 camtasia-format-reference
 ```
 
-## Project
-
 ```{toctree}
+:caption: Development
 :maxdepth: 1
 
+development/contributing
+development/architecture
+development/publishing
 changelog
 ```
 
