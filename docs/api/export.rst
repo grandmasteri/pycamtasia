@@ -30,3 +30,28 @@ Export
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. automodule:: camtasia.export.audio
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: camtasia.export.captions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: camtasia.export.campackage
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: camtasia.export.toc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: camtasia.export.chapters
+   :members:
+   :undoc-members:
+   :show-inheritance:

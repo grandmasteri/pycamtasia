@@ -40,3 +40,23 @@ Operations
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. automodule:: camtasia.operations.recording_sync
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: camtasia.operations.stitch
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: camtasia.operations.slide_markers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: camtasia.operations.captions
+   :members:
+   :undoc-members:
+   :show-inheritance:
