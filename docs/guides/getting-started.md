@@ -151,6 +151,6 @@ proj.export_all("output/")
 
 - [Quick Start](../quickstart.md) — cheat-sheet reference
 - [Undo & Redo](undo-redo.md) — change history with JSON Patch diffs
-- [Convenience API](convenience-api.md) — batch operations and L2 helpers
+- [The Two API Layers](../concepts/the-two-api-layers.md) — L1/L2 architecture and when to use each
 - [Speed Changes](speed-change.md) — rational-precision speed control
 - [Template Projects](template-projects.md) — cloning and media replacement
