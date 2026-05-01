@@ -1,5 +1,9 @@
 # pycamtasia Roadmap
 
+## Status
+
+All action-level gaps from the Deep Tutorial Analysis are implemented (325 completed, 1 ongoing refinement). Library is feature-complete for the TechSmith tutorial corpus.
+
 ## Pending Bugs
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
@@ -722,16 +726,9 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/visual-effects/
 
 _Total: 131 remaining gaps (178 implemented) across 54 tutorials (42 false positives removed during adversarial verification)._
 
-## High-Level API Improvement Ideas (from demo production)
+## Completed Major Features
 
-- [already-implemented] VideoProductionBuilder — `builders/video_production.py` fluent builder for assembling complete video productions
-- [already-implemented] ScreenRecordingSync
-- [already-implemented] import_media() format validation and auto-conversion
-- [already-implemented] ProgressiveDisclosure helper
-- [already-implemented] Project.clean_inherited_state()
-- [already-implemented] MarkerList.clear() and MarkerList.replace()
-- [already-implemented] Project.remove_orphaned_media()
-- [already-implemented] Recap/tile layout helper
+All high-level API improvement ideas from demo production are implemented: VideoProductionBuilder, ScreenRecordingSync, import_media() validation, ProgressiveDisclosure, Project.clean_inherited_state(), MarkerList.clear()/replace(), Project.remove_orphaned_media(), and Recap/tile layout helper.
 
 ## Feature Gaps (discovered during adversarial review & integration testing)
 
@@ -855,9 +852,13 @@ _Total: 131 remaining gaps (178 implemented) across 54 tutorials (42 false posit
 
 ## Tooling
 
-### Linting with Ruff
+### Linting with Ruff ✅
 
-Add [ruff](https://docs.astral.sh/ruff/) as the linter and formatter. Ruff replaces flake8 + black + isort as a single tool. Configure via `ruff.toml` or `pyproject.toml` `[tool.ruff]` section. Selected rules: `E` (pycodestyle errors), `F` (pyflakes), `I` (isort), `UP` (pyupgrade — enforce `X | Y` over `Union[X, Y]`), `W` (pycodestyle warnings). Add to CI workflow.
+[Ruff](https://docs.astral.sh/ruff/) is configured in `pyproject.toml` (`[tool.ruff]`) and enforced in CI (`.github/workflows/tests.yml`). Selected rules: `E` (pycodestyle errors), `F` (pyflakes), `I` (isort), `UP` (pyupgrade — enforce `X | Y` over `Union[X, Y]`), `W` (pycodestyle warnings).
+
+### Type Checking with mypy ✅
+
+[mypy](https://mypy-lang.org/) is configured in `pyproject.toml` (`[tool.mypy]`) and enforced in CI. Strict mode enabled for `src/camtasia/`.
 
 ### Additional Known Design Decisions (added after Round 123)
 
