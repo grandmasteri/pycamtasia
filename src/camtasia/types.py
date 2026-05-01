@@ -352,6 +352,8 @@ class _CaptionData(TypedDict, total=False):
     opacity: float
     backgroundEnabled: bool
     defaultDurationSeconds: float
+    positionX: float
+    positionY: float
 
 
 

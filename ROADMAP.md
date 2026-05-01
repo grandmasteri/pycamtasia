@@ -155,7 +155,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/add-closed-captions/
 - [x] **Edit/remove caption by index** `src/camtasia/timeline/timeline.py` — `Timeline.edit_caption / remove_caption`
 - [x] **Split overlong caption ('Split' button)** `src/camtasia/timeline/timeline.py` — `Timeline.split_caption`
 - [x] **Merge adjacent captions** `src/camtasia/timeline/timeline.py` — `Timeline.merge_caption_with_next`
-- [ ] **Caption vertical position / anchor** `src/camtasia/timeline/captions.py` — `CaptionAttributes.position / vertical_anchor`
+- [x] **Caption vertical position / anchor** `src/camtasia/timeline/captions.py` — `CaptionAttributes.position / vertical_anchor`
 - [x] **Speech-to-text auto-caption generation** `src/camtasia/operations/` — `generate_captions_from_audio`
 - [x] **Sync script to audio playback (Windows workflow)** `src/camtasia/operations/` — `sync_script_to_captions`
 - [x] **Burned-in (open) captions export toggle** `src/camtasia/export/` — `export_video(caption_style='burned_in')`
@@ -192,16 +192,16 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/animations-in-depth/
 - [x] **Skew parameter keyframes and setter** `src/camtasia/timeline/clips/base.py` — `set_skew / set_skew_keyframes`
 - [x] **Rotation on X and Y axes (only Z exposed)** `src/camtasia/timeline/clips/base.py` — `rotation_x/rotation_y setters and keyframes`
 - [x] **Z-axis position (translation2) not exposed** `src/camtasia/timeline/clips/base.py` — `translation_z in move_to / set_position_keyframes`
-- [ ] **Animation arrow abstraction (named Animation object)** `src/camtasia/timeline/clips/base.py` — `add_animation(start, end, scale=, position=, rotation=, opacity=, easing=)`
+- [x] **Animation arrow abstraction (named Animation object)** `src/camtasia/timeline/clips/base.py` — `add_animation(start, end, scale=, position=, rotation=, opacity=, easing=)`
 - [ ] **Edit-All-Animations mode** `src/camtasia/timeline/clips/base.py` — `apply_to_all_animations`
 
 ### Create Stunning Animations with Media Mattes
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/animations-with-media-mattes/
 
-- [ ] **MediaMatte.mode only 1/2 documented but Camtasia has 4 modes (Alpha, Alpha Invert, Luminosity, Luminosity Invert); fixtures use mode=3** `src/camtasia/effects/visual.py` — `MediaMatte.mode full enum coverage`
+- [x] **MediaMatte.mode only 1/2 documented but Camtasia has 4 modes (Alpha, Alpha Invert, Luminosity, Luminosity Invert); fixtures use mode=3** `src/camtasia/effects/visual.py` — `MediaMatte.mode full enum coverage`
 - [x] **MatteMode enum not defined in types.py** `src/camtasia/types.py` — `MatteMode IntEnum`
-- [ ] **add_media_matte lacks ease_in/ease_out parameters** `src/camtasia/timeline/clips/base.py` — `add_media_matte(..., ease_in_seconds, ease_out_seconds)`
+- [x] **add_media_matte lacks ease_in/ease_out parameters** `src/camtasia/timeline/clips/base.py` — `add_media_matte(..., ease_in_seconds, ease_out_seconds)`
 - [x] **Track-level matte attribute setter missing (right-click track -> Alpha/Luminosity/...)** `src/camtasia/timeline/track.py` — `Track.matte_mode property`
 - [ ] **No documentation of compatible transparent media formats** `src/camtasia/timeline/clips/base.py` — `add_media_matte docstring`
 - [ ] **add_media_matte default preset_name mismatches default matte_mode** `src/camtasia/timeline/clips/base.py` — `derive preset_name from matte_mode`
@@ -228,7 +228,7 @@ Source:
 - [x] **Callout tail for speech-bubble style — tail-x/tail-y hardcoded, not parameterized** `annotations/callouts.py` — `square(..., tail=(x,y))`
 - [x] **Italic / underline / strikethrough text properties — _text_attributes always writes 0 and callers cannot override** `annotations/callouts.py` — `text(..., italic=..., underline=..., strikethrough=...)`
 - [x] **Lower-third / title preset callout helpers — templates/lower_third.py exists but no public annotation factory in camtasia.annotations** `annotations/__init__.py` — `lower_third / title`
-- [ ] **Gradient fill for callouts/shapes — FillStyle.Gradient exists but no gradient-stop parameters accepted** `annotations/callouts.py` — `square(..., gradient_stops=...)`
+- [x] **Gradient fill for callouts/shapes — FillStyle.Gradient exists but no gradient-stop parameters accepted** `annotations/callouts.py` — `square(..., gradient_stops=...)`
 - [x] **Favorites / preset annotations (save/load custom annotation for reuse)** `annotations/__init__.py` — `save_as_favorite / load_favorite`
 
 ### 4 Ways to Visualize Your Audio

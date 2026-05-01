@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from dataclasses import dataclass
 from fractions import Fraction
 import sys
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -24,6 +25,29 @@ from camtasia.timing import seconds_to_ticks
 from camtasia.types import BlendMode, ClipType, EffectName, _ClipData
 
 EDIT_RATE = 705_600_000
+
+
+@dataclass
+class Animation:
+    """Describes a keyframed animation to apply to a clip.
+
+    Args:
+        start_seconds: Animation start time (clip-relative).
+        end_seconds: Animation end time (clip-relative).
+        scale: Target ``(x, y)`` scale at *end_seconds*.
+        position: Target ``(x, y)`` translation at *end_seconds*.
+        rotation: Target rotation in degrees at *end_seconds*.
+        opacity: Target opacity at *end_seconds*.
+        easing: Interpolation mode (``'linr'``, ``'eioe'``, etc.).
+    """
+
+    start_seconds: float = 0.0
+    end_seconds: float = 1.0
+    scale: tuple[float, float] | None = None
+    position: tuple[float, float] | None = None
+    rotation: float | None = None
+    opacity: float | None = None
+    easing: str = 'linr'
 """Ticks per second. Divisible by 30fps, 60fps, 44100Hz, 48000Hz."""
 
 
@@ -1388,26 +1412,42 @@ class BaseClip:
         meta.setdefault('lutPresets', {})[preset_name] = preset_data
 
     def add_media_matte(self, *, intensity: float = 1.0, matte_mode: int = 1, track_depth: int = 10002,
-                        preset_name: str = 'Media Matte Luminosity') -> Self:
+                        preset_name: str | None = None,
+                        ease_in_seconds: float = 0.0,
+                        ease_out_seconds: float = 0.0) -> Self:
         """Add a media matte compositing effect.
 
-        Uses one track as a transparency mask for this clip.
+        Uses one track as a transparency mask for this clip.  Compatible
+        transparent media formats: mp4, mov, gif, png, bmp.
 
         Args:
             intensity: Effect intensity 0.0-1.0.
-            matte_mode: Matte mode (1 = alpha, 2 = inverted alpha).
+            matte_mode: Matte mode (1=Alpha, 2=Alpha Invert,
+                3=Luminosity, 4=Luminosity Invert).
             track_depth: Track depth for matte source.
-            preset_name: Preset name for metadata.
+            preset_name: Preset name for metadata.  Defaults to
+                ``'Media Matte Alpha'`` when *matte_mode* is 1, otherwise
+                derived from the mode name.
+            ease_in_seconds: Ease-in duration in seconds.
+            ease_out_seconds: Ease-out duration in seconds.
         """
+        _MODE_NAMES = {1: 'Alpha', 2: 'Alpha Invert', 3: 'Luminosity', 4: 'Luminosity Invert'}
+        if preset_name is None:
+            preset_name = f'Media Matte {_MODE_NAMES.get(matte_mode, "Luminosity")}'
+        params: dict[str, Any] = {
+            'intensity': intensity,
+            'matteMode': matte_mode,
+            'trackDepth': track_depth,
+        }
+        if ease_in_seconds > 0:
+            params['ease-in'] = round(ease_in_seconds * EDIT_RATE)
+        if ease_out_seconds > 0:
+            params['ease-out'] = round(ease_out_seconds * EDIT_RATE)
         self.add_effect({
             'effectName': EffectName.MEDIA_MATTE,
             'bypassed': False,
             'category': 'categoryVisualEffects',
-            'parameters': {
-                'intensity': intensity,
-                'matteMode': matte_mode,
-                'trackDepth': track_depth,
-            },
+            'parameters': params,
             'metadata': {
                 'presetName': preset_name,
             },
@@ -2013,6 +2053,47 @@ class BaseClip:
                 (dur, move_to[0], move_to[1]),
             ])
 
+        return self
+
+    def add_animation(self, animation: Animation) -> Self:
+        """Apply an :class:`Animation` as keyframes on this clip.
+
+        Appends keyframes for each non-``None`` attribute in *animation*
+        between ``start_seconds`` and ``end_seconds``.
+
+        Args:
+            animation: The animation descriptor.
+
+        Returns:
+            ``self`` for chaining.
+        """
+        t0 = animation.start_seconds
+        t1 = animation.end_seconds
+        interp = animation.easing
+        if animation.scale is not None:
+            sx, _sy = self.scale
+            self.set_scale_keyframes([(t0, sx), (t1, animation.scale[0])])
+            # Patch interp on generated keyframes
+            for p in ('scale0', 'scale1'):
+                for kf in self._data.get('parameters', {}).get(p, {}).get('keyframes', []):
+                    kf['interp'] = interp
+        if animation.position is not None:
+            cx, cy = self.translation
+            self.set_position_keyframes(
+                [(t0, cx, cy), (t1, animation.position[0], animation.position[1])],
+                interp=interp,
+            )
+        if animation.rotation is not None:
+            import math
+            cur = math.degrees(self.rotation)
+            self.set_rotation_keyframes([(t0, cur), (t1, animation.rotation)])
+            for kf in self._data.get('parameters', {}).get('rotation2', {}).get('keyframes', []):
+                kf['interp'] = interp
+        if animation.opacity is not None:
+            self.fade(
+                fade_in_seconds=t1 - t0 if animation.opacity > self.opacity else 0.0,
+                fade_out_seconds=t1 - t0 if animation.opacity < self.opacity else 0.0,
+            )
         return self
 
     def to_dict(self) -> dict[str, Any]:

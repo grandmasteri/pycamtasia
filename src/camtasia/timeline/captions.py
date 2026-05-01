@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:
     from camtasia.timeline.clips.callout import Callout
@@ -188,6 +188,36 @@ class CaptionAttributes:
         if value <= 0:
             raise ValueError(f'default_duration_seconds must be > 0, got {value}')
         self._data['defaultDurationSeconds'] = value
+
+    @property
+    def position(self) -> dict[str, float]:
+        """Get the caption position as ``{'x': ..., 'y': ...}``."""
+        x = self._data.get('positionX', 0.5)
+        y = self._data.get('positionY', 0.9)
+        return {'x': float(x) if x is not None else 0.5, 'y': float(y) if y is not None else 0.9}
+
+    @position.setter
+    def position(self, value: dict[str, float]) -> None:
+        """Set the caption position from ``{'x': ..., 'y': ...}``."""
+        self._data['positionX'] = value['x']
+        self._data['positionY'] = value['y']
+
+    _ANCHOR_Y_MAP: ClassVar[dict[str, float]] = {'top': 0.1, 'middle': 0.5, 'bottom': 0.9}
+    _Y_ANCHOR_MAP: ClassVar[dict[float, str]] = {v: k for k, v in _ANCHOR_Y_MAP.items()}
+
+    @property
+    def vertical_anchor(self) -> str:
+        """Vertical anchor: ``'top'``, ``'middle'``, or ``'bottom'``."""
+        raw = self._data.get('positionY', 0.9)
+        y = float(raw) if raw is not None else 0.9
+        return self._Y_ANCHOR_MAP.get(y, 'bottom')
+
+    @vertical_anchor.setter
+    def vertical_anchor(self, value: str) -> None:
+        """Set vertical anchor: ``'top'``, ``'middle'``, or ``'bottom'``."""
+        if value not in self._ANCHOR_Y_MAP:
+            raise ValueError(f"vertical_anchor must be 'top', 'middle', or 'bottom', got {value!r}")
+        self._data['positionY'] = self._ANCHOR_Y_MAP[value]
 
     def __repr__(self) -> str:
         return f'CaptionAttributes(font={self.font_name!r}, size={self.font_size}, lang={self.lang!r})'
