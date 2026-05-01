@@ -15,11 +15,17 @@ def _to_ticks(v: Any) -> int:
     return int(Fraction(str(v))) if v is not None else 0
 
 
-def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
+def pack_track(track: Track, gap_seconds: float = 0.0, *, preserve_groups: bool = False) -> None:
     """Remove gaps between clips, packing them end-to-end.
 
     Sorts clips by start time, then repositions each to start
     immediately after the previous clip (plus optional gap).
+
+    Args:
+        track: Track to pack.
+        gap_seconds: Optional gap between clips in seconds.
+        preserve_groups: When ``True``, Group clips keep their original
+            spacing relative to their neighbors (they are not moved).
     """
     if gap_seconds < 0:
         raise ValueError(f'gap_seconds must be non-negative, got {gap_seconds}')
@@ -31,6 +37,13 @@ def pack_track(track: Track, gap_seconds: float = 0.0) -> None:
     cursor = 0
     any_shifted = False
     for i, m in enumerate(medias):
+        if preserve_groups and m.get('_type') == 'Group':
+            # Groups keep their position; advance cursor past them
+            group_end = _to_ticks(m.get('start', 0)) + _to_ticks(m.get('duration', 0))
+            cursor = max(cursor, group_end)
+            if i < len(medias) - 1:
+                cursor += gap_ticks
+            continue
         if _to_ticks(m.get('start', 0)) != cursor:
             any_shifted = True
         m['start'] = cursor
