@@ -193,7 +193,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/animations-in-depth/
 - [x] **Rotation on X and Y axes (only Z exposed)** `src/camtasia/timeline/clips/base.py` — `rotation_x/rotation_y setters and keyframes`
 - [x] **Z-axis position (translation2) not exposed** `src/camtasia/timeline/clips/base.py` — `translation_z in move_to / set_position_keyframes`
 - [x] **Animation arrow abstraction (named Animation object)** `src/camtasia/timeline/clips/base.py` — `add_animation(start, end, scale=, position=, rotation=, opacity=, easing=)`
-- [ ] **Edit-All-Animations mode** `src/camtasia/timeline/clips/base.py` — `apply_to_all_animations`
+- [x] **Edit-All-Animations mode** `src/camtasia/timeline/clips/base.py` — `apply_to_all_animations`
 
 ### Create Stunning Animations with Media Mattes
 
@@ -203,8 +203,8 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/animations-with-media
 - [x] **MatteMode enum not defined in types.py** `src/camtasia/types.py` — `MatteMode IntEnum`
 - [x] **add_media_matte lacks ease_in/ease_out parameters** `src/camtasia/timeline/clips/base.py` — `add_media_matte(..., ease_in_seconds, ease_out_seconds)`
 - [x] **Track-level matte attribute setter missing (right-click track -> Alpha/Luminosity/...)** `src/camtasia/timeline/track.py` — `Track.matte_mode property`
-- [ ] **No documentation of compatible transparent media formats** `src/camtasia/timeline/clips/base.py` — `add_media_matte docstring`
-- [ ] **add_media_matte default preset_name mismatches default matte_mode** `src/camtasia/timeline/clips/base.py` — `derive preset_name from matte_mode`
+- [x] **No documentation of compatible transparent media formats** `src/camtasia/timeline/clips/base.py` — `add_media_matte docstring`
+- [x] **add_media_matte default preset_name mismatches default matte_mode** `src/camtasia/timeline/clips/base.py` — `derive preset_name from matte_mode`
 
 ### Add Arrows, Shapes, & Callouts
 
@@ -409,7 +409,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/dynamic-backgrounds/
 - [x] **No high-level add_dynamic_background(asset_name=...) API — only add_gradient_background** `src/camtasia/builders/` — `add_dynamic_background(asset_name, duration, colors)`
 - [x] **No named-asset catalog for dynamic background shader assets** `src/camtasia/` — `DynamicBackgroundAsset enum / catalog`
 - [x] **No wrapper for Lottie-based dynamic backgrounds (source handles Color000 padded keys but no public helper)** `src/camtasia/builders/` — `add_lottie_background`
-- [ ] **No mapping of tutorial's UI property labels to SourceEffect parameter keys (Color0-3, MidPoint, Speed)** `src/camtasia/effects/source.py` — `documented property name aliases`
+- [x] **No mapping of tutorial's UI property labels to SourceEffect parameter keys (Color0-3, MidPoint, Speed)** `src/camtasia/effects/source.py` — `documented property name aliases`
 
 ### Add Dynamic Captions
 
@@ -424,8 +424,8 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/dynamic-captions/
 - [x] **Per-word transcription timing drag** `src/camtasia/audiate/transcript.py` — `Transcript.set_word_timing`
 - [x] **Transcript gap indicators** `src/camtasia/audiate/transcript.py` — `Transcript.gaps property`
 - [x] **Dynamic caption canvas position/size handles** `src/camtasia/timeline/clips/callout.py` — `DynamicCaptionClip.canvas_rect`
-- [ ] **Extend caption duration with transcript rescoping** `src/camtasia/timeline/clips/base.py` — `DynamicCaptionClip.set_duration with rescope`
-- [ ] **Preserve transcription edits when style deleted/swapped** `src/camtasia/timeline/clips/audio.py` — `AudioClip.dynamic_caption_transcription persistence`
+- [x] **Extend caption duration with transcript rescoping** `src/camtasia/timeline/clips/base.py` — `DynamicCaptionClip.set_duration with rescope`
+- [x] **Preserve transcription edits when style deleted/swapped** `src/camtasia/timeline/clips/audio.py` — `AudioClip.dynamic_caption_transcription persistence`
 
 ### Edit Zoom Recordings
 
@@ -618,7 +618,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/stitch-media/
 - [x] **join_clips does not validate same-source media** `src/camtasia/timeline/track.py` — `add same-src check to join_clips`
 - [x] **join_clips does not validate adjacency** `src/camtasia/timeline/track.py` — `add adjacency check to join_clips`
 - [x] **No Track.stitch_adjacent convenience** `src/camtasia/timeline/track.py` — `stitch_adjacent(clip_ids)`
-- [ ] **No auto-stitch-on-cut behavior** `src/camtasia/operations/` — `post-cut hook to re-stitch adjacent same-source segments`
+- [x] **No auto-stitch-on-cut behavior** `src/camtasia/operations/` — `post-cut hook to re-stitch adjacent same-source segments`
 
 ### Build Your Color Palette (Themes)
 
