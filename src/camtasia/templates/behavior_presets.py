@@ -255,7 +255,7 @@ PRESETS = {
         'in': _NONE_OUT,
         'center': {
             'attributes': {
-                'name': 'emphasize', 'type': 1, 'characterOrder': 6,
+                'name': 'pulsate', 'type': 1, 'characterOrder': 6,
                 'offsetBetweenCharacters': 0, 'secondsPerLoop': 1,
                 'numberOfLoops': -1, 'delayBetweenLoops': 0,
             },
@@ -277,7 +277,7 @@ PRESETS = {
         'in': _NONE_OUT,
         'center': {
             'attributes': {
-                'name': 'jiggle', 'type': 0, 'characterOrder': 6,
+                'name': 'tremble', 'type': 0, 'characterOrder': 6,
                 'offsetBetweenCharacters': 0, 'secondsPerLoop': '1/2',
                 'numberOfLoops': -1, 'delayBetweenLoops': 0,
             },
