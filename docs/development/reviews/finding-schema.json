@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pycamtasia Review Finding",
+  "description": "Schema for a single finding from a review-swarm agent.",
+  "type": "object",
+  "required": ["id", "severity", "aspect", "location", "finding", "evidence", "proposed_fix", "effort_minutes", "risk", "verified"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^REV-[a-z_]+-[0-9]{3}$",
+      "description": "Stable finding ID, e.g. REV-api-001"
+    },
+    "severity": {
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+      "description": "CRITICAL blocks release. HIGH should be fixed pre-release. MEDIUM/LOW go to post-release backlog."
+    },
+    "aspect": {
+      "type": "string",
+      "description": "Review aspect (api_consistency, typing, docstrings, etc.)"
+    },
+    "location": {
+      "type": "object",
+      "required": ["file"],
+      "properties": {
+        "file": {"type": "string"},
+        "line": {"type": "integer"},
+        "function": {"type": "string"}
+      }
+    },
+    "finding": {"type": "string", "minLength": 20, "description": "What is wrong, in one paragraph"},
+    "evidence": {
+      "type": "object",
+      "required": ["type", "content"],
+      "properties": {
+        "type": {"enum": ["code_quote", "doc_quote", "test_output", "counter_example", "comparison"]},
+        "content": {"type": "string"},
+        "repro_script": {"type": "string", "description": "Path to repro script, required for HIGH/CRITICAL"}
+      }
+    },
+    "proposed_fix": {"type": "string", "minLength": 20, "description": "Concrete, actionable fix description"},
+    "effort_minutes": {"type": "integer", "minimum": 1, "description": "Estimated fix time"},
+    "risk": {"type": "string", "description": "What could go wrong with the fix"},
+    "related_findings": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^REV-[a-z_]+-[0-9]{3}$"}
+    },
+    "verified": {
+      "type": "boolean",
+      "description": "Set by critic pass. False until a critic confirms the finding."
+    },
+    "verification_status": {
+      "enum": ["VERIFIED", "UNCONFIRMED", "FALSE_POSITIVE", "DUPLICATE", "PENDING"],
+      "default": "PENDING"
+    },
+    "verification_note": {"type": "string"},
+    "resolved": {"type": "boolean", "default": false},
+    "resolved_by_commit": {"type": "string"}
+  }
+}
