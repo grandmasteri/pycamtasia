@@ -17,6 +17,7 @@ extensions = [
     "myst_parser",
     "sphinx_autodoc_typehints",
     "sphinx_copybutton",
+    "sphinxcontrib.mermaid",
 ]
 
 # Theme

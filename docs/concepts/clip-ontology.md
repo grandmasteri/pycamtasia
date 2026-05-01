@@ -122,4 +122,4 @@ exposes internal tracks, `Callout` has text content and font properties, and
 - {doc}`/concepts/the-two-api-layers` — L1 vs L2 access patterns
 - {doc}`/concepts/timing` — how clip start/duration are measured
 - {doc}`/api/clips` — full clip API reference
-- {doc}`/guides/convenience-api` — L2 clip methods
+- {doc}`/concepts/the-two-api-layers` — L2 clip methods

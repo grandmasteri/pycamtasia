@@ -108,5 +108,5 @@ scripts should use L2 wherever possible.
 - {doc}`/concepts/project-model` — the Project object and its components
 - {doc}`/concepts/clip-ontology` — clip types and BaseClip
 - {doc}`/concepts/effect-system` — effect parameter access
-- {doc}`/guides/convenience-api` — full L2 method reference
+- {doc}`/concepts/the-two-api-layers` — full L2 method reference
 - {doc}`/api/clips` — clip API reference

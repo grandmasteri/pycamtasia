@@ -34,19 +34,23 @@ pip install pycamtasia[cli,media]
 The `media` extra depends on `pymediainfo`, which requires a native MediaInfo
 library. Install it for your platform:
 
-````{tab-set}
-```{tab-item} macOS
+**macOS**
+
+```bash
 brew install ffmpeg
 ```
 
-```{tab-item} Ubuntu / Debian
+**Ubuntu / Debian**
+
+```bash
 sudo apt install libmediainfo0v5
 ```
 
-```{tab-item} Windows
+**Windows**
+
+```bash
 choco install mediainfo-cli
 ```
-````
 
 If you don't need media probing, skip the `media` extra entirely — the core
 library works without it.
@@ -98,7 +102,7 @@ python -c "import sys; print(sys.executable)"
 
 If `pymediainfo` raises an `OSError` about a missing shared library, the
 native MediaInfo library is not installed. See the
-[platform-specific notes](#platform-specific-notes) above.
+platform-specific notes above.
 
 On macOS, `brew install ffmpeg` provides the libraries that `pymediainfo`
 needs. On Linux, install `libmediainfo0v5` (or `libmediainfo-dev` on older

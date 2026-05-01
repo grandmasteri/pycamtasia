@@ -51,4 +51,4 @@ projects.
 - [Quick Start](quickstart.md) — load a project and make your first edit
 - [Getting Started Tutorial](guides/getting-started.md) — build a complete
   project from scratch
-- [Feature Tour](guides/features.md) — explore the full API surface
+- [Cookbook](guides/cookbook.md) — 15+ runnable recipes

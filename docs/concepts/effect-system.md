@@ -141,4 +141,4 @@ clip's `effects` array.
 - {doc}`/concepts/clip-ontology` — the clips that effects attach to
 - {doc}`/concepts/the-two-api-layers` — L1 dict access for custom effects
 - {doc}`/api/effects` — full effect API reference
-- {doc}`/guides/convenience-api` — L2 effect methods
+- {doc}`/concepts/the-two-api-layers` — L2 effect methods
