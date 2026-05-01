@@ -228,3 +228,28 @@ class TestRippleReplaceInGroup:
         second_start_after = inner_medias[1]['start']
         expected_delta = seconds_to_ticks(4.0) - seconds_to_ticks(2.0)
         assert second_start_after == second_start_before + expected_delta
+
+    def test_recurses_into_nested_group(self, project):
+        """Cover layout.py lines 416-419: recurse into nested Group."""
+        track = project.timeline.get_or_create_track('Video')
+        c1 = track.add_image(1, 0.0, 2.0)
+        c2 = track.add_image(2, 2.0, 2.0)
+        outer = track.group_clips([c1.id, c2.id])
+        # Now group the inner clips into a nested group
+        inner_medias = outer._data['tracks'][0]['medias']
+        inner_id = inner_medias[0]['id']
+        # Wrap inner_medias[0] in a nested Group
+        nested_group = {
+            '_type': 'Group',
+            'id': 8888,
+            'start': 0,
+            'duration': seconds_to_ticks(2.0),
+            'tracks': [{'medias': [inner_medias[0]]}],
+        }
+        outer._data['tracks'][0]['medias'][0] = nested_group
+        new_media = {
+            '_type': 'IMFile', 'duration': seconds_to_ticks(2.0),
+            'mediaDuration': 1, 'scalar': 1, 'src': 77,
+        }
+        result = ripple_replace_in_group(outer, inner_id, new_media)
+        assert result is True

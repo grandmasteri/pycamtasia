@@ -258,3 +258,35 @@ class TestAddAiNoiseRemoval:
         nr_effects = [e for e in clip._data.get('effects', [])
                       if e.get('effectName') == 'VSTEffect-DFN3NoiseRemoval']
         assert nr_effects[0]['parameters']['Amount'] == 0.9
+
+
+class TestApplySmartFocusSkipBranches:
+    """Cover project.py lines 2953, 2956, 2959: skip non-ScreenIMFile clips."""
+
+    def test_skips_non_screen_im_clips(self, project):
+        """Line 2953: non-ScreenIMFile clip type → continue."""
+        track = project.timeline.get_or_create_track('Recording')
+        # Add a regular VMFile clip (not ScreenIMFile)
+        track._data.setdefault('medias', []).append({
+            'id': 900, '_type': 'VMFile', 'src': 1,
+            'start': 0, 'duration': seconds_to_ticks(5.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+            'scalar': 1, 'parameters': {}, 'effects': [],
+        })
+        # Also add a ScreenIMFile with only 1 keyframe (line 2959)
+        track._data['medias'].append({
+            'id': 901, '_type': 'ScreenIMFile', 'src': 1,
+            'start': 0, 'duration': seconds_to_ticks(5.0),
+            'mediaStart': 0, 'mediaDuration': 1,
+            'scalar': 1, 'effects': [],
+            'parameters': {
+                'cursorLocation': {
+                    'type': 'point3', 'defaultValue': [0, 0, 0],
+                    'keyframes': [
+                        {'time': 0, 'endTime': 0, 'value': [50, 50, 0], 'duration': 0},
+                    ],
+                },
+            },
+        })
+        count = project.apply_smart_focus()
+        assert count == 0

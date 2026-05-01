@@ -357,3 +357,20 @@ class TestMatchDurationWithMarkers:
             sync.match_duration_with_markers(
                 5, 10, [(0, 0), (5 * EDIT_RATE, 10 * EDIT_RATE)]
             )
+
+
+class TestMatchDurationZeroMediaDuration:
+    """Cover recording_sync.py line 78: mediaDuration <= 0 fallback."""
+
+    def test_zero_media_duration_falls_back_to_duration(self):
+        screen = _screen_clip(media_duration=0)
+        voice = _voice_clip(duration=20 * EDIT_RATE)
+        data = _make_project_data(screen, voice)
+
+        class FakeProject:
+            _data = data
+
+        sync = ScreenRecordingSync(FakeProject())  # type: ignore[arg-type]
+        result = sync.match_duration(5, 10)
+        # Should have used screen['duration'] (10*EDIT_RATE) as fallback
+        assert result == Fraction(20 * EDIT_RATE, 10 * EDIT_RATE)

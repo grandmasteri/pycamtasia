@@ -326,3 +326,31 @@ class TestReadTemplate:
             zf.writestr('manifest.json', json.dumps({'format': 'wrong'}))
         with pytest.raises(ValueError, match='Not a valid'):
             _read_template(bad)
+
+    def test_list_returns_empty_when_dir_missing(self, tmp_path):
+        """Cover template.py line 396: list() when dir doesn't exist."""
+        mgr = TemplateManager(tmp_path / 'nonexistent')
+        assert mgr.list() == []
+
+
+class TestNewProjectFromTemplateSkipsInvalid:
+    """Cover template.py lines 376-377: skip templates with bad manifest."""
+
+    def test_skips_corrupt_template(self, project, tmp_path, monkeypatch):
+        tpl_dir = tmp_path / 'templates'
+        tpl_dir.mkdir()
+        monkeypatch.setattr('camtasia.operations.template._TEMPLATES_DIR', tpl_dir)
+        # Install a valid template
+        good = tmp_path / 'good.camtemplate'
+        save_as_template(project, 'Target', good)
+        import shutil
+        shutil.copy2(good, tpl_dir / 'good.camtemplate')
+        # Install a corrupt template (bad manifest) that sorts before 'good'
+        bad = tpl_dir / 'aaa_bad.camtemplate'
+        with zipfile.ZipFile(bad, 'w') as zf:
+            zf.writestr('manifest.json', '{invalid json')
+            zf.writestr('project.tscproj', '{}')
+        dest = tmp_path / 'result.cmproj'
+        # Should skip the bad template and find the good one
+        new_project_from_template('Target', dest)
+        assert dest.exists()

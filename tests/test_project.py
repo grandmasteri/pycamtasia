@@ -1870,3 +1870,25 @@ class TestSaveNaNReplacementWarning:
             project.save()
         nan_warnings = [x for x in w if 'NaN' in str(x.message)]
         assert len(nan_warnings) == 0
+
+
+class TestFrameAt:
+    """Cover project.py line 3224: preview_frame includes transforms when params present."""
+
+    def test_includes_transforms_for_clip_with_parameters(self, project):
+        from camtasia.timing import seconds_to_ticks
+        track = project.timeline.get_or_create_track('Video')
+        track._data.setdefault('medias', []).append({
+            'id': 800, '_type': 'VMFile', 'src': 1,
+            'start': 0, 'duration': seconds_to_ticks(5.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(5.0),
+            'scalar': 1,
+            'parameters': {
+                'scale0': {'defaultValue': 1.5, 'type': 'double', 'interp': 'linr'},
+            },
+            'effects': [],
+        })
+        result = project.preview_frame(1.0)
+        assert len(result['clips']) == 1
+        assert 'transforms' in result['clips'][0]
+        assert result['clips'][0]['transforms']['scale0'] == 1.5
