@@ -11,6 +11,8 @@
 
 > ✨ Active development — this is the initial public release. API may evolve before 1.0.0.
 
+📖 **[Documentation](https://grandmasteri.github.io/pycamtasia/)** · 🐛 **[Issues](https://github.com/grandmasteri/pycamtasia/issues)** · 📋 **[Changelog](https://github.com/grandmasteri/pycamtasia/blob/main/CHANGELOG.md)**
+
 ---
 
 ## Why pycamtasia?
