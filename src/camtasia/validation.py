@@ -504,6 +504,26 @@ def _check_compound_invariants(data: dict[str, Any]) -> list[ValidationIssue]:
     return issues
 
 
+def _check_visual_track_order(data: dict) -> list[ValidationIssue]:
+    """Check that animationTracks.visual segments are sorted by start time."""
+    issues: list[ValidationIssue] = []
+    tracks = _get_tracks(data)
+    for ti, track in enumerate(tracks):
+        for media in track.get('medias', []):
+            mid = media.get('id')
+            visual = media.get('animationTracks', {}).get('visual', [])
+            if len(visual) < 2:
+                continue
+            times = [seg.get('range', [0])[0] for seg in visual]
+            if not all(times[i] <= times[i + 1] for i in range(len(times) - 1)):
+                issues.append(ValidationIssue(
+                    'error',
+                    f'track[{ti}] clip id={mid} has unsorted animationTracks.visual segments',
+                    source_id=mid,
+                ))
+    return issues
+
+
 def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     """Run all structural validation checks on project data."""
     issues: list[ValidationIssue] = []
@@ -523,6 +543,7 @@ def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     issues.extend(_check_behavior_effect_structure(data))
     issues.extend(_check_clip_overlap_on_track(data))
     issues.extend(_check_transition_null_endpoints(data))
+    issues.extend(_check_visual_track_order(data))
     return issues
 
 
