@@ -45,9 +45,15 @@ class TestSetSkewKeyframes:
         c = _clip()
         c.set_skew_keyframes([(1.0, 0.1), (3.0, 0.3)])
         kfs = c.parameters['geometrySkew']['keyframes']
+        # Each keyframe is a point: endTime == time, duration == 0.
+        # This matches Camtasia's own format (see techsmith_complex_asset.tscproj)
+        # and is required — Camtasia rejects files where keyframes are spans.
         assert kfs[0]['time'] == seconds_to_ticks(1.0)
-        assert kfs[0]['endTime'] == seconds_to_ticks(3.0)
+        assert kfs[0]['endTime'] == seconds_to_ticks(1.0)
+        assert kfs[0]['duration'] == 0
         assert kfs[1]['time'] == seconds_to_ticks(3.0)
+        assert kfs[1]['endTime'] == seconds_to_ticks(3.0)
+        assert kfs[1]['duration'] == 0
 
 
 # ------------------------------------------------------------------

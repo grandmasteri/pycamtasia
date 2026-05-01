@@ -2214,13 +2214,20 @@ class BaseClip:
     def _build_param_keyframes(
         self, keyframes: list[tuple[float, float]],
     ) -> list[dict[str, Any]]:
-        """Build keyframe dicts from ``(time_seconds, value)`` tuples."""
+        """Build keyframe dicts from ``(time_seconds, value)`` tuples.
+
+        Each keyframe represents a point in time, not a span. The
+        ``endTime`` field is ``time`` (not the next keyframe's time),
+        and ``duration`` is ``0``. This matches the format produced by
+        the Camtasia app itself (verified against
+        ``tests/fixtures/techsmith_complex_asset.tscproj``); treating
+        keyframes as spans causes Camtasia to reject the file with
+        ``Invalid KeyFrame operation at time ... on parameter ...``.
+        """
         kfs: list[dict[str, Any]] = []
-        for i, (t, v) in enumerate(keyframes):
+        for t, v in keyframes:
             ticks = seconds_to_ticks(t)
-            next_ticks = seconds_to_ticks(keyframes[i + 1][0]) if i + 1 < len(keyframes) else ticks
-            dur = next_ticks - ticks
-            kfs.append({'endTime': next_ticks, 'time': ticks, 'value': v, 'duration': dur})
+            kfs.append({'endTime': ticks, 'time': ticks, 'value': v, 'duration': 0})
         return kfs
 
     def _set_single_param_keyframes(
