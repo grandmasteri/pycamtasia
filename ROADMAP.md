@@ -760,6 +760,8 @@ All high-level API improvement ideas from demo production are implemented: Video
 - [already-implemented] Validate `GenericBehaviorEffect` has required `in`/`center`/`out` phases
 - [already-implemented] Validate overlapping clips on same track (Camtasia tracks are single-occupancy)
 - [already-implemented] Flag explicit `null` in transition `leftMedia`/`rightMedia` (format says omit, not null)
+- [ ] **Expand `project.validate()` to catch every failure mode Camtasia itself rejects, with specific error messages.** Today we have 34 validation rules; the goal is that if `project.save()` produces a file Camtasia can't open, our own validator should have flagged the problem first with a precise location ("Clip `foo` on track `bar` has zero duration"). Driven by failing integration tests: every Camtasia rejection that isn't already caught by `validate()` is a bug to file here.
+- [ ] **Kitchen-sink integration test bisection helper.** When a large multi-feature integration test fails, we need a way to quickly narrow down which feature caused the rejection. Proposed: a `project.validate(strict=True)` mode that simulates Camtasia's acceptance rules more aggressively, plus a `bisect_features()` helper that binary-searches a project by temporarily removing subsets of clips/effects and re-saving until it finds the minimal failing subset. Lowers the cost of multi-feature tests.
 
 ### Effects
 - [already-implemented] Typed wrapper classes added for LutEffect, Emphasize, Spotlight, ColorAdjustment, BlendModeEffect, MediaMatte — all registered with effect_from_dict
