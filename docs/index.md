@@ -34,6 +34,7 @@ guides/transcripts
 guides/camtasia-rev
 guides/undo-redo
 guides/type-safety
+guides/whats-new
 ```
 
 ## API Reference
@@ -63,6 +64,19 @@ api/screenplay
 api/builders
 api/export
 api/validation
+api/themes
+api/extras
+api/authoring_client
+api/frame_stamp
+api/app_validation
+```
+
+## Reference
+
+```{toctree}
+:maxdepth: 1
+
+camtasia-format-reference
 ```
 
 ## Project

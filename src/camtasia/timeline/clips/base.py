@@ -2673,13 +2673,11 @@ class BaseClip:
         """Adjust scale and translation to fit the clip to the canvas.
 
         Args:
-            mode: Fitting strategy.
-                - ``'cover'``: scale up so the clip fully covers the canvas
-                  (may crop edges).
-                - ``'contain'``: scale down so the entire clip is visible
-                  (may show letterbox/pillarbox).
-                - ``'center'``: reset scale to 1.0 and center the clip
-                  (no scaling, just positioning).
+            mode: Fitting strategy — ``'cover'`` scales up so the clip
+                fully covers the canvas (may crop edges),
+                ``'contain'`` scales down so the entire clip is visible
+                (may show letterbox/pillarbox), ``'center'`` resets scale
+                to 1.0 and centers the clip (no scaling, just positioning).
 
         Returns:
             ``self`` for chaining.

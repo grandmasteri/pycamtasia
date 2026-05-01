@@ -299,6 +299,7 @@ def apply_theme(project: Project, theme: Theme) -> int:
     each clip's relevant properties.
 
     Supported mapping keys:
+
     - ``fill``: sets ``fill-color-*`` on the clip's ``def`` dict
     - ``outline``: sets ``stroke-color-*`` on the clip's ``def`` dict
     - ``font-color``: sets font color on the clip's ``def`` dict and
