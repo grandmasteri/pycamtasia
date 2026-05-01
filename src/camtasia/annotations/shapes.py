@@ -11,17 +11,21 @@ def rectangle(fill_color=None,
               height=180.0,
               width=240.0,
               corner_radius=0.0,
+              gradient_stops=None,
               ):
     """Create a rectangle shape annotation dict.
 
     Args:
         corner_radius: Corner radius in points (0.0 = sharp corners).
+        gradient_stops: Optional list of ``(position, Color)`` tuples for
+            gradient fill.  When provided, *fill_style* is forced to
+            ``FillStyle.Gradient``.
     """
     if fill_color is None:
         fill_color = Color(0.0, 0.0, 0.0, 0.0)
     if stroke_color is None:
         stroke_color = Color(1.0, 1.0, 1.0, 1.0)
-    return {
+    result = {
         "kind": "remix",
         "shape": "shape-rectangle",
         "style": "basic",
@@ -40,6 +44,14 @@ def rectangle(fill_color=None,
         "fill-style": fill_style.value,
         "stroke-style": stroke_style.value
     }
+    if gradient_stops is not None:
+        result["fill-style"] = FillStyle.Gradient.value
+        result["gradient-stops"] = [
+            {"position": pos, "color-red": c.red, "color-green": c.green,
+             "color-blue": c.blue, "color-opacity": c.opacity}
+            for pos, c in gradient_stops
+        ]
+    return result
 
 
 def ellipse(fill_color=None,

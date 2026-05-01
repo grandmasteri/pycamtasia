@@ -191,7 +191,8 @@ def square(text,
            drop_shadow=False,
            italic=False,
            underline=False,
-           strikethrough=False):
+           strikethrough=False,
+           gradient_stops=None):
     """Create a square text callout annotation dict.
 
     Args:
@@ -200,6 +201,9 @@ def square(text,
         italic: Enable italic text.
         underline: Enable underlined text.
         strikethrough: Enable strikethrough text.
+        gradient_stops: Optional list of ``(position, Color)`` tuples for
+            gradient fill.  When provided, *fill_style* is forced to
+            ``FillStyle.Gradient``.
     """
     if font_color is None:
         font_color = Color(0.0, 0.0, 0.0)
@@ -207,7 +211,7 @@ def square(text,
         fill_color = Color(1.0, 1.0, 1.0)
     if stroke_color is None:
         stroke_color = Color(0.0, 0.5, 0.5)
-    return {
+    result = {
         "kind": "remix",
         "shape": "text-rectangle",
         "style": "basic",
@@ -259,6 +263,14 @@ def square(text,
             ]
         }
     }
+    if gradient_stops is not None:
+        result["fill-style"] = FillStyle.Gradient.value
+        result["gradient-stops"] = [
+            {"position": pos, "color-red": c.red, "color-green": c.green,
+             "color-blue": c.blue, "color-opacity": c.opacity}
+            for pos, c in gradient_stops
+        ]
+    return result
 
 
 def line(
