@@ -349,6 +349,7 @@ class MediaBin:
         *,
         recursive: bool = False,
         extensions: tuple[str, ...] = ('.mp4', '.mov', '.png', '.jpg', '.jpeg', '.wav', '.mp3', '.m4a'),
+        media_type: MediaType | None = None,
     ) -> list[Media]:
         """Batch-import all matching files from a directory.
 
@@ -356,6 +357,9 @@ class MediaBin:
             folder_path: Directory to scan.
             recursive: If ``True``, scan subdirectories as well.
             extensions: File extensions to include (case-insensitive).
+            media_type: Optional explicit media type applied to all files.
+                Useful when ``pymediainfo`` is not available and all files
+                share a known kind (e.g. a batch of PNG slides).
 
         Returns:
             List of newly imported :class:`Media` entries.
@@ -367,18 +371,26 @@ class MediaBin:
             p for p in folder_path.glob(pattern)
             if p.is_file() and p.suffix.lower() in ext_lower
         )
-        return self.import_many(paths)
+        return self.import_many(paths, media_type=media_type)
 
-    def import_many(self, paths: list[Path] | list[str]) -> list[Media]:
+    def import_many(
+        self,
+        paths: list[Path] | list[str],
+        *,
+        media_type: MediaType | None = None,
+    ) -> list[Media]:
         """Import multiple media files.
 
         Args:
             paths: List of file paths to import.
+            media_type: Optional explicit media type applied to all files.
+                Useful when ``pymediainfo`` is not available and all files
+                share a known kind (e.g. a batch of PNG slides).
 
         Returns:
             List of newly imported :class:`Media` entries.
         """
-        return [self.import_media(Path(p)) for p in paths]
+        return [self.import_media(Path(p), media_type=media_type) for p in paths]
 
     def __delitem__(self, media_id: int) -> None:
         """Remove a media entry by its integer ID.

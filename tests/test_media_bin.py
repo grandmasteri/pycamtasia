@@ -744,7 +744,7 @@ class TestImportMany:
             f.write_bytes(b'\x89PNG\r\n\x1a\n')
             files.append(f)
         initial = len(project.media_bin)
-        result = project.media_bin.import_many(files)
+        result = project.media_bin.import_many(files, media_type=MediaType.Image)
         assert len(result) == 2
         assert len(project.media_bin) == initial + 2
 
@@ -761,7 +761,7 @@ class TestImportFolder:
         sub.mkdir()
         (sub / 'c.png').write_bytes(b'\x89PNG\r\n\x1a\n')
         initial = len(project.media_bin)
-        result = project.media_bin.import_folder(tmp_path, recursive=False)
+        result = project.media_bin.import_folder(tmp_path, recursive=False, media_type=MediaType.Image)
         assert len(result) == 1  # only a.png, not sub/c.png or b.txt
         assert len(project.media_bin) == initial + 1
 
@@ -773,7 +773,7 @@ class TestImportFolder:
         sub.mkdir()
         (sub / 'b.png').write_bytes(b'\x89PNG\r\n\x1a\n')
         initial = len(project.media_bin)
-        result = project.media_bin.import_folder(import_dir, recursive=True)
+        result = project.media_bin.import_folder(import_dir, recursive=True, media_type=MediaType.Image)
         assert len(result) == 2
         assert len(project.media_bin) == initial + 2
 
@@ -783,7 +783,7 @@ class TestImportFolder:
         import_dir.mkdir()
         (import_dir / 'a.png').write_bytes(b'\x89PNG\r\n\x1a\n')
         shutil.copy(FIXTURES / 'empty.wav', import_dir / 'b.wav')
-        result = project.media_bin.import_folder(import_dir, extensions=('.wav',))
+        result = project.media_bin.import_folder(import_dir, extensions=('.wav',), media_type=MediaType.Audio)
         assert len(result) == 1
 
     def test_import_folder_empty_dir(self, project, tmp_path):
