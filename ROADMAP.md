@@ -333,8 +333,8 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/create-video-from-scr
 
 - [x] **No paragraph-to-scene mapping helper** `src/camtasia/screenplay.py` — `Section.from_paragraphs`
 - [x] **No scene/chapter markers emitted per section** `src/camtasia/builders/screenplay_builder.py` — `add marker per section`
-- [ ] **No VO-to-screen-recording alignment on visual track** `src/camtasia/builders/screenplay_builder.py` — `video-track placement`
-- [ ] **No on-screen captions generated from script lines** `src/camtasia/builders/screenplay_builder.py` — `_emit_captions_for_vo`
+- [x] **No VO-to-screen-recording alignment on visual track** `src/camtasia/builders/screenplay_builder.py` — `video-track placement`
+- [x] **No on-screen captions generated from script lines** `src/camtasia/builders/screenplay_builder.py` — `_emit_captions_for_vo`
 - [x] **Single default_pause used for both inter-VO and inter-scene** `src/camtasia/builders/screenplay_builder.py` — `section_pause distinct from vo_pause`
 - [x] **No VO duration/alignment validation against audio length** `src/camtasia/builders/screenplay_builder.py` — `_validate_vo_alignment`
 - [x] **Audio resolver case-sensitive / rigid prefix** `src/camtasia/builders/screenplay_builder.py` — `case-insensitive flexible _find_audio_file`
@@ -474,7 +474,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/extend-frame/
 - [x] **freeze_at_clip_start convenience** `src/camtasia/timeline/track.py` — `freeze_at_clip_start`
 - [x] **freeze_at_clip_end convenience** `src/camtasia/timeline/track.py` — `freeze_at_clip_end`
 - [x] **add_exported_frame (exports a frame as image on new track)** `src/camtasia/timeline/track.py` — `add_exported_frame`
-- [ ] **extend_clip has no ripple option** `src/camtasia/timeline/track.py` — `extend_clip(..., ripple=False)`
+- [x] **extend_clip has no ripple option** `src/camtasia/timeline/track.py` — `extend_clip(..., ripple=False)`
 
 ### Add Video Filters
 
@@ -495,7 +495,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/how-to-make-an-intro/
 - [x] **Edit intro group properties (BG1/BG2 gradient, text font/size/color)** `src/camtasia/timeline/track.py` — `set_group_property / edit_intro_properties`
 - [x] **Save customized timeline group back to library as reusable asset** `src/camtasia/project.py` — `save_timeline_group_to_library`
 - [x] **Access/modify nested intro subgroups (Cloud overlay opacity, Right Text spacing)** `src/camtasia/timeline/track.py` — `get_nested_subgroup / set_opacity`
-- [ ] **add_intro lacks template_name/library_asset linkage** `src/camtasia/builders/video_production.py` — `add_intro(template_name=..., library_asset=...)`
+- [x] **add_intro lacks template_name/library_asset linkage** `src/camtasia/builders/video_production.py` — `add_intro(template_name=..., library_asset=...)`
 
 ### Remove A Color (Green Screen)
 
@@ -522,7 +522,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/import-powerpoint-sli
 
 - [x] **No direct .pptx file import** `src/camtasia/builders/slide_import.py` — `import_powerpoint(project, pptx_path)`
 - [x] **No automatic slide-to-image extraction from PPTX** `src/camtasia/builders/slide_import.py` — `_extract_slides_as_images via python-pptx or LibreOffice`
-- [ ] **Default per-slide duration not sourced from project settings** `src/camtasia/builders/slide_import.py` — `use project.settings.default_image_duration`
+- [x] **Default per-slide duration not sourced from project settings** `src/camtasia/builders/slide_import.py` — `use project.settings.default_image_duration`
 - [x] **No automatic timeline markers from slide titles** `src/camtasia/builders/slide_import.py` — `add slide_titles param that emits markers`
 - [x] **No append-to-current-end placement (always starts at 0)** `src/camtasia/builders/slide_import.py` — `cursor from track.end_time()`
 
