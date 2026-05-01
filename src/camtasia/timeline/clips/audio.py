@@ -103,6 +103,27 @@ class AMFile(BaseClip):
         self._data.setdefault('attributes', {})['gain'] = gain
         return self
 
+    @property
+    def dynamic_caption_transcription(self) -> dict[str, Any] | None:
+        """Persisted dynamic caption transcription data.
+
+        Stored in ``metadata.dynamicCaptionTranscription``.  Preserves
+        user edits across style swaps.
+
+        Returns:
+            The transcription dict, or ``None`` if not set.
+        """
+        return self._data.get('metadata', {}).get('dynamicCaptionTranscription')
+
+    @dynamic_caption_transcription.setter
+    def dynamic_caption_transcription(self, value: dict[str, Any] | None) -> None:
+        """Set or clear the persisted dynamic caption transcription."""
+        meta = self._data.setdefault('metadata', {})
+        if value is None:
+            meta.pop('dynamicCaptionTranscription', None)
+        else:
+            meta['dynamicCaptionTranscription'] = value
+
     def add_audio_visualizer(
         self,
         *,

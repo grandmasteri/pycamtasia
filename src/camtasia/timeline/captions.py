@@ -338,3 +338,50 @@ def list_dynamic_caption_presets(presets_dir: Path | None = None) -> list[str]:
     if not directory.is_dir():
         return []
     return sorted(p.stem for p in directory.glob('*.json'))
+
+
+def extend_dynamic_caption(
+    callout_data: dict[str, Any],
+    new_duration_seconds: float,
+    *,
+    transcript: list[dict[str, Any]] | None = None,
+) -> None:
+    """Rescale word timings in a dynamic caption callout to a new duration.
+
+    Scales ``start`` and ``end`` fields in each transcript word entry
+    proportionally so the transcript fits the new duration.  If no
+    *transcript* is provided, looks for word timings inside
+    ``callout_data['metadata']['dynamicCaptionTranscription']['words']``.
+
+    Args:
+        callout_data: The raw callout clip dict.
+        new_duration_seconds: Target duration in seconds.
+        transcript: Optional explicit word list; each entry must have
+            ``start`` and ``end`` float keys (seconds).
+    """
+    from camtasia.timing import seconds_to_ticks, ticks_to_seconds
+
+    old_duration = callout_data.get('duration', 0)
+    if old_duration <= 0:
+        return
+    old_seconds = ticks_to_seconds(old_duration)
+    if old_seconds <= 0:
+        return
+    ratio = new_duration_seconds / old_seconds
+
+    words = transcript
+    if words is None:
+        words = (
+            callout_data
+            .get('metadata', {})
+            .get('dynamicCaptionTranscription', {})
+            .get('words')
+        )
+    if words:
+        for w in words:
+            if 'start' in w:
+                w['start'] = w['start'] * ratio
+            if 'end' in w:
+                w['end'] = w['end'] * ratio
+
+    callout_data['duration'] = seconds_to_ticks(new_duration_seconds)
