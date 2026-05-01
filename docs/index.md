@@ -30,7 +30,7 @@ guides/cookbook
 guides/best-practices
 guides/troubleshooting
 guides/faq
-guides/convenience-api
+concepts/the-two-api-layers
 guides/speed-change
 guides/audio-video-sync
 guides/template-projects

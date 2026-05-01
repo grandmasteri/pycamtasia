@@ -94,4 +94,4 @@ proj.export_all("output/")
 
 - [Getting Started Tutorial](guides/getting-started.md) — build a complete project from scratch
 - [Undo & Redo](guides/undo-redo.md) — change history and persistence
-- [Convenience API](guides/convenience-api.md) — batch operations and helpers
+- [The Two API Layers](concepts/the-two-api-layers.md) — L1/L2 architecture and when to use each
