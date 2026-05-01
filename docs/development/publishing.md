@@ -36,8 +36,9 @@ Before every release, verify ALL of:
 
 - [ ] Version bumped in pyproject.toml AND src/camtasia/version.py AND CHANGELOG.md
 - [ ] CHANGELOG.md has a dated section for the new version (move from [Unreleased])
-- [ ] All tests pass: `pytest`
+- [ ] All unit tests pass: `pytest`
 - [ ] 100% coverage: `pytest --cov=camtasia --cov-fail-under=100`
+- [ ] **Integration tests pass** (requires Camtasia.app installed locally on macOS): `pytest -m integration`. CI cannot run these — a maintainer with Camtasia installed MUST run them before tagging a release. Skipping this step risks shipping a release that generates files the real Camtasia app rejects.
 - [ ] ruff clean: `ruff check src/ tests/`
 - [ ] mypy clean: `mypy src/camtasia`
 - [ ] Sphinx docs build: `cd docs && sphinx-build -b html . _build/html -W`

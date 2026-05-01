@@ -219,7 +219,6 @@ class TestNewEffects:
 
 class TestAdvancedOperations:
     @pytest.mark.integration
-    @pytest.mark.xfail(reason="split_clip after transition needs investigation")
     def test_split_and_transition_opens(self, project):
         """Project with split clip and transition opens without exceptions."""
         media = project.import_media(EMPTY_WAV)
@@ -296,7 +295,6 @@ class TestBehaviorPresets:
         assert _validate_in_camtasia(str(project.file_path)) == 0
 
     @pytest.mark.integration
-    @pytest.mark.xfail(reason="PopUp preset grow behavior not recognized by Camtasia")
     def test_pop_up_behavior_opens(self, project):
         track = project.timeline.add_track('Callouts')
         callout = track.add_callout('Hello World', start_seconds=0.0, duration_seconds=5.0)
