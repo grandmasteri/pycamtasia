@@ -272,3 +272,15 @@ class TestAutoStitchOnTrack:
     def test_import_from_operations(self) -> None:
         from camtasia.operations import auto_stitch_on_track as fn
         assert callable(fn)
+
+    def test_group_flushed_when_different_source_follows(self) -> None:
+        """Cover stitch.py line 48: group appended in else branch."""
+        from camtasia.operations.stitch import auto_stitch_on_track
+        track = _make_track([
+            _clip(1, 0.0, 2.0, src=10),
+            _clip(2, 2.0, 3.0, src=10),
+            _clip(3, 5.0, 1.0, src=20),  # different source breaks the group
+        ])
+        results = auto_stitch_on_track(track)
+        assert len(results) == 1
+        assert results[0].clip_type == 'StitchedMedia'

@@ -121,3 +121,22 @@ class TestAudiateProjectProperties:
     def test_repr(self, audiate_file: Path):
         proj = AudiateProject(audiate_file)
         assert str(audiate_file) in repr(proj)
+
+
+class TestFindLinkedMedia:
+    def test_returns_none_when_src_not_in_media_bin(self, audiate_file, project):
+        """Cover lines 260-261: KeyError branch in find_linked_media."""
+        proj = AudiateProject(audiate_file)
+        # Add a clip whose audiateLinkedSession matches but src points to
+        # a non-existent media-bin entry.
+        track = project.timeline.tracks[0]
+        track._data.setdefault('medias', []).append({
+            'id': 999,
+            '_type': 'AMFile',
+            'start': 0,
+            'duration': EDIT_RATE,
+            'audiateLinkedSession': proj.session_id,
+            'src': 9999,  # does not exist in media bin
+        })
+        result = proj.find_linked_media(project)
+        assert result is None

@@ -215,3 +215,16 @@ class TestAddBackgroundRemoval:
         clip = BaseClip(data)
         result = clip.add_background_removal()
         assert result is clip
+
+
+class TestCornerPinAddKeyframe:
+    """Cover visual.py lines 940-941: add_keyframe creates param when missing."""
+
+    def test_add_keyframe_creates_parameter(self):
+        from camtasia.effects.visual import CornerPin
+        data = {'effectName': 'CornerPin', 'parameters': {}}
+        eff = CornerPin(data)
+        eff.add_keyframe(0.0, 'topLeft', 0.1, 0.2)
+        assert data['parameters']['topLeftX']['defaultValue'] == 0.1
+        assert data['parameters']['topLeftY']['defaultValue'] == 0.2
+        assert data['parameters']['topLeftX']['keyframes'][0]['value'] == 0.1

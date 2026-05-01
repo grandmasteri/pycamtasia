@@ -117,3 +117,14 @@ class TestProjectGetSafeZone:
     def test_invalid_platform_raises(self, project):
         with pytest.raises(ValueError):
             project.get_safe_zone('nonexistent')
+
+    def test_platform_enum_not_in_safe_zones_raises(self):
+        """Cover line 84: Platform enum member missing from _SAFE_ZONES."""
+        import camtasia.canvas_presets as mod
+        original = mod._SAFE_ZONES.copy()
+        try:
+            mod._SAFE_ZONES.clear()
+            with pytest.raises(ValueError, match='No safe zone defined'):
+                get_safe_zone(Platform.TIKTOK)
+        finally:
+            mod._SAFE_ZONES.update(original)

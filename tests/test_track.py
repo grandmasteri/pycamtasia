@@ -2454,3 +2454,28 @@ class TestJoinClips:
         ])
         with pytest.raises(KeyError, match='Clips not found'):
             tl.tracks[0].join_clips([1, 99])
+
+
+class TestClipsInSelectionNoSelection:
+    """Cover track.py line 3011: _clips_in_selection with no selection."""
+
+    def test_returns_empty_when_no_selection(self):
+        track = _make_timeline([
+            ('A', [{'id': 1, '_type': 'VMFile', 'start': 0, 'duration': 100}]),
+        ]).tracks[0]
+        assert track._clips_in_selection() == []
+
+
+class TestSetGroupPropertyNonDictPath:
+    """Cover track.py line 3305: set_group_property on non-dict intermediate."""
+
+    def test_raises_when_path_resolves_to_non_dict(self):
+        track = _make_timeline([
+            ('A', [{
+                'id': 1, '_type': 'Group', 'start': 0, 'duration': 100,
+                'tracks': [], 'attributes': {'ident': 'g', 'widthAttr': 1920},
+                'metadata': {'someKey': 'a string, not a dict'},
+            }]),
+        ]).tracks[0]
+        with pytest.raises(KeyError, match='Cannot set key on non-dict'):
+            track.set_group_property(1, 'metadata.someKey.nested', 42)

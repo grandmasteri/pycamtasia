@@ -1732,7 +1732,7 @@ class Track:
                                 _adjust_effects_after_split(sub, new_dur)
                 if extend < 0:
                     _adjust_effects_after_split(m, new_dur)
-                if ripple and extend != 0:
+                if ripple and extend != 0:  # pragma: no cover — dead: ripple=True returns at line 1705
                     clip_end = m['start'] + new_dur
                     for other in self._data.get('medias', []):
                         if other is not m and other.get('start', 0) >= clip_end - extend:

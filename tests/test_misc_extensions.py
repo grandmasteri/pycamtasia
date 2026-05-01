@@ -218,3 +218,10 @@ class TestGradientFill:
         result = rectangle()
         assert result["fill-style"] == "solid"
         assert "gradient-stops" not in result
+
+    def test_add_animation_opacity(self):
+        """Cover base.py line 2093: animate_to with opacity."""
+        clip = BaseClip(_clip_data())
+        anim = Animation(start_seconds=0.0, end_seconds=1.0, opacity=0.5)
+        result = clip.add_animation(anim)
+        assert result is clip

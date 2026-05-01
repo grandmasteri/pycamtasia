@@ -330,3 +330,60 @@ class TestCursorPropertySetters:
         assert kfs[1]['value'] == [300, 400, 0]
         assert kfs[0]['time'] == 0
         assert kfs[1]['time'] == seconds_to_ticks(1.0)
+
+
+class TestSplitCursorPathEdgeCases:
+    """Cover screen_recording.py lines 526, 531."""
+
+    def test_split_before_all_keyframes_returns_early(self):
+        """Line 526: before is None → early return."""
+        from camtasia.timeline.clips.screen_recording import ScreenIMFile
+        from camtasia.timing import seconds_to_ticks
+        data = {
+            '_type': 'ScreenIMFile', 'id': 1, 'start': 0,
+            'duration': seconds_to_ticks(10.0), 'mediaDuration': 1,
+            'scalar': 1, 'src': 1,
+            'parameters': {
+                'cursorLocation': {
+                    'keyframes': [
+                        {'time': seconds_to_ticks(5.0), 'endTime': seconds_to_ticks(5.0),
+                         'value': [100, 200, 0], 'duration': 0},
+                    ]
+                }
+            },
+        }
+        clip = ScreenIMFile(data)
+        kfs_before = len(clip.cursor_location_keyframes)
+        clip.split_cursor_path(1.0)  # before all keyframes
+        # No keyframes inserted — early return
+        assert len(clip.cursor_location_keyframes) == kfs_before
+
+    def test_split_between_keyframes_interpolates(self):
+        """Line 531+ (else branch): linear interpolation between keyframes."""
+        from camtasia.timeline.clips.screen_recording import ScreenIMFile
+        from camtasia.timing import seconds_to_ticks
+        data = {
+            '_type': 'ScreenIMFile', 'id': 1, 'start': 0,
+            'duration': seconds_to_ticks(10.0), 'mediaDuration': 1,
+            'scalar': 1, 'src': 1,
+            'parameters': {
+                'cursorLocation': {
+                    'keyframes': [
+                        {'time': seconds_to_ticks(2.0), 'endTime': seconds_to_ticks(2.0),
+                         'value': [0, 0, 0], 'duration': 0},
+                        {'time': seconds_to_ticks(4.0), 'endTime': seconds_to_ticks(4.0),
+                         'value': [100, 200, 0], 'duration': 0},
+                    ]
+                }
+            },
+        }
+        clip = ScreenIMFile(data)
+        clip.split_cursor_path(3.0)  # midpoint → interpolated
+        kfs = clip.cursor_location_keyframes
+        # Original 2 + 2 inserted = 4
+        assert len(kfs) == 4
+        # Midpoint interpolation: x=50, y=100
+        inserted = [k for k in kfs if k['time'] == seconds_to_ticks(3.0)]
+        assert len(inserted) == 2
+        assert inserted[0]['value'][0] == pytest.approx(50.0)
+        assert inserted[0]['value'][1] == pytest.approx(100.0)

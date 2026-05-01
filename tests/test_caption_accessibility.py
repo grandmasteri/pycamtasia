@@ -171,3 +171,22 @@ class TestLuminanceAndContrast:
     def test_contrast_ratio_same_color(self):
         ratio = _contrast_ratio([100, 100, 100, 255], [100, 100, 100, 255])
         assert ratio == pytest.approx(1.0)
+
+
+class TestNonCalloutOnSubtitlesTrack:
+    """Cover validation.py line 642: skip non-Callout clips on Subtitles track."""
+
+    def test_skips_non_callout_clips(self, project_with_captions):
+        from camtasia.timing import seconds_to_ticks
+        track = project_with_captions.timeline.find_track_by_name('Subtitles')
+        # Add a non-Callout clip to the Subtitles track
+        track._data.setdefault('medias', []).append({
+            'id': 777, '_type': 'VMFile', 'src': 1,
+            'start': seconds_to_ticks(20.0),
+            'duration': seconds_to_ticks(2.0),
+            'mediaStart': 0, 'mediaDuration': seconds_to_ticks(2.0),
+            'scalar': 1, 'parameters': {}, 'effects': [],
+        })
+        issues = validate_caption_accessibility(project_with_captions)
+        # Should not crash — the VMFile is simply skipped
+        assert all(i['type'] != 'unknown_clip_type' for i in issues)
