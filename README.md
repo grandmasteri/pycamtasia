@@ -1,81 +1,133 @@
-<p align="center">
-  <em>Read, write, and manipulate Camtasia project files with Python.</em>
-</p>
+# pycamtasia
 
-<p align="center">
-<a href="https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml"><img src="https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
-<a href="https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml"><img src="https://img.shields.io/badge/coverage-100%25-brightgreen" alt="Coverage"></a>
-<a href="https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml"><img src="https://img.shields.io/badge/mypy-0%20errors-blue" alt="mypy"></a>
-<a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
-<a href="https://github.com/grandmasteri/pycamtasia/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License: MIT"></a>
-</p>
+*Read, write, and manipulate Camtasia project files with Python.*
+
+[![PyPI version](https://img.shields.io/pypi/v/pycamtasia)](https://pypi.org/project/pycamtasia/)
+[![Python versions](https://img.shields.io/pypi/pyversions/pycamtasia)](https://pypi.org/project/pycamtasia/)
+[![Tests](https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml/badge.svg)](https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/grandmasteri/pycamtasia/blob/main/LICENSE)
 
 ---
 
-**pycamtasia** is a Python library for programmatic access to TechSmith Camtasia project files (`.cmproj` / `.tscproj`). Load projects, manipulate timelines, apply effects, manage media, and save — all from Python. Validated against 93 TechSmith sample assets (JSON Schema) with 2,676 tests at 100% coverage across 70 source files (0 mypy errors, 0 undocumented public symbols). Hardened through 15 rounds of adversarial code review (100+ bugs fixed). Tested on Python 3.10–3.13 in CI.
+## Why pycamtasia?
 
-📖 **[Documentation](https://grandmasteri.github.io/pycamtasia/)** · 🐛 **[Issues](https://github.com/grandmasteri/pycamtasia/issues)**
-
----
+Camtasia projects are opaque bundles of JSON, media, and recordings. **pycamtasia** gives you a clean Python API to create, inspect, and transform them — so you can automate video production pipelines, batch-apply effects, generate projects from scripts, and integrate Camtasia into CI workflows. The library is tested with ~4,900 tests at 100% line coverage across 92 source files, with full mypy and ruff compliance.
 
 ## Installation
 
 ```bash
-git clone https://github.com/grandmasteri/pycamtasia.git
-cd pycamtasia
-pip install -e '.[test]'
+pip install pycamtasia
 ```
 
-## Quick Example
+Optional extras:
+
+```bash
+pip install pycamtasia[cli]    # Command-line interface (pytsc)
+pip install pycamtasia[media]  # Media probing via pymediainfo
+```
+
+## Quickstart
 
 ```python
 import camtasia
 
-# Load a project
-proj = camtasia.load_project("my_video.cmproj")
+# Create a new empty project
+camtasia.new_project("demo.cmproj")
 
-# Iterate tracks and clips
-for track in proj.timeline.tracks:
-    for clip in track.clips:
-        print(f"{clip.clip_type}: {clip.duration_seconds:.1f}s")
-        clip.fade_in(0.5)
-        clip.add_drop_shadow(blur=25.0)
-        clip.set_speed(2.0)
+# Load it
+proj = camtasia.load_project("demo.cmproj")
 
-# Save
+# Add a track and inspect the timeline
+track = proj.timeline.add_track("Main")
+print(f"Tracks: {len(proj.timeline.tracks)}")
+
+# Set project metadata
+proj.title = "My Demo"
+proj.author = "pycamtasia"
+
+# Save and print the path
 proj.save()
+print(f"Saved to {proj.file_path}")
 ```
 
-## Features
+## More Examples
 
-- **Project I/O** — Load, create, copy, compact, and save `.cmproj` / `.tscproj` bundles
-- **Timeline manipulation** — Tracks, clips, markers, transitions, reordering
-- **Type-safe clips** — Audio, video, image, screen recording, callout, group
-- **Effects & animation** — Drop shadow, glow, round corners, keyframes, fade in/out
+### Read a project and print a report
+
+```python
+import camtasia
+
+proj = camtasia.load_project("lecture.cmproj")
+print(proj.summary())
+
+for track in proj.timeline.tracks:
+    print(f"Track {track.index}: {len(track.clips)} clips")
+    for clip in track.clips:
+        print(f"  {clip.clip_type}: {clip.duration_seconds:.1f}s")
+```
+
+### Batch-apply effects to every clip
+
+```python
+import camtasia
+
+with camtasia.use_project("tutorial.cmproj") as proj:
+    for track in proj.timeline.tracks:
+        for clip in track.clips:
+            clip.fade_in(0.5)
+            clip.add_drop_shadow(blur=25.0)
+# Project is saved automatically on exit
+```
+
+### Fill a template project with real media
+
+```python
+from camtasia import load_project
+from camtasia.operations.template import replace_placeholder
+
+proj = load_project("template.cmproj")
+for track in proj.timeline.tracks:
+    for clip in track.clips:
+        if clip.clip_type == "PlaceholderMedia":
+            print(f"Placeholder: {clip.name}")
+            # Replace with real media using replace_placeholder()
+```
+
+## Key Features
+
+- **Project I/O** — Create, load, copy, compact, and save `.cmproj` / `.tscproj` bundles
+- **Timeline editing** — Tracks, clips, markers, transitions, split, trim, reorder, ripple insert/delete
+- **Effects & animation** — Drop shadow, glow, round corners, keyframes, fade, behaviors, cursor effects
 - **Speed control** — Fraction-based lossless scalar arithmetic with audio-video sync
-- **Transforms** — Move, scale, crop, rotate with canvas-aware positioning
-- **Cursor effects** — Motion blur, shadow, physics, click scaling
+- **Builders** — `TimelineBuilder`, `CalloutBuilder`, `ScreenplayBuilder` for fluent project assembly
+- **Undo & redo** — JSON Patch-based change history, persistable across sessions
+- **Export** — SRT subtitles, EDL, CSV, project reports (JSON/Markdown), chapter markers
+- **Validation** — JSON Schema validation against 93 TechSmith samples; structural and semantic checks
+- **Video production helpers** — Background music, lower thirds, progressive disclosure, zoom-to-region, voiceover sequences, and more
 - **Audiate integration** — Word-level transcript parsing from Audiate and WhisperX
-- **Batch operations** — `apply_to_clips()`, `fade_all()`, `scale_all()`, `move_all()`
-- **Layout operations** — `pack_track()`, `ripple_insert()`, `ripple_delete()`, `snap_to_grid()`
-- **Builders** — `TimelineBuilder`, `CalloutBuilder`, `ScreenplayBuilder`, `build_from_screenplay()` for fluent assembly
-- **Undo & redo** — JSON Patch-based change history with `track_changes`, persist across sessions
-- **Export** — SRT subtitles, EDL, CSV, project reports (JSON/Markdown), timeline JSON
-- **Project tools** — Diff, merge, cleanup, validation, statistics
-- **Project introspection** — `Project.summary()`, `statistics()`, `to_markdown_report()`
-- **Project repair** — `Project.repair()` auto-fixes stale transitions and broken references
-- **Video production helpers** — `add_background_music`, `add_lower_third`, `add_progressive_disclosure`, `add_zoom_to_region`, `add_callout_sequence`, `add_chapter_markers`, `add_title_card`, `add_subtitle_track`, `add_voiceover_sequence`, `add_image_sequence`
-- **Group manipulation** — `group_clips()`, `ungroup_clip()`, `group_clips_across_tracks()`, `Group.add_internal_track()`, nested group support
-- **JSON Schema validation** — 93 TechSmith samples validated against schema; `validate_all()` for comprehensive structural, schema, and semantic checks
-- **Camtasia v10 compatible** — NSJSONSerialization-style formatting preserved on save
+
+## Requirements
+
+- **Python 3.10+** (tested on 3.10, 3.11, 3.12, 3.13)
+- **Camtasia 2024+** (project format version 10.0)
+- No binary dependencies — pure Python with only `jsonpatch` as a runtime requirement
+
+## Links
+
+- 📖 [Documentation](https://grandmasteri.github.io/pycamtasia/)
+- 📋 [Changelog](https://github.com/grandmasteri/pycamtasia/blob/main/CHANGELOG.md)
+- 🐛 [Issues](https://github.com/grandmasteri/pycamtasia/issues)
+- 🤝 [Contributing](https://github.com/grandmasteri/pycamtasia/blob/main/CONTRIBUTING.md)
+- 🔒 [Security](https://github.com/grandmasteri/pycamtasia/blob/main/SECURITY.md)
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines.
 
 ```bash
-pytest                                    # 2,676 tests, ~14s (parallel)
-pytest --cov=camtasia --cov-report=term   # with coverage
+pytest                                    # ~4,900 tests
+pytest --cov=camtasia --cov-report=term   # with coverage (must be 100%)
 mypy src/camtasia                         # 0 errors
 ```
 
@@ -83,4 +135,4 @@ mypy src/camtasia                         # 0 errors
 
 MIT — see [LICENSE](LICENSE) for details.
 
-Originally forked from [sixty-north/python-camtasia](https://github.com/sixty-north/python-camtasia).
+`SPDX-License-Identifier: MIT`
