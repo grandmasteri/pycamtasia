@@ -474,7 +474,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/extend-frame/
 - [x] **freeze_at_clip_start convenience** `src/camtasia/timeline/track.py` — `freeze_at_clip_start`
 - [x] **freeze_at_clip_end convenience** `src/camtasia/timeline/track.py` — `freeze_at_clip_end`
 - [x] **add_exported_frame (exports a frame as image on new track)** `src/camtasia/timeline/track.py` — `add_exported_frame`
-- [ ] **extend_clip has no ripple option** `src/camtasia/timeline/track.py` — `extend_clip(..., ripple=False)`
+- [x] **extend_clip has no ripple option** `src/camtasia/timeline/track.py` — `extend_clip(..., ripple=False)`
 
 ### Add Video Filters
 
@@ -546,12 +546,12 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/library/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/magnetic-tracks/
 
-- [ ] **Enabling magnetic on a track does not auto-close existing gaps** `src/camtasia/timeline/track.py` — `Track.magnetic setter should call pack_track when set to True`
-- [ ] **No automatic ripple-insert when dropping media between clips on magnetic track** `src/camtasia/timeline/track.py` — `Track.add_clip should ripple_insert when self.magnetic`
-- [ ] **No automatic ripple-close when moving clips on magnetic track** `src/camtasia/timeline/track.py` — `Track.move_clip should re-pack track when magnetic`
+- [x] **Enabling magnetic on a track does not auto-close existing gaps** `src/camtasia/timeline/track.py` — `Track.magnetic setter should call pack_track when set to True`
+- [x] **No automatic ripple-insert when dropping media between clips on magnetic track** `src/camtasia/timeline/track.py` — `Track.add_clip should ripple_insert when self.magnetic`
+- [x] **No automatic ripple-close when moving clips on magnetic track** `src/camtasia/timeline/track.py` — `Track.move_clip should re-pack track when magnetic`
 - [x] **No snap-to-clip-edge (only snap_to_grid exists)** `src/camtasia/operations/layout.py` — `snap_to_clip_edge(track, tolerance)`
 - [x] **No all-tracks magnetic toggle on Timeline** `src/camtasia/timeline/timeline.py` — `Timeline.set_all_magnetic(value)`
-- [ ] **Groups-on-magnetic-tracks-keep-spaces rule not honored** `src/camtasia/operations/layout.py` — `pack_track preserve spacing for Group clips`
+- [x] **Groups-on-magnetic-tracks-keep-spaces rule not honored** `src/camtasia/operations/layout.py` — `pack_track preserve spacing for Group clips`
 
 ### Add Markers & Video Table of Contents
 
@@ -614,10 +614,10 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/ripple-move/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/stitch-media/
 
-- [ ] **No unstitch/split StitchedMedia back into segments** `src/camtasia/timeline/track.py` — `Track.unstitch_clip(clip_id)`
-- [ ] **join_clips does not validate same-source media** `src/camtasia/timeline/track.py` — `add same-src check to join_clips`
-- [ ] **join_clips does not validate adjacency** `src/camtasia/timeline/track.py` — `add adjacency check to join_clips`
-- [ ] **No Track.stitch_adjacent convenience** `src/camtasia/timeline/track.py` — `stitch_adjacent(clip_ids)`
+- [x] **No unstitch/split StitchedMedia back into segments** `src/camtasia/timeline/track.py` — `Track.unstitch_clip(clip_id)`
+- [x] **join_clips does not validate same-source media** `src/camtasia/timeline/track.py` — `add same-src check to join_clips`
+- [x] **join_clips does not validate adjacency** `src/camtasia/timeline/track.py` — `add adjacency check to join_clips`
+- [x] **No Track.stitch_adjacent convenience** `src/camtasia/timeline/track.py` — `stitch_adjacent(clip_ids)`
 - [ ] **No auto-stitch-on-cut behavior** `src/camtasia/operations/` — `post-cut hook to re-stitch adjacent same-source segments`
 
 ### Build Your Color Palette (Themes)
