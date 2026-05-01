@@ -192,9 +192,9 @@ class MotionBlur(Effect):
 class Mask(Effect):
     """Mask effect.
 
-    Parameters:
-        mask-shape, mask-opacity, mask-blend, mask-invert, mask-rotation,
-        mask-width, mask-height, mask-positionX, mask-positionY, mask-cornerRadius.
+    Underlying parameters: mask-shape, mask-opacity, mask-blend, mask-invert,
+    mask-rotation, mask-width, mask-height, mask-positionX, mask-positionY,
+    mask-cornerRadius.
 
     Width, height, and position parameters may be keyframed (dict with
     ``keyframes`` array) or simple scalar values.
@@ -376,10 +376,9 @@ class BlurRegion(Effect):
         fixture. If your Camtasia version rejects these names, please
         file an issue with a fixture project.
 
-    Parameters:
-        sigma, mask-cornerRadius, mask-invert, color (RGBA via separate keys),
-        mask-shape, mask-blend, mask-opacity, mask-width, mask-height,
-        mask-positionX, mask-positionY, ease-in, ease-out.
+    Underlying parameters: sigma, mask-cornerRadius, mask-invert,
+    color (RGBA via separate keys), mask-shape, mask-blend, mask-opacity,
+    mask-width, mask-height, mask-positionX, mask-positionY, ease-in, ease-out.
     """
 
     @property
@@ -562,10 +561,9 @@ class ColorAdjustment(Effect):
 class LutEffect(Effect):
     """Color grading via a .cube LUT file.
 
-    Parameters:
-        lutSource, lut_intensity, channel, shadowRampStart, shadowRampEnd,
-        highlightRampStart, highlightRampEnd, rangePreset,
-        easeInTime (Mac-only, ticks), easeOutTime (Mac-only, ticks).
+    Underlying parameters: lutSource, lut_intensity, channel,
+    shadowRampStart, shadowRampEnd, highlightRampStart, highlightRampEnd,
+    rangePreset, easeInTime (Mac-only, ticks), easeOutTime (Mac-only, ticks).
     """
 
     _CHANNEL_MAP: ClassVar[dict[str, int]] = {

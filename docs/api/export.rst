@@ -1,11 +1,6 @@
 Export
 ======
 
-.. automodule:: camtasia.export
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 .. automodule:: camtasia.export.edl
    :members:
    :undoc-members:

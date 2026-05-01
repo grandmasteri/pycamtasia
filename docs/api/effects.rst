@@ -1,11 +1,6 @@
 Effects
 =======
 
-.. automodule:: camtasia.effects
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 .. automodule:: camtasia.effects.base
    :members:
    :undoc-members:

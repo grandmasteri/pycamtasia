@@ -44,3 +44,6 @@ source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
 }
+
+# Suppress highlighting warnings for abbreviated JSON examples with { ... }
+suppress_warnings = ["misc.highlighting_failure"]

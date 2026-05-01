@@ -591,6 +591,7 @@ def validate_caption_accessibility(
     and optionally ``value``.
 
     Checks performed:
+
     - ``line_too_long``: A line exceeds *max_words_per_line* words.
     - ``duration_too_long``: Clip duration exceeds *max_duration_seconds*.
     - ``duration_too_short``: Clip duration is less than 1 second.

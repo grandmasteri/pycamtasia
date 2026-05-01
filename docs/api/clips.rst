@@ -1,11 +1,6 @@
 Clips
 =====
 
-.. automodule:: camtasia.timeline.clips
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 .. automodule:: camtasia.timeline.clips.base
    :members:
    :undoc-members:

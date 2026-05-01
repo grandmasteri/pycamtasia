@@ -2399,9 +2399,8 @@ class Project:
         """Apply effects to clips based on their type.
 
         Args:
-            effect_config: Dict mapping clip types to effect method names.
-                Example: {'VMFile': ['add_drop_shadow', 'add_round_corners'],
-                          'IMFile': ['add_drop_shadow']}
+            effect_config: Dict mapping clip types to effect method names,
+                e.g. ``{'VMFile': ['add_drop_shadow'], 'IMFile': ['add_drop_shadow']}``.
 
         Returns:
             Number of effects applied.
