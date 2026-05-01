@@ -26,6 +26,11 @@ guides/getting-started
 ```{toctree}
 :maxdepth: 2
 
+guides/getting-started
+guides/cookbook
+guides/best-practices
+guides/troubleshooting
+guides/faq
 guides/convenience-api
 guides/speed-change
 guides/audio-video-sync
