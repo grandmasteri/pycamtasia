@@ -16,15 +16,17 @@ extensions = [
     "sphinx.ext.viewcode",
     "myst_parser",
     "sphinx_autodoc_typehints",
+    "sphinx_copybutton",
 ]
 
 # Theme
 html_theme = "furo"
+html_title = "pycamtasia"
 
 # Autodoc
 autodoc_default_options = {
     "members": True,
-    "undoc-members": True,
+    "undoc-members": False,
     "show-inheritance": True,
 }
 autodoc_member_order = "bysource"
@@ -44,6 +46,7 @@ source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
 }
+myst_enable_extensions = ["deflist", "colon_fence", "tasklist", "fieldlist"]
 
 # Suppress highlighting warnings for abbreviated JSON examples with { ... }
 suppress_warnings = ["misc.highlighting_failure"]
