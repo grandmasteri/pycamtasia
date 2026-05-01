@@ -14,6 +14,7 @@ from camtasia.effects.cursor import (
     CursorMagnify,
     CursorMotionBlur,
     CursorNegative,
+    CursorPathCreator,
     CursorPhysics,
     CursorShadow,
     CursorSmoothing,
@@ -103,7 +104,17 @@ class TestCursorShadow:
         assert e.blur == 5.0
         assert e.opacity == 0.8
         assert e.color == (0.0, 0.0, 0.0, 1.0)
+        e.enabled = 0
+        e.angle = 3.14
+        e.offset = 20.0
+        e.blur = 10.0
+        e.opacity = 0.5
         e.color = (1.0, 0.0, 0.0, 0.5)
+        assert e.enabled == 0
+        assert e.angle == pytest.approx(3.14)
+        assert e.offset == 20.0
+        assert e.blur == 10.0
+        assert e.opacity == 0.5
         assert e.color == (1.0, 0.0, 0.0, 0.5)
 
 
@@ -167,8 +178,10 @@ class TestCursorGlow:
         assert e.color == (1.0, 1.0, 0.0, 1.0)
         assert e.opacity == 0.7
         assert e.radius == 20.0
+        e.color = (0.5, 0.5, 0.5, 1.0)
         e.opacity = 0.3
         e.radius = 40.0
+        assert e.color == (0.5, 0.5, 0.5, 1.0)
         assert e.opacity == 0.3
         assert e.radius == 40.0
 
@@ -187,7 +200,11 @@ class TestCursorHighlight:
         assert e.color == (1.0, 1.0, 0.0, 0.5)
         assert e.opacity == 0.6
         e.size = 100.0
+        e.color = (0.0, 1.0, 0.0, 1.0)
+        e.opacity = 0.9
         assert e.size == 100.0
+        assert e.color == (0.0, 1.0, 0.0, 1.0)
+        assert e.opacity == 0.9
 
 
 class TestCursorIsolation:
@@ -231,8 +248,14 @@ class TestCursorSpotlight:
         assert e.opacity == 0.5
         assert e.blur == 15.0
         assert e.color == (0.0, 0.0, 0.0, 0.8)
+        e.size = 80.0
+        e.opacity = 0.9
         e.blur = 25.0
+        e.color = (1.0, 1.0, 1.0, 0.5)
+        assert e.size == 80.0
+        assert e.opacity == 0.9
         assert e.blur == 25.0
+        assert e.color == (1.0, 1.0, 1.0, 0.5)
 
 
 class TestCursorGradient:
@@ -248,8 +271,12 @@ class TestCursorGradient:
         assert e.color == (0.2, 0.4, 0.6, 1.0)
         assert e.size == 40.0
         assert e.opacity == 0.9
+        e.color = (0.1, 0.2, 0.3, 0.4)
         e.size = 80.0
+        e.opacity = 0.5
+        assert e.color == (0.1, 0.2, 0.3, 0.4)
         assert e.size == 80.0
+        assert e.opacity == 0.5
 
 
 class TestCursorLens:
@@ -320,9 +347,13 @@ class TestClickBurst:
         assert e.size == 30.0
         assert e.opacity == 0.8
         assert e.duration == 0.5
+        e.color = (0.0, 1.0, 0.0, 0.5)
         e.size = 60.0
+        e.opacity = 0.3
         e.duration = 1.0
+        assert e.color == (0.0, 1.0, 0.0, 0.5)
         assert e.size == 60.0
+        assert e.opacity == 0.3
         assert e.duration == 1.0
 
     def test_effect_from_dict_dispatch(self, name, cls):
@@ -348,7 +379,11 @@ class TestClickZoom:
         assert e.size == 50.0
         assert e.duration == 0.3
         e.scale = 4.0
+        e.size = 80.0
+        e.duration = 0.6
         assert e.scale == 4.0
+        assert e.size == 80.0
+        assert e.duration == 0.6
 
 
 _RINGS_CLASSES = [("LeftClickRings", LeftClickRings), ("RightClickRings", RightClickRings)]
@@ -370,6 +405,14 @@ class TestClickRings:
         assert e.size == 40.0
         assert e.opacity == 0.7
         assert e.duration == 0.6
+        e.color = (1.0, 0.0, 0.0, 0.5)
+        e.size = 80.0
+        e.opacity = 0.3
+        e.duration = 1.2
+        assert e.color == (1.0, 0.0, 0.0, 0.5)
+        assert e.size == 80.0
+        assert e.opacity == 0.3
+        assert e.duration == 1.2
 
 
 _RIPPLE_CLASSES = [("LeftClickRipple", LeftClickRipple), ("RightClickRipple", RightClickRipple)]
@@ -385,7 +428,11 @@ class TestClickRipple:
         assert e.opacity == 0.6
         assert e.duration == 0.4
         e.opacity = 0.9
+        e.size = 70.0
+        e.duration = 0.8
         assert e.opacity == 0.9
+        assert e.size == 70.0
+        assert e.duration == 0.8
 
 
 _SCOPE_CLASSES = [("LeftClickScope", LeftClickScope), ("RightClickScope", RightClickScope)]
@@ -405,6 +452,12 @@ class TestClickScope:
         assert e.color == (0.0, 0.0, 1.0, 1.0)
         assert e.size == 45.0
         assert e.opacity == 0.5
+        e.color = (1.0, 1.0, 0.0, 0.8)
+        e.size = 90.0
+        e.opacity = 0.2
+        assert e.color == (1.0, 1.0, 0.0, 0.8)
+        assert e.size == 90.0
+        assert e.opacity == 0.2
 
 
 _TARGET_CLASSES = [("LeftClickTarget", LeftClickTarget), ("RightClickTarget", RightClickTarget)]
@@ -425,7 +478,11 @@ class TestClickTarget:
         assert e.size == 25.0
         assert e.opacity == 0.9
         e.color = (0.0, 1.0, 0.0, 1.0)
+        e.size = 50.0
+        e.opacity = 0.4
         assert e.color == (0.0, 1.0, 0.0, 1.0)
+        assert e.size == 50.0
+        assert e.opacity == 0.4
 
 
 _WARP_CLASSES = [("LeftClickWarp", LeftClickWarp), ("RightClickWarp", RightClickWarp)]
@@ -441,7 +498,11 @@ class TestClickWarp:
         assert e.size == 50.0
         assert e.duration == 0.3
         e.intensity = 10.0
+        e.size = 80.0
+        e.duration = 0.6
         assert e.intensity == 10.0
+        assert e.size == 80.0
+        assert e.duration == 0.6
 
 
 _SOUND_CLASSES = [("LeftClickSound", LeftClickSound), ("RightClickSound", RightClickSound)]
@@ -483,6 +544,33 @@ class TestRightClickScaling:
         assert el.speed == er.speed
 
 
+class TestCursorPathCreator:
+
+    def test_add_point_and_keyframes(self):
+        d = _effect_dict("CursorPathCreator")
+        e = CursorPathCreator(d)
+        e.add_point(0.0, 100.0, 200.0)
+        e.add_point(1.0, 300.0, 400.0)
+        e.add_point(0.5, 150.0, 250.0)  # insert before existing
+        kfs = e.keyframes
+        assert len(kfs) == 3
+        assert kfs[0]['x'] == 100.0
+        assert kfs[1]['x'] == 150.0
+        assert kfs[2]['x'] == 300.0
+
+    def test_clear_points(self):
+        d = _effect_dict("CursorPathCreator")
+        e = CursorPathCreator(d)
+        e.add_point(0.0, 10.0, 20.0)
+        e.clear_points()
+        assert e.keyframes == []
+
+    def test_keyframes_empty_by_default(self):
+        d = _effect_dict("CursorPathCreator")
+        e = CursorPathCreator(d)
+        assert e.keyframes == []
+
+
 # ------------------------------------------------------------------
 # Registry / effect_from_dict dispatch
 # ------------------------------------------------------------------
@@ -492,6 +580,7 @@ _ALL_EFFECT_NAMES = [
     "CursorColor", "CursorGlow", "CursorHighlight", "CursorIsolation",
     "CursorMagnify", "CursorSpotlight", "CursorGradient", "CursorLens",
     "CursorNegative", "CursorSmoothing",
+    "CursorPathCreator",
     "LeftClickBurst1", "LeftClickBurst2", "LeftClickBurst3", "LeftClickBurst4",
     "RightClickBurst1", "RightClickBurst2", "RightClickBurst3", "RightClickBurst4",
     "LeftClickZoom", "RightClickZoom",
