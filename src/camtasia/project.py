@@ -2096,9 +2096,9 @@ class Project:
             keyframes: list[dict[str, Any]] = []
             if fade_in_ticks > 0:
                 keyframes.append({'endTime': 0, 'time': 0, 'value': 0.0, 'duration': 0})
-                keyframes.append({'endTime': fade_in_ticks, 'time': 0, 'value': volume, 'duration': fade_in_ticks})
+                keyframes.append({'endTime': fade_in_ticks, 'time': fade_in_ticks, 'value': volume, 'duration': 0})
                 if fade_out_ticks == 0:
-                    keyframes.append({'endTime': total_ticks, 'time': fade_in_ticks, 'value': volume, 'duration': total_ticks - fade_in_ticks})
+                    keyframes.append({'endTime': total_ticks, 'time': total_ticks, 'value': volume, 'duration': 0})
             elif fade_out_ticks == 0:
                 keyframes.append({'endTime': 0, 'time': 0, 'value': volume, 'duration': 0})  # pragma: no cover  # unreachable: outer guard ensures at least one fade > 0
             else:
@@ -2106,12 +2106,11 @@ class Project:
                 keyframes.append({'endTime': 0, 'time': 0, 'value': volume, 'duration': 0})
             if fade_out_ticks > 0 and total_ticks >= fade_in_ticks + fade_out_ticks:
                 fade_out_start = total_ticks - fade_out_ticks
-                keyframes.append({'endTime': fade_out_start, 'time': fade_in_ticks, 'value': volume, 'duration': fade_out_start - fade_in_ticks})
-                keyframes.append({'endTime': total_ticks, 'time': fade_out_start, 'value': 0.0, 'duration': fade_out_ticks})
+                keyframes.append({'endTime': fade_out_start, 'time': fade_out_start, 'value': volume, 'duration': 0})
+                keyframes.append({'endTime': total_ticks, 'time': total_ticks, 'value': 0.0, 'duration': 0})
             clip._data.setdefault('parameters', {})['volume'] = {
                 'type': 'double',
                 'defaultValue': volume,
-                'interp': 'linr',
                 'keyframes': keyframes,
             }
         return clip
