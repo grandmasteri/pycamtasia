@@ -9,8 +9,8 @@ A Python library for programmatically creating, reading, and manipulating TechSm
 - Undo/redo with JSON Patch diffs
 - Strong typing with enums and TypedDicts
 - Export to EDL, CSV, SRT, and JSON
-- 1700+ tests, 100% coverage, mypy-clean
-- Validated against 86 official TechSmith sample projects
+- 4900+ tests, 100% coverage, mypy-clean
+- Validated against 93 official TechSmith sample projects
 
 ## Getting Started
 
@@ -18,7 +18,6 @@ A Python library for programmatically creating, reading, and manipulating TechSm
 :maxdepth: 2
 
 quickstart
-guides/getting-started
 ```
 
 ## Guides
@@ -39,7 +38,6 @@ guides/transcripts
 guides/camtasia-rev
 guides/undo-redo
 guides/type-safety
-guides/whats-new
 ```
 
 ## API Reference
