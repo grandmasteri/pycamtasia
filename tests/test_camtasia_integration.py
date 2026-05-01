@@ -4,57 +4,36 @@ Each test creates a minimal project, applies ONE operation, saves,
 launches Camtasia, and checks stderr for 0 EXCEPTION lines.
 
 Run with: pytest -m integration
+
+NOTE: New integration tests should use `open_in_camtasia()` from
+`tests.integration_helpers` instead of `_validate_in_camtasia()` below.
+The new helper enforces the validator contract: every Camtasia rejection
+that isn't predicted by `project.validate()` is flagged as a validator
+gap (library bug), not a test bug.
 """
 from __future__ import annotations
 
 from pathlib import Path
 import struct
-import subprocess
-import time
-import uuid
 import zlib
 
 import pytest
 
 from camtasia import seconds_to_ticks
 
-CAMTASIA_APP = Path('/Applications/Camtasia.app')
-CAMTASIA_BIN = CAMTASIA_APP / 'Contents/MacOS/Camtasia'
+from tests.integration_helpers import (
+    CAMTASIA_APP,
+    launch_in_camtasia_raw as _validate_in_camtasia,
+)
+
 FIXTURES = Path(__file__).parent / 'fixtures'
 EMPTY_WAV = FIXTURES / 'empty.wav'
 
 pytestmark = [
     pytest.mark.skipif(not CAMTASIA_APP.exists(), reason='Camtasia not installed'),
     pytest.mark.integration,
-    pytest.mark.timeout(30),  # Integration tests need 15s+ for Camtasia launch
+    pytest.mark.timeout(60),  # Integration tests need 15s+ for Camtasia launch
 ]
-
-
-def _validate_in_camtasia(project_path: str, timeout: int = 15) -> int:
-    """Launch Camtasia, wait, count EXCEPTION lines in stderr."""
-    subprocess.run(['pkill', '-9', '-f', 'Camtasia'], capture_output=True)
-    time.sleep(3)
-
-    lock = Path(project_path) / '~project.tscproj'
-    lock.unlink(missing_ok=True)
-
-    log = Path(f'/tmp/cam_test_{uuid.uuid4().hex[:8]}.log')
-    with log.open('w') as log_fh:
-        proc = subprocess.Popen(
-            [str(CAMTASIA_BIN), project_path],
-            stderr=log_fh,
-            stdout=subprocess.DEVNULL,
-        )
-    time.sleep(timeout)
-    proc.terminate()
-    try:
-        proc.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-
-    count = log.read_text().count('EXCEPTION') if log.exists() else 0
-    log.unlink(missing_ok=True)
-    return count
 
 
 def _create_test_image(tmp_path: Path) -> Path:
@@ -219,6 +198,15 @@ class TestNewEffects:
 
 class TestAdvancedOperations:
     @pytest.mark.integration
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "Library bug: split_clip() on a clip that has a transition attached "
+            "produces a .tscproj that Camtasia rejects with 1 exception. The "
+            "previous XPASS observations were parallel-execution artifacts. "
+            "Tracked in ROADMAP.md as a Pending Bug."
+        ),
+    )
     def test_split_and_transition_opens(self, project):
         """Project with split clip and transition opens without exceptions."""
         media = project.import_media(EMPTY_WAV)

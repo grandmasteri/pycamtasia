@@ -38,7 +38,7 @@ Before every release, verify ALL of:
 - [ ] CHANGELOG.md has a dated section for the new version (move from [Unreleased])
 - [ ] All unit tests pass: `pytest`
 - [ ] 100% coverage: `pytest --cov=camtasia --cov-fail-under=100`
-- [ ] **Integration tests pass** (requires Camtasia.app installed locally on macOS): `pytest -m integration`. CI cannot run these — a maintainer with Camtasia installed MUST run them before tagging a release. Skipping this step risks shipping a release that generates files the real Camtasia app rejects.
+- [ ] **Integration tests pass** (requires Camtasia.app installed locally on macOS): `pytest -m integration -o "addopts="`. CI cannot run these — a maintainer with Camtasia installed MUST run them before tagging a release. Skipping this step risks shipping a release that generates files the real Camtasia app rejects. (The `-o "addopts="` flag disables xdist parallelism; integration tests serialize through a filelock anyway, but xdist causes pytest-timeout to fire during lock waits.)
 - [ ] ruff clean: `ruff check src/ tests/`
 - [ ] mypy clean: `mypy src/camtasia`
 - [ ] Sphinx docs build: `cd docs && sphinx-build -b html . _build/html -W`

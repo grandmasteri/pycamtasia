@@ -8,7 +8,7 @@ All action-level gaps from the Deep Tutorial Analysis are implemented (325 compl
 
 _This section is the authoritative list of bugs reported by adversarial reviewers but not yet fixed. Add entries here immediately upon report. Mark `[verified]` or `[withdrawn: reason]` after verification. Remove entries after the fix is committed and CI is green._
 
-(none currently)
+- [ ] **split_clip() + transition interaction produces Camtasia-rejected output.** Reproduces reliably (3/3) with the integration test `TestAdvancedOperations::test_split_and_transition_opens`. When you add a transition between two clips, then call `split_clip()` on the clip that has the transition attached, saving produces a .tscproj that Camtasia rejects with 1 EXCEPTION in stderr. Root cause unknown — likely the split duplicates or stale-references the transition's `leftMedia`/`rightMedia` IDs. The test is marked `xfail(strict=True)` so the xfail removal will be automatic once fixed.
 
 ## TechSmith Tutorial Analysis
 
