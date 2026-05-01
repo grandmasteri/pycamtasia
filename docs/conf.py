@@ -6,8 +6,8 @@ import sys
 sys.path.insert(0, os.path.abspath("../src"))
 
 project = "pycamtasia"
-copyright = "2024, Sixty North AS"
-author = "Sixty North AS"
+copyright = "2019-2026, Isaac Douglas"
+author = "Isaac Douglas"
 
 extensions = [
     "sphinx.ext.autodoc",

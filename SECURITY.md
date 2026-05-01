@@ -13,12 +13,14 @@ and are not considered released software.
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-Report vulnerabilities through one of these private channels:
+Report vulnerabilities through GitHub's private channel:
 
-1. **GitHub Private Vulnerability Reporting** (preferred):
-   <https://github.com/grandmasteri/pycamtasia/security/advisories/new>
+**GitHub Private Vulnerability Reporting**:
+<https://github.com/grandmasteri/pycamtasia/security/advisories/new>
 
-2. **Email**: Send an encrypted report to `austin@sixty-north.com`.
+This is the only supported reporting channel. It's end-to-end private,
+creates an audit trail, and gives you a direct line to the maintainers
+without exposing details publicly before a fix is available.
 
 ### What to Include
 

@@ -12,7 +12,7 @@ license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = ["jsonpatch>=1.33,<2.0", 'typing_extensions>=4.0; python_version < "3.11"']
 authors = [
-    { name = "Sixty North AS", email = "austin@sixty-north.com" },
+    { name = "Isaac Douglas", email = "31323121+grandmasteri@users.noreply.github.com" },
 ]
 keywords = [
     "camtasia",

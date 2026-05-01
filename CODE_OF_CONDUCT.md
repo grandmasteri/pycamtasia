@@ -59,8 +59,9 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-austin@sixty-north.com.
+reported to the project maintainers via [GitHub's private vulnerability
+reporting](https://github.com/grandmasteri/pycamtasia/security/advisories/new)
+(for safety-critical issues) or by opening a private Discussion on GitHub.
 
 All complaints will be reviewed and investigated promptly and fairly.
 
