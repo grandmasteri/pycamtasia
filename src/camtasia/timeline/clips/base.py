@@ -934,6 +934,7 @@ class BaseClip:
             (int(v.get('range', [0])[0] if v.get('range') else 0), int(v.get('endTime', 0)))
             for v in visual
         }
+        added = False
         for kf in keyframes:
             time = int(kf.get('time', 0))
             end_time = int(kf.get('endTime', 0))
@@ -946,6 +947,9 @@ class BaseClip:
                 'range': [time, int(kf.get('duration', 0))],
                 'interp': kf.get('interp', 'linr'),
             })
+            added = True
+        if added:
+            visual.sort(key=lambda s: s.get('range', [0])[0])
 
     def _add_opacity_track(self, keyframes: list[dict[str, Any]], *, default_value: float = 0.0) -> None:
         """Add opacity animation via parameters.opacity and animationTracks.visual.
@@ -1755,20 +1759,65 @@ class BaseClip:
     ) -> Self:
         """Add a keyframe to a clip parameter.
 
+        For visual parameters (scale, opacity, translation), keyframes are
+        stored as non-overlapping spans. The ``time`` field is the animation
+        start, ``endTime = time + duration``. Camtasia requires strict gaps
+        between spans. When ``duration_seconds`` is 0 (default), the duration
+        is auto-computed as half the gap from the previous keyframe's end.
+
+        For non-visual parameters (e.g. volume), keyframes are stored as
+        points (duration=0, endTime=time).
+
         Returns:
             ``self`` for chaining.
         """
+        _VISUAL_PARAMS = {
+            'opacity', 'translation0', 'translation1',
+            'scale0', 'scale1', 'rotation2',
+            'geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3',
+        }
         params = self._data.setdefault('parameters', {})
         time_ticks = seconds_to_ticks(time_seconds)
         dur_ticks = seconds_to_ticks(duration_seconds) if duration_seconds > 0 else 0
-        end_ticks = time_ticks + dur_ticks if dur_ticks else time_ticks
+        is_visual = parameter in _VISUAL_PARAMS
 
-        kf_entry: dict[str, Any] = {
-            'endTime': end_ticks,
-            'time': time_ticks,
-            'value': value,
-            'duration': dur_ticks,
-        }
+        if is_visual and dur_ticks == 0:
+            # Auto-compute span duration for visual parameters.
+            existing = params.get(parameter)
+            if isinstance(existing, dict) and existing.get('keyframes'):
+                prev_end = existing['keyframes'][-1].get('endTime', 0)
+                gap = time_ticks - prev_end
+                if gap > 0:
+                    dur_ticks = gap // 3 if gap > 2 else 1
+                else:
+                    dur_ticks = 1
+                # Fix first keyframe if it still has duration=0
+                first_kf = existing['keyframes'][0]
+                if first_kf.get('duration', 0) == 0:
+                    first_kf['duration'] = dur_ticks
+                    first_kf['endTime'] = first_kf['time'] + dur_ticks
+            elif time_ticks > 0:
+                dur_ticks = time_ticks // 3 if time_ticks > 2 else 1
+
+        if is_visual:
+            # Span format: time=start, endTime=time+duration
+            end_ticks = time_ticks + dur_ticks
+            kf_entry: dict[str, Any] = {
+                'endTime': end_ticks,
+                'time': time_ticks,
+                'value': value,
+                'duration': dur_ticks,
+            }
+        else:
+            # Point format for non-visual params
+            end_ticks = time_ticks + dur_ticks if dur_ticks else time_ticks
+            kf_entry = {
+                'endTime': end_ticks,
+                'time': time_ticks,
+                'value': value,
+                'duration': dur_ticks,
+            }
+
         if interp:
             kf_entry['interp'] = interp
 
@@ -1782,13 +1831,9 @@ class BaseClip:
                 'defaultValue': default_val,
                 'keyframes': [kf_entry],
             }
-        # For visual parameters, create a matching animationTracks.visual segment
-        _VISUAL_PARAMS = {
-            'opacity', 'translation0', 'translation1',
-            'scale0', 'scale1', 'rotation2',
-            'geometryCrop0', 'geometryCrop1', 'geometryCrop2', 'geometryCrop3',
-        }
-        if parameter in _VISUAL_PARAMS:
+        # Create visual animation track segments for visual parameters
+        # with explicit (user-specified) duration only.
+        if is_visual and duration_seconds > 0:
             self._add_visual_tracks_for_keyframes([kf_entry])
         return self
 

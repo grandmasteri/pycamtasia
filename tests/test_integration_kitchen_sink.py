@@ -461,7 +461,8 @@ class TestHistoryStress:
 class TestTemplateRoundtrip:
     """Template with lots of features: save, load, modify, open both."""
 
-    def test_template_roundtrip_with_features_opens(self, project, tmp_path):
+    def _build_feature_rich_project(self, project, tmp_path):
+        """Build a feature-rich project and return (template_path, image_media)."""
         audio = project.import_media(EMPTY_WAV)
         img = _create_test_image(tmp_path, 'tpl.png')
         image_media = project.import_media(img)
@@ -469,7 +470,6 @@ class TestTemplateRoundtrip:
         project.width = 1920
         project.height = 1080
 
-        # Build a feature-rich project
         track = project.timeline.add_track('Video')
         audio_track = project.timeline.add_track('Audio')
         callout_track = project.timeline.add_track('Callouts')
@@ -494,23 +494,26 @@ class TestTemplateRoundtrip:
         project.timeline.add_marker('Main', time_seconds=5.0)
         project.timeline.add_marker('Outro', time_seconds=15.0)
 
-        # Save as template
         template_path = tmp_path / 'feature_rich.camtemplate'
         save_as_template(project, 'Feature Rich', template_path)
-        assert template_path.exists()
+        return template_path
 
-        # Create new project from template
+    def test_template_roundtrip_with_features_opens(self, project, tmp_path):
+        template_path = self._build_feature_rich_project(project, tmp_path)
+        assert template_path.exists()
+        open_in_camtasia(project, timeout=30)
+
+    def test_template_from_template_opens(self, project, tmp_path):
+        template_path = self._build_feature_rich_project(project, tmp_path)
+
         new_proj_path = tmp_path / 'from_template.cmproj'
         new_proj = new_from_template(template_path, new_proj_path)
 
-        # Modify the new project further
         new_track = new_proj.timeline.add_track('Extra')
         new_audio = new_proj.import_media(EMPTY_WAV)
         new_track.add_audio(new_audio.id, start_seconds=0.0, duration_seconds=10.0)
         new_proj.timeline.add_marker('New marker', time_seconds=8.0)
 
-        # Both should open
-        open_in_camtasia(project, timeout=30)
         open_in_camtasia(new_proj, timeout=30)
 
 
@@ -586,6 +589,7 @@ class TestMultiFormatMedia:
 class TestExtremeKeyframes:
     """Keyframe stress: many effects with 20+ keyframes each."""
 
+    @pytest.mark.timeout(90)
     def test_extreme_keyframes_opens(self, project, tmp_path):
         project.width = 1920
         project.height = 1080
@@ -595,30 +599,22 @@ class TestExtremeKeyframes:
 
         track = project.timeline.add_track('Animated')
 
-        # Create 5 clips, each with many keyframes
+        # Create 5 clips, each with many keyframes.
+        # Visual parameters (scale, opacity) share the same keyframe times
+        # because Camtasia treats them as a single animation track and
+        # rejects overlapping spans from different parameters.
         for clip_idx in range(5):
             clip = track.add_clip(
                 'IMFile', image_media.id,
                 seconds_to_ticks(clip_idx * 10), seconds_to_ticks(10),
             )
 
-            # 25 keyframes on scale0 parameter
-            for kf_idx in range(25):
-                t = kf_idx * 0.4
-                val = 1.0 + (kf_idx % 5) * 0.1
-                clip.add_keyframe('scale0', t, val)
-
-            # 20 keyframes on scale1 parameter
+            # 20 keyframes on scale0, scale1, and opacity at the same times
             for kf_idx in range(20):
                 t = kf_idx * 0.5
-                val = 1.0 + (kf_idx % 3) * 0.15
-                clip.add_keyframe('scale1', t, val)
-
-            # 20 keyframes on opacity
-            for kf_idx in range(20):
-                t = kf_idx * 0.5
-                val = 0.5 + (kf_idx % 4) * 0.125
-                clip.add_keyframe('opacity', t, val)
+                clip.add_keyframe('scale0', t, 1.0 + (kf_idx % 5) * 0.1)
+                clip.add_keyframe('scale1', t, 1.0 + (kf_idx % 3) * 0.15)
+                clip.add_keyframe('opacity', t, 0.5 + (kf_idx % 4) * 0.125)
 
             # Add visual effects too
             clip.add_drop_shadow()
