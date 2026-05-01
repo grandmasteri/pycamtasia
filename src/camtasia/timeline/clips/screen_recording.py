@@ -527,8 +527,8 @@ class ScreenIMFile(BaseClip):
         if before['time'] == ticks:
             # Already a keyframe at this time — insert a duplicate
             x, y, z = before['value']
-        elif before is after:  # pragma: no cover — before==after implies before['time']==ticks
-            x, y, z = before['value']
+        elif before is after:  # pragma: no cover
+            raise AssertionError('unreachable: before is after implies before[time]==ticks, handled above')
         else:
             # Linear interpolation
             span = after['time'] - before['time']
