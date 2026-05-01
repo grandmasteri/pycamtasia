@@ -396,10 +396,10 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/customize-your-cursor
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/device-frames/
 
-- [ ] **No built-in device frame Type presets / enum (tutorial has Type dropdown)** `src/camtasia/builders/device_frame.py` — `DeviceFrameType enum / preset catalog`
-- [ ] **No integration with TechSmith asset library / 'Download More' frames** `src/camtasia/builders/device_frame.py` — `library/preset-name resolver`
+- [x] **No built-in device frame Type presets / enum (tutorial has Type dropdown)** `src/camtasia/builders/device_frame.py` — `DeviceFrameType enum / preset catalog`
+- [x] **No integration with TechSmith asset library / 'Download More' frames** `src/camtasia/builders/device_frame.py` — `library/preset-name resolver`
 - [x] **Implemented as image overlay rather than Camtasia's native DeviceFrame visualEffect on the clip** `src/camtasia/builders/device_frame.py` — `emit visualEffects DeviceFrame entry on wrapped_clip`
-- [ ] **No auto-fit/snap of clip to canvas** `src/camtasia/builders/device_frame.py` — `add_device_frame fit_to_canvas param`
+- [x] **No auto-fit/snap of clip to canvas** `src/camtasia/builders/device_frame.py` — `add_device_frame fit_to_canvas param`
 - [x] **No remove_device_frame helper (tutorial's X icon)** `src/camtasia/builders/device_frame.py` — `remove_device_frame`
 
 ### Add a Dynamic Background
