@@ -1744,9 +1744,9 @@ class TestClearAllKeyframesAnimationTracks:
 
 
 class TestMediaMattePresetName:
-    """add_media_matte default preset_name should be 'Luminosity'."""
+    """add_media_matte default preset_name should derive from matte_mode."""
 
-    def test_default_preset_name_is_luminosity(self):
+    def test_default_preset_name_derives_from_mode(self):
         clip = BaseClip({
             '_type': 'VMFile', 'id': 1, 'start': 0, 'duration': EDIT_RATE,
             'mediaDuration': EDIT_RATE, 'scalar': 1, 'parameters': {},
@@ -1754,7 +1754,8 @@ class TestMediaMattePresetName:
         })
         clip.add_media_matte()
         eff = clip._data['effects'][-1]
-        assert eff['metadata']['presetName'] == 'Media Matte Luminosity'
+        # Default matte_mode=1 (Alpha), so preset should be 'Media Matte Alpha'
+        assert eff['metadata']['presetName'] == 'Media Matte Alpha'
 
 
 # ------------------------------------------------------------------

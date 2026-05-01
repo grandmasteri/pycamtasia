@@ -46,7 +46,7 @@ class TestExtendClipRipple:
     def test_ripple_raises_on_nonpositive_duration(self, project):
         track = project.timeline.get_or_create_track('T')
         c1 = track.add_image(0, start_seconds=0.0, duration_seconds=2.0)
-        with pytest.raises(ValueError, match='non-positive'):
+        with pytest.raises(ValueError, match='negative'):
             track.extend_clip(c1.id, extend_seconds=-3.0, ripple=True)
 
     def test_extend_clip_to_delegates_without_ripple(self, project):
