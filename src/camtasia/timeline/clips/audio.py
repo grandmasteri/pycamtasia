@@ -61,6 +61,16 @@ class AMFile(BaseClip):
         self._data.setdefault('attributes', {})['loudnessNormalization'] = value
 
     @property
+    def mix_to_mono(self) -> bool:
+        """Whether stereo audio is mixed down to mono."""
+        return bool(self.attributes.get('mixToMono', False))
+
+    @mix_to_mono.setter
+    def mix_to_mono(self, value: bool) -> None:
+        """Set whether stereo audio is mixed down to mono."""
+        self._data.setdefault('attributes', {})['mixToMono'] = value
+
+    @property
     def is_muted(self) -> bool:
         """Whether the clip's gain or volume is zero."""
         return self.gain == 0.0 or self.volume == 0.0

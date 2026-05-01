@@ -83,19 +83,29 @@ def delete_favorite(name: str, favorites_dir: Path | None = None) -> None:
     path.unlink()
 
 
-def _text_attributes(text: str, font_name: str, font_weight: str | int, font_size: float, font_color: Color) -> list[dict]:
+def _text_attributes(
+    text: str,
+    font_name: str,
+    font_weight: str | int,
+    font_size: float,
+    font_color: Color,
+    *,
+    italic: bool = False,
+    underline: bool = False,
+    strikethrough: bool = False,
+) -> list[dict]:
     """Build the 8 standard text attribute dicts for Camtasia."""
     text_len = len(text)
     fg_color = f"({round(font_color.red*255)},{round(font_color.green*255)},{round(font_color.blue*255)},{round(font_color.opacity*255)})"
     weight_int = _WEIGHT_MAP.get(font_weight, 400) if isinstance(font_weight, str) else int(font_weight)
     return [
-        {"name": "underline", "rangeEnd": text_len, "rangeStart": 0, "value": 0, "valueType": "int"},
+        {"name": "underline", "rangeEnd": text_len, "rangeStart": 0, "value": int(underline), "valueType": "int"},
         {"name": "fontSize", "rangeEnd": text_len, "rangeStart": 0, "value": font_size, "valueType": "double"},
         {"name": "fontName", "rangeEnd": text_len, "rangeStart": 0, "value": font_name, "valueType": "string"},
         {"name": "kerning", "rangeEnd": text_len, "rangeStart": 0, "value": 0.0, "valueType": "double"},
-        {"name": "strikethrough", "rangeEnd": text_len, "rangeStart": 0, "value": 0, "valueType": "int"},
+        {"name": "strikethrough", "rangeEnd": text_len, "rangeStart": 0, "value": int(strikethrough), "valueType": "int"},
         {"name": "fontWeight", "rangeEnd": text_len, "rangeStart": 0, "value": weight_int, "valueType": "int"},
-        {"name": "fontItalic", "rangeEnd": text_len, "rangeStart": 0, "value": 0, "valueType": "int"},
+        {"name": "fontItalic", "rangeEnd": text_len, "rangeStart": 0, "value": int(italic), "valueType": "int"},
         {"name": "fgColor", "rangeEnd": text_len, "rangeStart": 0, "value": fg_color, "valueType": "color"},
     ]
 
@@ -109,9 +119,18 @@ def text(text,
          width=400.0,
          horizontal_alignment=HorizontalAlignment.Center,
          vertical_alignment=VerticalAlignment.Center,
-         line_spacing=0.0
+         line_spacing=0.0,
+         italic=False,
+         underline=False,
+         strikethrough=False,
          ):
-    """Create a text callout annotation dict."""
+    """Create a text callout annotation dict.
+
+    Args:
+        italic: Enable italic text.
+        underline: Enable underlined text.
+        strikethrough: Enable strikethrough text.
+    """
     if font_color is None:
         font_color = Color(1.0, 1.0, 1.0)
     return {
@@ -142,7 +161,10 @@ def text(text,
                 {
                     "endTime": 0,
                     "time": 0,
-                    "value": _text_attributes(text, font_name, font_weight, font_size, font_color),
+                    "value": _text_attributes(
+                        text, font_name, font_weight, font_size, font_color,
+                        italic=italic, underline=underline, strikethrough=strikethrough,
+                    ),
                     "duration": 0
                 }
             ]
@@ -164,8 +186,21 @@ def square(text,
            width=350.0,
            horizontal_alignment=HorizontalAlignment.Center,
            vertical_alignment=VerticalAlignment.Center,
-           line_spacing=0.0):
-    """Create a square text callout annotation dict."""
+           line_spacing=0.0,
+           corner_radius=0.0,
+           drop_shadow=False,
+           italic=False,
+           underline=False,
+           strikethrough=False):
+    """Create a square text callout annotation dict.
+
+    Args:
+        corner_radius: Corner radius in points (0.0 = sharp corners).
+        drop_shadow: Enable drop shadow on the callout.
+        italic: Enable italic text.
+        underline: Enable underlined text.
+        strikethrough: Enable strikethrough text.
+    """
     if font_color is None:
         font_color = Color(0.0, 0.0, 0.0)
     if fill_color is None:
@@ -176,7 +211,8 @@ def square(text,
         "kind": "remix",
         "shape": "text-rectangle",
         "style": "basic",
-        "corner-radius": 0.0,
+        "corner-radius": float(corner_radius),
+        "hasDropShadow": 1.0 if drop_shadow else 0.0,
         "fill-color-blue": fill_color.blue,
         "fill-color-green": fill_color.green,
         "fill-color-opacity": fill_color.opacity,
@@ -214,11 +250,55 @@ def square(text,
                 {
                     "endTime": 0,
                     "time": 0,
-                    "value": _text_attributes(text, font_name, font_weight, font_size, font_color),
+                    "value": _text_attributes(
+                        text, font_name, font_weight, font_size, font_color,
+                        italic=italic, underline=underline, strikethrough=strikethrough,
+                    ),
                     "duration": 0
                 }
             ]
         }
+    }
+
+
+def line(
+    *,
+    tail: tuple[float, float] = (0, 0),
+    head: tuple[float, float] = (100, 0),
+    stroke_color: Color | None = None,
+    width: float = 3.0,
+) -> dict:
+    """Create a line annotation dict (no arrowhead).
+
+    Args:
+        tail: (x, y) start point.
+        head: (x, y) end point.
+        stroke_color: Line color. Defaults to red.
+        width: Stroke width in points.
+
+    Returns:
+        Annotation definition dict.
+    """
+    if stroke_color is None:
+        stroke_color = Color(1.0, 0.0, 0.0)
+    return {
+        'kind': 'remix',
+        'shape': 'arrow',
+        'style': 'line',
+        'tail-x': tail[0],
+        'tail-y': tail[1],
+        'head-x': head[0],
+        'head-y': head[1],
+        'stroke-color-red': stroke_color.red,
+        'stroke-color-green': stroke_color.green,
+        'stroke-color-blue': stroke_color.blue,
+        'stroke-color-opacity': stroke_color.opacity,
+        'stroke-width': float(width),
+        'fill-color-red': stroke_color.red,
+        'fill-color-green': stroke_color.green,
+        'fill-color-blue': stroke_color.blue,
+        'fill-color-opacity': stroke_color.opacity,
+        'fill-style': 'solid',
     }
 
 
@@ -295,12 +375,14 @@ def keystroke_callout(
     keys: str,
     *,
     font_size: float = 24.0,
+    drop_shadow: bool = False,
 ) -> dict:
     """Create a keystroke callout annotation dict.
 
     Args:
         keys: Key combination string (e.g. 'Ctrl+C', 'Cmd+Shift+S').
         font_size: Font size for the keystroke text.
+        drop_shadow: Enable drop shadow on the callout.
     """
     font_color = Color(1.0, 1.0, 1.0)
     return {
@@ -310,7 +392,7 @@ def keystroke_callout(
         'text': keys,
         'corner-radius': 5.0,
         'enable-ligatures': 0.0,
-        'hasDropShadow': 0.0,
+        'hasDropShadow': 1.0 if drop_shadow else 0.0,
         'width': 400.0,
         'height': 100.0,
         'word-wrap': 1.0,
