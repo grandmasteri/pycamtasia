@@ -378,9 +378,9 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/cursor-effects/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/customize-your-cursor-path/
 
-- [ ] **No per-keyframe Line Type (straight vs curved/bezier) in set_cursor_location_keyframes** `src/camtasia/timeline/clips/screen_recording.py` — `set_cursor_location_keyframes(line_types=...)`
-- [ ] **No bezier tangent handle control for cursor path points** `src/camtasia/timeline/clips/screen_recording.py` — `bezier handles param`
-- [ ] **No per-point easing dropdown equivalent (only global 'linr')** `src/camtasia/timeline/clips/screen_recording.py` — `per-point easing`
+- [x] **No per-keyframe Line Type (straight vs curved/bezier) in set_cursor_location_keyframes** `src/camtasia/timeline/clips/screen_recording.py` — `set_cursor_location_keyframes(line_types=...)`
+- [x] **No bezier tangent handle control for cursor path points** `src/camtasia/timeline/clips/screen_recording.py` — `bezier handles param`
+- [x] **No per-point easing dropdown equivalent (only global 'linr')** `src/camtasia/timeline/clips/screen_recording.py` — `per-point easing`
 - [x] **No add_cursor_point(time,x,y) helper** `src/camtasia/timeline/clips/screen_recording.py` — `add_cursor_point`
 - [x] **No delete_cursor_point helper** `src/camtasia/timeline/clips/screen_recording.py` — `delete_cursor_point`
 - [x] **No move_cursor_point helper** `src/camtasia/timeline/clips/screen_recording.py` — `move_cursor_point`
