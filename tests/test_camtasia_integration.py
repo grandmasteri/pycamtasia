@@ -198,17 +198,16 @@ class TestNewEffects:
 
 class TestAdvancedOperations:
     @pytest.mark.integration
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "Library bug: split_clip() on a clip that has a transition attached "
-            "produces a .tscproj that Camtasia rejects with 1 exception. The "
-            "previous XPASS observations were parallel-execution artifacts. "
-            "Tracked in ROADMAP.md as a Pending Bug."
-        ),
-    )
     def test_split_and_transition_opens(self, project):
-        """Project with split clip and transition opens without exceptions."""
+        """Project with split clip and transition opens without exceptions.
+
+        Regression test for a previously-known library bug where
+        split_clip() on a clip with an attached transition produced a
+        .tscproj that Camtasia rejected. Fixed as a side-effect of the
+        keyframe format fix (commit 954af9c) and related ripple/split
+        improvements — the root cause was invalid keyframe structures
+        on the transition's animation parameters.
+        """
         media = project.import_media(EMPTY_WAV)
         track = project.timeline.add_track('Audio')
         c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=4.0)

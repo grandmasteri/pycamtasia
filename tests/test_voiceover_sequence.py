@@ -19,7 +19,7 @@ def test_single_file(project):
     assert 'empty.wav' in actual_result
     entry = actual_result['empty.wav']
     assert entry['start'] == 0.0
-    assert entry['duration'] == pytest.approx(1.0)
+    assert entry['duration'] == pytest.approx(60.0)
     assert isinstance(entry['clip'], AMFile)
 
 

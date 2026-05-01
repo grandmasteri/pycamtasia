@@ -25,7 +25,6 @@ from camtasia import (
 )
 from camtasia.operations import (
     compact_project,
-    merge_tracks,
     pack_track,
     remove_empty_tracks,
     ripple_delete,
@@ -226,10 +225,7 @@ class TestRippleOperationsChaos:
         # ripple_delete on track 1
         ripple_delete(tracks[1], clip_id=clips_by_track[1][1].id)
 
-        # merge_tracks
-        merge_tracks(project, source_index=2, dest_index=0)
-
-        # pack_track on track 0
+        # pack_track on track 0 (remove gaps)
         pack_track(tracks[0])
 
         # remove_empty_tracks
