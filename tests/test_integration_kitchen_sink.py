@@ -219,8 +219,9 @@ class TestRippleOperationsChaos:
         # ripple_move on track 1
         ripple_move(tracks[1], clip_id=clips_by_track[1][0].id, delta_seconds=6.0)
 
-        # split_clip on track 0
-        tracks[0].split_clip(clips_by_track[0][1].id, split_at_seconds=5.0)
+        # split_clip on track 0 (after ripple_insert of 2.0s at 1.5s, clip[1]
+        # now starts at 5.0s and ends at 8.0s. Split at midpoint 6.5s.)
+        tracks[0].split_clip(clips_by_track[0][1].id, split_at_seconds=6.5)
 
         # ripple_delete on track 1
         ripple_delete(tracks[1], clip_id=clips_by_track[1][1].id)
@@ -245,15 +246,12 @@ class TestGroupTransitionBehaviorInteractions:
     """Known tricky combinations of groups, transitions, behaviors."""
 
     def test_group_transition_behavior_interactions_opens(self, project, tmp_path):
-        img = _create_test_image(tmp_path, 'slide.png')
-        image_media = project.import_media(img)
-
         track = project.timeline.add_track('Content')
 
-        # Create 3 clips
-        c1 = track.add_clip('IMFile', image_media.id, seconds_to_ticks(0), seconds_to_ticks(5))
-        c2 = track.add_clip('IMFile', image_media.id, seconds_to_ticks(5), seconds_to_ticks(5))
-        c3 = track.add_clip('IMFile', image_media.id, seconds_to_ticks(10), seconds_to_ticks(5))
+        # Create 3 callouts (callouts support behaviors; image clips don't)
+        c1 = track.add_callout('First', start_seconds=0.0, duration_seconds=5.0)
+        c2 = track.add_callout('Second', start_seconds=5.0, duration_seconds=5.0)
+        c3 = track.add_callout('Third', start_seconds=10.0, duration_seconds=5.0)
 
         # Add transition between clips 1 and 2
         track.add_transition(
@@ -731,12 +729,11 @@ class TestMultiGroupNestedOperations:
         track_b = project.timeline.add_track('Track B')
         track_c = project.timeline.add_track('Track C')
 
-        # Create clips on track A and group them
+        # Create callouts on track A and group them (callouts support behaviors)
         a_clips = []
         for i in range(4):
-            c = track_a.add_clip(
-                'IMFile', image_media.id,
-                seconds_to_ticks(i * 4), seconds_to_ticks(4),
+            c = track_a.add_callout(
+                f'Slide {i}', start_seconds=i * 4.0, duration_seconds=4.0,
             )
             a_clips.append(c)
 

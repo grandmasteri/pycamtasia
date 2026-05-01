@@ -104,9 +104,10 @@ class TestCsvExport:
         open_in_camtasia(project)
 
     def test_csv_include_nested_true_vs_false(self, project, tmp_path):
-        track = project.timeline.get_or_create_track('Video')
-        c1 = track.add_clip('VMFile', 1, 0, seconds_to_ticks(5.0))
-        c2 = track.add_clip('VMFile', 1, seconds_to_ticks(5.0), seconds_to_ticks(5.0))
+        media = project.import_media(EMPTY_WAV)
+        track = project.timeline.add_track('Audio')
+        c1 = track.add_audio(media.id, start_seconds=0.0, duration_seconds=5.0)
+        c2 = track.add_audio(media.id, start_seconds=5.0, duration_seconds=5.0)
         track.group_clips([c1.id, c2.id])
 
         nested_path = tmp_path / 'nested.csv'
