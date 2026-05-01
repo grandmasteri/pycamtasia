@@ -112,6 +112,8 @@ class TestFreezeFrame:
         track = project.timeline.add_track('Content')
         clip = track.add_image(media.id, start_seconds=0.0, duration_seconds=5.0)
         track.add_freeze_frame(clip, at_seconds=2.0, freeze_duration_seconds=3.0)
+        # Trim source clip to end at freeze start so clips don't overlap
+        track.trim_clip(clip.id, trim_end_seconds=3.0)
         open_in_camtasia(project)
 
 
@@ -121,7 +123,7 @@ class TestExportedFrame:
         img = _create_test_image(tmp_path)
         media = project.import_media(img)
         track = project.timeline.add_track('Content')
-        clip = track.add_image(media.id, start_seconds=0.0, duration_seconds=5.0)
+        clip = track.add_image(media.id, start_seconds=0.0, duration_seconds=2.0)
         track.add_exported_frame(clip.id, at_seconds=2.0)
         open_in_camtasia(project)
 
