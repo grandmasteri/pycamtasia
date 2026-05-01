@@ -261,9 +261,15 @@ class Track:
 
     @magnetic.setter
     def magnetic(self, value: bool) -> None:
-        """Set whether magnetic clip snapping is enabled."""
+        """Set whether magnetic clip snapping is enabled.
+
+        When set to ``True``, immediately packs the track to close gaps.
+        """
         self._attributes['magnetic'] = value
         self._data['magnetic'] = value
+        if value:
+            from camtasia.operations.layout import pack_track
+            pack_track(self)
 
     @property
     def solo(self) -> bool:
@@ -539,6 +545,16 @@ class Track:
         # Enforce valid ID — clone() sets id=-1 as a sentinel
         if record['id'] == -1:
             record['id'] = self._next_clip_id()
+
+        # Magnetic track: ripple-insert to make room for the new clip
+        if self.magnetic:
+            from camtasia.operations.layout import ripple_insert
+            from camtasia.timing import ticks_to_seconds
+            ripple_insert(
+                self,
+                ticks_to_seconds(start),
+                ticks_to_seconds(duration),
+            )
 
         self._data.setdefault('medias', []).append(record)
         return clip_from_dict(record)
@@ -1176,14 +1192,11 @@ class Track:
     def join_clips(self, clip_ids: list[int]) -> BaseClip:
         """Join the specified clips into a single StitchedMedia compound.
 
-        The clips must be adjacent on this track. They are removed from
-        the track and placed inside a new StitchedMedia whose inner
-        segments are laid out back-to-back, preserving their original
-        durations and source references.
-
-        Unlike :meth:`group_clips` (which creates a spatial container),
-        join_clips creates a temporal compound where the segments play
-        as a single continuous media source.
+        The clips must be adjacent on this track and share the same
+        source (``src`` ID). They are removed from the track and placed
+        inside a new StitchedMedia whose inner segments are laid out
+        back-to-back, preserving their original durations and source
+        references.
 
         Args:
             clip_ids: IDs of clips to join. Must all exist on this track.
@@ -1193,7 +1206,8 @@ class Track:
 
         Raises:
             KeyError: No clips found with the given IDs.
-            ValueError: Fewer than 2 clips supplied.
+            ValueError: Fewer than 2 clips, clips not adjacent, or
+                clips have different sources.
         """
         from camtasia.timeline.timeline import _remap_clip_ids_with_map
         if len(clip_ids) < 2:
@@ -1211,6 +1225,24 @@ class Track:
 
         # Sort by timeline start so the stitched inner segments play in order
         clips_to_join.sort(key=lambda c: int(c.get('start', 0)))
+
+        # Validate same source
+        src_ids = {c.get('src') for c in clips_to_join}
+        if len(src_ids) > 1:
+            raise ValueError(
+                f'All clips must share the same source, got src IDs: {sorted(str(s) for s in src_ids)}'
+            )
+
+        # Validate adjacency: clip[i].end == clip[i+1].start
+        for i in range(len(clips_to_join) - 1):
+            end_i = int(clips_to_join[i].get('start', 0)) + int(clips_to_join[i].get('duration', 0))
+            start_next = int(clips_to_join[i + 1].get('start', 0))
+            if end_i != start_next:
+                raise ValueError(
+                    f'Clips must be adjacent: clip {clips_to_join[i].get("id")} ends at '
+                    f'tick {end_i} but clip {clips_to_join[i + 1].get("id")} starts at '
+                    f'tick {start_next}'
+                )
         earliest_start = int(clips_to_join[0].get('start', 0))
         total_duration = sum(int(c.get('duration', 0)) for c in clips_to_join)
 
@@ -1248,6 +1280,60 @@ class Track:
         }
         self._data.setdefault('medias', []).append(stitched_record)
         return clip_from_dict(stitched_record)
+
+    def unstitch_clip(self, clip_id: int) -> list[BaseClip]:
+        """Dissolve a StitchedMedia back into its individual segments.
+
+        The StitchedMedia is removed and each nested segment is placed
+        on this track at the correct timeline position.
+
+        Args:
+            clip_id: ID of the StitchedMedia clip to unstitch.
+
+        Returns:
+            List of clips placed on the track.
+
+        Raises:
+            KeyError: No clip with the given ID.
+            TypeError: Clip is not a StitchedMedia.
+        """
+        medias: list[dict[str, Any]] = self._data.get('medias', [])
+        target: dict[str, Any] | None = None
+        for m in medias:
+            if m.get('id') == clip_id:
+                target = m
+                break
+        if target is None:
+            raise KeyError(f'No clip with id={clip_id}')
+        if target.get('_type') != 'StitchedMedia':
+            raise TypeError(f'Clip {clip_id} is {target.get("_type")}, not StitchedMedia')
+
+        parent_start = int(target.get('start', 0))
+        inner_medias = target.get('medias', [])
+        placed: list[BaseClip] = []
+        for seg in inner_medias:
+            restored = copy.deepcopy(seg)
+            restored['start'] = parent_start + int(seg.get('start', 0))
+            restored['id'] = self._next_clip_id()
+            _propagate_start_to_unified(restored)
+            self._data.setdefault('medias', []).append(restored)
+            placed.append(clip_from_dict(restored))
+        self.remove_clip(clip_id)
+        return placed
+
+    def stitch_adjacent(self, clip_ids: list[int]) -> BaseClip:
+        """Join clips with automatic adjacency sorting.
+
+        Sorts the given clips by start time and delegates to
+        :meth:`join_clips`, which validates adjacency and same-source.
+
+        Args:
+            clip_ids: IDs of clips to stitch.
+
+        Returns:
+            The newly created StitchedMedia clip.
+        """
+        return self.join_clips(clip_ids)
 
     def add_screen_recording(
         self,
@@ -1601,7 +1687,7 @@ class Track:
         delta = target_duration_seconds - clip.duration_seconds
         self.extend_clip(clip_id, extend_seconds=delta)
 
-    def extend_clip(self, clip_id: int, *, extend_seconds: float) -> None:
+    def extend_clip(self, clip_id: int, *, extend_seconds: float, ripple: bool = False) -> None:
         """Extend or shorten a clip's duration.
 
         Positive values extend, negative values shorten.
@@ -1609,11 +1695,17 @@ class Track:
         Args:
             clip_id: ID of the clip to extend.
             extend_seconds: Seconds to add (positive) or remove (negative).
+            ripple: When ``True``, push following clips forward (or pull
+                them backward) by the extension amount.
 
         Raises:
             KeyError: Clip not found.
             ValueError: Would result in zero or negative duration.
         """
+        if ripple:
+            from camtasia.operations.layout import ripple_extend
+            ripple_extend(self, clip_id, extend_seconds)
+            return
         extend = seconds_to_ticks(extend_seconds)
         for m in self._data.get('medias', []):
             if m.get('id') == clip_id:
@@ -2170,6 +2262,8 @@ class Track:
     def move_clip(self, clip_id: int, new_start_seconds: float) -> None:
         """Move a clip to a new timeline position.
 
+        If the track is magnetic, the track is re-packed after the move.
+
         Args:
             clip_id: ID of the clip to move.
             new_start_seconds: New start position in seconds.
@@ -2184,6 +2278,9 @@ class Track:
                     t for t in transitions
                     if t.get('leftMedia') != clip_id and t.get('rightMedia') != clip_id
                 ]
+                if self.magnetic:
+                    from camtasia.operations.layout import pack_track
+                    pack_track(self)
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
