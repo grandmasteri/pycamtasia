@@ -129,7 +129,8 @@ class TestTemplateRoundTrip:
         # Create project from template, modify it
         proj2 = operations.new_from_template(tpl1, tmp_path / 'modified.cmproj')
         extra_track = proj2.timeline.add_track('Extra')
-        extra_track.add_clip('AMFile', 1, 0, seconds_to_ticks(2))
+        media2 = proj2.import_media(EMPTY_WAV)
+        extra_track.add_audio(media2.id, start_seconds=0.0, duration_seconds=2.0)
 
         # Save modified project as a new template
         tpl2 = tmp_path / 'v2.camtemplate'
