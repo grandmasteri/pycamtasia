@@ -191,3 +191,75 @@ for issue in issues:
 if not issues:
     proj.save()
 ```
+
+## Add an audio visualizer effect
+
+```python
+from camtasia import load_project
+
+proj = load_project("my-video.cmproj")
+audio_clip = proj.timeline.tracks[1].clips[0]
+audio_clip.add_audio_visualizer()
+audio_clip.mix_to_mono = True
+proj.save()
+```
+
+## Iterate Audiate transcript words
+
+```python
+from camtasia.audiate import AudiateProject
+
+audiate = AudiateProject("recording.audiate")
+for word in audiate.transcript.words:
+    print(f"{word.text} @ {word.start:.2f}s")
+```
+
+## Save and list dynamic caption presets
+
+```python
+from camtasia.timeline.captions import (
+    DynamicCaptionStyle,
+    save_dynamic_caption_preset,
+    list_dynamic_caption_presets,
+)
+
+style = DynamicCaptionStyle(
+    name="my_style",
+    font_name="Montserrat",
+    font_size=48,
+    highlight_color=(255, 255, 0, 255),
+)
+save_dynamic_caption_preset(style)
+print(list_dynamic_caption_presets())
+```
+
+## Create a sketch-motion callout and save as favorite
+
+```python
+from camtasia.annotations.callouts import (
+    sketch_motion_callout,
+    save_as_favorite,
+    list_favorites,
+)
+
+callout = sketch_motion_callout(
+    shape="circle",
+    color=(1, 0, 0, 1),
+    stroke_width=4.0,
+    draw_time_seconds=1.0,
+)
+save_as_favorite(callout, "red_circle")
+print(list_favorites())
+```
+
+## Export a library archive
+
+```python
+from camtasia.library import Library
+from camtasia.library.libzip import export_libzip
+from pathlib import Path
+
+lib = Library("my_library")
+lib.add_asset(clip._data, name="intro_clip")
+export_libzip(lib, Path("my_library.libzip"))
+```

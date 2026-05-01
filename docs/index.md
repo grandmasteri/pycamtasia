@@ -39,7 +39,6 @@ guides/transcripts
 guides/camtasia-rev
 guides/undo-redo
 guides/type-safety
-guides/whats-new
 ```
 
 ## API Reference
