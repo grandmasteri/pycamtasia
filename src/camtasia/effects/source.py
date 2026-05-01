@@ -1,7 +1,21 @@
 """Source effects for shader videos."""
 from __future__ import annotations
 
+from typing import Any
+
 from camtasia.effects.base import Effect, register_effect
+
+#: Mapping from Camtasia UI labels to internal parameter key prefixes.
+UI_ALIASES: dict[str, str] = {
+    'Background Color': 'Color0',
+    'Accent Color': 'Color1',
+    'Tertiary Color': 'Color2',
+    'Quaternary Color': 'Color3',
+    'Mid Point': 'MidPoint',
+    'Mid Point X': 'MidPointX',
+    'Mid Point Y': 'MidPointY',
+    'Speed': 'Speed',
+}
 
 
 @register_effect("SourceEffect")
@@ -146,6 +160,41 @@ class SourceEffect(Effect):
             return str(self.get_parameter("sourceFileType"))
         except KeyError:
             return None
+
+    def get_ui_property(self, label: str) -> Any:
+        """Get a parameter value using its Camtasia UI label.
+
+        Args:
+            label: UI label from :data:`UI_ALIASES` (e.g. ``'Background Color'``).
+
+        Returns:
+            The parameter value.  For color labels, returns the RGBA tuple.
+
+        Raises:
+            KeyError: If *label* is not a recognised UI alias.
+        """
+        key = UI_ALIASES[label]
+        if key.startswith('Color'):
+            idx = int(key.replace('Color', ''))
+            return self._get_color(idx)
+        return self.get_parameter(key)
+
+    def set_ui_property(self, label: str, value: Any) -> None:
+        """Set a parameter value using its Camtasia UI label.
+
+        Args:
+            label: UI label from :data:`UI_ALIASES` (e.g. ``'Speed'``).
+            value: The value to set.  For color labels, pass an RGBA tuple.
+
+        Raises:
+            KeyError: If *label* is not a recognised UI alias.
+        """
+        key = UI_ALIASES[label]
+        if key.startswith('Color'):
+            idx = int(key.replace('Color', ''))
+            self._set_color(idx, value)
+        else:
+            self.set_parameter(key, value)
 
     def set_shader_colors(self, *colors: tuple[int, int, int]) -> None:
         """Set shader colours from 0-255 RGB tuples.

@@ -34,6 +34,7 @@ from camtasia.operations.layout import (
 from camtasia.operations.merge import merge_tracks
 from camtasia.operations.slide_markers import mark_slides_from_presentation
 from camtasia.operations.speed import rescale_project, set_audio_speed
+from camtasia.operations.stitch import auto_stitch_on_track
 from camtasia.operations.sync import (
     SyncSegment,
     apply_sync,
@@ -66,6 +67,7 @@ __all__ = [
     "apply_to_all_tracks",
     "apply_to_clips",
     "apply_to_track",
+    "auto_stitch_on_track",
     "clone_project_structure",
     "compact_project",
     "delete_words_from_timeline",
