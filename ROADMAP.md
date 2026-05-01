@@ -92,7 +92,7 @@ Review each official Camtasia tutorial to extract insights about features pycamt
 - [already-implemented] [Add a Transition](https://www.techsmith.com/learn/tutorials/camtasia/video-transitions/) — timeline/transitions.py TransitionList with add, add_fade, add_card_flip, add_glitch, add_linear_blur, add_stretch, add_paint_arcs
 - [already-implemented] [Animations In-Depth](https://www.techsmith.com/learn/tutorials/camtasia/animations-in-depth/) — animation_tracks, _add_visual_tracks_for_keyframes, _add_opacity_track, set_scale_keyframes, set_position_keyframes, fade_in/fade_out
 - [deferred: needs fixture] [Add Movement to Any Object (Motion Paths)](https://www.techsmith.com/learn/tutorials/camtasia/motion-path/) — set_position_keyframes supports linear movement; no bezier/curved motion paths or easing presets
-- [already-implemented] [Blur or Mask a Video](https://www.techsmith.com/learn/tutorials/camtasia/blur-mask-video/) — Mask effect with shape/opacity/blend/invert/rotation/size/position/corner-radius; BlurRegion (unregistered); add_motion_blur
+- [already-implemented] [Blur or Mask a Video](https://www.techsmith.com/learn/tutorials/camtasia/blur-mask-video/) — Mask effect with shape/opacity/blend/invert/rotation/size/position/corner-radius; BlurRegion (registered with color/shape/feather/opacity/ease/position props); add_motion_blur
 - [already-implemented] [Animate Text & Images with Behaviors](https://www.techsmith.com/learn/tutorials/camtasia/animation-behaviors/) — effects/behaviors.py GenericBehaviorEffect with BehaviorPhase; callout add_behavior; templates/behavior_presets
 - [already-implemented] [Create Stunning Animations with Media Mattes](https://www.techsmith.com/learn/tutorials/camtasia/animations-with-media-mattes/) — effects/visual.py MediaMatte; BaseClip.add_media_matte builder
 
@@ -252,13 +252,13 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/basic-video-edits/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/blur-mask-video/
 
-- [ ] **BlurRegion not registered via @register_effect and unverified against fixtures** `src/camtasia/effects/visual.py` — `@register_effect('BlurRegion') decorator`
-- [ ] **BlurRegion missing Tint color RGB (only color-alpha exposed)** `src/camtasia/effects/visual.py` — `BlurRegion.color property`
-- [ ] **BlurRegion missing Shape parameter (Oval vs Rectangle)** `src/camtasia/effects/visual.py` — `BlurRegion.shape property`
-- [ ] **BlurRegion missing Feather/edge-softness slider** `src/camtasia/effects/visual.py` — `BlurRegion.feather or mask_blend`
-- [ ] **BlurRegion missing Opacity slider** `src/camtasia/effects/visual.py` — `BlurRegion.opacity`
-- [ ] **BlurRegion missing Ease In/Ease Out controls** `src/camtasia/effects/visual.py` — `BlurRegion.ease_in/ease_out`
-- [ ] **BlurRegion missing positional/dimension params for moving-blur keyframes** `src/camtasia/effects/visual.py` — `BlurRegion.mask_width/height/position_x/position_y`
+- [x] **BlurRegion not registered via @register_effect and unverified against fixtures** `src/camtasia/effects/visual.py` — `@register_effect('BlurRegion') decorator`
+- [x] **BlurRegion missing Tint color RGB (only color-alpha exposed)** `src/camtasia/effects/visual.py` — `BlurRegion.color property`
+- [x] **BlurRegion missing Shape parameter (Oval vs Rectangle)** `src/camtasia/effects/visual.py` — `BlurRegion.shape property`
+- [x] **BlurRegion missing Feather/edge-softness slider** `src/camtasia/effects/visual.py` — `BlurRegion.feather or mask_blend`
+- [x] **BlurRegion missing Opacity slider** `src/camtasia/effects/visual.py` — `BlurRegion.opacity`
+- [x] **BlurRegion missing Ease In/Ease Out controls** `src/camtasia/effects/visual.py` — `BlurRegion.ease_in/ease_out`
+- [x] **BlurRegion missing positional/dimension params for moving-blur keyframes** `src/camtasia/effects/visual.py` — `BlurRegion.mask_width/height/position_x/position_y`
 - [x] **No animate_to helper for Mask/BlurRegion keyframes** `src/camtasia/effects/visual.py` — `Mask.animate_to(time, x, y, w, h)`
 
 ### Speed Up Editing with Camtasia Audiate
@@ -718,7 +718,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/visual-effects/
 - [x] **Background Removal (AI, non-green-screen) distinct from ChromaKey** `src/camtasia/effects/visual.py` — `add @register_effect("BackgroundRemoval") class`
 - [ ] **Freeze Region (freeze a sub-region of the clip)** `src/camtasia/effects/visual.py` — `add @register_effect("FreezeRegion") class with positionX/positionY/width/height parameters`
 - [x] **Motion Path as visual effect** `src/camtasia/effects/visual.py` — `add @register_effect("MotionPath") class with path keyframes`
-- [ ] **BlurRegion defined but not registered** `src/camtasia/effects/visual.py` — `add @register_effect("BlurRegion") decorator to existing class after fixture verification`
+- [x] **BlurRegion defined but not registered** `src/camtasia/effects/visual.py` — `add @register_effect("BlurRegion") decorator to existing class after fixture verification`
 
 _Total: 139 remaining gaps (170 implemented) across 54 tutorials (42 false positives removed during adversarial verification)._
 
@@ -766,7 +766,7 @@ _Total: 139 remaining gaps (170 implemented) across 54 tutorials (42 false posit
 
 ### Effects
 - [already-implemented] Typed wrapper classes added for LutEffect, Emphasize, Spotlight, ColorAdjustment, BlendModeEffect, MediaMatte — all registered with effect_from_dict
-- [already-implemented] `BlurRegion` export is intentional — class docstring warns it is unregistered and unverified against real projects
+- [already-implemented] `BlurRegion` registered via @register_effect with unverified-fixture warning in docstring
 - [already-implemented] `DropShadow.enabled` / `CursorShadow.enabled` docstrings clarify that setting only updates defaultValue, not existing keyframes
 
 ### Export
