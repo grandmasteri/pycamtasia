@@ -398,7 +398,7 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/device-frames/
 
 - [ ] **No built-in device frame Type presets / enum (tutorial has Type dropdown)** `src/camtasia/builders/device_frame.py` — `DeviceFrameType enum / preset catalog`
 - [ ] **No integration with TechSmith asset library / 'Download More' frames** `src/camtasia/builders/device_frame.py` — `library/preset-name resolver`
-- [ ] **Implemented as image overlay rather than Camtasia's native DeviceFrame visualEffect on the clip** `src/camtasia/builders/device_frame.py` — `emit visualEffects DeviceFrame entry on wrapped_clip`
+- [x] **Implemented as image overlay rather than Camtasia's native DeviceFrame visualEffect on the clip** `src/camtasia/builders/device_frame.py` — `emit visualEffects DeviceFrame entry on wrapped_clip`
 - [ ] **No auto-fit/snap of clip to canvas** `src/camtasia/builders/device_frame.py` — `add_device_frame fit_to_canvas param`
 - [x] **No remove_device_frame helper (tutorial's X icon)** `src/camtasia/builders/device_frame.py` — `remove_device_frame`
 
@@ -449,10 +449,10 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/editing-audio/
 
 Source: https://www.techsmith.com/learn/tutorials/camtasia/enhance-video/
 
-- [ ] **Gesture Effects (tap/swipe/pinch for iOS recordings, Mac only)** `src/camtasia/effects/visual.py` — `class GestureEffect with @register_effect('GestureTap'|'GestureSwipe'|'GesturePinch')`
-- [ ] **Interactive Hotspot effect (clickable regions)** `src/camtasia/effects/visual.py` — `class Hotspot with @register_effect('Hotspot') — url, action, pause, javascript params`
-- [ ] **Zoom-n-Pan as a first-class effect** `src/camtasia/effects/visual.py` — `class ZoomNPan with scale, positionX, positionY parameters`
-- [ ] **Device Frame as a registered visual effect** `src/camtasia/effects/visual.py` — `class DeviceFrame with @register_effect('DeviceFrame') — frame_type parameter`
+- [x] **Gesture Effects (tap/swipe/pinch for iOS recordings, Mac only)** `src/camtasia/effects/visual.py` — `class GestureEffect with @register_effect('GestureTap'|'GestureSwipe'|'GesturePinch')`
+- [x] **Interactive Hotspot effect (clickable regions)** `src/camtasia/effects/visual.py` — `class Hotspot with @register_effect('Hotspot') — url, action, pause, javascript params`
+- [x] **Zoom-n-Pan as a first-class effect** `src/camtasia/effects/visual.py` — `class ZoomNPan with scale, positionX, positionY parameters`
+- [x] **Device Frame as a registered visual effect** `src/camtasia/effects/visual.py` — `class DeviceFrame with @register_effect('DeviceFrame') — frame_type parameter`
 - [ ] **ChromaKey and CornerPin lack fixture verification** `src/camtasia/effects/visual.py` — `add fixture-backed tests and remove unverified warnings`
 
 ### Export an Audio File
@@ -704,9 +704,9 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/visual-effects/
 - [x] **Border (colored border around media)** `src/camtasia/effects/visual.py` — `add @register_effect("Border") class with color RGBA + thickness parameters`
 - [x] **CRT Monitor (scanlines + curvature)** `src/camtasia/effects/visual.py` — `add @register_effect("CRTMonitor") class with scanline/curvature/intensity parameters`
 - [x] **Cursor Path Creator** `src/camtasia/effects/cursor.py` — `add @register_effect("CursorPathCreator") class`
-- [ ] **Device Frame effect (distinct from builders/device_frame.py overlay)** `src/camtasia/effects/visual.py` — `add @register_effect("DeviceFrame") class with frame-id parameter`
+- [x] **Device Frame effect (distinct from builders/device_frame.py overlay)** `src/camtasia/effects/visual.py` — `add @register_effect("DeviceFrame") class with frame-id parameter`
 - [x] **Keystroke effect (Mac)** `src/camtasia/effects/visual.py` — `add @register_effect("Keystroke") class`
-- [ ] **Interactive Hotspot** `src/camtasia/effects/visual.py` — `add @register_effect("Hotspot") class with url/action/pause parameters`
+- [x] **Interactive Hotspot** `src/camtasia/effects/visual.py` — `add @register_effect("Hotspot") class with url/action/pause parameters`
 - [x] **Mosaic / pixelate (Mac)** `src/camtasia/effects/visual.py` — `add @register_effect("Mosaic") class with pixel-size parameter`
 - [x] **Outline Edges (line-drawing)** `src/camtasia/effects/visual.py` — `add @register_effect("OutlineEdges") class with threshold/intensity parameters`
 - [x] **Reflection effect** `src/camtasia/effects/visual.py` — `add @register_effect("Reflection") class with opacity/distance/falloff parameters`
@@ -716,11 +716,11 @@ Source: https://www.techsmith.com/learn/tutorials/camtasia/visual-effects/
 - [x] **Window Spotlight (Mac)** `src/camtasia/effects/visual.py` — `add @register_effect("WindowSpotlight") class`
 - [x] **Vignette** `src/camtasia/effects/visual.py` — `add @register_effect("Vignette") class with amount/falloff/color parameters`
 - [x] **Background Removal (AI, non-green-screen) distinct from ChromaKey** `src/camtasia/effects/visual.py` — `add @register_effect("BackgroundRemoval") class`
-- [ ] **Freeze Region (freeze a sub-region of the clip)** `src/camtasia/effects/visual.py` — `add @register_effect("FreezeRegion") class with positionX/positionY/width/height parameters`
+- [x] **Freeze Region (freeze a sub-region of the clip)** `src/camtasia/effects/visual.py` — `add @register_effect("FreezeRegion") class with positionX/positionY/width/height parameters`
 - [x] **Motion Path as visual effect** `src/camtasia/effects/visual.py` — `add @register_effect("MotionPath") class with path keyframes`
 - [x] **BlurRegion defined but not registered** `src/camtasia/effects/visual.py` — `add @register_effect("BlurRegion") decorator to existing class after fixture verification`
 
-_Total: 139 remaining gaps (170 implemented) across 54 tutorials (42 false positives removed during adversarial verification)._
+_Total: 131 remaining gaps (178 implemented) across 54 tutorials (42 false positives removed during adversarial verification)._
 
 ## High-Level API Improvement Ideas (from demo production)
 

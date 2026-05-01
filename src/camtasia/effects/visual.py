@@ -1547,3 +1547,303 @@ class Crop(Effect):
     @bottom.setter
     def bottom(self, value: float) -> None:
         self.set_parameter("bottom", value)
+
+
+@register_effect("GestureTap")
+class GestureTap(Effect):
+    """Gesture tap overlay effect.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        positionX, positionY, duration.
+    """
+
+    @property
+    def position(self) -> tuple[float, float]:
+        """Tap position (x, y)."""
+        return (float(self.get_parameter("positionX")), float(self.get_parameter("positionY")))
+
+    @position.setter
+    def position(self, value: tuple[float, float]) -> None:
+        self.set_parameter("positionX", value[0])
+        self.set_parameter("positionY", value[1])
+
+    @property
+    def duration(self) -> float:
+        """Tap animation duration."""
+        return float(self.get_parameter("duration"))
+
+    @duration.setter
+    def duration(self, value: float) -> None:
+        self.set_parameter("duration", value)
+
+
+@register_effect("GestureSwipe")
+class GestureSwipe(Effect):
+    """Gesture swipe overlay effect.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        startPositionX, startPositionY, endPositionX, endPositionY, duration.
+    """
+
+    @property
+    def start_position(self) -> tuple[float, float]:
+        """Swipe start position (x, y)."""
+        return (float(self.get_parameter("startPositionX")), float(self.get_parameter("startPositionY")))
+
+    @start_position.setter
+    def start_position(self, value: tuple[float, float]) -> None:
+        self.set_parameter("startPositionX", value[0])
+        self.set_parameter("startPositionY", value[1])
+
+    @property
+    def end_position(self) -> tuple[float, float]:
+        """Swipe end position (x, y)."""
+        return (float(self.get_parameter("endPositionX")), float(self.get_parameter("endPositionY")))
+
+    @end_position.setter
+    def end_position(self, value: tuple[float, float]) -> None:
+        self.set_parameter("endPositionX", value[0])
+        self.set_parameter("endPositionY", value[1])
+
+    @property
+    def duration(self) -> float:
+        """Swipe animation duration."""
+        return float(self.get_parameter("duration"))
+
+    @duration.setter
+    def duration(self, value: float) -> None:
+        self.set_parameter("duration", value)
+
+
+@register_effect("GesturePinch")
+class GesturePinch(Effect):
+    """Gesture pinch/zoom overlay effect.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        centerX, centerY, startScale, endScale, duration.
+    """
+
+    @property
+    def center(self) -> tuple[float, float]:
+        """Pinch center (x, y)."""
+        return (float(self.get_parameter("centerX")), float(self.get_parameter("centerY")))
+
+    @center.setter
+    def center(self, value: tuple[float, float]) -> None:
+        self.set_parameter("centerX", value[0])
+        self.set_parameter("centerY", value[1])
+
+    @property
+    def start_scale(self) -> float:
+        """Scale at the start of the pinch."""
+        return float(self.get_parameter("startScale"))
+
+    @start_scale.setter
+    def start_scale(self, value: float) -> None:
+        self.set_parameter("startScale", value)
+
+    @property
+    def end_scale(self) -> float:
+        """Scale at the end of the pinch."""
+        return float(self.get_parameter("endScale"))
+
+    @end_scale.setter
+    def end_scale(self, value: float) -> None:
+        self.set_parameter("endScale", value)
+
+    @property
+    def duration(self) -> float:
+        """Pinch animation duration."""
+        return float(self.get_parameter("duration"))
+
+    @duration.setter
+    def duration(self, value: float) -> None:
+        self.set_parameter("duration", value)
+
+
+@register_effect("Hotspot")
+class Hotspot(Effect):
+    """Interactive hotspot overlay.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        url, action, pause, javascript.
+    """
+
+    @property
+    def url(self) -> str:
+        """Target URL for the hotspot."""
+        return str(self.get_parameter("url"))
+
+    @url.setter
+    def url(self, value: str) -> None:
+        self.set_parameter("url", value)
+
+    @property
+    def action(self) -> str:
+        """Action type (e.g., 'openURL', 'goToTime')."""
+        return str(self.get_parameter("action"))
+
+    @action.setter
+    def action(self, value: str) -> None:
+        self.set_parameter("action", value)
+
+    @property
+    def pause(self) -> bool:
+        """Whether playback pauses at the hotspot."""
+        return bool(self.get_parameter("pause"))
+
+    @pause.setter
+    def pause(self, value: bool) -> None:
+        self.set_parameter("pause", float(value))
+
+    @property
+    def javascript(self) -> str:
+        """Custom JavaScript to execute."""
+        return str(self.get_parameter("javascript"))
+
+    @javascript.setter
+    def javascript(self, value: str) -> None:
+        self.set_parameter("javascript", value)
+
+
+@register_effect("ZoomNPan")
+class ZoomNPan(Effect):
+    """Zoom-n-pan (SmartFocus) effect.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        scale, positionX, positionY.
+    """
+
+    @property
+    def scale(self) -> float:
+        """Zoom scale factor."""
+        return float(self.get_parameter("scale"))
+
+    @scale.setter
+    def scale(self, value: float) -> None:
+        self.set_parameter("scale", value)
+
+    @property
+    def position_x(self) -> float:
+        """Horizontal pan position."""
+        return float(self.get_parameter("positionX"))
+
+    @position_x.setter
+    def position_x(self, value: float) -> None:
+        self.set_parameter("positionX", value)
+
+    @property
+    def position_y(self) -> float:
+        """Vertical pan position."""
+        return float(self.get_parameter("positionY"))
+
+    @position_y.setter
+    def position_y(self, value: float) -> None:
+        self.set_parameter("positionY", value)
+
+
+@register_effect("DeviceFrame")
+class DeviceFrame(Effect):
+    """Device frame effect (distinct from builders/device_frame.py overlay).
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        frameType, frameId.
+    """
+
+    @property
+    def frame_type(self) -> str:
+        """Device type (e.g., 'phone', 'tablet', 'laptop')."""
+        return str(self.get_parameter("frameType"))
+
+    @frame_type.setter
+    def frame_type(self, value: str) -> None:
+        self.set_parameter("frameType", value)
+
+    @property
+    def frame_id(self) -> str:
+        """Identifier for the specific frame asset."""
+        return str(self.get_parameter("frameId"))
+
+    @frame_id.setter
+    def frame_id(self, value: str) -> None:
+        self.set_parameter("frameId", value)
+
+
+@register_effect("FreezeRegion")
+class FreezeRegion(Effect):
+    """Freeze a rectangular region of the frame.
+
+    .. warning::
+        Parameter names have not been verified against a real TechSmith
+        fixture. If your Camtasia version rejects these names, please
+        file an issue with a fixture project.
+
+    Parameters:
+        positionX, positionY, width, height.
+    """
+
+    @property
+    def position_x(self) -> float:
+        """Horizontal position of the frozen region."""
+        return float(self.get_parameter("positionX"))
+
+    @position_x.setter
+    def position_x(self, value: float) -> None:
+        self.set_parameter("positionX", value)
+
+    @property
+    def position_y(self) -> float:
+        """Vertical position of the frozen region."""
+        return float(self.get_parameter("positionY"))
+
+    @position_y.setter
+    def position_y(self, value: float) -> None:
+        self.set_parameter("positionY", value)
+
+    @property
+    def width(self) -> float:
+        """Width of the frozen region."""
+        return float(self.get_parameter("width"))
+
+    @width.setter
+    def width(self, value: float) -> None:
+        self.set_parameter("width", value)
+
+    @property
+    def height(self) -> float:
+        """Height of the frozen region."""
+        return float(self.get_parameter("height"))
+
+    @height.setter
+    def height(self, value: float) -> None:
+        self.set_parameter("height", value)
