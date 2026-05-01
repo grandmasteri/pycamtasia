@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/grandmasteri/pycamtasia/tree/main/docs
+    about: Check the docs first — quickstart, cookbook, guides, API reference
+  - name: Discussions
+    url: https://github.com/grandmasteri/pycamtasia/discussions
+    about: Ask a question, share an idea, or show what you built
+  - name: Security vulnerability
+    url: https://github.com/grandmasteri/pycamtasia/security/advisories/new
+    about: Report a security issue privately (see SECURITY.md)
