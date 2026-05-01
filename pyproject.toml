@@ -53,8 +53,8 @@ dev = ["bumpversion", "ruff"]
 test = ["pytest", "pytest-cov", "hypothesis", "pytest-xdist", "pytest-timeout", "mypy", "jsonschema", "ruff"]
 
 [project.urls]
-Homepage = "https://github.com/grandmasteri/pycamtasia"
-Repository = "https://github.com/grandmasteri/pycamtasia"
+Homepage = "https://grandmasteri.github.io/pycamtasia/"
+Documentation = "https://grandmasteri.github.io/pycamtasia/"
 Source = "https://github.com/grandmasteri/pycamtasia"
 Issues = "https://github.com/grandmasteri/pycamtasia/issues"
 Changelog = "https://github.com/grandmasteri/pycamtasia/blob/main/CHANGELOG.md"

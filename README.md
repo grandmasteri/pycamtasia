@@ -5,6 +5,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/pycamtasia)](https://pypi.org/project/pycamtasia/)
 [![Python versions](https://img.shields.io/pypi/pyversions/pycamtasia)](https://pypi.org/project/pycamtasia/)
 [![Tests](https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml/badge.svg)](https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml)
+[![Docs](https://github.com/grandmasteri/pycamtasia/actions/workflows/docs.yml/badge.svg)](https://grandmasteri.github.io/pycamtasia/)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/grandmasteri/pycamtasia/blob/main/LICENSE)
 
