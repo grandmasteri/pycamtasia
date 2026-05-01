@@ -154,3 +154,18 @@ class TestBackgroundMusicZeroDurationClip:
         # Verify no keyframes were set (the guard prevents it)
         vol = zero_clip._data.get('parameters', {}).get('volume')
         assert vol is None
+
+
+def test_keyframes_are_points_not_spans(project):
+    """Regression: keyframes must be points (endTime==time, duration==0).
+
+    Camtasia rejects keyframes where endTime != time (span format) with
+    'Invalid KeyFrame operation at time ... on parameter volume'.
+    """
+    clip = project.add_background_music(
+        EMPTY_WAV, fade_in_seconds=1.0, fade_out_seconds=2.0, volume=0.2,
+    )
+    volume_param = clip._data['parameters']['volume']
+    for kf in volume_param['keyframes']:
+        assert kf['endTime'] == kf['time'], f"Keyframe is a span, not a point: {kf}"
+        assert kf['duration'] == 0, f"Keyframe has non-zero duration: {kf}"
