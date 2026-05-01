@@ -8,11 +8,13 @@
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/grandmasteri/pycamtasia/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/grandmasteri/pycamtasia/blob/main/LICENSE)
 
+> ✨ Active development — this is the initial public release. API may evolve before 1.0.0.
+
 ---
 
 ## Why pycamtasia?
 
-Camtasia projects are opaque bundles of JSON, media, and recordings. **pycamtasia** gives you a clean Python API to create, inspect, and transform them — so you can automate video production pipelines, batch-apply effects, generate projects from scripts, and integrate Camtasia into CI workflows. The library is tested with ~4,900 tests at 100% line coverage across 92 source files, with full mypy and ruff compliance.
+Camtasia projects are opaque bundles of JSON, media, and recordings. **pycamtasia** gives you a clean Python API to create, inspect, and transform them — so you can automate video production pipelines, batch-apply effects, generate projects from scripts, and integrate Camtasia into CI workflows. The library is tested with 4,900+ tests at 100% line coverage across 92 source files, with full mypy and ruff compliance.
 
 ## Installation
 
@@ -126,7 +128,7 @@ for track in proj.timeline.tracks:
 Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines.
 
 ```bash
-pytest                                    # ~4,900 tests
+pytest                                    # 4,900+ tests
 pytest --cov=camtasia --cov-report=term   # with coverage (must be 100%)
 mypy src/camtasia                         # 0 errors
 ```
