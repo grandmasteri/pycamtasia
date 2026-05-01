@@ -2,63 +2,103 @@
 
 All notable changes to pycamtasia are documented in this file.
 
-## [Unreleased]
+## [8.0.0] (2026-04-30)
+
+122 commits via worktree-based parallel development. ~70 new public API methods. Test count: 3283 → 4937 (+1654 tests). 100% coverage maintained.
 
 ### Added
-- TimelineBuilder.add_background_image / add_background_video
-- import_slide_images() places pre-rendered slide images on timeline
-- Project.add_caption single-entry convenience API
-- add_device_frame() helper overlays a bezel image on a clip
-- CornerPin and ChromaKey typed effect wrappers (experimental)
-- set_position_keyframes supports interp mode (easing)
-- Track.join_clips() joins adjacent clips into a StitchedMedia
-- Theme / apply_theme API for color palettes
-- caption extract/reimport for translation workflows
-- NoiseRemoval typed wrapper + BaseClip.add_noise_removal()
-- add setters for 3 ScreenIMFile/ScreenVMFile cursor properties
-- tighten schema effectName enum + document reveal preset start
-- tile_layout auto-fits images to cell size
-- EDL / CSV / report exporters recurse into compound clips
-- typed wrapper classes for 6 more effects
-- timeline_json includes effects, transitions, clip metadata
-- insert_gap / remove_gap shift timeline markers
-- all visual-param keyframe setters create animationTracks.visual entries
-- clip_strictly_after + triage 5 more roadmap items
-- 5 small feature-gap fixes
-- add 4 validation checks
-- UnifiedMedia effect read/remove redirects to sub-clips
-- BaseClip.unmute() reverses mute() on all clip types
-- invariant checker + property-based tests
-- add ruff linting with comprehensive rules, fix all 426 violations
 
-### Fixed
-- 10 verified bugs from unbiased review (cycle 15 domains 4-6)
-- 12 verified bugs from unbiased review (cycle 15 domains 1-3)
-- 12 verified bugs from unbiased review (cycle 14 domains 4-6)
-- 11 verified bugs from unbiased review (cycle 14 domains 1-3)
-- 9 verified bugs from unbiased review (cycle 13 domains 4-6)
-- 10 verified bugs from unbiased review (cycle 13 domains 1-3)
-- 9 verified bugs from unbiased review (cycle 12 domains 4-6)
-- 11 verified bugs from unbiased review (cycle 12 domains 1-3)
-- 9 verified bugs from unbiased review (cycle 11 domains 4-6)
-- 11 verified bugs from unbiased review (cycle 11 domains 1-3)
-- 9 verified bugs from unbiased review (cycle 10 domains 4-6)
-- 11 verified bugs from unbiased review (cycle 10 domains 1-3)
-- 9 verified bugs from unbiased review (cycle 9 domains 4-6)
-- 12 verified bugs from unbiased review (cycle 9 domains 1-3)
-- 9 verified bugs from unbiased review (cycle 8 domains 4-6)
+#### Cursor & Click Effects (33 classes)
+- `GestureTap`, `GestureSwipe`, `GesturePinch` — touch gesture effects
+- `Hotspot`, `ZoomNPan`, `DeviceFrame`, `FreezeRegion` — visual effects
+- `CursorPathCreator` effect + `BaseClip.add_cursor_path_creator()`
+- Per-point bezier/easing on cursor paths
+- `CursorType` enum, `ScreenIMFile.replace_cursor()`, `import_custom_cursor()`
+
+#### Audio & Video Visual Effects
+- `AudioVisualizer` effect + `AMFile.add_audio_visualizer()`
+- `Equalizer` effect
+- `BackgroundRemoval` added to schema effectName enum
+- `mix_to_mono()` audio utility
+- `add_background_removal()` clip method
+
+#### Canvas & Presets
+- Vertical canvas presets, safe zones, zoom import
+- `Project.canvas_preview()` — Rev layout/style stubs
+- `DeviceFrameType` enum, orientation, `fit_to_canvas()`
+
+#### Library Module
+- `MediaBin` bridge to `Library`
+- Library asset stubs for device frames
+- `Timeline.add_library_asset()`
+
+#### Template I/O
+- `template_save()`, `template_import()`, `template_install()`
+- Placeholder replacement modes
+- `insert_intro_template()`, `export_campackage()`
+
+#### Audiate Transcript Editing & SRT
+- `DynamicCaptionStyle` + transcript word editing + `active_word_at()`
+- SRT/VTT import/export, multilang caption export
+- `validate_caption_accessibility()` + SRT export aliases
+- Audiate translate/TTS stubs, `smart_scenes`, sync-edits
+
+#### Dynamic Caption Styles
+- `apply_dynamic_style()` + save/load/list dynamic caption presets
+- Caption anchor support
+- Burned-in caption metadata stub
+
+#### Annotations & Callouts
+- `sketch_motion_callout()` annotation factory
+- Line, ellipse, triangle annotation shapes
+- `drop_shadow`, `corner_radius`, `italic`/`underline`/`strikethrough` exposed
+- Annotation favorites: save/load/list/delete + `Callout.add_to_favorites()`
+
+#### SmartFocus & Animation
+- `Animation` class for structured keyframe animation
+- `BaseClip.motion_path` + `ClipSpeed` effect + edit-all-animations
+
+#### Clip & Track API
+- `Track.selection/cut/copy/paste` + `exported_frame` + `ripple_replace`
+- `Track.marker_promote()` / `marker_demote()` + Group property access
+- `Group.save_as_asset()` + `quick_properties` editor
+- `MediaMatte.mode` setter with `MatteMode` enum + `Crop` effect + crop/fit helpers
+- `PlaceholderMedia.replace_with()`
+- `BaseClip.add_cursor_path_creator()`, `remove_device_frame()`
+
+#### Timeline & Project API
+- Timeline view toggles, `zoom_rect`, `detach`, `playback_rate`, `scroll_offset`
+- `export_toc()`, `export_chapters()`, `mark_slides_from_presentation()`
+- PowerPoint import wrapper + dynamic background assets
+- `MatteMode` enum, `InterpolationType` easi/easo/bezi
+
+#### Screenplay & Slide Import
+- Screenplay `screen_recording` alignment
+- Extend ripple, intro templates, slide duration from settings
+
+#### Magnetic Track & Stitched Media
+- `Track.magnetic` auto-pack/insert/close
+- Stitched media validation, `unstitch()`, extend ripple
+
+#### SourceEffect & Misc
+- SourceEffect UI aliases, dynamic caption persistence, `auto_stitch_on_track()`
+- `VideoProductionBuilder` and `ScreenRecordingSync` verified and fixed
 
 ### Changed
-- split compound assert in theme group test (CI ruff PT018)
-- fix theme test to use post-grouping inner clip ID
-- triage all 81 TechSmith tutorial items
-- pass media_type explicitly in TestRapidImportNoCollision
-- add insert_gap, remove_gap, duplicate_clip, set_segment_speeds rules
-- add Group and StitchedMedia state machines + save/reload rule
-- reduce stateful test settings to fit CI timeout
-- extend stateful property test with 5 more mutation rules
-- log 11 verified bugs from cycle 15 domains 4-6 (1 withdrawn)
-- log 12 verified bugs from cycle 15 domains 1-3 (1 withdrawn)
+- `BlurRegion` now registered as a proper effect with color/shape/feather/opacity/ease/position properties
+- `Track.magnetic` auto-close behavior on pack/insert operations
+- Stitched media validation enforced on join operations
+- Improved `preset_name` derivation logic
+- Screenplay caption and alignment helpers extracted into private functions
+- Replaced `ci-local.sh` with native tox config in `pyproject.toml`
+
+### Fixed
+- `CornerPin`/`ChromaKey` fixture verification — removed unverified warnings
+- mypy type narrowing across modules (3 rounds: bool narrowing, isinstance guards, type annotations)
+- ruff lint cleanup across all tracks (unused imports, import ordering, 426+ violations fixed)
+- `set_internal_segment_speeds` uses `Fraction` arithmetic for `mediaStart`
+- `preset_name` + error message regex fixes after track8 merges
+- Docstring indentation in `apply_template_effects` (sphinx build)
 
 ### Removed
 - `strip_all_effects()` (use `remove_all_effects()`)
@@ -66,9 +106,14 @@ All notable changes to pycamtasia are documented in this file.
 - `remove_all_empty_tracks()` (use `remove_empty_tracks()`)
 - `BaseClip.remove_effects()` (use `remove_all_effects()`)
 - `IntEncodedTime` class
-- `BlurRegion` effect registration
+- `BlurRegion` effect registration (replaced by full effect class)
 
-## [Unreleased]
+### Infrastructure
+- 100% test coverage (4937 tests, `fail_under = 100`)
+- Adversarial verification methodology: 42 false positives dropped from tutorial gap analysis
+- Worktree-based parallel development across 9 implementation tracks
+- Comprehensive tutorial analysis: 357 specific feature gaps identified and implemented
+- Ruff linting with comprehensive rules enforced project-wide
 
 ## [7.2.0] (2026-04-16)
 
