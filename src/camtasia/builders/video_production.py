@@ -46,8 +46,14 @@ class VideoProductionBuilder:
         title: str,
         subtitle: str = '',
         duration: float = 5.0,
+        *,
+        template_name: str | None = None,
+        library_asset: str | None = None,
     ) -> VideoProductionBuilder:
-        self._intro = {'title': title, 'subtitle': subtitle, 'duration': duration}
+        self._intro = {
+            'title': title, 'subtitle': subtitle, 'duration': duration,
+            'template_name': template_name, 'library_asset': library_asset,
+        }
         return self
 
     def add_section(
@@ -118,6 +124,11 @@ class VideoProductionBuilder:
                     track_name='Intro Subtitle',
                     font_size=36.0,
                 )
+            meta = p.timeline._data.setdefault('metadata', {})
+            if self._intro.get('template_name'):
+                meta['introTemplateName'] = self._intro['template_name']
+            if self._intro.get('library_asset'):
+                meta['introLibraryAsset'] = self._intro['library_asset']
 
         for section in self._sections:
             cursor = p.duration_seconds

@@ -69,11 +69,16 @@ def _extract_slides_as_images(pptx_path: Path, out_dir: Path) -> list[dict[str, 
     return slides_info
 
 
+def _default_slide_duration(project: Project) -> float:
+    """Read default image duration from project metadata, falling back to 5.0."""
+    return float(project._data.get('metadata', {}).get('defaultImageDuration', 5.0))
+
+
 def import_slide_images(
     project: Project,
     image_paths: list[Path | str],
     *,
-    per_slide_seconds: float = 5.0,
+    per_slide_seconds: float | None = None,
     track_name: str = 'Slides',
     transition_seconds: float = 0.0,
     slide_titles: list[str] | None = None,
@@ -94,7 +99,9 @@ def import_slide_images(
     Args:
         project: Target project.
         image_paths: Ordered list of slide image files.
-        per_slide_seconds: Duration each slide is on screen.
+        per_slide_seconds: Duration each slide is on screen. When None,
+            reads from ``project._data['metadata']['defaultImageDuration']``,
+            falling back to 5.0.
         track_name: Name of the dedicated slides track.
         transition_seconds: When > 0, adjacent slide pairs overlap by this
             duration, producing a cross-fade effect (via the existing fade
@@ -108,6 +115,7 @@ def import_slide_images(
     Returns:
         List of placed image clips, in order.
     """
+    effective_seconds = per_slide_seconds if per_slide_seconds is not None else _default_slide_duration(project)
     track = project.timeline.get_or_create_track(track_name)
     placed: list[BaseClip] = []
     cursor = cursor_offset
@@ -116,7 +124,7 @@ def import_slide_images(
         clip = track.add_image(
             media.id,
             start_seconds=cursor,
-            duration_seconds=per_slide_seconds,
+            duration_seconds=effective_seconds,
         )
         if transition_seconds > 0:
             # Fade in all but the first; fade out all but the last
@@ -132,7 +140,7 @@ def import_slide_images(
             )
             project.timeline.markers.add(label, seconds_to_ticks(cursor))
         placed.append(clip)
-        cursor += per_slide_seconds - transition_seconds
+        cursor += effective_seconds - transition_seconds
     return placed
 
 
@@ -168,7 +176,7 @@ def import_powerpoint(
     """
     import tempfile
 
-    effective_seconds = per_slide_seconds if per_slide_seconds is not None else 5.0
+    effective_seconds = per_slide_seconds if per_slide_seconds is not None else _default_slide_duration(project)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         slides_info = _extract_slides_as_images(Path(pptx_path), Path(tmp_dir))

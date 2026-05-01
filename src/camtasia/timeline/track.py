@@ -1732,6 +1732,12 @@ class Track:
                                 _adjust_effects_after_split(sub, new_dur)
                 if extend < 0:
                     _adjust_effects_after_split(m, new_dur)
+                if ripple and extend != 0:
+                    clip_end = m['start'] + new_dur
+                    for other in self._data.get('medias', []):
+                        if other is not m and other.get('start', 0) >= clip_end - extend:
+                            other['start'] = other['start'] + extend
+                            _propagate_start_to_unified(other)
                 return
         raise KeyError(f'No clip with id={clip_id}')
 
