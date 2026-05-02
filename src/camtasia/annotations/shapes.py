@@ -1,18 +1,26 @@
 """Shape annotations."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from .types import Color, FillStyle, StrokeStyle
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
-def rectangle(fill_color=None,
-              fill_style=FillStyle.Solid,
-              stroke_color=None,
-              stroke_width=6.0,
-              stroke_style=StrokeStyle.Solid,
-              height=180.0,
-              width=240.0,
-              corner_radius=0.0,
-              gradient_stops=None,
-              ):
+
+def rectangle(
+    fill_color: Color | None = None,
+    fill_style: FillStyle = FillStyle.Solid,
+    stroke_color: Color | None = None,
+    stroke_width: float = 6.0,
+    stroke_style: StrokeStyle = StrokeStyle.Solid,
+    height: float = 180.0,
+    width: float = 240.0,
+    corner_radius: float = 0.0,
+    gradient_stops: Sequence[tuple[float, Color]] | None = None,
+) -> dict[str, Any]:
     """Create a rectangle shape annotation dict.
 
     Args:
@@ -25,7 +33,7 @@ def rectangle(fill_color=None,
         fill_color = Color(0.0, 0.0, 0.0, 0.0)
     if stroke_color is None:
         stroke_color = Color(1.0, 1.0, 1.0, 1.0)
-    result = {
+    result: dict[str, Any] = {
         "kind": "remix",
         "shape": "shape-rectangle",
         "style": "basic",
@@ -54,14 +62,15 @@ def rectangle(fill_color=None,
     return result
 
 
-def ellipse(fill_color=None,
-            fill_style=FillStyle.Solid,
-            stroke_color=None,
-            stroke_width=6.0,
-            stroke_style=StrokeStyle.Solid,
-            height=180.0,
-            width=240.0,
-            ):
+def ellipse(
+    fill_color: Color | None = None,
+    fill_style: FillStyle = FillStyle.Solid,
+    stroke_color: Color | None = None,
+    stroke_width: float = 6.0,
+    stroke_style: StrokeStyle = StrokeStyle.Solid,
+    height: float = 180.0,
+    width: float = 240.0,
+) -> dict[str, Any]:
     """Create an ellipse/circle shape annotation dict.
 
     Args:
@@ -100,14 +109,15 @@ def ellipse(fill_color=None,
     }
 
 
-def triangle(fill_color=None,
-             fill_style=FillStyle.Solid,
-             stroke_color=None,
-             stroke_width=6.0,
-             stroke_style=StrokeStyle.Solid,
-             height=180.0,
-             width=240.0,
-             ):
+def triangle(
+    fill_color: Color | None = None,
+    fill_style: FillStyle = FillStyle.Solid,
+    stroke_color: Color | None = None,
+    stroke_width: float = 6.0,
+    stroke_style: StrokeStyle = StrokeStyle.Solid,
+    height: float = 180.0,
+    width: float = 240.0,
+) -> dict[str, Any]:
     """Create a triangle shape annotation dict.
 
     Args:
