@@ -165,7 +165,8 @@ def test_export_import_no_logo(tmp_path):
 
 def _make_themed_project(theme_mappings):
     """Helper: create a project with a callout wired to the given themeMappings."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    td = tempfile.TemporaryDirectory()
+    tmp = Path(td.name) / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('T')
     callout = track.add_callout('X', 0.0, 1.0)
@@ -175,6 +176,7 @@ def _make_themed_project(theme_mappings):
             'themeMappings': theme_mappings,
         },
     ]
+    proj._tmp_dir = td  # prevent GC cleanup
     return proj, callout
 
 
@@ -212,8 +214,8 @@ def test_apply_theme_stroke_style():
 # add_annotation_from_theme
 # ---------------------------------------------------------------------------
 
-def test_add_annotation_from_theme_applies_colors():
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+def test_add_annotation_from_theme_applies_colors(tmp_path):
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('T')
     theme = Theme(
@@ -230,8 +232,8 @@ def test_add_annotation_from_theme_applies_colors():
     assert cdef['font']['name'] == 'Menlo'
 
 
-def test_add_annotation_from_theme_unsupported_type():
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+def test_add_annotation_from_theme_unsupported_type(tmp_path):
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('T')
     with pytest.raises(ValueError, match='Unsupported annotation type'):

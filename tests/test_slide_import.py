@@ -1,8 +1,6 @@
 """Tests for builders.slide_import.import_slide_images."""
 from __future__ import annotations
 
-from pathlib import Path
-import tempfile
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -25,7 +23,7 @@ def mock_pymediainfo(monkeypatch):
 
 @pytest.fixture
 def proj_and_slides(tmp_path, mock_pymediainfo):
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     slides = []
     for i in range(3):

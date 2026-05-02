@@ -7,6 +7,8 @@ relying on adversarial review finding each specific case.
 from __future__ import annotations
 
 from fractions import Fraction
+from pathlib import Path
+import tempfile
 
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
@@ -19,11 +21,10 @@ from camtasia.validation import _check_compound_invariants
 
 def _make_project_with_clips(num_clips: int) -> object:
     """Build a fresh project with N simple video clips on one track."""
-    from pathlib import Path
-    import tempfile
 
     from camtasia import Project
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp_dir = tempfile.TemporaryDirectory()
+    tmp = Path(tmp_dir.name) / 'test.cmproj'
     proj = Project.new(str(tmp), width=1920, height=1080)
     # Project.new() provides default tracks; use the first
     track = proj.timeline.tracks[0]
@@ -122,11 +123,10 @@ def test_smoke_mutations_preserve_invariants(mutation_name: str) -> None:
 
 def _make_project_with_unified_clip() -> object:
     """Build a project with a UnifiedMedia clip (video+audio)."""
-    from pathlib import Path
-    import tempfile
 
     from camtasia import Project
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp_dir = tempfile.TemporaryDirectory()
+    tmp = Path(tmp_dir.name) / 'test.cmproj'
     proj = Project.new(str(tmp), width=1920, height=1080)
     # Manually inject a UnifiedMedia clip with synced video and audio sub-clips
     src_id = proj.media_bin.next_id()
@@ -441,11 +441,10 @@ class TestInvariantCheckerDetectsViolations:
 
 def _make_project_with_group() -> object:
     """Build a project with a Group containing a UnifiedMedia clip and a simple IMFile."""
-    from pathlib import Path
-    import tempfile
 
     from camtasia import Project
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp_dir = tempfile.TemporaryDirectory()
+    tmp = Path(tmp_dir.name) / 'test.cmproj'
     proj = Project.new(str(tmp), width=1920, height=1080)
     src_id = proj.media_bin.next_id()
     proj._data.setdefault('sourceBin', []).append({
@@ -558,11 +557,10 @@ TestGroupStateful.settings = settings(
 
 def _make_project_with_stitched() -> object:
     """Build a project with a StitchedMedia containing a UnifiedMedia segment + a VMFile segment."""
-    from pathlib import Path
-    import tempfile
 
     from camtasia import Project
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp_dir = tempfile.TemporaryDirectory()
+    tmp = Path(tmp_dir.name) / 'test.cmproj'
     proj = Project.new(str(tmp), width=1920, height=1080)
     src_id = proj.media_bin.next_id()
     proj._data.setdefault('sourceBin', []).append({

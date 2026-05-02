@@ -1236,13 +1236,11 @@ class TestTrackAccessorGetitemMatchesTrackIndex:
 
 
 class TestInsertGapShiftsMarkers:
-    def test_marker_at_or_after_gap_shifted(self):
-        from pathlib import Path
-        import tempfile
+    def test_marker_at_or_after_gap_shifted(self, tmp_path):
 
         from camtasia import Project
         from camtasia.timing import seconds_to_ticks
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         # Add markers at 3s and 10s
         proj.timeline.markers.add('m1', seconds_to_ticks(3.0))
@@ -1255,13 +1253,11 @@ class TestInsertGapShiftsMarkers:
 
 
 class TestRemoveGapShiftsMarkers:
-    def test_marker_after_gap_shifted_back(self):
-        from pathlib import Path
-        import tempfile
+    def test_marker_after_gap_shifted_back(self, tmp_path):
 
         from camtasia import Project
         from camtasia.timing import seconds_to_ticks
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         proj.timeline.markers.add('m1', seconds_to_ticks(3.0))
         proj.timeline.markers.add('m2', seconds_to_ticks(12.0))

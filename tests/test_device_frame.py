@@ -1,8 +1,6 @@
 """Tests for the device_frame builder."""
 from __future__ import annotations
 
-from pathlib import Path
-import tempfile
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -20,7 +18,7 @@ def proj_with_clip(tmp_path, monkeypatch):
         SimpleNamespace(track_type='Image', width=1920, height=1080),
     ])
     monkeypatch.setitem(sys.modules, 'pymediainfo', mock_mi)
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     # Import an underlying media file and place a clip
     img = tmp_path / 'bg.png'

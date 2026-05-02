@@ -25,10 +25,12 @@ TICK = 705_600_000  # ~23.5 s at 30 fps editRate
 
 def _fresh_project():
     """Load template into an isolated temp copy (safe for Hypothesis)."""
-    td = tempfile.mkdtemp()
-    dst = Path(td) / 'test.cmproj'
+    td = tempfile.TemporaryDirectory()
+    dst = Path(td.name) / 'test.cmproj'
     shutil.copytree(RESOURCES / 'new.cmproj', dst)
-    return load_project(dst)
+    proj = load_project(dst)
+    proj._tmp_dir = td  # prevent GC cleanup until project is done
+    return proj
 
 
 def _make_track():
