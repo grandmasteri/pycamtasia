@@ -5,6 +5,8 @@ to verify the resulting file is valid.
 """
 from __future__ import annotations
 
+import contextlib
+
 from camtasia.operations.layout import ripple_insert
 from camtasia.timing import seconds_to_ticks
 from tests.integration_helpers import INTEGRATION_MARKERS, open_in_camtasia
@@ -64,11 +66,11 @@ class TestUndoRedo:
 
         with project.track_changes("add clip A"):
             track = list(project.timeline.tracks)[-1]
-            clip_a = track.add_clip("Callout", None, start=0, duration=seconds_to_ticks(3))
+            track.add_clip("Callout", None, start=0, duration=seconds_to_ticks(3))
 
         with project.track_changes("add clip B"):
             track = list(project.timeline.tracks)[-1]
-            clip_b = track.add_clip("Callout", None, start=seconds_to_ticks(3), duration=seconds_to_ticks(3))
+            track.add_clip("Callout", None, start=seconds_to_ticks(3), duration=seconds_to_ticks(3))
 
         with project.track_changes("add transition"):
             track = list(project.timeline.tracks)[-1]
@@ -77,7 +79,7 @@ class TestUndoRedo:
 
         with project.track_changes("add effect"):
             track = list(project.timeline.tracks)[-1]
-            clip = list(track.clips)[0]
+            clip = next(iter(track.clips))
             clip.add_drop_shadow()
 
         with project.track_changes("remove clip"):
@@ -96,10 +98,8 @@ class TestUndoRedo:
             project.timeline.add_track("Only One")
         project.undo()
         # Attempting to undo with nothing left should raise but not corrupt
-        try:
+        with contextlib.suppress(IndexError):
             project.undo()
-        except IndexError:
-            pass
         open_in_camtasia(project)
 
     def test_redo_past_end_does_not_crash(self, project):
@@ -108,10 +108,8 @@ class TestUndoRedo:
         project.undo()
         project.redo()
         # Attempting to redo with nothing left should raise but not corrupt
-        try:
+        with contextlib.suppress(IndexError):
             project.redo()
-        except IndexError:
-            pass
         open_in_camtasia(project)
 
     def test_ripple_insert_undo_restores_state(self, project):

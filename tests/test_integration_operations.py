@@ -30,7 +30,7 @@ def _setup_track_with_clips(project, n=3, duration=2.0):
 
 class TestRippleOperations:
     def test_ripple_insert_opens(self, project):
-        track, clips, _ = _setup_track_with_clips(project)
+        track, _clips, _ = _setup_track_with_clips(project)
         operations.ripple_insert(track, position_seconds=2.0, duration_seconds=1.0)
         open_in_camtasia(project)
 
@@ -40,7 +40,7 @@ class TestRippleOperations:
         open_in_camtasia(project)
 
     def test_ripple_delete_range_opens(self, project):
-        track, clips, _ = _setup_track_with_clips(project)
+        track, _clips, _ = _setup_track_with_clips(project)
         operations.ripple_delete_range(track, start_seconds=1.0, end_seconds=3.0)
         open_in_camtasia(project)
 
@@ -57,7 +57,7 @@ class TestRippleOperations:
     def test_ripple_move_multi_opens(self, project):
         track1, clips1, media = _setup_track_with_clips(project)
         track2 = project.timeline.add_track('Audio 2')
-        c2a = track2.add_audio(media.id, start_seconds=0.0, duration_seconds=2.0)
+        track2.add_audio(media.id, start_seconds=0.0, duration_seconds=2.0)
         c2b = track2.add_audio(media.id, start_seconds=2.0, duration_seconds=2.0)
         operations.ripple_move_multi(
             tracks=[track1, track2],

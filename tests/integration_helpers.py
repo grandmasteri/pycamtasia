@@ -21,12 +21,14 @@ from __future__ import annotations
 from pathlib import Path
 import subprocess
 import time
+from typing import TYPE_CHECKING
 import uuid
 
 import filelock
 import pytest
 
-from camtasia.project import Project
+if TYPE_CHECKING:
+    from camtasia.project import Project
 
 CAMTASIA_APP = Path('/Applications/Camtasia.app')
 CAMTASIA_BIN = CAMTASIA_APP / 'Contents/MacOS/Camtasia'

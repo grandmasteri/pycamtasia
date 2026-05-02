@@ -33,7 +33,7 @@ class TestEmptyAndMinimalProjects:
         open_in_camtasia(project)
 
     def test_canvas_1x1_minimum(self, project):
-        """Minimum possible canvas size (1×1 pixel)."""
+        """Minimum possible canvas size (1x1 pixel)."""
         project.set_canvas_size(1, 1)
         open_in_camtasia(project)
 
@@ -92,12 +92,12 @@ class TestTimingBoundaries:
         """
         track = project.timeline.add_track('Neg')
         track.add_callout('neg', start_seconds=-5.0, duration_seconds=3.0)
-        issues = project.validate()
+        project.validate()
         # If validate catches it, good. If not, we still don't open —
         # negative timestamps are not valid Camtasia content.
         # Either way, the API accepted it without raising, so we verify
         # the clip was created with a negative start tick.
-        clip = list(track.clips)[0]
+        clip = next(iter(track.clips))
         assert clip.start_seconds < 0
 
     def test_negative_duration_rejected(self, project):
@@ -108,8 +108,8 @@ class TestTimingBoundaries:
         """
         track = project.timeline.add_track('NegDur')
         track.add_callout('neg', start_seconds=0.0, duration_seconds=-3.0)
-        issues = project.validate()
-        clip = list(track.clips)[0]
+        project.validate()
+        clip = next(iter(track.clips))
         assert clip.duration_seconds < 0
 
 

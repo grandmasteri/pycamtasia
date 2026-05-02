@@ -122,7 +122,7 @@ class TestFullVideoProduction:
             CalloutShape.ARROW, CalloutShape.SHAPE_RECTANGLE,
             CalloutShape.SHAPE_ELLIPSE,
         ]
-        for i, shape in enumerate(shapes):
+        for i, _shape in enumerate(shapes):
             co = title_track.add_callout(
                 f'Note {i}', start_seconds=10.0 + i * 8, duration_seconds=4.0,
             )
@@ -713,7 +713,7 @@ class TestMultiGroupNestedOperations:
 
         audio = project.import_media(EMPTY_WAV)
         img = _create_test_image(tmp_path, 'grp.png')
-        image_media = project.import_media(img)
+        project.import_media(img)
 
         track_a = project.timeline.add_track('Track A')
         track_b = project.timeline.add_track('Track B')
@@ -745,7 +745,7 @@ class TestMultiGroupNestedOperations:
         b_clips[2].add_noise_removal(amount=0.5)
         b_clips[3].add_audio_fade_out(0.5)
 
-        group_b = track_b.group_clips([b_clips[0].id, b_clips[1].id])
+        track_b.group_clips([b_clips[0].id, b_clips[1].id])
 
         # Track C: callouts with transitions and splits
         c_clips = []
