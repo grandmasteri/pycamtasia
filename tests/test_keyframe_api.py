@@ -116,3 +116,41 @@ def test_clear_keyframes_all_clears_animation_tracks() -> None:
     clip.clear_keyframes(None)
     assert "keyframes" not in clip.parameters["opacity"]
     assert data["animationTracks"] == {}
+
+
+# -- visual parameter first-keyframe duration fix --
+
+def test_add_visual_keyframe_fixes_first_keyframe_duration() -> None:
+    """Adding a second visual keyframe should retroactively set the first
+    keyframe's duration (regression for src/camtasia/timeline/clips/base.py:1793).
+
+    Visual parameters (opacity, scale*, translation*) require span-form
+    keyframes (endTime > time). The first keyframe is initially created
+    with duration=0; when a second keyframe is added, the gap determines
+    the first keyframe's duration.
+    """
+    clip = VMFile(_vmfile_dict())
+    # First visual keyframe (creates the parameter with duration=0)
+    clip.add_keyframe('opacity', time_seconds=0.0, value=0.0)
+    first = clip._data['parameters']['opacity']['keyframes'][0]
+    assert first['duration'] == 0
+    # Second keyframe 3 seconds later — should trigger the fix-up branch
+    clip.add_keyframe('opacity', time_seconds=3.0, value=1.0)
+    first_after = clip._data['parameters']['opacity']['keyframes'][0]
+    # The first keyframe's duration should have been updated
+    assert first_after['duration'] > 0
+    assert first_after['endTime'] == first_after['time'] + first_after['duration']
+
+
+def test_add_visual_keyframe_same_time_falls_back_to_unit_duration() -> None:
+    """When two visual keyframes share the same time (gap == 0), the
+    duration falls back to 1 tick rather than dividing by zero or
+    producing negative durations.
+    """
+    clip = VMFile(_vmfile_dict())
+    clip.add_keyframe('opacity', time_seconds=2.0, value=0.5)
+    # Second keyframe at exactly the same time (gap == 0 path)
+    clip.add_keyframe('opacity', time_seconds=2.0, value=0.7)
+    keyframes = clip._data['parameters']['opacity']['keyframes']
+    # Both keyframes have duration > 0 (1-tick fallback, not 0)
+    assert all(kf['duration'] >= 1 for kf in keyframes)

@@ -276,3 +276,34 @@ def test_check_group_required_fields_recurses_into_unified_media():
     }
     issues = _check_group_required_fields(data)
     assert any('group id=3' in i.message for i in issues)
+
+
+# -- visual track order validator --
+
+def test_unsorted_visual_segments_detected() -> None:
+    """_check_visual_track_order catches out-of-order visual animation segments
+    (regression for src/camtasia/validation.py:519).
+
+    Visual parameters share animation tracks that require monotonically
+    increasing segment times; unsorted segments would produce a file
+    Camtasia rejects.
+    """
+    from camtasia.validation import _check_visual_track_order
+    data = _make_data([
+        {
+            'medias': [
+                {
+                    'id': 1,
+                    'animationTracks': {
+                        'visual': [
+                            {'range': [100]},
+                            {'range': [50]},  # out of order
+                            {'range': [200]},
+                        ],
+                    },
+                }
+            ],
+        },
+    ])
+    issues = _check_visual_track_order(data)
+    assert any('unsorted animationTracks.visual segments' in i.message for i in issues)
