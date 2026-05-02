@@ -1340,3 +1340,43 @@ def test_sync_internal_durations_stitched_uses_round() -> None:
     assert len(medias) == 2
     # seg2 should be trimmed: start=50, new_dur = 80 - 50 = 30
     assert medias[1]['duration'] == 30
+
+
+# ------------------------------------------------------------------
+# REV-test_gaps-007: Group error paths
+# ------------------------------------------------------------------
+
+
+class TestGroupErrorPaths:
+    def test_group_track_transitions_raises(self):
+        group = _make_group([[_clip_data('AMFile', 10, 0, 5)]])
+        gt = group.tracks[0]
+        with pytest.raises(AttributeError, match='Internal Group tracks do not support transitions'):
+            _ = gt.transitions
+
+    def test_group_set_source_raises(self):
+        group = _make_group([[_clip_data('AMFile', 10, 0, 5)]])
+        with pytest.raises(TypeError, match='Group clips do not have a source ID'):
+            group.set_source(99)
+
+    def test_set_internal_segment_speeds_no_unified_media_raises(self):
+        group = _make_group([[_clip_data('AMFile', 10, 0, 5)]])
+        with pytest.raises(ValueError, match='No internal track with UnifiedMedia found'):
+            group.set_internal_segment_speeds([(0, 5, 5)])
+
+    def test_set_internal_segment_speeds_invalid_range_raises(self):
+        um = _clip_data('UnifiedMedia', 10, 0, 10)
+        um['video'] = {'_type': 'VMFile', 'id': 11, 'src': 1, 'start': 0,
+                        'duration': seconds_to_ticks(10), 'mediaStart': 0,
+                        'mediaDuration': seconds_to_ticks(10), 'scalar': 1,
+                        'parameters': {}, 'effects': [], 'metadata': {},
+                        'animationTracks': {}, 'attributes': {'ident': 'v'}}
+        um['audio'] = None
+        group = _make_group([[um]])
+        with pytest.raises(ValueError, match=r'segment src_end.*must be > src_start'):
+            group.set_internal_segment_speeds([(5, 3, 5)])
+
+    def test_save_as_asset_wrong_type_raises(self):
+        group = _make_group([[_clip_data('AMFile', 10, 0, 5)]])
+        with pytest.raises(TypeError, match='Expected Library, got str'):
+            group.save_as_asset('not_a_library', 'test')
