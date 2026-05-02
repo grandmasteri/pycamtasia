@@ -506,7 +506,19 @@ class Project:
 
     @property
     def duration_formatted(self) -> str:
-        """Total duration as MM:SS string."""
+        """Total duration as MM:SS string.
+
+        .. deprecated::
+            Use :attr:`total_duration_formatted` instead, which handles
+            durations of one hour or more correctly.
+        """
+        import warnings
+
+        warnings.warn(
+            'duration_formatted is deprecated, use total_duration_formatted instead',
+            DeprecationWarning,
+            stacklevel=2,
+        )
         total_seconds: float = self.duration_seconds
         minutes: int = int(total_seconds // 60)
         remaining_seconds: int = int(total_seconds % 60)
@@ -1473,8 +1485,8 @@ class Project:
         duration_seconds: float,
         color0: tuple[float, float, float, float] = (0.16, 0.16, 0.16, 1.0),
         color1: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0),
-        track_index: int = 1,
-    ) -> Any:
+        track_name: str = 'Background',
+    ) -> BaseClip:
         """Create a gradient shader background on the specified track.
 
         Adds a sourceBin entry for the gradient shader and places a VMFile
@@ -1484,7 +1496,7 @@ class Project:
             duration_seconds: How long the background should last.
             color0: First RGBA gradient colour.
             color1: Second RGBA gradient colour.
-            track_index: Track index to place the clip on (default 1).
+            track_name: Name of the track to place the clip on.
 
         Returns:
             The created clip.
@@ -1554,7 +1566,7 @@ class Project:
             self.media_bin.add_media_entry(source_entry)
 
         dur_ticks = seconds_to_ticks(duration_seconds)
-        track = self.timeline.tracks[track_index]
+        track = self.timeline.get_or_create_track(track_name)
 
         def _color_params(prefix: str, rgba: tuple[float, float, float, float]) -> dict:
             return {
@@ -1703,6 +1715,9 @@ class Project:
     ) -> dict[str, dict]:
         """Import voiceover files and place them sequentially on an audio track.
 
+        .. deprecated::
+            Use :meth:`add_voiceover_sequence_v2` instead.
+
         Args:
             vo_files: List of audio file paths to import and place.
             pauses: Optional mapping of filename to seconds of silence
@@ -1713,6 +1728,13 @@ class Project:
             Dict mapping each filename to ``{'start': float,
             'duration': float, 'clip': AMFile}``.
         """
+        import warnings
+
+        warnings.warn(
+            'add_voiceover_sequence is deprecated, use add_voiceover_sequence_v2 instead',
+            DeprecationWarning,
+            stacklevel=2,
+        )
         pauses = pauses or {}
         track = self.timeline.get_or_create_track(track_name)
         cursor = 0.0
@@ -2029,7 +2051,7 @@ class Project:
         font_name: str = 'Helvetica Neue',
         font_weight: str = 'Bold',
         font_size: float = 72.0,
-        font_color: tuple[float, float, float] = (1.0, 1.0, 1.0),
+        font_color: tuple[float, ...] = (1.0, 1.0, 1.0),
         fade_seconds: float = 0.5,
     ) -> BaseClip:
         """Add a text title card to the timeline.
@@ -2045,7 +2067,8 @@ class Project:
             font_name: Font family name.
             font_weight: Font weight (e.g. 'Bold', 'Regular').
             font_size: Font size in points.
-            font_color: RGB color as a tuple of floats in [0.0, 1.0].
+            font_color: RGBA color as floats in [0.0, 1.0]. A 3-tuple
+                ``(r, g, b)`` is also accepted (alpha defaults to 1.0).
             fade_seconds: Duration of fade-in and fade-out. Pass 0 to skip.
 
         Returns:
@@ -2173,7 +2196,7 @@ class Project:
         subtitle_entries: list[tuple[float, float, str]],
         track_name: str = 'Subtitles',
         font_size: float = 36.0,
-        font_color: tuple[float, float, float] = (1.0, 1.0, 1.0),
+        font_color: tuple[float, ...] = (1.0, 1.0, 1.0),
     ) -> list[BaseClip]:
         """Add subtitle text entries to a dedicated track.
 
@@ -2185,7 +2208,8 @@ class Project:
                 tuples, one per subtitle line.
             track_name: Name of the track to place subtitles on.
             font_size: Font size in points for all subtitle clips.
-            font_color: RGB color as a tuple of floats in [0.0, 1.0].
+            font_color: RGBA color as floats in [0.0, 1.0]. A 3-tuple
+                ``(r, g, b)`` is also accepted (alpha defaults to 1.0).
 
         Returns:
             List of created callout clips in the same order as the input.
@@ -2209,7 +2233,7 @@ class Project:
         *,
         track_name: str = 'Subtitles',
         font_size: float = 36.0,
-        font_color: tuple[float, float, float] = (1.0, 1.0, 1.0),
+        font_color: tuple[float, ...] = (1.0, 1.0, 1.0),
     ) -> BaseClip:
         """Add a single caption entry to the subtitle track.
 
@@ -2223,7 +2247,8 @@ class Project:
             duration_seconds: Duration in seconds.
             track_name: Name of the target track.
             font_size: Font size in points.
-            font_color: RGB tuple in 0.0-1.0.
+            font_color: RGBA color as floats in [0.0, 1.0]. A 3-tuple
+                ``(r, g, b)`` is also accepted (alpha defaults to 1.0).
 
         Returns:
             The created callout clip.
@@ -2267,7 +2292,7 @@ class Project:
             placed_callouts.append(callout)
         return placed_callouts
 
-    def add_lower_third(
+    def add_simple_lower_third(
         self,
         title_text: str,
         subtitle_text: str = '',
@@ -2276,10 +2301,13 @@ class Project:
         track_name: str = 'Lower Thirds',
         fade_seconds: float = 0.5,
     ) -> BaseClip:
-        """Add a lower-third title overlay.
+        """Add a simple lower-third title overlay.
 
         Creates a callout positioned in the lower portion of the frame
         with title and optional subtitle text.
+
+        See also :meth:`Track.add_lower_third` for the template-based
+        variant that produces a styled Group with accent lines.
         """
         display_text: str = title_text
         if subtitle_text:
@@ -2293,6 +2321,33 @@ class Project:
             callout.fade_in(fade_seconds)
             callout.fade_out(fade_seconds)
         return callout
+
+    def add_lower_third(
+        self,
+        title_text: str,
+        subtitle_text: str = '',
+        start_seconds: float = 0.0,
+        duration_seconds: float = 5.0,
+        track_name: str = 'Lower Thirds',
+        fade_seconds: float = 0.5,
+    ) -> BaseClip:
+        """Add a lower-third title overlay.
+
+        .. deprecated::
+            Use :meth:`add_simple_lower_third` instead. This method will
+            be removed in a future release.
+        """
+        import warnings
+
+        warnings.warn(
+            'add_lower_third is deprecated on Project, use add_simple_lower_third instead',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.add_simple_lower_third(
+            title_text, subtitle_text, start_seconds, duration_seconds,
+            track_name, fade_seconds,
+        )
 
     def add_section_divider(
         self,
