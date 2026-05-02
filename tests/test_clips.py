@@ -2887,3 +2887,40 @@ def test_set_position_keyframes_with_interp_per_keyframe():
     ])
     kfs = clip._data['parameters']['translation0']['keyframes']
     assert [kf['interp'] for kf in kfs] == ['easi', 'linr', 'easo']
+
+
+# ------------------------------------------------------------------
+# REV-test_gaps-004: crop() negative values and fit_to_duration() <= 0
+# ------------------------------------------------------------------
+
+
+def test_crop_negative_left_raises():
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': EDIT_RATE * 10}
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    with pytest.raises(ValueError, match='Crop left must be non-negative'):
+        clip.crop(left=-1)
+
+
+def test_crop_negative_bottom_raises():
+    media = {'_type': 'VMFile', 'id': 1, 'start': 0, 'duration': EDIT_RATE * 10}
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    with pytest.raises(ValueError, match='Crop bottom must be non-negative'):
+        clip.crop(bottom=-0.5)
+
+
+def test_fit_to_duration_zero_raises():
+    media = _base()
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    with pytest.raises(ValueError, match='target_duration_seconds must be > 0'):
+        clip.set_speed_by_duration(0)
+
+
+def test_fit_to_duration_negative_raises():
+    media = _base()
+    track = _make_track(medias=[media])
+    clip = next(iter(track.clips))
+    with pytest.raises(ValueError, match='target_duration_seconds must be > 0'):
+        clip.set_speed_by_duration(-1)
