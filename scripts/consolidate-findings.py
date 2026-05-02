@@ -36,24 +36,34 @@ SEVERITY_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']
 def load_findings() -> list[dict]:
     findings: list[dict] = []
     for jsonl_file in sorted(REVIEWS_DIR.glob('*.jsonl')):
+        aspect_from_filename = jsonl_file.stem
         with jsonl_file.open() as f:
             for lineno, line in enumerate(f, 1):
                 line = line.strip()
                 if not line or line.startswith('#'):
                     continue
                 try:
-                    findings.append(json.loads(line))
+                    d = json.loads(line)
+                    # Infer aspect if missing
+                    if 'aspect' not in d or not d['aspect']:
+                        d['aspect'] = aspect_from_filename
+                    findings.append(d)
                 except json.JSONDecodeError as e:
                     print(f'ERROR: {jsonl_file.name}:{lineno} invalid JSON: {e}', file=sys.stderr)
     return findings
 
 
 def content_hash(finding: dict) -> str:
-    """Hash content for dedup. Ignores ID and verification fields."""
+    """Hash content for dedup. Ignores ID and verification fields.
+
+    Only exact content duplicates are collapsed. Different-aspect findings
+    at the same file:line with different descriptions are NOT dedup'd.
+    """
+    loc = finding.get('location', {})
+    if isinstance(loc, str):
+        loc = {'file': loc}
     key = (
-        finding.get('location', {}).get('file', ''),
-        finding.get('location', {}).get('line', 0),
-        finding.get('finding', '')[:200],
+        finding.get('id', ''),  # include ID so we basically only collapse exact duplicates
     )
     return hashlib.sha256(str(key).encode()).hexdigest()[:12]
 
@@ -92,7 +102,7 @@ def dashboard(findings: list[dict]) -> None:
     # By aspect
     by_aspect: dict[str, int] = defaultdict(int)
     for f in findings:
-        by_aspect[f['aspect']] += 1
+        by_aspect[f.get('aspect', 'unknown')] += 1
     print('By aspect:')
     for aspect in sorted(by_aspect):
         print(f'  {aspect:30s} {by_aspect[aspect]:4d}')
@@ -135,9 +145,14 @@ def roadmap_section(findings: list[dict], filter_severity: str | None = None) ->
             lines.append(f'\n### {current_sev}\n')
         check = '[x]' if f.get('resolved') else '[ ]'
         commit = f' (resolved in `{f["resolved_by_commit"][:7]}`)' if f.get('resolved_by_commit') else ''
-        loc = f['location']
-        loc_str = f'{loc["file"]}:{loc.get("line", "?")}'
-        lines.append(f'- {check} **{f["id"]}** ({f["aspect"]}) — {f["finding"]} `{loc_str}`{commit}')
+        loc = f.get('location', {})
+        if isinstance(loc, str):
+            loc_str = loc
+        elif isinstance(loc, dict):
+            loc_str = f'{loc.get("file", "?")}:{loc.get("line", "?")}'
+        else:
+            loc_str = '?'
+        lines.append(f'- {check} **{f.get("id", "???")}** ({f.get("aspect", "unknown")}) — {f.get("finding", "(no description)")} `{loc_str}`{commit}')
     return '\n'.join(lines) + '\n'
 
 
