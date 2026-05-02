@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 from importlib import resources as importlib_resources
 import json
+import threading
 from typing import Any
 
 
@@ -547,15 +548,18 @@ def validate_all(data: dict[str, Any]) -> list[ValidationIssue]:
     return issues
 
 
+_schema_lock = threading.Lock()
 _CACHED_SCHEMA: dict[str, Any] | None = None
 
 
 def _get_schema() -> dict[str, Any]:
-    """Load and cache the Camtasia project JSON schema."""
+    """Load and cache the Camtasia project JSON schema (thread-safe)."""
     global _CACHED_SCHEMA
     if _CACHED_SCHEMA is None:
-        schema_path = importlib_resources.files('camtasia.resources') / 'camtasia-project-schema.json'
-        _CACHED_SCHEMA = json.loads(schema_path.read_text(encoding='utf-8'))
+        with _schema_lock:
+            if _CACHED_SCHEMA is None:
+                schema_path = importlib_resources.files('camtasia.resources') / 'camtasia-project-schema.json'
+                _CACHED_SCHEMA = json.loads(schema_path.read_text(encoding='utf-8'))
     return _CACHED_SCHEMA
 
 
