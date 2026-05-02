@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from camtasia.timeline.clips.callout import _WEIGHT_MAP
 
 from .types import Color, FillStyle, HorizontalAlignment, StrokeStyle, VerticalAlignment
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 _DEFAULT_FAVORITES_DIR = Path.home() / '.pycamtasia' / 'favorites'
 
@@ -110,20 +114,20 @@ def _text_attributes(
     ]
 
 
-def text(text,
-         font_name,
-         font_weight,
-         font_size=96.0,
-         font_color=None,
-         height=250.0,
-         width=400.0,
-         horizontal_alignment=HorizontalAlignment.Center,
-         vertical_alignment=VerticalAlignment.Center,
-         line_spacing=0.0,
-         italic=False,
-         underline=False,
-         strikethrough=False,
-         ):
+def text(text: str,
+         font_name: str,
+         font_weight: str | int,
+         font_size: float = 96.0,
+         font_color: Color | None = None,
+         height: float = 250.0,
+         width: float = 400.0,
+         horizontal_alignment: HorizontalAlignment = HorizontalAlignment.Center,
+         vertical_alignment: VerticalAlignment = VerticalAlignment.Center,
+         line_spacing: float = 0.0,
+         italic: bool = False,
+         underline: bool = False,
+         strikethrough: bool = False,
+         ) -> dict[str, Any]:
     """Create a text callout annotation dict.
 
     Args:
@@ -172,27 +176,28 @@ def text(text,
     }
 
 
-def square(text,
-           font_name,
-           font_weight,
-           font_size=64.0,
-           font_color=None,
-           fill_color=None,
-           fill_style=FillStyle.Solid,
-           stroke_color=None,
-           stroke_width=2.0,
-           stroke_style=StrokeStyle.Solid,
-           height=150.0,
-           width=350.0,
-           horizontal_alignment=HorizontalAlignment.Center,
-           vertical_alignment=VerticalAlignment.Center,
-           line_spacing=0.0,
-           corner_radius=0.0,
-           drop_shadow=False,
-           italic=False,
-           underline=False,
-           strikethrough=False,
-           gradient_stops=None):
+def square(text: str,
+           font_name: str,
+           font_weight: str | int,
+           font_size: float = 64.0,
+           font_color: Color | None = None,
+           fill_color: Color | None = None,
+           fill_style: FillStyle = FillStyle.Solid,
+           stroke_color: Color | None = None,
+           stroke_width: float = 2.0,
+           stroke_style: StrokeStyle = StrokeStyle.Solid,
+           height: float = 150.0,
+           width: float = 350.0,
+           horizontal_alignment: HorizontalAlignment = HorizontalAlignment.Center,
+           vertical_alignment: VerticalAlignment = VerticalAlignment.Center,
+           line_spacing: float = 0.0,
+           corner_radius: float = 0.0,
+           drop_shadow: bool = False,
+           italic: bool = False,
+           underline: bool = False,
+           strikethrough: bool = False,
+           gradient_stops: Sequence[tuple[float, Color]] | None = None,
+           ) -> dict[str, Any]:
     """Create a square text callout annotation dict.
 
     Args:
