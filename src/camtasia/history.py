@@ -212,7 +212,7 @@ class ChangeHistory:
         return restored_history
 
 
-def with_undo(description: str) -> Callable:
+def with_undo(description: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Decorator that wraps a function call in track_changes."""
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         """Inner decorator function."""
