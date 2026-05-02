@@ -68,10 +68,8 @@ class TestTrecProbeRounding:
 class TestTrecProbeStringDuration:
     """Bug 12: trec_probe should handle track.duration as string."""
 
-    def test_video_string_duration(self):
+    def test_video_string_duration(self, tmp_path):
         import importlib
-        import os
-        import tempfile
 
         import camtasia.media_bin.trec_probe as tp
 
@@ -94,28 +92,24 @@ class TestTrecProbeStringDuration:
         mock_pymediainfo = MagicMock()
         mock_pymediainfo.MediaInfo.parse.return_value = mock_mi
 
-        with tempfile.NamedTemporaryFile(suffix='.trec', delete=False) as f:
-            f.write(b'\x00')
-            tmp = f.name
+        trec = tmp_path / 'test.trec'
+        trec.write_bytes(b'\x00')
         try:
             with patch.dict('sys.modules', {'pymediainfo': mock_pymediainfo}):
                 importlib.reload(tp)
-                result = tp.probe_trec(tmp)
+                result = tp.probe_trec(trec)
                 # Should not raise TypeError
                 assert len(result['sourceTracks']) == 1
                 assert result['sourceTracks'][0]['range'][1] == round(5000 / 1000 * 30)
         finally:
-            os.unlink(tmp)
             importlib.reload(tp)
 
 
 class TestTrecProbeHandlesDualRateSampleRate:
     """Bug fix: trec_probe must handle dual-rate audio strings like '44100 / 48000'."""
 
-    def test_dual_rate_audio_does_not_crash(self):
+    def test_dual_rate_audio_does_not_crash(self, tmp_path):
         import importlib
-        import os
-        import tempfile
 
         import camtasia.media_bin.trec_probe as tp
 
@@ -136,13 +130,12 @@ class TestTrecProbeHandlesDualRateSampleRate:
         mock_pymediainfo = MagicMock()
         mock_pymediainfo.MediaInfo.parse.return_value = mock_mi
 
-        with tempfile.NamedTemporaryFile(suffix='.trec', delete=False) as f:
-            f.write(b'\x00')
-            tmp = f.name
+        trec = tmp_path / 'test.trec'
+        trec.write_bytes(b'\x00')
         try:
             with patch.dict('sys.modules', {'pymediainfo': mock_pymediainfo}):
                 importlib.reload(tp)
-                result = tp.probe_trec(tmp)
+                result = tp.probe_trec(trec)
                 assert len(result['sourceTracks']) == 1
                 st = result['sourceTracks'][0]
                 # Should use first rate (44100), not crash on int(float('44100 / 48000'))
@@ -150,7 +143,6 @@ class TestTrecProbeHandlesDualRateSampleRate:
                 assert st['sampleRate'] == 44100
                 assert st['range'][1] == round(5000 / 1000 * 44100)
         finally:
-            os.unlink(tmp)
             importlib.reload(tp)
 
 
