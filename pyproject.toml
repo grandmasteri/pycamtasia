@@ -50,7 +50,7 @@ media = ["pymediainfo"]
 all = ["pycamtasia[cli]", "pycamtasia[media]"]
 docs = ["sphinx", "furo", "myst-parser", "sphinx-autodoc-typehints"]
 dev = ["bumpversion", "ruff"]
-test = ["pytest", "pytest-cov", "hypothesis", "pytest-xdist", "pytest-timeout", "mypy", "jsonschema", "ruff"]
+test = ["pytest", "pytest-cov", "hypothesis", "pytest-xdist", "pytest-timeout", "mypy", "jsonschema", "ruff", "filelock"]
 
 [project.urls]
 Homepage = "https://grandmasteri.github.io/pycamtasia/"
