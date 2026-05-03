@@ -4,6 +4,6 @@ include CHANGELOG.md
 include CONTRIBUTING.md
 include SECURITY.md
 recursive-include tests *.py
-recursive-include tests/fixtures *
+recursive-include tests/fixtures *.tscproj
 recursive-include docs *.md *.rst *.py *.txt
 global-exclude __pycache__ *.py[cod] .DS_Store
