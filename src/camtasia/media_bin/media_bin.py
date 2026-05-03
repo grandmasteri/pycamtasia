@@ -698,7 +698,14 @@ def _parse_with_pymediainfo(file_path: Path) -> dict[str, Any] | None:
 
     try:
         media_info = MediaInfo.parse(file_path)
-    except Exception:
+    except (RuntimeError, OSError):
+        return None
+    except Exception as exc:
+        import warnings
+        warnings.warn(
+            f'Unexpected pymediainfo error ({type(exc).__name__}): {exc}',
+            stacklevel=2,
+        )
         return None
 
     if len(media_info.tracks) < 2:

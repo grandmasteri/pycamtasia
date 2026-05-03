@@ -55,10 +55,11 @@ class TestRemoveMedia:
         clip.id = 1
         track = MagicMock()
         track.medias = [clip]
+        track.name = 'Track 1'
         project = MagicMock()
         project.timeline.tracks = [track]
 
-        with pytest.raises(ValueError, match="references exist on tracks"):
+        with pytest.raises(ValueError, match="Cannot remove media 42"):
             remove_media(project, 42, clear_tracks=False)
 
     def test_clears_track_references_when_clear_tracks_true(self):
