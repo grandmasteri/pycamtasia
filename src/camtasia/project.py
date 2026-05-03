@@ -76,13 +76,19 @@ def _probe_media(path: Path) -> dict:
             return result
     except ImportError:
         pass
-    except Exception:
+    except (RuntimeError, OSError):  # expected pymediainfo failures
         pass
+    except Exception as exc:
+        warnings.warn(
+            f'Unexpected pymediainfo error ({type(exc).__name__}): {exc}',
+            stacklevel=2,
+        )
     return _probe_media_ffprobe(path)
 
 
 def _probe_media_ffprobe(path: Path) -> dict:
     """Probe media file using ffprobe subprocess."""
+    _expected = (FileNotFoundError, _sp.TimeoutExpired, _sp.CalledProcessError, OSError, ValueError)
     result: dict = {'_backend': 'ffprobe'}
     try:
         out = _sp.run(
@@ -94,8 +100,10 @@ def _probe_media_ffprobe(path: Path) -> dict:
         if len(parts) >= 2 and parts[0] and parts[1]:
             result['width'] = int(parts[0])
             result['height'] = int(parts[1])
-    except Exception:
+    except _expected:
         pass
+    except Exception as exc:
+        warnings.warn(f'Unexpected ffprobe error (dimensions): {type(exc).__name__}: {exc}', stacklevel=2)
     try:
         out = _sp.run(
             ['ffprobe', '-v', 'quiet', '-show_entries', 'format=duration',
@@ -105,8 +113,10 @@ def _probe_media_ffprobe(path: Path) -> dict:
         val = out.stdout.strip()
         if val:
             result['duration_seconds'] = float(val)
-    except Exception:
+    except _expected:
         pass
+    except Exception as exc:
+        warnings.warn(f'Unexpected ffprobe error (duration): {type(exc).__name__}: {exc}', stacklevel=2)
     try:
         out = _sp.run(
             ['ffprobe', '-v', 'quiet', '-print_format', 'json',
@@ -128,8 +138,10 @@ def _probe_media_ffprobe(path: Path) -> dict:
                     except ValueError:  # pragma: no cover  # defensive for malformed ffprobe output
                         pass
                 break
-    except Exception:
+    except _expected:
         pass
+    except Exception as exc:
+        warnings.warn(f'Unexpected ffprobe error (streams): {type(exc).__name__}: {exc}', stacklevel=2)
     return result
 
 
