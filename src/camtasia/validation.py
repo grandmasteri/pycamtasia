@@ -24,20 +24,6 @@ class ValidationIssue:
     source_id: int | None = None
 
 
-def _collect_ids(media: dict, ids: list, path: str) -> None:
-    """Recursively collect clip IDs from a media dict."""
-    if media.get('id') is not None:
-        ids.append((media['id'], path))
-    for key in ('video', 'audio'):
-        if key in media and isinstance(media[key], dict):
-            _collect_ids(media[key], ids, f'{path}/{key}')
-    for track in media.get('tracks', []):
-        for inner in track.get('medias', []):
-            _collect_ids(inner, ids, f'{path}/group{media.get("id")}')
-    for inner in media.get('medias', []):
-        _collect_ids(inner, ids, f'{path}/stitched{media.get("id")}')
-
-
 def _collect_ids_grouped(media: dict, ids_to_locs: dict[Any, list[str]], path: str) -> None:
     """Recursively collect clip IDs into a dict mapping id -> [locations]."""
     if media.get('id') is not None:

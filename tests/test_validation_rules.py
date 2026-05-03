@@ -220,16 +220,16 @@ def test_callout_excluded_from_timing_consistency():
 
 
 def test_collect_ids_recurses_into_unified_media():
-    """Bug 4: _collect_ids should recurse into UnifiedMedia video/audio sub-dicts."""
-    from camtasia.validation import _collect_ids
+    """Bug 4: _collect_ids_grouped should recurse into UnifiedMedia video/audio sub-dicts."""
+    from camtasia.validation import _collect_ids_grouped
     media = {
         'id': 1, '_type': 'UnifiedMedia',
         'video': {'id': 2, '_type': 'VMFile'},
         'audio': {'id': 3, '_type': 'AMFile'},
     }
-    ids: list = []
-    _collect_ids(media, ids, 'test')
-    collected_ids = [i for i, _ in ids]
+    ids_to_locs: dict = {}
+    _collect_ids_grouped(media, ids_to_locs, 'test')
+    collected_ids = list(ids_to_locs.keys())
     assert 1 in collected_ids
     assert 2 in collected_ids
     assert 3 in collected_ids

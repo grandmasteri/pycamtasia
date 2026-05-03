@@ -61,3 +61,29 @@ class TestTempLogCleanup:
             camtasia_validate(fake_project)
 
         assert not log_file.exists(), 'temp log file should be cleaned up'
+
+
+class TestPopenTimeoutExpiredBranch:
+    """Cover the proc.wait() timeout -> proc.kill() branch (lines 65-66)."""
+
+    def test_kill_called_on_wait_timeout(self, fake_project):
+        """If proc.wait(timeout=5) raises TimeoutExpired, proc.kill() is called."""
+        import subprocess
+        mock_proc = MagicMock()
+        # First .wait() raises TimeoutExpired, triggering the fallback to .kill()
+        mock_proc.wait.side_effect = subprocess.TimeoutExpired(cmd='camtasia', timeout=5)
+
+        with (
+            patch('camtasia.app_validation.subprocess') as mock_sub,
+            patch('camtasia.app_validation.time'),
+            patch('camtasia.app_validation.tempfile.NamedTemporaryFile'),
+            patch('camtasia.app_validation.Path.read_text', return_value='clean\n'),
+            patch('builtins.open', mock_open()),
+        ):
+            # Re-export the real TimeoutExpired so the except clause catches it
+            mock_sub.TimeoutExpired = subprocess.TimeoutExpired
+            mock_sub.Popen.return_value = mock_proc
+            camtasia_validate(fake_project)
+
+        mock_proc.terminate.assert_called_once()
+        mock_proc.kill.assert_called_once()
