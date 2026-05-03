@@ -252,7 +252,7 @@ def test_parse_scalar_rejects_oversized_string_fraction() -> None:
     import pytest
 
     from camtasia.timing import parse_scalar
-    big = "1/" + "9" * 200
+    big = "1/" + "9" * 300
     with pytest.raises(ValueError, match="too long"):
         parse_scalar(big)
 
