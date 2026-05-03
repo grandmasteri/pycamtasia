@@ -247,7 +247,17 @@ class Project:
                 f"Project file exceeds maximum allowed size "
                 f"({file_size} > {_MAX_PROJECT_FILE_SIZE} bytes)"
             )
-        self._data: dict[str, Any] = json.loads(pf.read_text(encoding=encoding))
+        try:
+            self._data: dict[str, Any] = json.loads(pf.read_text(encoding=encoding))
+        except RecursionError as e:
+            # json.loads itself hit the recursion limit on deeply-nested input
+            # (Python 3.11 limit is 1000; very nested .tscproj can blow past this).
+            # Convert to a typed ValueError matching our nesting-depth check
+            # so callers see a single error class for "file too deeply nested".
+            raise ValueError(
+                "Project file exceeds maximum nesting depth (json.loads "
+                "RecursionError); likely a recursion-bomb attack or corrupt file"
+            ) from e
         # Structural validation — reject obviously invalid data early.
         _required: dict[str, type] = {"timeline": dict, "sourceBin": list}
         for key, expected_type in _required.items():
