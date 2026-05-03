@@ -27,6 +27,14 @@ _FORMAT_WARNING = (
 )
 
 
+def _is_safe_relative_path(p: str) -> bool:
+    """Return True if *p* is a safe relative path (no '..' components, not absolute)."""
+    path = Path(p)
+    if path.is_absolute():
+        return False
+    return '..' not in path.parts
+
+
 def import_libzip(
     path: Path,
     *,
@@ -46,7 +54,8 @@ def import_libzip(
 
     Raises:
         FileNotFoundError: *path* does not exist.
-        ValueError: *target_library* is ``None`` and *create_new* is ``False``.
+        ValueError: *target_library* is ``None`` and *create_new* is ``False``,
+            or the archive contains unsafe paths.
         zipfile.BadZipFile: *path* is not a valid zip archive.
     """
     warnings.warn(_FORMAT_WARNING, UserWarning, stacklevel=2)
@@ -61,12 +70,22 @@ def import_libzip(
     with zipfile.ZipFile(path, "r") as zf:
         manifest_data = json.loads(zf.read("manifest.json"))
         for entry in manifest_data.get("assets", []):
-            asset_data = json.loads(zf.read(entry["file"]))
+            entry_file = entry["file"]
+            if not _is_safe_relative_path(entry_file):
+                raise ValueError(
+                    f"Unsafe path in libzip manifest: {entry_file!r}"
+                )
+            asset_data = json.loads(zf.read(entry_file))
+            thumbnail_raw = asset_data.get("thumbnail")
+            if thumbnail_raw and not _is_safe_relative_path(thumbnail_raw):
+                raise ValueError(
+                    f"Unsafe thumbnail path in libzip asset: {thumbnail_raw!r}"
+                )
             asset = LibraryAsset(
                 name=asset_data["name"],
                 kind=asset_data["kind"],
                 payload=asset_data.get("payload", {}),
-                thumbnail_path=Path(asset_data["thumbnail"]) if asset_data.get("thumbnail") else None,
+                thumbnail_path=Path(thumbnail_raw) if thumbnail_raw else None,
             )
             target_library.assets.append(asset)
         for folder_name in manifest_data.get("folders", []):

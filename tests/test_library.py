@@ -283,13 +283,13 @@ class TestExportImportLibzip:
 
     def test_asset_with_thumbnail_roundtrip(self, tmp_path):
         lib = Library("thumbs")
-        asset = LibraryAsset(name="pic", kind="media", payload={"src": "img.png"}, thumbnail_path=Path("/t.png"))
+        asset = LibraryAsset(name="pic", kind="media", payload={"src": "img.png"}, thumbnail_path=Path("thumbnails/t.png"))
         lib.assets.append(asset)
         with pytest.warns(UserWarning, match="custom JSON-based format"):
             path = export_libzip(lib, tmp_path / "thumbs.libzip")
         with pytest.warns(UserWarning, match="custom JSON-based format"):
             imported = import_libzip(path)
-        assert imported.assets[0].thumbnail_path == Path("/t.png")
+        assert imported.assets[0].thumbnail_path == Path("thumbnails/t.png")
 
     def test_asset_without_thumbnail_roundtrip(self, tmp_path):
         lib = Library("no_thumb")
