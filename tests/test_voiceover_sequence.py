@@ -75,6 +75,6 @@ def test_voiceover_warns_when_probe_returns_no_duration(project):
     with patch("camtasia.project._probe_media", _probe_no_duration), warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
         result = project.add_voiceover_sequence([EMPTY_WAV])
-        assert len(w) == 1
-        assert 'Could not probe duration' in str(w[0].message)
+        probe_warnings = [x for x in w if 'Could not probe duration' in str(x.message)]
+        assert len(probe_warnings) == 1
         assert result['empty.wav']['duration'] == 1.0

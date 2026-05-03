@@ -893,7 +893,7 @@ class Track:
         subtitle: str,
         start_seconds: float,
         duration_seconds: float,
-        title_color: tuple[int, int, int, int] | None = None,
+        title_color: tuple[float, float, float, float] | tuple[int, int, int, int] | None = None,
         accent_color: tuple[float, float, float] | None = None,
         *,
         font_weight: int = 900,
@@ -907,8 +907,9 @@ class Track:
             subtitle: Body text (replaces 'Lorem ipsum...').
             start_seconds: Timeline position in seconds.
             duration_seconds: Playback duration in seconds.
-            title_color: Optional RGBA tuple ``(r, g, b, a)`` 0-255 for the
-                title text ``fgColor``.
+            title_color: Optional RGBA tuple ``(r, g, b, a)`` as floats
+                0.0-1.0 for the title text ``fgColor``. Legacy int
+                0-255 tuples are accepted but deprecated.
             accent_color: Optional ``(r, g, b)`` floats 0.0-1.0 for the
                 accent line fill color.
             font_weight: Font weight for the title text (default 900).
@@ -1018,7 +1019,17 @@ class Track:
         # --- Optional color overrides ---
         if title_color is not None:
             r, g, b, a = title_color
-            color_str = f'({r},{g},{b},{a})'
+            # Detect legacy int 0-255 range and convert to 0-255 string
+            if any(isinstance(c, int) and c > 1 for c in title_color) or all(isinstance(c, int) for c in title_color):
+                import warnings
+                warnings.warn(
+                    'title_color as int 0-255 is deprecated, use float 0.0-1.0 RGBA instead',
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                color_str = f'({r},{g},{b},{a})'
+            else:
+                color_str = f'({round(r * 255)},{round(g * 255)},{round(b * 255)},{round(a * 255)})'
             for kf in title_clip['def']['textAttributes']['keyframes']:
                 for attr in kf['value']:
                     if attr['name'] == 'fgColor':
