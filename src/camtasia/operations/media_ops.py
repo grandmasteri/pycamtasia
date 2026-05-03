@@ -68,10 +68,14 @@ def remove_media(project: Project, media_id: int, clear_tracks: bool = False) ->
         ValueError: *clear_tracks* is ``False`` and references to the media
             exist on tracks.
     """
+    refs: list[str] = []
     for track in project.timeline.tracks:
         for mid in [tm.id for tm in track.medias if tm.source_id == media_id]:
             if not clear_tracks:
-                raise ValueError("Attempt to remove media from media-bin while references exist on tracks")
-            track.remove_clip(mid)
+                refs.append(f'clip {mid} on track {track.name!r}')
+            else:
+                track.remove_clip(mid)
+    if refs:
+        raise ValueError(f"Cannot remove media {media_id}: referenced by {', '.join(refs)}")
 
     del project.media_bin[media_id]
