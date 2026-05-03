@@ -88,6 +88,15 @@ def parse_scalar(value: int | float | str | Fraction) -> Fraction:
     if isinstance(value, Fraction):
         return value
     if isinstance(value, str):
+        # Cap string-fraction length to prevent CPU-based DoS via astronomically
+        # large denominators (Fraction() accepts them without applying
+        # limit_denominator). Real scalars are at most a few dozen chars
+        # (e.g. "2520000000/705600000" for 1/frame_rate ratios).
+        if len(value) > 100:
+            raise ValueError(
+                f'Scalar string too long ({len(value)} chars, max 100); '
+                f'likely a DoS attack or corrupt file'
+            )
         try:
             return Fraction(value)
         except ZeroDivisionError:

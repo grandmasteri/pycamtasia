@@ -35,6 +35,40 @@ from camtasia.validation import ValidationIssue, validate_against_schema, valida
 #: are rejected at load time to prevent memory exhaustion from malicious
 #: or corrupted ``.tscproj`` files.  Override for testing only.
 _MAX_PROJECT_FILE_SIZE: int = 100 * 1024 * 1024
+_MAX_NESTING_DEPTH: int = 100
+
+
+def _check_nesting_depth(obj: Any, limit: int, depth: int = 0) -> None:
+    """Raise ValueError if JSON nesting exceeds ``limit``.
+
+    Prevents RecursionError-based DoS attacks via deeply-nested .tscproj
+    files. Real Camtasia projects nest at most ~10 levels (groups within
+    groups within tracks within scenes); 100 is a very generous upper
+    bound. Uses an iterative stack to avoid recursing while checking
+    for recursion (which would be silly).
+
+    Raises:
+        ValueError: If any path in the JSON tree exceeds ``limit``
+            levels of nesting.
+    """
+    # Use an explicit stack to check depth without recursion.
+    stack: list[tuple[Any, int]] = [(obj, 0)]
+    while stack:
+        cur, d = stack.pop()
+        if d > limit:
+            raise ValueError(
+                f"Project structure exceeds maximum nesting depth "
+                f"({d} > {limit}); likely a recursion-bomb attack "
+                f"or corrupt file"
+            )
+        if isinstance(cur, dict):
+            for v in cur.values():
+                if isinstance(v, (dict, list)):
+                    stack.append((v, d + 1))
+        elif isinstance(cur, list):
+            for v in cur:
+                if isinstance(v, (dict, list)):
+                    stack.append((v, d + 1))
 
 
 def _probe_media(path: Path) -> dict:
@@ -226,6 +260,11 @@ class Project:
                     f"Invalid project: {key!r} must be a {expected_type.__name__}, "
                     f"got {type(self._data[key]).__name__}"
                 )
+        # Depth check — prevent recursion bombs. Real projects have
+        # maybe 5-10 levels of nesting (groups within groups within tracks).
+        # 100 is a generous upper bound; 500+ is a DoS attempt that would
+        # crash save() / validate() with RecursionError.
+        _check_nesting_depth(self._data, limit=_MAX_NESTING_DEPTH)
         self._history: ChangeHistory | None = None
 
     @classmethod

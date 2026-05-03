@@ -236,3 +236,29 @@ def test_ticks_roundtrip_property(ticks: int) -> None:
     seconds = ticks_to_seconds(ticks)
     recovered = seconds_to_ticks(seconds)
     assert recovered == ticks
+
+
+# REV-red_team-002: parse_scalar string DoS prevention
+
+
+def test_parse_scalar_rejects_oversized_string_fraction() -> None:
+    """Extremely long fraction strings are rejected as potential DoS.
+
+    Regression for REV-red_team-002: parse_scalar previously accepted
+    arbitrary-precision string fractions (e.g. "1/999...999" with 4000+
+    digits) without bounds, enabling CPU-based DoS via slow Fraction
+    arithmetic downstream.
+    """
+    import pytest
+
+    from camtasia.timing import parse_scalar
+    big = "1/" + "9" * 200
+    with pytest.raises(ValueError, match="too long"):
+        parse_scalar(big)
+
+
+def test_parse_scalar_accepts_reasonable_string_fraction() -> None:
+    """Normal-length string fractions still work."""
+    from camtasia.timing import parse_scalar
+    result = parse_scalar("2520000000/705600000")
+    assert result is not None
