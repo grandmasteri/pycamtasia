@@ -1097,30 +1097,39 @@ class Project:
                           allow_nan=True)
         # Replace -Infinity/Infinity/NaN with the original extreme values
         # Use a regex that skips quoted strings to avoid corrupting filenames
-        def _replace_special(m: re.Match[str]) -> str:
-            if m.group(1) is not None:
-                return str(m.group(0))  # inside a quoted string, leave as-is
-            token = m.group(0)
-            if token == '-Infinity':
-                return '-1.79769313486232e+308'
-            if token == 'Infinity':
-                return '1.79769313486232e+308'
-            warnings.warn('Replacing NaN with 0.0 in saved JSON', stacklevel=2)
-            return '0.0'
-        text = re.sub(r'("(?:[^"\\]|\\.)*")|-?Infinity\b|NaN\b', _replace_special, text)
+        # Short-circuit: only run the expensive regex if special values exist
+        if 'Infinity' in text or 'NaN' in text:
+            def _replace_special(m: re.Match[str]) -> str:
+                if m.group(1) is not None:
+                    return str(m.group(0))  # inside a quoted string, leave as-is
+                token = m.group(0)
+                if token == '-Infinity':
+                    return '-1.79769313486232e+308'
+                if token == 'Infinity':
+                    return '1.79769313486232e+308'
+                warnings.warn('Replacing NaN with 0.0 in saved JSON', stacklevel=2)
+                return '0.0'
+            text = re.sub(r'("(?:[^"\\]|\\.)*")|-?Infinity\b|NaN\b', _replace_special, text)
 
         # Step 2: Add space before colon (NSJSONSerialization style)
         # "key": value  ->  "key" : value
         # Only on lines that don't contain escaped quotes (to avoid
         # corrupting JSON-inside-string values like textAttributes).
         # Only match the key-value separator colon, not colons inside string values.
-        lines = text.split('\n')
-        for i, line in enumerate(lines):
-            if '\\"' not in line:
-                # Match "key": pattern — the colon must follow a closing quote
-                # that is preceded by a non-quote char (end of key name)
-                lines[i] = re.sub(r'(^\s*"[^"]+")(\s*):', r'\1 :', line)
-        text = '\n'.join(lines)
+        # Use a negative lookahead to skip lines with escaped quotes.
+        text = re.sub(
+            r'^(\s*"[^"]+")\s*:',
+            r'\1 :',
+            text,
+            flags=re.MULTILINE,
+        )
+        # Revert colon spacing on lines containing escaped quotes (JSON-in-string)
+        if '\\"' in text:
+            lines = text.split('\n')
+            for i, line in enumerate(lines):
+                if '\\"' in line:
+                    lines[i] = re.sub(r'^(\s*"[^"]+")\s+:', r'\1:', line)
+            text = '\n'.join(lines)
 
         # Step 3: Collapse scalar arrays to single lines
         def _collapse(m: re.Match) -> str:
@@ -1137,7 +1146,8 @@ class Project:
         )
 
         # Step 4: Expand empty objects to multi-line with proper indentation
-        text = re.sub(r'^([ \t]*)("[^"]*"[ \t]*:[ \t]*)\{\}([ \t]*,?)[ \t]*$', r'\1\2{\n\1}\3', text, flags=re.MULTILINE)
+        if '{}' in text:
+            text = re.sub(r'^([ \t]*)("[^"]*"[ \t]*:[ \t]*)\{\}([ \t]*,?)[ \t]*$', r'\1\2{\n\1}\3', text, flags=re.MULTILINE)
 
         # Step 5: Add trailing space after commas at end of lines
         text = re.sub(r',\n', ', \n', text)
