@@ -67,7 +67,7 @@ from camtasia.history import with_undo
 def normalize_audio(project):
     for track in project.timeline.tracks:
         for clip in track.clips:
-            clip.audio_level = 0.0
+            clip.gain = 0.0
 ```
 
 Calling `normalize_audio(project)` automatically wraps the body in
