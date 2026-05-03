@@ -128,7 +128,10 @@ def speed_to_scalar(speed: float) -> Fraction:
         raise ValueError('Speed cannot be zero')
     if speed < 0:
         raise ValueError('Speed cannot be negative')
-    return Fraction(1, 1) / Fraction(speed).limit_denominator(10_000)
+    denom = Fraction(speed).limit_denominator(10_000)
+    if denom == 0:
+        raise ValueError(f'Speed too small to represent as a rational scalar: {speed}')
+    return Fraction(1, 1) / denom
 
 
 def scalar_to_speed(scalar: Fraction) -> float:
