@@ -47,4 +47,4 @@ jobs:
       url: ${{ github.event.repository.html_url }}
     steps:
       - uses: actions/configure-pages@v4
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v5
