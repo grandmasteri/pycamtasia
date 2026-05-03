@@ -5,9 +5,11 @@ Short, runnable recipes for common pycamtasia tasks.
 ## Create a project from scratch
 
 ```python
-from camtasia import new_project
+from camtasia import new_project, load_project
 
-proj = new_project("my-video.cmproj", title="My Video")
+new_project("my-video.cmproj")
+proj = load_project("my-video.cmproj")
+proj.title = "My Video"
 print(proj)  # My Video (0:00, 0 tracks, 0 clips)
 proj.save()
 ```
