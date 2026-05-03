@@ -31,6 +31,11 @@ from camtasia.timeline import Timeline
 from camtasia.timing import EDIT_RATE, seconds_to_ticks
 from camtasia.validation import ValidationIssue, validate_against_schema, validate_all
 
+#: Maximum project file size in bytes (100 MB).  Files larger than this
+#: are rejected at load time to prevent memory exhaustion from malicious
+#: or corrupted ``.tscproj`` files.  Override for testing only.
+_MAX_PROJECT_FILE_SIZE: int = 100 * 1024 * 1024
+
 
 def _probe_media(path: Path) -> dict:
     """Probe media file for metadata. Uses pymediainfo if available, falls back to ffprobe.
@@ -189,7 +194,26 @@ class Project:
     def __init__(self, file_path: Path, encoding: str | None = None) -> None:
         self._file_path = file_path
         self._encoding = encoding
-        self._data: dict[str, Any] = json.loads(self._project_file.read_text(encoding=encoding))
+        pf = self._project_file
+        file_size = pf.stat().st_size
+        if file_size > _MAX_PROJECT_FILE_SIZE:
+            raise ValueError(
+                f"Project file exceeds maximum allowed size "
+                f"({file_size} > {_MAX_PROJECT_FILE_SIZE} bytes)"
+            )
+        self._data: dict[str, Any] = json.loads(pf.read_text(encoding=encoding))
+        # Structural validation — reject obviously invalid data early.
+        _required: dict[str, type] = {"timeline": dict, "sourceBin": list}
+        for key, expected_type in _required.items():
+            if key not in self._data:
+                raise ValueError(
+                    f"Invalid project: missing required key {key!r}"
+                )
+            if not isinstance(self._data[key], expected_type):
+                raise ValueError(
+                    f"Invalid project: {key!r} must be a {expected_type.__name__}, "
+                    f"got {type(self._data[key]).__name__}"
+                )
         self._history: ChangeHistory | None = None
 
     @classmethod
@@ -202,8 +226,17 @@ class Project:
 
         Returns:
             A Project instance.
+
+        Raises:
+            ValueError: If the path is a symlink (potential path-traversal).
         """
-        return cls(Path(file_path).resolve(), encoding=encoding)
+        p = Path(file_path)
+        if p.is_symlink():
+            raise ValueError(
+                f"Symlink detected at '{p}': refusing to load through a "
+                f"symlinked project path to prevent path-traversal attacks"
+            )
+        return cls(p.resolve(), encoding=encoding)
 
     @property
     def history(self) -> ChangeHistory:
@@ -726,6 +759,11 @@ class Project:
         src = Path(template_path)
         dst = Path(output_path)
         if dst.exists():
+            if dst.suffix != '.cmproj':
+                raise ValueError(
+                    f"Safety check: refusing to delete '{dst}' — "
+                    f"output_path must have a .cmproj extension"
+                )
             shutil.rmtree(dst)
         shutil.copytree(src, dst)
         return cls.load(str(dst))
@@ -736,6 +774,11 @@ class Project:
         template = importlib_resources.files('camtasia.resources') / 'new.cmproj'
         dst = Path(output_path)
         if dst.exists():
+            if dst.suffix != '.cmproj':
+                raise ValueError(
+                    f"Safety check: refusing to delete '{dst}' — "
+                    f"output_path must have a .cmproj extension"
+                )
             shutil.rmtree(dst)
         shutil.copytree(str(template), dst)
         proj = cls.load(str(dst))
@@ -880,37 +923,52 @@ class Project:
         """
         issues: list[ValidationIssue] = []
 
-        for media in self.media_bin:
-            raw = media._data
+        try:
+            media_bin_iter = list(self.media_bin)
+        except (TypeError, KeyError, AttributeError) as exc:
+            issues.append(ValidationIssue('error', f'Corrupted project structure: {exc}'))
+            media_bin_iter = []
 
-            # Missing source file (check first, before type-specific checks that may continue)
-            src_path = self._file_path / media.source if self._file_path.is_dir() else self._file_path.parent / media.source
-            if not src_path.exists():
-                issues.append(ValidationIssue('warning', f'Missing source file: {media.source}', media.id))
+        try:
+            for media in media_bin_iter:
+                raw = media._data
 
-            # Zero-range audio
-            if media.type == MediaType.Audio:
-                try:
-                    r = raw['sourceTracks'][0]['range']
-                except (KeyError, IndexError):
-                    issues.append(ValidationIssue('error', f'Media {media.id}: missing sourceTracks or range'))
-                    continue
-                if r == [0, 0]:
-                    issues.append(ValidationIssue('error', f'Zero-range audio source: {media.source}', media.id))
+                # Missing source file (check first, before type-specific checks that may continue)
+                src_path = self._file_path / media.source if self._file_path.is_dir() else self._file_path.parent / media.source
+                if not src_path.exists():
+                    issues.append(ValidationIssue('warning', f'Missing source file: {media.source}', media.id))
 
-            # Zero-dimension image
-            if media.type == MediaType.Image:
-                try:
-                    rect = raw['rect']
-                except KeyError:
-                    issues.append(ValidationIssue('error', f'Media {media.id}: missing rect'))
-                    continue
-                if rect == [0, 0, 0, 0]:
-                    issues.append(ValidationIssue('error', f'Zero-dimension image source: {media.source}', media.id))
+                # Zero-range audio
+                if media.type == MediaType.Audio:
+                    try:
+                        r = raw['sourceTracks'][0]['range']
+                    except (KeyError, IndexError):
+                        issues.append(ValidationIssue('error', f'Media {media.id}: missing sourceTracks or range'))
+                        continue
+                    if r == [0, 0]:
+                        issues.append(ValidationIssue('error', f'Zero-range audio source: {media.source}', media.id))
+
+                # Zero-dimension image
+                if media.type == MediaType.Image:
+                    try:
+                        rect = raw['rect']
+                    except KeyError:
+                        issues.append(ValidationIssue('error', f'Media {media.id}: missing rect'))
+                        continue
+                    if rect == [0, 0, 0, 0]:
+                        issues.append(ValidationIssue('error', f'Zero-dimension image source: {media.source}', media.id))
+        except (TypeError, KeyError, AttributeError) as exc:
+            issues.append(ValidationIssue('error', f'Corrupted project structure: {exc}'))
 
         # Collect all clip source references
         referenced_ids: set[int] = set()
-        for _, clip in self.all_clips:
+        try:
+            all_clips_list = self.all_clips
+        except (TypeError, KeyError, AttributeError) as exc:
+            issues.append(ValidationIssue('error', f'Corrupted timeline structure: {exc}'))
+            return issues
+
+        for _, clip in all_clips_list:
             if clip.source_id is not None:
                 referenced_ids.add(clip.source_id)
             # Also check UnifiedMedia children
@@ -921,20 +979,26 @@ class Project:
                         referenced_ids.add(child['src'])
 
         # Source reference validation
-        issues.extend(validate_all(self._data))
+        try:
+            issues.extend(validate_all(self._data))
+        except (TypeError, KeyError, AttributeError) as exc:
+            issues.append(ValidationIssue('error', f'Corrupted project structure: {exc}'))
 
         # Overlapping clips
-        for track in self.timeline.tracks:
-            for clip_a_id, clip_b_id in track.overlaps():
-                issues.append(ValidationIssue(
-                    'warning',
-                    f'Overlapping clips on track {track.name!r}: clip {clip_a_id} and clip {clip_b_id}',
-                ))
+        try:
+            for track in self.timeline.tracks:
+                for clip_a_id, clip_b_id in track.overlaps():
+                    issues.append(ValidationIssue(
+                        'warning',
+                        f'Overlapping clips on track {track.name!r}: clip {clip_a_id} and clip {clip_b_id}',
+                    ))
 
-        # Orphaned media
-        for media in self.media_bin:
-            if media.id not in referenced_ids:
-                issues.append(ValidationIssue('warning', f'Orphaned media not used by any clip: {media.source}', media.id))
+            # Orphaned media
+            for media in media_bin_iter:
+                if media.id not in referenced_ids:
+                    issues.append(ValidationIssue('warning', f'Orphaned media not used by any clip: {media.source}', media.id))
+        except (TypeError, KeyError, AttributeError) as exc:
+            issues.append(ValidationIssue('error', f'Corrupted project structure: {exc}'))
 
         # JSON schema validation
         # Schema validation available via validate_schema() method
@@ -3375,7 +3439,7 @@ def load_project(file_path: str | Path, encoding: str | None = None) -> Project:
     Returns:
         A Project instance.
     """
-    return Project(Path(file_path).resolve(), encoding=encoding)
+    return Project.load(file_path, encoding=encoding)
 
 
 @contextmanager
