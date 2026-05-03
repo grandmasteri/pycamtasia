@@ -64,7 +64,7 @@ into a library that can be shared across projects.
    :doc:`library` for the Library / LibraryAsset API,
    :doc:`operations` for :func:`~camtasia.operations.cleanup.remove_orphaned_media`.
 
-.. automodule:: camtasia.media_bin
+.. automodule:: camtasia.media_bin.media_bin
    :members:
    :undoc-members:
    :show-inheritance:
