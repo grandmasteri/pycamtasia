@@ -66,3 +66,26 @@ def test_boundary_depth_accepted(tmp_path):
     (proj_dir / "project.tscproj").write_text(_make_nested_project_json(20))
     proj = Project.load(proj_dir)
     assert proj is not None
+
+
+def test_recursion_error_during_json_loads_rejected(tmp_path, monkeypatch):
+    """Cover the json.loads RecursionError branch in Project.__init__.
+
+    On systems with low recursion limits (e.g. CI's Python 3.11 with
+    default limit 1000), json.loads can raise RecursionError before
+    our explicit depth check runs. We monkeypatch json.loads to raise
+    RecursionError deterministically regardless of platform/runner.
+    """
+    proj_dir = tmp_path / "deep.cmproj"
+    proj_dir.mkdir()
+    (proj_dir / "project.tscproj").write_text('{"timeline":{},"sourceBin":[]}')
+
+    def raise_recursion(*args, **kwargs):
+        raise RecursionError("simulated deep-nesting crash in json.loads")
+
+    # Patch the json module as imported by project.py
+    import camtasia.project
+    monkeypatch.setattr(camtasia.project.json, "loads", raise_recursion)
+
+    with pytest.raises(ValueError, match="nesting depth"):
+        Project.load(proj_dir)
