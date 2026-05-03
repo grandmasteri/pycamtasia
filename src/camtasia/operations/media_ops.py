@@ -54,15 +54,19 @@ def add_media_to_track(
 def remove_media(project: Project, media_id: int, clear_tracks: bool = False) -> None:
     """Remove a piece of media from the media-bin.
 
-    By default, this will also remove references to the removed media from tracks.
+    By default, raises ``ValueError`` if references to the media exist on
+    tracks.  Set *clear_tracks* to ``True`` to remove those references
+    automatically before deleting the media.
 
     Args:
+        project: The Camtasia project containing the media.
         media_id: The ID of the media bin media to remove.
         clear_tracks: Whether to remove references to the media from tracks.
 
     Raises:
         KeyError: The project has no media with the specified ID.
-        ValueError: `clear_tracks` is False and references to the media exist on tracks.
+        ValueError: *clear_tracks* is ``False`` and references to the media
+            exist on tracks.
     """
     for track in project.timeline.tracks:
         for mid in [tm.id for tm in track.medias if tm.source_id == media_id]:
