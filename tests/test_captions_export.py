@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-import tempfile
 
 import pytest
 
@@ -12,8 +10,8 @@ from camtasia.export import CaptionEntry, export_captions, import_captions
 
 
 @pytest.fixture
-def project_with_subtitles():
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+def project_with_subtitles(tmp_path):
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     proj.add_subtitle_track([
         (0.0, 2.0, 'Hello world'),
@@ -77,7 +75,7 @@ def test_caption_entry_dataclass():
 
 def test_export_captions_skips_non_callout_clips(tmp_path):
     """Non-Callout clips on the caption track are skipped."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('Subtitles')
     # Add a non-callout clip (e.g., an image)

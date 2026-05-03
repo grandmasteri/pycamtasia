@@ -177,6 +177,42 @@ class TestMergeCaptionWithNext:
 
 
 # ---------------------------------------------------------------------------
+# REV-test_gaps-002: Caption index boundary error messages
+# ---------------------------------------------------------------------------
+
+
+class TestCaptionIndexBoundaryMessages:
+    def test_edit_caption_negative_index(self, timeline):
+        timeline.add_caption('A', 0.0, 1.0)
+        with pytest.raises(IndexError, match='Caption index'):
+            timeline.edit_caption(-1, text='Nope')
+
+    def test_remove_caption_negative_index(self, timeline):
+        timeline.add_caption('A', 0.0, 1.0)
+        with pytest.raises(IndexError, match='Caption index'):
+            timeline.remove_caption(-1)
+
+    def test_split_caption_negative_index(self, timeline):
+        timeline.add_caption('A', 0.0, 2.0)
+        with pytest.raises(IndexError, match='Caption index'):
+            timeline.split_caption(-1, 1.0)
+
+    def test_merge_caption_negative_index(self, timeline):
+        timeline.add_caption('A', 0.0, 1.0)
+        timeline.add_caption('B', 2.0, 1.0)
+        with pytest.raises(IndexError, match='Caption index'):
+            timeline.merge_caption_with_next(-1)
+
+    def test_edit_caption_empty_timeline(self, timeline):
+        with pytest.raises(IndexError, match='Caption index'):
+            timeline.edit_caption(0, text='Nope')
+
+    def test_split_caption_empty_timeline(self, timeline):
+        with pytest.raises(IndexError, match='Caption index'):
+            timeline.split_caption(0, 1.0)
+
+
+# ---------------------------------------------------------------------------
 # set_all_magnetic
 # ---------------------------------------------------------------------------
 

@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-import tempfile
 
 import pytest
 
@@ -19,8 +17,8 @@ from camtasia.export.captions import (
 
 
 @pytest.fixture
-def project_with_subtitles():
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+def project_with_subtitles(tmp_path):
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     proj.add_subtitle_track([
         (0.0, 2.0, 'Hello world'),

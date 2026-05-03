@@ -1,9 +1,6 @@
 """Tests for validate_caption_accessibility in camtasia.validation."""
 from __future__ import annotations
 
-from pathlib import Path
-import tempfile
-
 import pytest
 
 from camtasia import Project
@@ -15,9 +12,9 @@ from camtasia.validation import (
 
 
 @pytest.fixture
-def project_with_captions():
+def project_with_captions(tmp_path):
     """Project with three well-formed captions on a Subtitles track."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     proj.add_subtitle_track([
         (0.0, 3.0, 'Hello world'),
@@ -28,9 +25,9 @@ def project_with_captions():
 
 
 @pytest.fixture
-def empty_project():
+def empty_project(tmp_path):
     """Project with no subtitle track."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     return Project.new(str(tmp))
 
 
@@ -46,8 +43,8 @@ class TestValidateCaptionAccessibilityClean:
 
 
 class TestLineTooLong:
-    def test_detects_line_exceeding_max_words(self):
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    def test_detects_line_exceeding_max_words(self, tmp_path):
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         proj.add_subtitle_track([
             (0.0, 3.0, 'one two three four five six seven eight'),
@@ -58,8 +55,8 @@ class TestLineTooLong:
         assert long_issues[0]['value'] == 8
         assert long_issues[0]['clip_index'] == 0
 
-    def test_respects_custom_max_words(self):
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    def test_respects_custom_max_words(self, tmp_path):
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         proj.add_subtitle_track([
             (0.0, 3.0, 'one two three four five'),
@@ -69,8 +66,8 @@ class TestLineTooLong:
         assert len(long_issues) == 1
         assert long_issues[0]['value'] == 5
 
-    def test_checks_each_line_separately(self):
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    def test_checks_each_line_separately(self, tmp_path):
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         proj.add_subtitle_track([
             (0.0, 3.0, 'short\none two three four five six seven eight'),
@@ -79,8 +76,8 @@ class TestLineTooLong:
         long_issues = [i for i in issues if i['type'] == 'line_too_long']
         assert len(long_issues) == 1
 
-    def test_exactly_max_words_is_ok(self):
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    def test_exactly_max_words_is_ok(self, tmp_path):
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         proj.add_subtitle_track([
             (0.0, 3.0, 'one two three four five six seven'),
@@ -91,8 +88,8 @@ class TestLineTooLong:
 
 
 class TestDurationTooLong:
-    def test_detects_long_duration(self):
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    def test_detects_long_duration(self, tmp_path):
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         proj.add_subtitle_track([
             (0.0, 10.0, 'Long caption'),
@@ -102,8 +99,8 @@ class TestDurationTooLong:
         assert len(long_issues) == 1
         assert long_issues[0]['clip_index'] == 0
 
-    def test_respects_custom_max_duration(self):
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    def test_respects_custom_max_duration(self, tmp_path):
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         proj.add_subtitle_track([
             (0.0, 4.0, 'Caption'),
@@ -114,8 +111,8 @@ class TestDurationTooLong:
 
 
 class TestDurationTooShort:
-    def test_detects_short_duration(self):
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    def test_detects_short_duration(self, tmp_path):
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         proj.add_subtitle_track([
             (0.0, 0.5, 'Flash'),
@@ -128,8 +125,8 @@ class TestDurationTooShort:
 
 
 class TestContrastRatio:
-    def test_low_contrast_detected(self):
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    def test_low_contrast_detected(self, tmp_path):
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         proj.add_subtitle_track([(0.0, 3.0, 'Hello')])
         # Set fg and bg to similar colors (low contrast)
@@ -147,8 +144,8 @@ class TestContrastRatio:
         contrast_issues = [i for i in issues if i['type'] == 'low_contrast']
         assert contrast_issues == []
 
-    def test_custom_min_contrast(self):
-        tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    def test_custom_min_contrast(self, tmp_path):
+        tmp = tmp_path / 'test.cmproj'
         proj = Project.new(str(tmp))
         proj.add_subtitle_track([(0.0, 3.0, 'Hello')])
         # White on black has ~21:1 contrast

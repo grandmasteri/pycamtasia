@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from fractions import Fraction
 
+from hypothesis import given, settings
+from hypothesis import strategies as st
 import pytest
 
 from camtasia.timing import (
@@ -211,3 +213,26 @@ class TestSpeedScalarConversions:
     def test_scalar_negative_raises(self):
         with pytest.raises(ValueError, match='negative'):
             scalar_to_speed(Fraction(-1))
+
+
+# ------------------------------------------------------------------
+# REV-test_gaps-001: Property-based timing roundtrip
+# ------------------------------------------------------------------
+
+
+@given(seconds=st.floats(min_value=0, max_value=86400, allow_nan=False, allow_infinity=False))
+@settings(max_examples=200)
+def test_seconds_roundtrip_property(seconds: float) -> None:
+    """seconds_to_ticks(x) → ticks_to_seconds → should be within 1/EDIT_RATE of x."""
+    ticks = seconds_to_ticks(seconds)
+    recovered = ticks_to_seconds(ticks)
+    assert abs(recovered - seconds) <= 1.0 / EDIT_RATE
+
+
+@given(ticks=st.integers(min_value=0, max_value=86400 * EDIT_RATE))
+@settings(max_examples=200)
+def test_ticks_roundtrip_property(ticks: int) -> None:
+    """ticks_to_seconds(t) → seconds_to_ticks should recover t exactly."""
+    seconds = ticks_to_seconds(ticks)
+    recovered = seconds_to_ticks(seconds)
+    assert recovered == ticks

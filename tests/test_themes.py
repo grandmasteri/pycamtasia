@@ -1,17 +1,14 @@
 """Tests for the Theme / apply_theme API."""
 from __future__ import annotations
 
-from pathlib import Path
-import tempfile
-
 import pytest
 
 from camtasia import Project, Theme, apply_theme
 
 
 @pytest.fixture
-def project_with_themed_callout():
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+def project_with_themed_callout(tmp_path):
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('Captions')
     callout = track.add_callout('Hello', 0.0, 2.0, font_size=32.0)
@@ -66,9 +63,9 @@ def test_apply_theme_writes_colors(project_with_themed_callout):
     assert cdef['font']['name'] == 'Georgia'
 
 
-def test_apply_theme_skips_empty_slots():
+def test_apply_theme_skips_empty_slots(tmp_path):
     """A mapping value of '' should be skipped."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('T')
     callout = track.add_callout('X', 0.0, 1.0)
@@ -82,9 +79,9 @@ def test_apply_theme_skips_empty_slots():
     assert count == 0
 
 
-def test_apply_theme_handles_missing_clip():
+def test_apply_theme_handles_missing_clip(tmp_path):
     """themeMappings referencing non-existent clip IDs are ignored."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('T')
     callout = track.add_callout('X', 0.0, 1.0)
@@ -98,9 +95,9 @@ def test_apply_theme_handles_missing_clip():
     assert count == 0
 
 
-def test_apply_theme_skips_unknown_slots_silently():
+def test_apply_theme_skips_unknown_slots_silently(tmp_path):
     """An unknown slot value is skipped (no exception)."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('T')
     callout = track.add_callout('X', 0.0, 1.0)
@@ -114,9 +111,9 @@ def test_apply_theme_skips_unknown_slots_silently():
     assert count == 0
 
 
-def test_apply_theme_recurses_into_group():
+def test_apply_theme_recurses_into_group(tmp_path):
     """apply_theme walks nested clips inside Groups to find themed callouts."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('T')
     c1 = track.add_callout('A', 0.0, 1.0)
@@ -139,9 +136,9 @@ def test_apply_theme_recurses_into_group():
     assert c2.id  # wrapper objects still valid
 
 
-def test_apply_theme_resolves_across_stitched_and_unified():
+def test_apply_theme_resolves_across_stitched_and_unified(tmp_path):
     """apply_theme finds clips inside StitchedMedia / UnifiedMedia for themeMappings resolution."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('T')
     c1 = track.add_callout('C', 0.0, 2.0)
@@ -177,9 +174,9 @@ def test_apply_theme_resolves_across_stitched_and_unified():
     assert count == 2
 
 
-def test_apply_theme_finds_clip_inside_group():
+def test_apply_theme_finds_clip_inside_group(tmp_path):
     """_find_clip_by_id must descend into Group inner tracks."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('T')
     c1 = track.add_callout('A', 0.0, 1.0)
@@ -198,9 +195,9 @@ def test_apply_theme_finds_clip_inside_group():
     assert count == 1
 
 
-def test_apply_theme_empty_mappings_ignored():
+def test_apply_theme_empty_mappings_ignored(tmp_path):
     """assetProperties with empty themeMappings or empty objects are skipped."""
-    tmp = Path(tempfile.mkdtemp()) / 'test.cmproj'
+    tmp = tmp_path / 'test.cmproj'
     proj = Project.new(str(tmp))
     track = proj.timeline.get_or_create_track('T')
     callout = track.add_callout('X', 0.0, 1.0)
