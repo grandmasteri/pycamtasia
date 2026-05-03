@@ -48,23 +48,34 @@ def camtasia_validate(
     with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False) as log_file:
         log_path = Path(log_file.name)
 
-    with open(log_path, 'w') as stderr_file:
-        subprocess.Popen(
-            [str(camtasia_path), str(project_path)],
-            stderr=stderr_file,
-        )
+    try:
+        with open(log_path, 'w') as stderr_file:
+            proc = subprocess.Popen(
+                [str(camtasia_path), str(project_path)],
+                stderr=stderr_file,
+            )
 
-    # 4. Wait timeout_seconds
-    time.sleep(timeout_seconds)
+        # 4. Wait timeout_seconds
+        time.sleep(timeout_seconds)
 
-    # 5. Read log and count exceptions
-    log_output = log_path.read_text()
-    exception_count = len(_EXCEPTION_RE.findall(log_output))
+        # 5. Terminate the process (matching integration_helpers pattern)
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
 
-    # 6. Kill Camtasia
-    subprocess.run(['pkill', '-f', 'Camtasia'], stderr=subprocess.DEVNULL)
+        # 6. Read log and count exceptions
+        log_output = log_path.read_text()
+        exception_count = len(_EXCEPTION_RE.findall(log_output))
 
-    # 7. Return result
+        # 7. Kill any remaining Camtasia instances (belt-and-suspenders)
+        subprocess.run(['pkill', '-f', 'Camtasia'], stderr=subprocess.DEVNULL)
+    finally:
+        # Clean up temp log file
+        log_path.unlink(missing_ok=True)
+
+    # 8. Return result
     return CamtasiaValidationResult(
         success=exception_count == 0,
         exception_count=exception_count,
