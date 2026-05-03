@@ -16,6 +16,10 @@ class FrameStamp:
     frame_number: int
     frame_rate: int
 
+    def __post_init__(self) -> None:
+        if self.frame_rate <= 0:
+            raise ValueError(f"frame_rate must be positive, got {self.frame_rate}")
+
     @property
     def frame_time(self) -> tuple[timedelta, int]:
         """A tuple of seconds-resolution-time and sub-second frames.
@@ -65,6 +69,9 @@ class FrameStamp:
 
 def _lcm(x: int, y: int) -> int:
     "Quick-and-dirty LCM"
+    if x == 0 or y == 0:
+        raise ValueError("Arguments must be positive (non-zero)")
+    x, y = abs(x), abs(y)
     mul = x * y
 
     while y > 0:
