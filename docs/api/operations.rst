@@ -48,7 +48,7 @@ rate:
 
 .. code-block:: python
 
-   from fractions import Fraction
+   import camtasia
    from camtasia.operations.speed import set_audio_speed
 
    project = camtasia.load_project("demo.cmproj")
@@ -60,6 +60,7 @@ rate:
 
 .. code-block:: python
 
+   import camtasia
    from camtasia.operations.layout import pack_track
 
    project = camtasia.load_project("demo.cmproj")
@@ -128,6 +129,11 @@ rate:
    :show-inheritance:
 
 .. automodule:: camtasia.operations.captions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: camtasia.operations.media_ops
    :members:
    :undoc-members:
    :show-inheritance:
