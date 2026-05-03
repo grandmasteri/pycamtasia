@@ -39,6 +39,20 @@ def _collect_ids(media: dict, ids: list, path: str) -> None:
         _collect_ids(inner, ids, f'{path}/stitched{media.get("id")}')
 
 
+def _collect_ids_grouped(media: dict, ids_to_locs: dict[Any, list[str]], path: str) -> None:
+    """Recursively collect clip IDs into a dict mapping id -> [locations]."""
+    if media.get('id') is not None:
+        ids_to_locs.setdefault(media['id'], []).append(path)
+    for key in ('video', 'audio'):
+        if key in media and isinstance(media[key], dict):
+            _collect_ids_grouped(media[key], ids_to_locs, f'{path}/{key}')
+    for track in media.get('tracks', []):
+        for inner in track.get('medias', []):
+            _collect_ids_grouped(inner, ids_to_locs, f'{path}/group{media.get("id")}')
+    for inner in media.get('medias', []):
+        _collect_ids_grouped(inner, ids_to_locs, f'{path}/stitched{media.get("id")}')
+
+
 def _get_tracks(data: dict) -> list:
     """Extract top-level tracks from project data, safely handling empty scenes."""
     scenes = data.get('timeline', {}).get('sceneTrack', {}).get('scenes', [{}])
@@ -51,15 +65,13 @@ def _get_tracks(data: dict) -> list:
 def _check_duplicate_clip_ids(data: dict) -> list[ValidationIssue]:
     """Check for duplicate clip IDs across all tracks."""
     issues: list[ValidationIssue] = []
-    all_ids: list[tuple] = []
+    ids_to_locs: dict[Any, list[str]] = {}
     tracks = _get_tracks(data)
     for ti, track in enumerate(tracks):
         for media in track.get('medias', []):
-            _collect_ids(media, all_ids, f'track[{ti}]')
-    counts = Counter(mid for mid, _ in all_ids)
-    for mid, count in counts.items():
-        if count > 1:
-            locs = [loc for i, loc in all_ids if i == mid]
+            _collect_ids_grouped(media, ids_to_locs, f'track[{ti}]')
+    for mid, locs in ids_to_locs.items():
+        if len(locs) > 1:
             issues.append(ValidationIssue('error', f'Duplicate clip ID {mid} in: {locs}'))
     return issues
 
