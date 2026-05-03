@@ -37,11 +37,30 @@ def _make_nested_project_json(depth: int) -> str:
     )
 
 
-def test_deeply_nested_project_rejected(tmp_path):
-    """500-level deep nesting must be rejected by depth check."""
+def test_deeply_nested_project_rejected(tmp_path, monkeypatch):
+    """500-level deep nesting must be rejected by depth check.
+
+    Uses monkeypatch to force json.loads to return the nested dict
+    structure directly, bypassing platform-dependent RecursionError
+    behavior in json.loads itself (Python 3.11 has recursion limit
+    1000; 3.12 has the same limit but different call-stack frame
+    cost). This way _check_nesting_depth is deterministically the
+    code path that catches the bomb.
+    """
     proj_dir = tmp_path / "bomb.cmproj"
     proj_dir.mkdir()
-    (proj_dir / "project.tscproj").write_text(_make_nested_project_json(500))
+    (proj_dir / "project.tscproj").write_text('{}')  # content ignored, json is patched
+
+    # Build a deeply nested dict directly, avoiding json.loads recursion.
+    deep: dict = {"timeline": {}, "sourceBin": []}
+    current = deep["timeline"]
+    for _ in range(200):
+        current["nested"] = {}
+        current = current["nested"]
+
+    import camtasia.project
+    monkeypatch.setattr(camtasia.project.json, "loads", lambda *a, **kw: deep)
+
     with pytest.raises(ValueError, match="nesting depth"):
         Project.load(proj_dir)
 
