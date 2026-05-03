@@ -497,6 +497,11 @@ class Track:
         if clip_type not in _VALID_CLIP_TYPES:
             raise ValueError(f'Unknown clip type {clip_type!r}. Valid: {sorted(_VALID_CLIP_TYPES)}')
 
+        if duration < 0:
+            raise ValueError(f'duration must be non-negative, got {duration}')
+        if start < 0:
+            raise ValueError(f'start must be non-negative, got {start}')
+
         scalar = kwargs.pop('scalar', 1)
         scalar_val = _parse_scalar(scalar)
         if scalar_val <= 0:
