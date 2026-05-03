@@ -1,8 +1,8 @@
 """Test for REV-concurrency-001: _get_schema() must be thread-safe."""
 from __future__ import annotations
 
-import threading
 from concurrent.futures import ThreadPoolExecutor, wait
+import threading
 
 from camtasia import validation
 
