@@ -1,7 +1,6 @@
 """Project validation — checks for common issues before save."""
 from __future__ import annotations
 
-from collections import Counter
 from dataclasses import dataclass
 from fractions import Fraction
 from importlib import resources as importlib_resources
